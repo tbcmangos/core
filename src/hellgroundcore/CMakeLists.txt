@@ -35,7 +35,7 @@ endif()
 
 target_link_libraries(${EXECUTABLE_NAME}
   game
-  trinityscript
+  hellgroundscript
   shared
   framework
   g3dlib
