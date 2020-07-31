@@ -59,11 +59,7 @@ void ScriptMgr::LoadDatabase()
     pSystemMgr.LoadScriptWaypoints(); //[TZERO] to implement
 }
 
-struct TSpellSummary
-{
-    uint8 Targets;                                          // set of enum SelectTarget
-    uint8 Effects;                                          // set of enum SelectEffect
-} *SpellSummary;
+
 
 ScriptMgr::ScriptMgr()
 {
