@@ -334,4 +334,4 @@ add_library(ace SHARED ${ace_STAT_SRCS})
 
 # add_native_precompiled_header(ace ${CMAKE_CURRENT_SOURCE_DIR}/PrecompiledHeaders/WinAcePCH)
 
-install(TARGETS ace RUNTIME DESTINATION "${CMAKE_INSTALL_PREFIX}")
+install(TARGETS ace RUNTIME DESTINATION ${CMAKE_INSTALL_PREFIX})
