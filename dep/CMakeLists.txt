@@ -15,12 +15,15 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #
-
-if(NOT TBB_USE_EXTERNAL AND NOT USE_STD_MALLOC)
-  add_subdirectory(tbb)
+if(WIN32)
+	if(NOT TBB_USE_EXTERNAL AND NOT USE_STD_MALLOC)
+	  add_subdirectory(tbb)
+	endif()
+	
 endif()
-
+add_subdirectory(ACE_wrappers)
 add_subdirectory(lualib)
 add_subdirectory(g3dlite)
 add_subdirectory(recastnavigation)
 add_subdirectory(src)
+add_subdirectory(zlib)

@@ -5,6 +5,7 @@ file(GLOB_RECURSE EXECUTABLE_SRCS RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} *.cpp *.h
 if(WIN32)
   list(APPEND EXECUTABLE_SRCS
     HellgroundCore.rc
+	${sources_Debugging}
   )
 endif()
 
@@ -39,6 +40,7 @@ target_link_libraries(${EXECUTABLE_NAME}
   ${ACE_LIBRARIES}
   ${READLINE_LIBRARIES}
   ${OPENSSL_LIBRARIES}
+  ${ZLIB_LIBRARIES}
 )
 
 if(WIN32)

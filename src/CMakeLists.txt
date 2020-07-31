@@ -6,6 +6,10 @@ if(WIN32)
   include_directories(
     ${CMAKE_SOURCE_DIR}/dep/include # For Win32
   )
+  set(sources_Debugging
+	${CMAKE_SOURCE_DIR}/src/shared/WheatyExceptionReport.cpp
+	${CMAKE_SOURCE_DIR}/src/shared/WheatyExceptionReport.h
+  )
 endif()
 
 add_subdirectory(framework)
