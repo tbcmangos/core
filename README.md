@@ -1,4 +1,4 @@
-![logox.png](http://forums.hellground.net/public/style_images/deflection/logo.png)
+[![Build Status](https://travis-ci.com/tbcmangos/core.svg?branch=master)](https://travis-ci.com/tbcmangos/core)
 
 ######################
 #   HellGroundCore   #
