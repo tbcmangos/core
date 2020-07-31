@@ -15,6 +15,7 @@ include_directories(
   ${CMAKE_SOURCE_DIR}/dep/include
   ${CMAKE_SOURCE_DIR}/src/framework
   ${CMAKE_SOURCE_DIR}/src/game
+  ${CMAKE_SOURCE_DIR}/src/scripts
   ${CMAKE_BINARY_DIR}
   ${CMAKE_BINARY_DIR}/src/shared
   ${ACE_INCLUDE_DIR}
@@ -34,6 +35,7 @@ endif()
 
 target_link_libraries(${EXECUTABLE_NAME}
   game
+  trinityscript
   shared
   framework
   g3dlib
@@ -46,8 +48,7 @@ target_link_libraries(${EXECUTABLE_NAME}
 if(WIN32)
   target_link_libraries(${EXECUTABLE_NAME}
     zlib
-    optimized ${MYSQL_LIBRARY}
-    debug ${MYSQL_DEBUG_LIBRARY}
+    ${MYSQL_LIBRARY}
   )
   if(PLATFORM MATCHES X86)
     target_link_libraries(${EXECUTABLE_NAME})

@@ -2,6 +2,7 @@
 if(WIN32)
   link_directories(
     ${CMAKE_BINARY_DIR}/src/hellgroundcore/${CMAKE_CFG_INTDIR}
+	${CMAKE_BINARY_DIR}/dep/ACE_wrappers/ace/${CMAKE_CFG_INTDIR}
   )
   include_directories(
     ${CMAKE_SOURCE_DIR}/dep/include # For Win32

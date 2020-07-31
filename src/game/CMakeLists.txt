@@ -12,6 +12,7 @@ include_directories(
   ${CMAKE_SOURCE_DIR}/src/shared
   ${CMAKE_SOURCE_DIR}/src/shared/Database
   ${CMAKE_SOURCE_DIR}/src/framework
+  ${CMAKE_SOURCE_DIR}/src/scripts
   ${CMAKE_BINARY_DIR}
   ${CMAKE_BINARY_DIR}/src/shared
   ${MYSQL_INCLUDE_DIR}
@@ -73,6 +74,7 @@ target_link_libraries(game
   g3dlib
   detour
   lualib
+ #  hellgroundscript
 )
 
 if(UNIX)

@@ -155,11 +155,10 @@ else()
   set(LIBS_DIR ${CMAKE_INSTALL_PREFIX}/lib)
 endif()
 
-# For Unix systems set the rpath so that libraries are found
+# Set RPATH-handing (CMake parameters)
+set(CMAKE_SKIP_BUILD_RPATH 0)
+set(CMAKE_BUILD_WITH_INSTALL_RPATH 0)
 set(CMAKE_INSTALL_RPATH ${LIBS_DIR})
-set(CMAKE_INSTALL_NAME_DIR ${LIBS_DIR})
-# Run out of build tree
-set(CMAKE_BUILD_WITH_INSTALL_RPATH OFF)
 set(CMAKE_INSTALL_RPATH_USE_LINK_PATH 1)
 
 # Find needed packages and if necessery abort if something important is missing
@@ -232,6 +231,9 @@ else()
   message("Build with CLI        : No")
 endif()
 
+#no warning
+add_definitions(-w)
+
 # if(RA)
 #   message("* Build with RA         : Yes")
 #   add_definitions(-DENABLE_RA)
@@ -281,9 +283,9 @@ endif(LARGE_CELL)
 message("")
 
 if(PLATFORM MATCHES X86)
-  set(ADDITIONAL_COMPILE_FLAGS "-std=c++0x -ggdb -O2 -msse3  -fno-delete-null-pointer-checks -ftracer -fno-strict-aliasing -funroll-loops -m32 -pipe -DFD_SETSIZE=4096")
+  set(ADDITIONAL_COMPILE_FLAGS "${ADDITIONAL_COMPILE_FLAGS} -m32")
 else()
-  set(ADDITIONAL_COMPILE_FLAGS "-std=c++0x -ggdb -O2 -msse3  -fno-delete-null-pointer-checks -ftracer -fno-strict-aliasing -funroll-loops -m64 -pipe -DFD_SETSIZE=4096")
+  set(ADDITIONAL_COMPILE_FLAGS "${ADDITIONAL_COMPILE_FLAGS} -m64")
 endif()
 set(ADDITIONAL_OPTIMIZE_FLAGS "-fomit-frame-pointer -frename-registers")
 set(ADDITIONAL_MATH_FLAGS " -ffast-math -fno-math-errno -funsafe-math-optimizations")
@@ -291,7 +293,7 @@ set(ADDITIONAL_GPROF_FLAGS " -pg")
 
 # Set warning levels for different builds
 if(UNIX)
-  set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -Wall -Wextra -Wfatal-errors")
+  set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -Wfatal-errors")
 elseif(WIN32)
   # Disable warnings in Visual Studio 8 and above and add /MP
   if(MSVC AND NOT CMAKE_GENERATOR MATCHES "Visual Studio 7")

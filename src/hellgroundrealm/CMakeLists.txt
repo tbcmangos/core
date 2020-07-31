@@ -37,8 +37,7 @@ target_link_libraries(${EXECUTABLE_NAME}
 
 if(WIN32)
   target_link_libraries(${EXECUTABLE_NAME}
-    optimized ${MYSQL_LIBRARY}
-    debug ${MYSQL_DEBUG_LIBRARY}
+    ${MYSQL_LIBRARY}
   )
   if(PLATFORM MATCHES X86)
     target_link_libraries(${EXECUTABLE_NAME})

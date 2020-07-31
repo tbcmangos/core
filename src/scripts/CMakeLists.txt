@@ -1,4 +1,26 @@
 file(GLOB_RECURSE hellgroundscript_SRCS RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} *.cpp *.h)
+set(scripts_STAT_SRCS
+  ${scripts_STAT_SRCS}
+  ../game/ScriptedEscortAI.cpp
+  ../game/ScriptedEscortAI.h
+  ../game/ScriptedGossip.h
+  ../game/ScriptedCreature.cpp
+  ../game/ScriptedCreature.h
+  ../game/ScriptedFollowerAI.cpp
+  ../game/ScriptedFollowerAI.h
+  ../game/ScriptedInstance.h
+  ../game/ScriptMgr.h
+)
+
+if(WIN32)
+  list(APPEND hellgroundscript_SRCS
+    ${scripts_STAT_SRCS}
+	${sources_Debugging}
+  )
+endif()
+  list(APPEND hellgroundscript_SRCS
+    ${scripts_STAT_SRCS}
+  )
 
 include_directories(
   ${CMAKE_CURRENT_SOURCE_DIR}
@@ -13,6 +35,7 @@ include_directories(
   ${CMAKE_SOURCE_DIR}/src/framework
   ${CMAKE_BINARY_DIR}
   ${CMAKE_BINARY_DIR}/src/shared
+  ${CMAKE_CURRENT_SOURCE_DIR}/PrecompiledHeaders
   ${MYSQL_INCLUDE_DIR}
   ${ACE_INCLUDE_DIR}
 )
@@ -64,11 +87,12 @@ add_library(hellgroundscript SHARED ${hellgroundscript_SRCS})
 
 add_definitions(-D_TRINITY_SCRIPT_CONFIG='"${CONF_DIR}/hellgroundcore.conf"' -DTHIS_IS_SCRIPT_DLL)
 
-IF (CMAKE_SYSTEM_NAME MATCHES "Darwin")
-    SET_TARGET_PROPERTIES(hellgroundscript PROPERTIES LINK_FLAGS "-flat_namespace -undefined suppress")
-ENDIF (CMAKE_SYSTEM_NAME MATCHES "Darwin")
+# IF (CMAKE_SYSTEM_NAME MATCHES "Darwin")
+#     SET_TARGET_PROPERTIES(trinityscript PROPERTIES LINK_FLAGS "-flat_namespace -undefined suppress")
+# ENDIF (CMAKE_SYSTEM_NAME MATCHES "Darwin")
 
 target_link_libraries(hellgroundscript)
 
-set_target_properties(hellgroundscript PROPERTIES VERSION 4.2.0 SOVERSION 4)
-install(TARGETS hellgroundscript DESTINATION lib)
+# set_target_properties(trinityscript PROPERTIES VERSION 4.2.0 SOVERSION 4)
+# install(TARGETS trinityscript DESTINATION lib)
+
