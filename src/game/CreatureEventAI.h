@@ -25,6 +25,7 @@
 #include "Creature.h"
 #include "CreatureAI.h"
 #include "Unit.h"
+#include "ScriptSystem.h"
 
 class Player;
 class WorldObject;
@@ -186,14 +187,14 @@ enum SpawnedEventMode
     SPAWNED_EVENT_ZONE  = 2
 };
 
-// String text additional data, used in (CreatureEventAI)
-struct StringTextData
-{
-    uint32 SoundId;
-    uint8  Type;
-    uint32 Language;
-    uint32 Emote;
-};
+//// String text additional data, used in (CreatureEventAI)
+//struct StringTextData
+//{
+//    uint32 SoundId;
+//    uint8  Type;
+//    uint32 Language;
+//    uint32 Emote;
+//};
 
 // Text Maps
 typedef UNORDERED_MAP<int32, StringTextData> CreatureEventAI_TextMap;
