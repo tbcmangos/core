@@ -19,9 +19,9 @@ bin/
 *.gitignore
 dep/lib/*/ACE*
 dep/lib/*/Detour*
-dep/ACE_wrappers/lib/*
-dep/ACE_wrappers/ace/Release*/*/*
-dep/ACE_wrappers/ace/Debug*/*/*
+dep/acelite/lib/*
+dep/acelite/ace/Release*/*/*
+dep/acelite/ace/Debug*/*/*
 win/VC1*0/*/*
 win/_*/
 

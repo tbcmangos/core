@@ -319,22 +319,19 @@ set(ace_STAT_SRCS
   XTI_ATM_Mcast.cpp
 )
 
-include_directories(${CMAKE_SOURCE_DIR}/dep/acelite)
+include_directories(
+  ${CMAKE_SOURCE_DIR}/dep/acelite
+  ${CMAKE_CURRENT_SOURCE_DIR}/PrecompiledHeaders
+  ${CMAKE_SOURCE_DIR}/dep/zlib
+)
+
+# Needed for PCH support
+set_source_files_properties(Atomic_Op_Sparc.c Rtems_init.c PROPERTIES LANGUAGE CXX)
 
 add_definitions(-DACE_BUILD_DLL)
 
 add_library(ace SHARED ${ace_STAT_SRCS})
 
-if (MINGW)
-  target_link_libraries(ace ws2_32 iphlpapi netapi32 mswsock)
-endif()
+# add_native_precompiled_header(ace ${CMAKE_CURRENT_SOURCE_DIR}/PrecompiledHeaders/WinAcePCH)
 
-install(
-    TARGETS ace
-    RUNTIME DESTINATION "${BIN_DIR}"
-    LIBRARY DESTINATION "${LIBS_DIR}"
-)
-
-if(WIN32)
-  install(FILES "${CMAKE_CURRENT_BINARY_DIR}/\${BUILD_TYPE}/ace.pdb" DESTINATION "${BIN_DIR}" CONFIGURATIONS Debug)
-endif()
+install(TARGETS ace RUNTIME DESTINATION "${CMAKE_INSTALL_PREFIX}")
