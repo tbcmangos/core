@@ -38,7 +38,7 @@ matrix:
     # linux builds gcc4 x64
     - os: linux
       arch: amd64
-      name: "Eluna Disabled gcc x64"
+      name: "linux builds gcc4 x64"
       compiler: gcc
       env:
         - CC=gcc-4
@@ -53,7 +53,7 @@ matrix:
     # linux builds gcc7 x64
     - os: linux
       arch: amd64
-      name: "Eluna Disabled gcc x64"
+      name: "linux builds gcc7 x64"
       compiler: gcc
       env:
         - CC=gcc-7
@@ -68,7 +68,7 @@ matrix:
     # linux builds clang x64
     - os: linux
       arch: amd64
-      name: "Eluna Disabled clang x64"
+      name: "linux builds clang x64"
       compiler: clang
       env:
         - CC=clang
