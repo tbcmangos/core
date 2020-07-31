@@ -806,8 +806,7 @@ bool ChatHandler::HandleReloadLocalesQuestCommand(const char* /*arg*/)
 
 bool ChatHandler::HandleLoadScriptsCommand(const char* args)
 {
-     if (!sScriptMgr.InitScriptLibrary())
-         return true;
+    sScriptMgr.InitScriptLibrary();
 
     sWorld.SendGMText(LANG_SCRIPTS_RELOADED);
     return true;
