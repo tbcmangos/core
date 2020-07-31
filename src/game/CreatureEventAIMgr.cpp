@@ -52,10 +52,10 @@ void CreatureEventAIMgr::LoadCreatureEventAI_Texts(bool check_entry_use)
             StringTextData temp;
 
             int32 i             = fields[0].GetInt32();
-            temp.SoundId        = fields[1].GetInt32();
-            temp.Type           = fields[2].GetInt32();
-            temp.Language       = fields[3].GetInt32();
-            temp.Emote          = fields[4].GetInt32();
+            temp.uiSoundId        = fields[1].GetInt32();
+            temp.uiType           = fields[2].GetInt32();
+            temp.uiLanguage       = fields[3].GetInt32();
+            temp.uiEmote          = fields[4].GetInt32();
 
             // range negative
             if (i > MIN_CREATURE_AI_TEXT_STRING_ID || i <= MAX_CREATURE_AI_TEXT_STRING_ID)
@@ -71,22 +71,22 @@ void CreatureEventAIMgr::LoadCreatureEventAI_Texts(bool check_entry_use)
                 continue;
             }
 
-            if (temp.SoundId)
+            if (temp.uiSoundId)
             {
-                if (!sSoundEntriesStore.LookupEntry(temp.SoundId))
-                    sLog.outLog(LOG_DB_ERR, "CreatureEventAI:  Entry %i in table `creature_ai_texts` has Sound %u but sound does not exist.",i,temp.SoundId);
+                if (!sSoundEntriesStore.LookupEntry(temp.uiSoundId))
+                    sLog.outLog(LOG_DB_ERR, "CreatureEventAI:  Entry %i in table `creature_ai_texts` has Sound %u but sound does not exist.",i,temp.uiSoundId);
             }
 
-            if (!GetLanguageDescByID(temp.Language))
-                sLog.outLog(LOG_DB_ERR, "CreatureEventAI:  Entry %i in table `creature_ai_texts` using Language %u but Language does not exist.",i,temp.Language);
+            if (!GetLanguageDescByID(temp.uiLanguage))
+                sLog.outLog(LOG_DB_ERR, "CreatureEventAI:  Entry %i in table `creature_ai_texts` using Language %u but Language does not exist.",i,temp.uiLanguage);
 
-            if (temp.Type > CHAT_TYPE_ZONE_YELL)
-                sLog.outLog(LOG_DB_ERR, "CreatureEventAI:  Entry %i in table `creature_ai_texts` has Type %u but this Chat Type does not exist.",i,temp.Type);
+            if (temp.uiType > CHAT_TYPE_ZONE_YELL)
+                sLog.outLog(LOG_DB_ERR, "CreatureEventAI:  Entry %i in table `creature_ai_texts` has Type %u but this Chat Type does not exist.",i,temp.uiType);
 
-            if (temp.Emote)
+            if (temp.uiEmote)
             {
-                if (!sEmotesStore.LookupEntry(temp.Emote))
-                    sLog.outLog(LOG_DB_ERR, "CreatureEventAI:  Entry %i in table `creature_ai_texts` has Emote %u but emote does not exist.",i,temp.Emote);
+                if (!sEmotesStore.LookupEntry(temp.uiEmote))
+                    sLog.outLog(LOG_DB_ERR, "CreatureEventAI:  Entry %i in table `creature_ai_texts` has Emote %u but emote does not exist.",i,temp.uiEmote);
             }
 
             m_CreatureEventAI_TextMap[i] = temp;
