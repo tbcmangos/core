@@ -21,7 +21,7 @@ if(WIN32)
 	endif()
 	
 endif()
-add_subdirectory(ACE_wrappers)
+add_subdirectory(acelite)
 add_subdirectory(lualib)
 add_subdirectory(g3dlite)
 add_subdirectory(recastnavigation)
