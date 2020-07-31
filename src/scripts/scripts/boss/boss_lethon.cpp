@@ -24,5 +24,5 @@ SDComment: Place Holder
 SDCategory: Bosses
 EndScriptData */
 
-#include "precompiled.h"
+#include "ScriptedPch.h"
 

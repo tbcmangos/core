@@ -24,7 +24,7 @@ SDComment: Some details and adjustments left to do, probably nothing major. Spaw
 SDCategory: Coilfang Resevoir, Serpent Shrine Cavern
 EndScriptData */
 
-#include "precompiled.h"
+#include "ScriptedPch.h"
 #include "def_serpent_shrine.h"
 
 #define SAY_AGGRO                   -1548000

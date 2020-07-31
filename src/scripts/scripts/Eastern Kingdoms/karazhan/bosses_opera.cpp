@@ -24,7 +24,7 @@ SDComment: Oz, Hood, and RAJ event implemented. RAJ event requires more testing.
 SDCategory: Karazhan
 EndScriptData */
 
-#include "precompiled.h"
+#include "ScriptedPch.h"
 #include "def_karazhan.h"
 
 struct boss_operaAI : public ScriptedAI

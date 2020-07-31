@@ -31,7 +31,7 @@ go_keystone_chamber
 at_map_chamber
 EndContentData */
 
-#include "precompiled.h"
+#include "ScriptedPch.h"
 #include "def_uldaman.h"
 
 #define QUEST_HIDDEN_CHAMBER 2240

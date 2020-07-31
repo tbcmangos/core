@@ -24,7 +24,7 @@ SDComment: Heroic supported. Some details missing, but most are spell related.
 SDCategory: Auchindoun, Sethekk Halls
 EndScriptData */
 
-#include "precompiled.h"
+#include "ScriptedPch.h"
 #include "def_sethekk_halls.h"
 
 #define SAY_INTRO                   -1556007

@@ -33,8 +33,8 @@ npc_kayra_longmane
 npc_baby_murloc
 EndContentData */
 
-#include "precompiled.h"
-#include "escort_ai.h"
+#include "ScriptedPch.h"
+#include "ScriptedEscortAI.h"
 
 /*######
 ## npcs_ashyen_and_keleth

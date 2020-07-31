@@ -30,7 +30,7 @@ npc_time_rift
 npc_saat
 EndContentData */
 
-#include "precompiled.h"
+#include "ScriptedPch.h"
 #include "def_dark_portal.h"
 
 #define SAY_ENTER               -1269020        //intro speach by Medivh when entering instance

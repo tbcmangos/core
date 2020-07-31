@@ -24,7 +24,7 @@ SDComment: Timers may be incorrect, not working summon
 SDCategory: Ruins of Ahn'Qiraj
 EndScriptData */
 
-#include "precompiled.h"
+#include "ScriptedPch.h"
 #include "def_ruins_of_ahnqiraj.h"
 
 #define SPELL_MORTALWOUND       25646

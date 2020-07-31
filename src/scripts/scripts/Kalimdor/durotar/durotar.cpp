@@ -28,7 +28,7 @@ EndScriptData */
 npc_lazy_peon
 EndContentData */
 
-#include "precompiled.h"
+#include "ScriptedPch.h"
 
 /*######
 ## npc_lazy_peon

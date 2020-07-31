@@ -17,7 +17,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
  */
 
-#include "precompiled.h"
+#include "ScriptedPch.h"
 #include "def_serpent_shrine.h"
 #include "../../../special/simple_ai.h"
 #include "Spell.h"

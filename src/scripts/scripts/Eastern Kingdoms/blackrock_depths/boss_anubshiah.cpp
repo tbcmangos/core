@@ -24,7 +24,7 @@ SDComment:
 SDCategory: Blackrock Depths
 EndScriptData */
 
-#include "precompiled.h"
+#include "ScriptedPch.h"
 
 #define SPELL_SHADOWBOLT            17228
 #define SPELL_CURSEOFTONGUES        15470

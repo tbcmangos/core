@@ -24,7 +24,7 @@ SDComment: Animation cosmetics, check all timers in phase 5
 SDCategory: Tempest Keep, The Eye
 EndScriptData */
 
-#include "precompiled.h"
+#include "ScriptedPch.h"
 #include "def_the_eye.h"
 #include "WorldPacket.h"
 

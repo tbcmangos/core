@@ -24,7 +24,7 @@ SDComment: VERIFY SCRIPT
 SDCategory: Naxxramas
 EndScriptData */
 
-#include "precompiled.h"
+#include "ScriptedPch.h"
 #include "def_naxxramas.h"
 
 //when shappiron dies. dialog between kel and lich king (in this order)

@@ -24,7 +24,7 @@ SDComment: TODO: add fight event when player enter in the room
 SDCategory: Auchindoun, Shadow Labyrinth
 EndScriptData */
 
-#include "precompiled.h"
+#include "ScriptedPch.h"
 
 #define EMOTE_SONIC_BOOM            -1555036
 

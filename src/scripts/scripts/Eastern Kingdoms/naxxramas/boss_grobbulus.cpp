@@ -24,7 +24,7 @@ SDComment: Initial script.
 SDCategory: Naxxramas
 EndScriptData */
 
-#include "precompiled.h"
+#include "ScriptedPch.h"
 #include "def_naxxramas.h"
 
 enum GrobbulusSpells

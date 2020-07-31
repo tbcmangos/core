@@ -30,8 +30,8 @@ npc_00x09hl
 npc_rinji
 EndContentData */
 
-#include "precompiled.h"
-#include "escort_ai.h"
+#include "ScriptedPch.h"
+#include "ScriptedEscortAI.h"
 
 /*######
 ## npc_00x09hl

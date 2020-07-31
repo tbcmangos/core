@@ -23,7 +23,7 @@ SDComment: basicaly pyramid event, TODO: make captives fight together against mo
 SDCategory: Zul'Farrak
 EndScriptData */
 
-#include "precompiled.h"
+#include "ScriptedPch.h"
 #include "def_zul_farrak.h"
 
 #define ENCOUNTERS 2

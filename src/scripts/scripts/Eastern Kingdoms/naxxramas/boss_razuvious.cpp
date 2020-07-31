@@ -24,7 +24,7 @@ SDComment: Missing adds and event is impossible without Mind Control
 SDCategory: Naxxramas
 EndScriptData */
 
-#include "precompiled.h"
+#include "ScriptedPch.h"
 #include "def_naxxramas.h"
 
 //Razuvious - NO TEXT sound only

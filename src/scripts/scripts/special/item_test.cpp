@@ -24,7 +24,7 @@ SDComment: Used for Testing Item Scripts
 SDCategory: Items
 EndScriptData */
 
-#include "precompiled.h"
+#include "ScriptedPch.h"
 
 extern void LoadDatabase(char const* cfg_file);
 

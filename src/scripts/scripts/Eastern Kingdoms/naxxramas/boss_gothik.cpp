@@ -24,7 +24,7 @@ SDComment: Placeholder
 SDCategory: Naxxramas
 EndScriptData */
 
-#include "precompiled.h"
+#include "ScriptedPch.h"
 #include "def_naxxramas.h"
 
 #define SAY_SPEECH                  -1533040

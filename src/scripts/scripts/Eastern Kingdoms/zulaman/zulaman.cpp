@@ -28,8 +28,8 @@ EndScriptData */
 npc_forest_frog
 EndContentData */
 
-#include "precompiled.h"
-#include "escort_ai.h"
+#include "ScriptedPch.h"
+#include "ScriptedEscortAI.h"
 #include "def_zulaman.h"
 
 /*######

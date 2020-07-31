@@ -24,7 +24,7 @@ SDComment:
 SDCategory: Blackrock Spire
 EndScriptData */
 
-#include "precompiled.h"
+#include "ScriptedPch.h"
 
 #define SPELL_CROWDPUMMEL       10887
 #define SPELL_MIGHTYBLOW        14099

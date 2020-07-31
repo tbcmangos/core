@@ -30,7 +30,7 @@ boss_exarch_maladaar
 mob_avatar_of_martyred
 EndContentData */
 
-#include "precompiled.h"
+#include "ScriptedPch.h"
 
 #define SPELL_MOONFIRE          37328
 #define SPELL_FIREBALL          37329

@@ -49,9 +49,9 @@ npc_viera
 npc_deranged_helboar
 EndContentData */
 
-#include "precompiled.h"
-#include "escort_ai.h"
-#include "follower_ai.h"
+#include "ScriptedPch.h"
+#include "ScriptedEscortAI.h"
+#include "ScriptedFollowerAI.h"
 
 /*######
 ## npc_aeranas

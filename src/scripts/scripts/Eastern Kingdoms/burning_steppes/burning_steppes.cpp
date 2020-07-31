@@ -28,7 +28,7 @@ EndScriptData */
 npc_ragged_john
 EndContentData */
 
-#include "precompiled.h"
+#include "ScriptedPch.h"
 
 /*######
 ## npc_ragged_john

@@ -23,7 +23,7 @@ SD%Complete: 85%
 SDComment:
 EndScriptData */
 
-#include "precompiled.h"
+#include "ScriptedPch.h"
 #include "def_zulaman.h"
 
 //Speech

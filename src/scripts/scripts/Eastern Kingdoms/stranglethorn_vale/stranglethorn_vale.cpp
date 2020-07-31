@@ -28,7 +28,7 @@ EndScriptData */
 mob_yenniku
 EndContentData */
 
-#include "precompiled.h"
+#include "ScriptedPch.h"
 
 /*######
 ## mob_yenniku

@@ -24,7 +24,7 @@ SDComment: Possesion Support
 SDCategory: Coilfang Resevoir, Serpent Shrine Cavern
 EndScriptData */
 
-#include "precompiled.h"
+#include "ScriptedPch.h"
 #include "def_serpent_shrine.h"
 
 // --- Spells used by Leotheras The Blind

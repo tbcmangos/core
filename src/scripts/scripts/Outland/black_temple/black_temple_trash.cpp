@@ -23,7 +23,7 @@ SDComment: Trash NPCs divided by to boss links
 SDCategory: Black Temple
 EndScriptData */
 
-#include "precompiled.h"
+#include "ScriptedPch.h"
 #include "def_black_temple.h"
 
 #define AGGRO_RANGE             35.0

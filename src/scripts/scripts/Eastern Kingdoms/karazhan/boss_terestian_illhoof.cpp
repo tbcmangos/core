@@ -24,7 +24,7 @@ SDComment: Complete! Needs adjustments to use spell though.
 SDCategory: Karazhan
 EndScriptData */
 
-#include "precompiled.h"
+#include "ScriptedPch.h"
 #include "def_karazhan.h"
 
 #define SAY_SLAY1                   -1532065

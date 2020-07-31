@@ -24,7 +24,7 @@ SDComment: Quest support: 925
 SDCategory: Thunder Bluff
 EndScriptData */
 
-#include "precompiled.h"
+#include "ScriptedPch.h"
 
 /*#####
 # npc_cairne_bloodhoof

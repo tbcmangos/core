@@ -29,7 +29,7 @@ npc_sergeant_bly
 npc_weegli_blastfuse
 EndContentData */
 
-#include "precompiled.h"
+#include "ScriptedPch.h"
 #include "def_zul_farrak.h"
 
 /*######

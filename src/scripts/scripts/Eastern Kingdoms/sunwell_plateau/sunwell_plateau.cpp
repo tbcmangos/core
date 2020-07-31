@@ -29,7 +29,7 @@ npc_prophet_velen
 npc_captain_selana
 EndContentData */
 
-#include "precompiled.h"
+#include "ScriptedPch.h"
 #include "def_sunwell_plateau.h"
 #include "GameEvent.h"
 

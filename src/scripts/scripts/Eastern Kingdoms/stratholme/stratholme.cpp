@@ -31,7 +31,7 @@ mob_restless_soul
 mobs_spectral_ghostly_citizen
 EndContentData */
 
-#include "precompiled.h"
+#include "ScriptedPch.h"
 #include "def_stratholme.h"
 
 /*######

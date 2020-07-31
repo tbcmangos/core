@@ -24,7 +24,7 @@ SDComment:
 SDCategory: Caverns of Time, Old Hillsbrad Foothills
 EndScriptData */
 
-#include "precompiled.h"
+#include "ScriptedPch.h"
 #include "def_old_hillsbrad.h"
 
 #define ENCOUNTERS               9

@@ -24,7 +24,7 @@ SDComment: Intro event NYI
 SDCategory: Blackrock Spire
 EndScriptData */
 
-#include "precompiled.h"
+#include "ScriptedPch.h"
 
 #define SPELL_WHIRLWIND                 26038
 #define SPELL_CLEAVE                    20691

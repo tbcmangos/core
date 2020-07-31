@@ -24,7 +24,7 @@ SDComment:
 SDCategory: Mechanar
 EndScriptData */
 
-#include "precompiled.h"
+#include "ScriptedPch.h"
 #include "def_mechanar.h"
 
 #define ENCOUNTERS      6

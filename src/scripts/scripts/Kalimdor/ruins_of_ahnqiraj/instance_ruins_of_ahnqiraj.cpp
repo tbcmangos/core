@@ -23,7 +23,7 @@ SDComment: Place holder
 SDCategory: Ruins of Ahn'Qiraj
 EndScriptData */
 
-#include "precompiled.h"
+#include "ScriptedPch.h"
 #include "def_ruins_of_ahnqiraj.h"
 
 #define ENCOUNTERS 6

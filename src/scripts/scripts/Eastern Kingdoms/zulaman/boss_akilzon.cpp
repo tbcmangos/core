@@ -23,7 +23,7 @@ SD%Complete: 95%
 SDComment: Boss fight completed. TODO: Akil'zon Gauntlet event
 EndScriptData */
 
-#include "precompiled.h"
+#include "ScriptedPch.h"
 #include "def_zulaman.h"
 #include "Weather.h"
 

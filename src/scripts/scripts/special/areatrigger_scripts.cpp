@@ -32,7 +32,7 @@ at_nats_landing         quest 11209
 at_test                 script test only
 EndContentData */
 
-#include "precompiled.h"
+#include "ScriptedPch.h"
 
 /*#####
 ## at_legion_teleporter

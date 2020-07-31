@@ -24,7 +24,7 @@ SDComment:
 SDCategory: Auchindoun, Shadow Labyrinth
 EndScriptData */
 
-#include "precompiled.h"
+#include "ScriptedPch.h"
 #include "def_shadow_labyrinth.h"
 #include "PlayerAI.h"
 

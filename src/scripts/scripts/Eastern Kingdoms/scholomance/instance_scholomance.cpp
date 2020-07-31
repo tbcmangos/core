@@ -24,7 +24,7 @@ SDComment:
 SDCategory: Scholomance
 EndScriptData */
 
-#include "precompiled.h"
+#include "ScriptedPch.h"
 #include "def_scholomance.h"
 
 struct instance_scholomance : public ScriptedInstance

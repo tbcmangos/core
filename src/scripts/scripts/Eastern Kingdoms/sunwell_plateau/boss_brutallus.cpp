@@ -23,7 +23,7 @@ SD%Complete: 98
 SDComment: Check Felmyst spawning event, final debugging
 EndScriptData */
 
-#include "precompiled.h"
+#include "ScriptedPch.h"
 #include "def_sunwell_plateau.h"
 
 enum Quotes

@@ -24,7 +24,7 @@ SDComment:
 SDCategory: Blackrock Spire
 EndScriptData */
 
-#include "precompiled.h"
+#include "ScriptedPch.h"
 
 #define SPELL_WARSTOMP          24375
 #define SPELL_CLEAVE            15579

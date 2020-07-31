@@ -25,7 +25,7 @@ SDComment:
 SDCategory: Hellfire Citadel, Shattered Halls
 EndScriptData */
 
-#include "precompiled.h"
+#include "ScriptedPch.h"
 #include "def_shattered_halls.h"
 
 #define ENCOUNTERS           6

@@ -24,7 +24,7 @@ SDComment:
 SDCategory: Stratholme
 EndScriptData */
 
-#include "precompiled.h"
+#include "ScriptedPch.h"
 #include "def_stratholme.h"
 
 #define SPELL_DRAININGBLOW    16793

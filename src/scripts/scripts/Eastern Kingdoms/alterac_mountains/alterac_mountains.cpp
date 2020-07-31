@@ -28,8 +28,8 @@ EndScriptData */
 npc_ravenholdt
 EndContentData */
 
-#include "precompiled.h"
-#include "escort_ai.h"
+#include "ScriptedPch.h"
+#include "ScriptedEscortAI.h"
 
 /*######
 ## npc_ravenholdt

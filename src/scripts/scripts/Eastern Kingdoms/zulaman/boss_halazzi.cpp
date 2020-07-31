@@ -24,7 +24,7 @@ SDComment:
 SDCategory: Zul'Aman
 EndScriptData */
 
-#include "precompiled.h"
+#include "ScriptedPch.h"
 #include "def_zulaman.h"
 //#include "spell.h"
 

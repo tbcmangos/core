@@ -36,9 +36,9 @@ go_landmark_treasure
 npc_tooga
 EndContentData */
 
-#include "precompiled.h"
-#include "escort_ai.h"
-#include "follower_ai.h"
+#include "ScriptedPch.h"
+#include "ScriptedEscortAI.h"
+#include "ScriptedFollowerAI.h"
 
 /*######
 ## mob_aquementas

@@ -24,7 +24,7 @@ SDComment: Missing Balcony stage !
 SDCategory: Naxxramas
 EndScriptData */
 
-#include "precompiled.h"
+#include "ScriptedPch.h"
 #include "def_naxxramas.h"
 
 #define SOUND_DEATH         8848

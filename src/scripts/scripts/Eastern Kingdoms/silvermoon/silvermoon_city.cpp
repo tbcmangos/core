@@ -28,7 +28,7 @@ EndScriptData */
 npc_blood_knight_stillblade
 EndContentData */
 
-#include "precompiled.h"
+#include "ScriptedPch.h"
 
 /*#######
 # npc_blood_knight_stillblade

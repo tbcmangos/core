@@ -24,7 +24,7 @@ SDComment: Needs revision
 SDCategory: Blackrock Spire
 EndScriptData */
 
-#include "precompiled.h"
+#include "ScriptedPch.h"
 
 #define SPELL_SHOOT             16496
 #define SPELL_STUNBOMB          16497

@@ -24,7 +24,7 @@ SDComment: cos pewnie zle dziala
 SDCategory: Onyxia's Lair
 EndScriptData */
 
-#include "precompiled.h"
+#include "ScriptedPch.h"
 #include "def_onyxia_lair.h"
 
 enum SpawnDefinitions;

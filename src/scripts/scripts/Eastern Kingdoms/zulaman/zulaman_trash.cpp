@@ -26,7 +26,7 @@ EndScriptData */
 /* ContentData
 EndContentData */
 
-#include "precompiled.h"
+#include "ScriptedPch.h"
 #include "def_zulaman.h"
 
 void AddSC_zulaman_trash()

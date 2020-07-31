@@ -23,7 +23,7 @@ SD%Complete:
 SDComment: Some spells listed on wowwiki but doesn't exist on wowhead
 EndScriptData */
 
-#include "precompiled.h"
+#include "ScriptedPch.h"
 
 #define YELL_AGGRO              -2100008
 

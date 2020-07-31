@@ -24,7 +24,7 @@ SDComment:
 SDCategory: Razorfen Downs
 EndScriptData */
 
-#include "precompiled.h"
+#include "ScriptedPch.h"
 
 #define SAY_0             "You'll never leave this place... alive."
 #define SAY_1             "Come, spirits, attend your master."

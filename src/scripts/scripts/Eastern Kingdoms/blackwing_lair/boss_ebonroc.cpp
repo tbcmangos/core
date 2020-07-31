@@ -24,7 +24,7 @@ SDComment: Shadow of Ebonroc needs core support
 SDCategory: Blackwing Lair
 EndScriptData */
 
-#include "precompiled.h"
+#include "ScriptedPch.h"
 #include "def_blackwing_lair.h"
 
 #define SPELL_SHADOWFLAME           22539

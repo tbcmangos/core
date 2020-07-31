@@ -24,7 +24,7 @@ SDComment:
 SDCategory: Blackrock Depths
 EndScriptData */
 
-#include "precompiled.h"
+#include "ScriptedPch.h"
 #include "def_blackrock_depths.h"
 
 #define FACTION_NEUTRAL             734

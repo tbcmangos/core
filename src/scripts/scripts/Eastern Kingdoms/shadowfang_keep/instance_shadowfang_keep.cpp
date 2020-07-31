@@ -24,7 +24,7 @@ SDComment: Complete, Doors checked
 SDCategory: Shadowfang Keep
 EndScriptData */
 
-#include "precompiled.h"
+#include "ScriptedPch.h"
 #include "def_shadowfang_keep.h"
 
 #define ENCOUNTERS              4

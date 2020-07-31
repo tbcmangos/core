@@ -24,7 +24,7 @@ SDComment: Need to implement molten punch
 SDCategory: Black Temple
 EndScriptData */
 
-#include "precompiled.h"
+#include "ScriptedPch.h"
 #include "def_black_temple.h"
 
 #define EMOTE_NEW_TARGET            -1564010

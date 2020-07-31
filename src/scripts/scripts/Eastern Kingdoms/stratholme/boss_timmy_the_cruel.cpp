@@ -24,7 +24,7 @@ SDComment:
 SDCategory: Stratholme
 EndScriptData */
 
-#include "precompiled.h"
+#include "ScriptedPch.h"
 
 #define SAY_SPAWN   "TIMMY!"
 

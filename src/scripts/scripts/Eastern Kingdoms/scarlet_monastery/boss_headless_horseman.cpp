@@ -24,7 +24,7 @@ SDComment:
 SDCategory: Scarlet Monastery
 EndScriptData */
 
-#include "precompiled.h"
+#include "ScriptedPch.h"
 #include "SpellMgr.h"
 #include "def_scarlet_monastery.h"
 

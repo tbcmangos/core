@@ -42,8 +42,8 @@ npc_warmaul_pyre
 npc_fel_cannon
 EndContentData */
 
-#include "precompiled.h"
-#include "escort_ai.h"
+#include "ScriptedPch.h"
+#include "ScriptedEscortAI.h"
 
 /*######
 ## mob_shattered_rumbler - this should be done with ACID

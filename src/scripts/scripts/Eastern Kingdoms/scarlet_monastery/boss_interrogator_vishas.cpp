@@ -24,7 +24,7 @@ SDComment:
 SDCategory: Scarlet Monastery
 EndScriptData */
 
-#include "precompiled.h"
+#include "ScriptedPch.h"
 
 #define SPELL_POWERWORDSHIELD           6065
 

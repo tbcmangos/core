@@ -23,7 +23,7 @@ SDComment: Lord Ahune in Midsummer Festival
 SDCategory: Slave Pens
 EndScriptData */
 
-#include "precompiled.h"
+#include "ScriptedPch.h"
 
 #define DATA_AHUNEEVENT     1
 

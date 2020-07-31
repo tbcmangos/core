@@ -602,7 +602,7 @@ Parameter 1: Field - The field to change in the instance script. Again, this fie
 Parameter 2: Data - The value to put at that field index.
 
 Sets data for the instance. Note that this will only work when the creature is inside an instantiable zone that has a valid script (ScriptedInstance) assigned. 
-NOTE: Param1 Value is located in "def_<instance name>.h" SD2 File and Param2 value is generally found in the "sc_instance.h" file in SD2
+NOTE: Param1 Value is located in "def_<instance name>.h" SD2 File and Param2 value is generally found in the "ScriptedInstance.h" file in SD2
 This is commonly used to link an ACID script with a SD2 C++ Script. You make make things happen like opening doors on specific events that happen. ACID Just triggers the C++ Script to function.
 
 ------------------------------

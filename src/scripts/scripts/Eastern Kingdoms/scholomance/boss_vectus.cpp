@@ -24,7 +24,7 @@ SDComment:
 SDCategory: Scholomance
 EndScriptData */
 
-#include "precompiled.h"
+#include "ScriptedPch.h"
 
 #define SPELL_FIRESHIELD        19626
 #define SPELL_BLASTWAVE         13021

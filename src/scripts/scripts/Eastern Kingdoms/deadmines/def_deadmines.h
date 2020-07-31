@@ -19,7 +19,7 @@
 #ifndef SC_DEF_DEADMINES_H
 #define SC_DEF_DEADMINES_H
 
-#include "precompiled.h"
+#include "ScriptedPch.h"
 
 #define CANNON_NOT_USED 1
 #define CANNON_GUNPOWDER_USED 2

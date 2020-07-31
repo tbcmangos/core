@@ -24,7 +24,7 @@ SDComment: It appears that it's done now.
 SDCategory: Auchindoun, Shadow Labyrinth
 EndScriptData */
 
-#include "precompiled.h"
+#include "ScriptedPch.h"
 #include "def_shadow_labyrinth.h"
 
 #define SAY_INTRO       -1555000

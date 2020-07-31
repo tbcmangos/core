@@ -24,7 +24,7 @@ SDComment:
 SDCategory: Coilfang Resevoir, The Steamvault
 EndScriptData */
 
-#include "precompiled.h"
+#include "ScriptedPch.h"
 #include "def_steam_vault.h"
 
 #define SAY_INTRO                   -1545016

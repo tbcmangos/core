@@ -24,7 +24,7 @@ SDComment:
 SDCategory: Blackrock Depths
 EndScriptData */
 
-#include "precompiled.h"
+#include "ScriptedPch.h"
 
 #define SPELL_GROUNDTREMOR          6524
 #define SPELL_FRENZY                28371

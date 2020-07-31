@@ -24,7 +24,7 @@ SDComment: Event not implemented
 SDCategory: Scarlet Monastery
 EndScriptData */
 
-#include "precompiled.h"
+#include "ScriptedPch.h"
 #include "def_scarlet_monastery.h"
 
 #define SAY_MO_AGGRO                -1189005

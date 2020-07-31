@@ -30,7 +30,7 @@ npc_lothos_riftwaker
 npc_zamael_lunthistle
 EndContentData */
 
-#include "precompiled.h"
+#include "ScriptedPch.h"
 
 /*######
 ## npc_kalaran_windblade

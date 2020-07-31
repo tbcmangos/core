@@ -24,7 +24,7 @@ SDComment:
 SDCategory: Blackrock Depths
 EndScriptData */
 
-#include "precompiled.h"
+#include "ScriptedPch.h"
 
 #define SPELL_WHIRLWIND             15589
 #define SPELL_MORTALSTRIKE          24573

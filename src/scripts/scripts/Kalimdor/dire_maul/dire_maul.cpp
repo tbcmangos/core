@@ -27,7 +27,7 @@ EndScriptData */
 go_kariel_remains
 EndContentData */
 
-#include "precompiled.h"
+#include "ScriptedPch.h"
 
 #define QUEST_ELVEN_LEGENDS_HORDE 7481
 #define QUEST_ELVEN_LEGENDS_ALLY 7482

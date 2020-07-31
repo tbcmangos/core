@@ -29,8 +29,8 @@ npc_torek
 npc_ruul_snowhoof
 EndContentData */
 
-#include "precompiled.h"
-#include "escort_ai.h"
+#include "ScriptedPch.h"
+#include "ScriptedEscortAI.h"
 
 /*####
 # npc_torek

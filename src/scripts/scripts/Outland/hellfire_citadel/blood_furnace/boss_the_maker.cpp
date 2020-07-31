@@ -24,7 +24,7 @@ SDComment:
 SDCategory: Hellfire Citadel, Blood Furnace
 EndScriptData */
 
-#include "precompiled.h"
+#include "ScriptedPch.h"
 #include "def_blood_furnace.h"
 
 #define SAY_AGGRO_1                 -1542009

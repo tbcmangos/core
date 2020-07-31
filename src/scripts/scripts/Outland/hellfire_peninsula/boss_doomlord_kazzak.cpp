@@ -24,7 +24,7 @@ SDComment: Using incorrect spell for Mark of Kazzak
 SDCategory: Hellfire Peninsula
 EndScriptData */
 
-#include "precompiled.h"
+#include "ScriptedPch.h"
 
 #define EVENT_KAZZAK 1
 

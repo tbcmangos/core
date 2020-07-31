@@ -28,7 +28,7 @@ TODO:
  - Fix spells (Game in session, Rain of Fire, Poison Cloud (it's all ? ))
 EndScriptData */
 
-#include "precompiled.h"
+#include "ScriptedPch.h"
 #include "def_karazhan.h"
 #include "instance_karazhan.h"
 

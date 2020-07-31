@@ -24,7 +24,7 @@ SDComment: Immunities are wrong, must be adjusted to use resistance from creatur
 SDCategory: Tempest Keep, The Botanica
 EndScriptData */
 
-#include "precompiled.h"
+#include "ScriptedPch.h"
 
 #define EMOTE_SUMMON                -1553006
 

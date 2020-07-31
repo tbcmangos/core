@@ -24,7 +24,7 @@ SDComment: check cooldowns, final debugging
 SDCategory: Sunwell_Plateau
 EndScriptData */
 
-#include "precompiled.h"
+#include "ScriptedPch.h"
 #include "def_sunwell_plateau.h"
 
 enum Quotes

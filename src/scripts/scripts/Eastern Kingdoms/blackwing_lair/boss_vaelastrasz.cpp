@@ -24,7 +24,7 @@ SDComment: Burning Adrenaline not correctly implemented in core, looks like the 
 SDCategory: Blackwing Lair
 EndScriptData */
 
-#include "precompiled.h"
+#include "ScriptedPch.h"
 #include "def_blackwing_lair.h"
 
 #define SAY_LINE1           -1469026

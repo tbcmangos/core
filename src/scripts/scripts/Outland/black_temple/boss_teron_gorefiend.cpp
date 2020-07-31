@@ -24,7 +24,7 @@ SDComment: Needs tests and probably some minor changes
 SDCategory: Black Temple
 EndScriptData */
 
-#include "precompiled.h"
+#include "ScriptedPch.h"
 #include "def_black_temple.h"
 
  //Speech'n'sound

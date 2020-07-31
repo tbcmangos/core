@@ -24,7 +24,7 @@ SDComment: Doors missing in instance script.
 SDCategory: Scholomance
 EndScriptData */
 
-#include "precompiled.h"
+#include "ScriptedPch.h"
 
 #define SPELL_ARCANEMISSILES           15791
 #define SPELL_SHADOWSHIELD             22417                //Not right ID. But 12040 is wrong either.

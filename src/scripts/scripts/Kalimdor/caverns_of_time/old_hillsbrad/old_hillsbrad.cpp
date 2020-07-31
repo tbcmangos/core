@@ -32,8 +32,8 @@ npc_taretha
 erozion_image
 EndContentData */
 
-#include "precompiled.h"
-#include "escort_ai.h"
+#include "ScriptedPch.h"
+#include "ScriptedEscortAI.h"
 #include "def_old_hillsbrad.h"
 
 #define QUEST_ENTRY_HILLSBRAD   10282

@@ -24,7 +24,7 @@ SDComment: Quest Support:8735
 SDCategory: Duskwood
 EndScriptData */
 
-#include "precompiled.h"
+#include "ScriptedPch.h"
 
 #define BOSS_TWILIGHT_CORRUPTER            15625
 

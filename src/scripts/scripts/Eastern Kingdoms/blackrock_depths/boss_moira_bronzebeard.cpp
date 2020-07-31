@@ -24,7 +24,7 @@ SDComment: Healing of Emperor NYI
 SDCategory: Blackrock Depths
 EndScriptData */
 
-#include "precompiled.h"
+#include "ScriptedPch.h"
 
 #define SPELL_HEAL              10917
 #define SPELL_RENEW             10929

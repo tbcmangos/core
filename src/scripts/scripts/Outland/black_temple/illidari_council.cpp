@@ -24,7 +24,7 @@ SDComment: Test event reseting and saving to DB (simplify some code..?)
 SDCategory: Black Temple
 EndScriptData */
 
-#include "precompiled.h"
+#include "ScriptedPch.h"
 #include "def_black_temple.h"
 
 //Speech'n'Sounds

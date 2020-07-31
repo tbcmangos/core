@@ -24,7 +24,7 @@ SDComment: Check melee dmg and immunities
 SDCategory: Tempest Keep, The Mechanar
 EndScriptData */
 
-#include "precompiled.h"
+#include "ScriptedPch.h"
 #include "def_mechanar.h"
 
 #define SAY_AGGRO                       -1554013

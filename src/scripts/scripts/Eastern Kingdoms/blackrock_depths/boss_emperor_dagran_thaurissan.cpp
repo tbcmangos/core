@@ -24,7 +24,7 @@ SDComment:
 SDCategory: Blackrock Depths
 EndScriptData */
 
-#include "precompiled.h"
+#include "ScriptedPch.h"
 
 #define SPELL_HANDOFTHAURISSAN          17492
 #define SPELL_AVATAROFFLAME             15636

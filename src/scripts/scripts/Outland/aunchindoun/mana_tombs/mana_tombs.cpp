@@ -28,9 +28,9 @@ npc_shaheen
 go_transportercp
 EndContentData */
 
-#include "precompiled.h"
+#include "ScriptedPch.h"
 #include "def_mana_tombs.h"
-#include "escort_ai.h"
+#include "ScriptedEscortAI.h"
 
 enum
 {

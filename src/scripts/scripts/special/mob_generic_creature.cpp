@@ -24,7 +24,7 @@ SDComment: Should be replaced with core based AI
 SDCategory: Creatures
 EndScriptData */
 
-#include "precompiled.h"
+#include "ScriptedPch.h"
 
 #define GENERIC_CREATURE_COOLDOWN   5000
 

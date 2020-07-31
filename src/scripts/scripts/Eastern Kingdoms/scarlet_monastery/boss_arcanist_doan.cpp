@@ -24,7 +24,7 @@ SDComment:
 SDCategory: Scarlet Monastery
 EndScriptData */
 
-#include "precompiled.h"
+#include "ScriptedPch.h"
 
 #define SPELL_POLYMORPH                 12826
 #define SPELL_AOESILENCE                8988

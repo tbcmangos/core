@@ -24,7 +24,7 @@ SDComment: Somewhat of a workaround for Parasitic Shadowfiend, unable to summon 
 SDCategory: Black Temple
 EndScriptData */
 
-#include "precompiled.h"
+#include "ScriptedPch.h"
 #include "def_black_temple.h"
 
 /************* Quotes and Sounds ***********************/

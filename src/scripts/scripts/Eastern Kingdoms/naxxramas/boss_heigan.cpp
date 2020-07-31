@@ -36,7 +36,7 @@ EndScriptData */
 //8833 taunt4 - The end is upon you.
 //8834 taunt5 - Hungry worms will feast on your rotten flesh!
 
-#include "precompiled.h"
+#include "ScriptedPch.h"
 #include "def_naxxramas.h"
 
 //Spell used by floor peices to cause damage to players

@@ -44,7 +44,7 @@ npc_crashin_thrashin_robot  100%    AI for Crashin' Thrashin' Robot from enginee
 npc_gnomish_flame_turret
 EndContentData */
 
-#include "precompiled.h"
+#include "ScriptedPch.h"
 #include "BattleGround.h"
 #include "Totem.h"
 #include "PetAI.h"

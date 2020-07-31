@@ -29,7 +29,7 @@ boss_kelidan_the_breaker
 mob_shadowmoon_channeler
 EndContentData */
 
-#include "precompiled.h"
+#include "ScriptedPch.h"
 #include "def_blood_furnace.h"
 
 #define SAY_WAKE                    -1542000

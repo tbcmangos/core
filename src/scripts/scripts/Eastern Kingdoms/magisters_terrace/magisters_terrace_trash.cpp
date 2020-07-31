@@ -23,7 +23,7 @@ SDComment: Check timers, spell Ids and cosmetics mostly for heroic versions. Imp
 SDCategory: Magister Terrace
 EndScriptData */
 
-#include "precompiled.h"
+#include "ScriptedPch.h"
 #include "def_magisters_terrace.h"
 
 /**********

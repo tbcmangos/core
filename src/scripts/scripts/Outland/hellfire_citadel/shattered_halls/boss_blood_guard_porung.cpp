@@ -29,7 +29,7 @@ EndScriptData */
 boss_blood_guard_porung
 EndContentData */
 
-#include "precompiled.h"
+#include "ScriptedPch.h"
 #include "def_shattered_halls.h"
 
 #define SPELL_CLEAVE 15496

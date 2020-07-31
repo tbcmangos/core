@@ -1,5 +1,5 @@
 
-#include "precompiled.h"
+#include "ScriptedPch.h"
 
 #define START_SAY_1 -5
 #define START_SAY_2 -6

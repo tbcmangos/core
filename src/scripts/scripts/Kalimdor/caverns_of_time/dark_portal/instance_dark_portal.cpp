@@ -24,7 +24,7 @@ SDComment: Quest support: 9836, 10297. Still needs post-event support.
 SDCategory: Caverns of Time, The Dark Portal
 EndScriptData */
 
-#include "precompiled.h"
+#include "ScriptedPch.h"
 #include "def_dark_portal.h"
 
 #define ENCOUNTERS              4

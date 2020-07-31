@@ -30,7 +30,7 @@ npc_warden_mellichar
 mob_zerekethvoidzone
 EndContentData */
 
-#include "precompiled.h"
+#include "ScriptedPch.h"
 #include "def_arcatraz.h"
 
 /*#####

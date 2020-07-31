@@ -24,7 +24,7 @@ SDComment: Darkglare tracking issue
 SDCategory: Temple of Ahn'Qiraj
 EndScriptData */
 
-#include "precompiled.h"
+#include "ScriptedPch.h"
 #include "def_temple_of_ahnqiraj.h"
 
 //Text emote

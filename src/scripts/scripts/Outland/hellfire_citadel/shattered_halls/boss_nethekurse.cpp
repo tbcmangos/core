@@ -30,7 +30,7 @@ boss_grand_warlock_nethekurse
 mob_fel_orc_convert
 EndContentData */
 
-#include "precompiled.h"
+#include "ScriptedPch.h"
 #include "def_shattered_halls.h"
 
 struct Say

@@ -25,7 +25,7 @@ SDComment:
 SDCategory: Hellfire Ramparts
 EndScriptData */
 
-#include "precompiled.h"
+#include "ScriptedPch.h"
 #include "hellfire_ramparts.h"
 
 #define ENCOUNTERS                           3

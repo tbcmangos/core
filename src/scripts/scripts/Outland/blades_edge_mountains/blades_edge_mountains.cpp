@@ -54,7 +54,7 @@ npc_bashir_landing
 npc_banishing_crystal
 EndContentData */
 
-#include "precompiled.h"
+#include "ScriptedPch.h"
 
 /*######
 ## mobs_nether_drake

@@ -24,8 +24,8 @@ SDComment: Should in addition spawn Myrmidons in the hallway outside
 SDCategory: Scarlet Monastery
 EndScriptData */
 
-#include "precompiled.h"
-#include "escort_ai.h"
+#include "ScriptedPch.h"
+#include "ScriptedEscortAI.h"
 
 #define SAY_AGGRO                   -1189000
 #define SAY_WHIRLWIND               -1189001

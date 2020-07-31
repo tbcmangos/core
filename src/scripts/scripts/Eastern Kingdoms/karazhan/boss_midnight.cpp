@@ -24,7 +24,7 @@ SDComment:
 SDCategory: Karazhan
 EndScriptData */
 
-#include "precompiled.h"
+#include "ScriptedPch.h"
 #include "def_karazhan.h"
 
 #define SAY_MIDNIGHT_KILL           -1532000

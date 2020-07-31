@@ -24,7 +24,7 @@ SDComment: VERIFY SCRIPT, Wasp include missing, larvas and sacrifice too, not fl
 SDCategory: Ruins of Ahn'Qiraj
 EndScriptData */
 
-#include "precompiled.h"
+#include "ScriptedPch.h"
 #include "def_ruins_of_ahnqiraj.h"
 
 /*

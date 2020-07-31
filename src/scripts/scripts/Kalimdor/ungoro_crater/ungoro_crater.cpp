@@ -30,9 +30,9 @@ npc_a-me
 npc_ringo
 EndContentData */
 
-#include "precompiled.h"
-#include "escort_ai.h"
-#include "follower_ai.h"
+#include "ScriptedPch.h"
+#include "ScriptedEscortAI.h"
+#include "ScriptedFollowerAI.h"
 
 #define SAY_READY -1000200
 #define SAY_AGGRO1 -1000201

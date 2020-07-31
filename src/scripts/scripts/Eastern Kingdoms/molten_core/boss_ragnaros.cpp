@@ -24,7 +24,7 @@ SDComment: Intro Dialog and event NYI, some submerge/emerge bugs, boss should em
 SDCategory: Molten Core
 EndScriptData */
 
-#include "precompiled.h"
+#include "ScriptedPch.h"
 #include "def_molten_core.h"
 
 #define SAY_REINFORCEMENTS1         -1409013

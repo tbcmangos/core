@@ -24,7 +24,7 @@ SDComment: Flame wreath missing cast animation, mods won't triggere.
 SDCategory: Karazhan
 EndScriptData */
 
-#include "precompiled.h"
+#include "ScriptedPch.h"
 #include "../../special/simple_ai.h"
 #include "def_karazhan.h"
 #include "GameObject.h"

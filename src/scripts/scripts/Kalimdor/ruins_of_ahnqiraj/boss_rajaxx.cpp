@@ -24,7 +24,7 @@ SDComment: Waves event NYI, timers may be wrong, lieutenant AI NYI
 SDCategory: Ruins of Ahn'Qiraj
 EndScriptData */
 
-#include "precompiled.h"
+#include "ScriptedPch.h"
 #include "def_ruins_of_ahnqiraj.h"
 
 #define SAY_ANDOROV_INTRO   -1509003 //They come now. Try not to get yourself killed, young blood.

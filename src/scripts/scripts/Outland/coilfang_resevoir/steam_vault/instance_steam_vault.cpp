@@ -24,7 +24,7 @@ SDComment:  Instance script and access panel GO
 SDCategory: Coilfang Resevoir, The Steamvault
 EndScriptData */
 
-#include "precompiled.h"
+#include "ScriptedPch.h"
 #include "def_steam_vault.h"
 
 #define ENCOUNTERS 3

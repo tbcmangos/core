@@ -31,8 +31,8 @@ npc_apprentice_mirveda
 npc_infused_crystal
 EndContentData */
 
-#include "precompiled.h"
-#include "escort_ai.h"
+#include "ScriptedPch.h"
+#include "ScriptedEscortAI.h"
 
 /*######
 ## mobs_mana_tapped

@@ -28,7 +28,7 @@ EndScriptData */
 npc_mountaineer_pebblebitty
 EndContentData */
 
-#include "precompiled.h"
+#include "ScriptedPch.h"
 
 /*######
 ## npc_mountaineer_pebblebitty

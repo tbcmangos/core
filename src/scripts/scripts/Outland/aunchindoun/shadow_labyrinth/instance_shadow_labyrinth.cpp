@@ -24,7 +24,7 @@ SDComment: Some cleanup left along with save
 SDCategory: Auchindoun, Shadow Labyrinth
 EndScriptData */
 
-#include "precompiled.h"
+#include "ScriptedPch.h"
 #include "def_shadow_labyrinth.h"
 
 #define ENCOUNTERS 5

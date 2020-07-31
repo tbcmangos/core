@@ -31,8 +31,8 @@ npc_melizza_brimbuzzle
 npc_rokaro
 EndContentData */
 
-#include "precompiled.h"
-#include "escort_ai.h"
+#include "ScriptedPch.h"
+#include "ScriptedEscortAI.h"
 
 /*######
 ## npc_aged_dying_ancient_kodo. Quest 5561

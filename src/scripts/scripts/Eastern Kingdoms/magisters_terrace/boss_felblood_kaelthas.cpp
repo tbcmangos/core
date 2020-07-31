@@ -24,7 +24,7 @@ SDComment: Final debugging, force him to make death animations
 SDCategory: Magisters' Terrace
 EndScriptData */
 
-#include "precompiled.h"
+#include "ScriptedPch.h"
 #include "def_magisters_terrace.h"
 #include "WorldPacket.h"
 

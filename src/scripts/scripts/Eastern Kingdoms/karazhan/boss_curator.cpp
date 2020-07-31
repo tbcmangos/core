@@ -24,7 +24,7 @@ SDComment: Evocation may cause client crash (Core related)
 SDCategory: Karazhan
 EndScriptData */
 
-#include "precompiled.h"
+#include "ScriptedPch.h"
 #include "def_karazhan.h"
 
 #define SAY_AGGRO                       -1532057

@@ -24,7 +24,7 @@ SDComment: DMG in DB is propably wrong (30 on plate tank?)
 SDCategory: Molten Core
 EndScriptData */
 
-#include "precompiled.h"
+#include "ScriptedPch.h"
 #include "def_molten_core.h"
 
 #define EMOTE_SERVICE               -1409000

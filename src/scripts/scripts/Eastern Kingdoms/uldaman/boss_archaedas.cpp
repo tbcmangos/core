@@ -27,7 +27,7 @@ At 33%, he will awaken the Vault Walkers
 On his death the vault door opens.
 EndScriptData */
 
-#include "precompiled.h"
+#include "ScriptedPch.h"
 #include "def_uldaman.h"
 
 #define SAY_AGGRO           "Who dares awaken Archaedas? Who dares the wrath of the makers!"
@@ -288,7 +288,7 @@ SDComment: After activating the altar of the keepers, the stone keepers will
 wake up one by one.
 EndScriptData */
 
-#include "precompiled.h"
+#include "ScriptedPch.h"
 
 #define SPELL_SELF_DESTRUCT           9874
 

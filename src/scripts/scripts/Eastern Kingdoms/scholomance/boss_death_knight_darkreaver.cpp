@@ -24,7 +24,7 @@ SDComment:
 SDCategory: Scholomance
 EndScriptData */
 
-#include "precompiled.h"
+#include "ScriptedPch.h"
 
 struct boss_death_knight_darkreaverAI : public ScriptedAI
 {

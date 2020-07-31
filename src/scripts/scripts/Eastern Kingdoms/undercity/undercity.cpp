@@ -31,7 +31,7 @@ npc_highborne_lamenter
 npc_parqual_fintallas
 EndContentData */
 
-#include "precompiled.h"
+#include "ScriptedPch.h"
 
 /*######
 ## mob_rift_spawn - for mage qs "Investigate the Alchemist Shop" & "Investigate the Blue Recluse"

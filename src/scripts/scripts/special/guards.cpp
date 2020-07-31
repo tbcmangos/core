@@ -47,7 +47,7 @@ guard_tirisfal
 guard_undercity
 EndContentData */
 
-#include "precompiled.h"
+#include "ScriptedPch.h"
 #include "guard_ai.h"
 
 //script spesific action

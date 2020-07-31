@@ -23,7 +23,7 @@ SDComment: Trash NPCs divided by to boss links
 SDCategory: Sunwell Plateau
 EndScriptData */
 
-#include "precompiled.h"
+#include "ScriptedPch.h"
 #include "def_sunwell_plateau.h"
 
 #define AGGRO_RANGE             25.0

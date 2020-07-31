@@ -24,7 +24,7 @@ SDComment: Spell Heated Ground is wrong, flying animation, visual for area effec
 SDCategory: Onyxia's Lair
 EndScriptData */
 
-#include "precompiled.h"
+#include "ScriptedPch.h"
 #include "def_onyxia_lair.h"
 
 #define SAY_AGGRO                   -1249000

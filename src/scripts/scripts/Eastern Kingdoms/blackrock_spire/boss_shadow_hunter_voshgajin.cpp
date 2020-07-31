@@ -24,7 +24,7 @@ SDComment:
 SDCategory: Blackrock Spire
 EndScriptData */
 
-#include "precompiled.h"
+#include "ScriptedPch.h"
 
 #define SPELL_CURSEOFBLOOD      24673
 #define SPELL_HEX               16708

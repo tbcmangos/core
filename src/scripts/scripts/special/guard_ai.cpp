@@ -24,7 +24,7 @@ SDComment:
 SDCategory: Guards
 EndScriptData */
 
-#include "precompiled.h"
+#include "ScriptedPch.h"
 #include "guard_ai.h"
 
 // **** This script is for use within every single guard to save coding time ****

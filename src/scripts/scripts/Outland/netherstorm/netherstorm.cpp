@@ -56,8 +56,8 @@ npc_trader_marid
 npc_doctor_vomisa
 EndContentData */
 
-#include "precompiled.h"
-#include "escort_ai.h"
+#include "ScriptedPch.h"
+#include "ScriptedEscortAI.h"
 
 /*######
 ## npc_manaforge_control_console

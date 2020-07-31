@@ -33,7 +33,7 @@ SDComment:
 
 */
 
-#include "precompiled.h"
+#include "ScriptedPch.h"
 #include "def_sunwell_plateau.h"
 
 // Muru & Entropius's spells

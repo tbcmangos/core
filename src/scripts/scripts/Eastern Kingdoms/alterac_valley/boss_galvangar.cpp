@@ -23,7 +23,7 @@ SD%Complete:
 SDComment: timers should be adjusted
 EndScriptData */
 
-#include "precompiled.h"
+#include "ScriptedPch.h"
 
 #define YELL_AGGRO                 -2100021
 #define YELL_EVADE                 -2100022

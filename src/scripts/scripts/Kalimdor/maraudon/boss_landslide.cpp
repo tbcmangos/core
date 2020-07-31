@@ -24,7 +24,7 @@ SDComment:
 SDCategory: Maraudon
 EndScriptData */
 
-#include "precompiled.h"
+#include "ScriptedPch.h"
 
 #define SPELL_KNOCKAWAY         18670
 #define SPELL_TRAMPLE           5568

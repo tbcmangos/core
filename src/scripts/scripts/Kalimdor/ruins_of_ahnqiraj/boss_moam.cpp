@@ -24,7 +24,7 @@ SDComment: Mana Fiends not 100% scripted, rest should be OK
 SDCategory: Ruins of Ahn'Qiraj
 EndScriptData */
 
-#include "precompiled.h"
+#include "ScriptedPch.h"
 #include "def_ruins_of_ahnqiraj.h"
 
 #define EMOTE_AGGRO             -1509000

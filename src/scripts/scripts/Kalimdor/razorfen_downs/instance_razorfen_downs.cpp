@@ -18,7 +18,7 @@
  */
 
 //#include "ScriptedPch.h"
-#include "precompiled.h"
+#include "ScriptedPch.h"
 #include "razorfen_downs.h"
 
 #define    MAX_ENCOUNTER  2

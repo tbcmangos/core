@@ -46,7 +46,7 @@ item_zezzak_shard(i31463)           Quest The eyes of Grillok (q10813). Prevents
 item_inoculating_crystal            Quest Inoculating. Prevent abuse
 EndContentData */
 
-#include "precompiled.h"
+#include "ScriptedPch.h"
 #include "SpellMgr.h"
 #include "Spell.h"
 #include "WorldPacket.h"

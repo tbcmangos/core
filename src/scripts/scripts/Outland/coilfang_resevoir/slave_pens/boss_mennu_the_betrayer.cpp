@@ -16,7 +16,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
  */
 
-#include "precompiled.h"
+#include "ScriptedPch.h"
 
 #define SPELL_HEALING_WARD              34980
 #define SPELL_CORRUPTED_NOVA_TOTEM      31991

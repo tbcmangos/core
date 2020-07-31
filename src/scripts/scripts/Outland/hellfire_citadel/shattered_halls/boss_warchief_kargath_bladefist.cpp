@@ -29,7 +29,7 @@ EndScriptData */
 boss_warchief_kargath_bladefist
 EndContentData */
 
-#include "precompiled.h"
+#include "ScriptedPch.h"
 #include "def_shattered_halls.h"
 
 #define SPELL_BLADE_DANCE               30739

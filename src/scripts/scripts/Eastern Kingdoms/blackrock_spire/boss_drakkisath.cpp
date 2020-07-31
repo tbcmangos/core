@@ -24,7 +24,7 @@ SDComment:
 SDCategory: Blackrock Spire
 EndScriptData */
 
-#include "precompiled.h"
+#include "ScriptedPch.h"
 
 #define SPELL_FIRENOVA                  23462
 #define SPELL_CLEAVE                    20691

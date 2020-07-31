@@ -35,8 +35,8 @@ npc_ishanah
 npc_khadgar
 EndContentData */
 
-#include "precompiled.h"
-#include "escort_ai.h"
+#include "ScriptedPch.h"
+#include "ScriptedEscortAI.h"
 
 /*######
 ## npc_raliq_the_drunk

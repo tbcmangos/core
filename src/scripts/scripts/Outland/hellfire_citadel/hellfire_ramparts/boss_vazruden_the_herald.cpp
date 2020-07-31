@@ -25,7 +25,7 @@ Comment:
 Category: Hellfire Citadel, Hellfire Ramparts
 EndScriptData */
 
-#include "precompiled.h"
+#include "ScriptedPch.h"
 #include "hellfire_ramparts.h"
 
 #define SAY_INTRO                   -1543017

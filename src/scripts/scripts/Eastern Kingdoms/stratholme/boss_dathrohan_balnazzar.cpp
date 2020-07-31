@@ -24,7 +24,7 @@ SDComment: CHECK SQL
 SDCategory: Stratholme
 EndScriptData */
 
-#include "precompiled.h"
+#include "ScriptedPch.h"
 
 //Dathrohan spells
 #define SPELL_CRUSADERSHAMMER    17286 //AOE stun

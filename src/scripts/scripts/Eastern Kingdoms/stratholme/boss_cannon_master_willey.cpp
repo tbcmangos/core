@@ -24,7 +24,7 @@ SDComment:
 SDCategory: Stratholme
 EndScriptData */
 
-#include "precompiled.h"
+#include "ScriptedPch.h"
 
 //front, left
 #define ADD_1X 3553.851807

@@ -24,7 +24,7 @@ SDComment: Instance Data Scripts and functions to acquire mobs and set encounter
 SDCategory: Caverns of Time, Mount Hyjal
 EndScriptData */
 
-#include "precompiled.h"
+#include "ScriptedPch.h"
 #include "def_hyjal.h"
 #include "hyjal_trash.h"
 

@@ -24,7 +24,7 @@ SDComment: Problem in finding the right flying batriders for spawning and making
 SDCategory: Zul'Gurub
 EndScriptData */
 
-#include "precompiled.h"
+#include "ScriptedPch.h"
 #include "def_zulgurub.h"
 
 #define SAY_AGGRO                   -1309002

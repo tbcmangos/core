@@ -24,7 +24,7 @@ SDComment:
 SDCategory: Blackwing Lair
 EndScriptData */
 
-#include "precompiled.h"
+#include "ScriptedPch.h"
 #include "def_blackwing_lair.h"
 
 #define SAY_AGGRO               -1469000

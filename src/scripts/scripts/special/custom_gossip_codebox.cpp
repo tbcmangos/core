@@ -24,7 +24,7 @@ SDComment: Show a codebox in gossip option
 SDCategory: Script Examples
 EndScriptData */
 
-#include "precompiled.h"
+#include "ScriptedPch.h"
 #include <cstring>
 
 //This function is called when the player opens the gossip menubool

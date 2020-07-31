@@ -24,7 +24,7 @@ SDComment: Need some cosmetics updates when archeadas door are closing (Guardian
 SDCategory: Uldaman
 EndScriptData */
 
-#include "precompiled.h"
+#include "ScriptedPch.h"
 #include "def_uldaman.h"
 
 #define SPELL_ARCHAEDAS_AWAKEN        10347

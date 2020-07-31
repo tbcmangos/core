@@ -29,8 +29,8 @@ npc_braug_dimspirit
 npc_kaya_flathoof
 EndContentData */
 
-#include "precompiled.h"
-#include "escort_ai.h"
+#include "ScriptedPch.h"
+#include "ScriptedEscortAI.h"
 
 /*######
 ## npc_braug_dimspirit

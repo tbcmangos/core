@@ -29,7 +29,7 @@ boss_nexusprince_shaffar
 mob_ethereal_beacon
 EndContentData */
 
-#include "precompiled.h"
+#include "ScriptedPch.h"
 #include "def_mana_tombs.h"
 
 #define SAY_INTRO                       -1557000

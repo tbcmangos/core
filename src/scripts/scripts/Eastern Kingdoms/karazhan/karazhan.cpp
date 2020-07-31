@@ -29,7 +29,7 @@ npc_berthold
 npc_image_of_medivh
 EndContentData */
 
-#include "precompiled.h"
+#include "ScriptedPch.h"
 #include "def_karazhan.h"
 
 /*###

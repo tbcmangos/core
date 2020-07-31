@@ -37,8 +37,8 @@ npc_tobias_seecher
 npc_rocknot
 EndContentData */
 
-#include "precompiled.h"
-#include "escort_ai.h"
+#include "ScriptedPch.h"
+#include "ScriptedEscortAI.h"
 #include "def_blackrock_depths.h"
 
 #define C_GRIMSTONE         10096

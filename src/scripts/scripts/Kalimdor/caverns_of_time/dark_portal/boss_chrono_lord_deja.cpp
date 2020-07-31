@@ -24,7 +24,7 @@ SDComment: Some timers may not be completely Blizzlike
 SDCategory: Caverns of Time, The Dark Portal
 EndScriptData */
 
-#include "precompiled.h"
+#include "ScriptedPch.h"
 #include "def_dark_portal.h"
 
 #define SAY_ENTER                   -1269006

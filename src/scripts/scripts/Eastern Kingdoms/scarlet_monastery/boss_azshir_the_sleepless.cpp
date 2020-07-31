@@ -24,7 +24,7 @@ SDComment:
 SDCategory: Scarlet Monastery
 EndScriptData */
 
-#include "precompiled.h"
+#include "ScriptedPch.h"
 
 #define SPELL_CALLOFTHEGRAVE            17831
 #define SPELL_TERRIFY                   7399

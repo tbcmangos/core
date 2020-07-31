@@ -24,7 +24,7 @@ SDComment:
 SDCategory: Scarlet Monastery
 EndScriptData */
 
-#include "precompiled.h"
+#include "ScriptedPch.h"
 
 #define SPELL_FROSTNOVA2                865
 #define SPELL_FLAMESHOCK3               8053

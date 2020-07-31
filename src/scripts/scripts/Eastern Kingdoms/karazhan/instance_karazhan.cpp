@@ -24,7 +24,7 @@ SDComment: Instance Script for Karazhan to help in various encounters. TODO: Gam
 SDCategory: Karazhan
 EndScriptData */
 
-#include "precompiled.h"
+#include "ScriptedPch.h"
 #include "instance_karazhan.h"
 
 instance_karazhan::instance_karazhan(Map* map) : ScriptedInstance(map) {Initialize();}

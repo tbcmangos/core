@@ -24,7 +24,7 @@ SDComment: Muru testing
 SDCategory: Sunwell_Plateau
 EndScriptData */
 
-#include "precompiled.h"
+#include "ScriptedPch.h"
 #include "def_sunwell_plateau.h"
 
 #define ENCOUNTERS 7

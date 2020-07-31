@@ -24,7 +24,7 @@ SDComment: In Development
 SDCategory: Hellfire Citadel, Magtheridon's lair
 EndScriptData */
 
-#include "precompiled.h"
+#include "ScriptedPch.h"
 #include "def_magtheridons_lair.h"
 
 enum MagtheridonTexts

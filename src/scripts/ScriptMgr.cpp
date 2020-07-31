@@ -17,13 +17,13 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
  */
 
-#include "precompiled.h"
+#include "ScriptedPch.h"
 #include "Database/DatabaseEnv.h"
 #include "DBCStores.h"
 #include "ObjectMgr.h"
 #include "ProgressBar.h"
 #include "system/ScriptLoader.h"
-#include "system/system.h"
+#include "system/ScriptSystem.h"
 
 #include "../game/ScriptMgr.h"
 

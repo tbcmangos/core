@@ -28,7 +28,7 @@ EndScriptData */
 npc_royal_historian_archesonus
 EndContentData */
 
-#include "precompiled.h"
+#include "ScriptedPch.h"
 
 /*######
 ## npc_royal_historian_archesonus

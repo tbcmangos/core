@@ -29,7 +29,7 @@ npc_deathly_usher
 npc_fallen_hero_of_horde
 EndContentData */
 
-#include "precompiled.h"
+#include "ScriptedPch.h"
 
 /*######
 ## npc_deathly_usher

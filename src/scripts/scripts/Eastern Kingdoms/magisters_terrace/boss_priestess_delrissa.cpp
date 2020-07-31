@@ -24,7 +24,7 @@ SDComment: Verify timers, long and tiring debugging :)
 SDCategory: Magister's Terrace
 EndScriptData */
 
-#include "precompiled.h"
+#include "ScriptedPch.h"
 #include "def_magisters_terrace.h"
 
 struct Speech

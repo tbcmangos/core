@@ -24,7 +24,7 @@ SDComment: Some issues with hateful strike inturrupting the melee swing timer ?
 SDCategory: Naxxramas
 EndScriptData */
 
-#include "precompiled.h"
+#include "ScriptedPch.h"
 #include "def_naxxramas.h"
 
 enum PatchwerkTexts

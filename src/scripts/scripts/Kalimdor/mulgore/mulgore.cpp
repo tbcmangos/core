@@ -30,7 +30,7 @@ npc_kyle_frenzied
 npc_plains_vision
 EndContentData */
 
-#include "precompiled.h"
+#include "ScriptedPch.h"
 
 /*######
 # npc_skorn_whitecloud

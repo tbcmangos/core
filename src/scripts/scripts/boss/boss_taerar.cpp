@@ -24,7 +24,7 @@ SDComment: Mark of Nature & Teleport NYI
 SDCategory: Bosses
 EndScriptData */
 
-#include "precompiled.h"
+#include "ScriptedPch.h"
 
 //Spells of Taerar
 

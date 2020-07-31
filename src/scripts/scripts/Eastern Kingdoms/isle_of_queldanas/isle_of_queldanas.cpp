@@ -34,7 +34,7 @@ npc_madrigosa
 npc_brutallus
 EndContentData */
 
-#include "precompiled.h"
+#include "ScriptedPch.h"
 #include "GameEvent.h"
 
 /*######

@@ -24,7 +24,7 @@ SDComment: ??
 SDCategory: Naxxramas
 EndScriptData */
 
-#include "precompiled.h"
+#include "ScriptedPch.h"
 #include "def_naxxramas.h"
 
 #define ZOMBIE_CHOW_ID  16360

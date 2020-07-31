@@ -24,7 +24,7 @@ SDComment: Final debugging;
 SDCategory: Magister's Terrace
 EndScriptData */
 
-#include "precompiled.h"
+#include "ScriptedPch.h"
 #include "def_magisters_terrace.h"
 
 #define SAY_AGGRO                       -1585000

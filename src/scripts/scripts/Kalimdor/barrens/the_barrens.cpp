@@ -34,8 +34,8 @@ npc_twiggy_flathead
 npc_wizzlecrank_shredder
 EndContentData */
 
-#include "precompiled.h"
-#include "escort_ai.h"
+#include "ScriptedPch.h"
+#include "ScriptedEscortAI.h"
 
 /*######
 ## npc_beaten_corpse

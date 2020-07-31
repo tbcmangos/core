@@ -24,7 +24,7 @@ SDComment: aura applied/defined in database
 SDCategory: Scholomance
 EndScriptData */
 
-#include "precompiled.h"
+#include "ScriptedPch.h"
 #include "def_scholomance.h"
 
 #define SPELL_IMMOLATE             20294                    // Old ID  was 15570

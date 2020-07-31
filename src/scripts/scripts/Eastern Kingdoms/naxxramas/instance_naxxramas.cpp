@@ -23,7 +23,7 @@ SDComment:
 SDCategory: Naxxramas
 EndScriptData */
 
-#include "precompiled.h"
+#include "ScriptedPch.h"
 #include "def_naxxramas.h"
 
 // This spawns 5 corpse scarabs ontop of us (most likely the player casts this on death)

@@ -48,7 +48,7 @@ go_ethereum_transponder_zeta
 go_draconic_for_dummies
 EndContentData */
 
-#include "precompiled.h"
+#include "ScriptedPch.h"
 
 /*######
 ## go_cat_figurine  UPDATE `gameobject_template` SET `ScriptName`='go_cat_figurine' WHERE `entry`=13873;

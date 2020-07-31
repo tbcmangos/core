@@ -24,7 +24,7 @@ SDComment: Ground Slam seriously messed up due to core problem
 SDCategory: Gruul's Lair
 EndScriptData */
 
-#include "precompiled.h"
+#include "ScriptedPch.h"
 #include "def_gruuls_lair.h"
 
 #include "../framework/Utilities/EventProcessor.h"

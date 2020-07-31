@@ -24,7 +24,7 @@ SDComment: Ohgan function needs improvements.
 SDCategory: Zul'Gurub
 EndScriptData */
 
-#include "precompiled.h"
+#include "ScriptedPch.h"
 #include "def_zulgurub.h"
 
 #define SAY_AGGRO               -1309015

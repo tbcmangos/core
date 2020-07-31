@@ -21,7 +21,7 @@
 #define SC_HYJALAI_H
 
 #include "def_hyjal.h"
-#include "escort_ai.h"
+#include "ScriptedEscortAI.h"
 
 // Trash Mobs summoned in waves
 #define NECROMANCER         17899//done

@@ -52,8 +52,8 @@ go_veil_skith_cage
 npc_skywing
 EndContentData */
 
-#include "precompiled.h"
-#include "escort_ai.h"
+#include "ScriptedPch.h"
+#include "ScriptedEscortAI.h"
 
 /*######
 ## mob_unkor_the_ruthless

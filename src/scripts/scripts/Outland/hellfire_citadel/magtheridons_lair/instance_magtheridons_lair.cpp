@@ -24,7 +24,7 @@ SDComment:
 SDCategory: Hellfire Citadel, Magtheridon's lair
 EndScriptData */
 
-#include "precompiled.h"
+#include "ScriptedPch.h"
 #include "def_magtheridons_lair.h"
 
 #define ENCOUNTERS 1

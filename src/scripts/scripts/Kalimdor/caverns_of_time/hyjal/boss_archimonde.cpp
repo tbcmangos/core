@@ -24,7 +24,7 @@ SDComment: Doomfires to be tested. Draining tree visuals to be fixed. Tyrande an
 SDCategory: Caverns of Time, Mount Hyjal
 EndScriptData */
 
-#include "precompiled.h"
+#include "ScriptedPch.h"
 #include "def_hyjal.h"
 #include "SpellAuras.h"
 #include "hyjal_trash.h"

@@ -24,7 +24,7 @@ SDComment:
 SDCategory: Uldaman
 EndScriptData */
 
-#include "precompiled.h"
+#include "ScriptedPch.h"
 
 #define SPELL_ARCINGSMASH           39144
 #define SPELL_KNOCKAWAY             22893

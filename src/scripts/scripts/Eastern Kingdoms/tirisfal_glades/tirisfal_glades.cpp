@@ -30,7 +30,7 @@ go_mausoleum_door
 go_mausoleum_trigger
 EndContentData */
 
-#include "precompiled.h"
+#include "ScriptedPch.h"
 
 /*######
 ## npc_calvin_montague

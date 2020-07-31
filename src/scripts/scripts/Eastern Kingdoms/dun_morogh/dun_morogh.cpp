@@ -28,7 +28,7 @@ EndScriptData */
 npc_narm_faulk
 EndContentData */
 
-#include "precompiled.h"
+#include "ScriptedPch.h"
 
 /*######
 ## npc_narm_faulk

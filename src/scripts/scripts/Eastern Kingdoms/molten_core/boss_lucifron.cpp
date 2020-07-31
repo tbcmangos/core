@@ -24,7 +24,7 @@ SDComment:
 SDCategory: Molten Core
 EndScriptData */
 
-#include "precompiled.h"
+#include "ScriptedPch.h"
 #include "def_molten_core.h"
 
 #define SPELL_IMPENDINGDOOM 19702

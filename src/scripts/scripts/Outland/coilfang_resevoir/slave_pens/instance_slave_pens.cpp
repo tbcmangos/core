@@ -23,7 +23,7 @@ SDComment: Instance Data with save to database for Ahune, Slave Pens
 SDCategory: Slave Pens
 EndScriptData */
 
-#include "precompiled.h"
+#include "ScriptedPch.h"
 
 #define ENCOUNTERS          1
 

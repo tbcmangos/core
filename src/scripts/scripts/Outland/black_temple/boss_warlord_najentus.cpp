@@ -24,7 +24,7 @@ SDComment:
 SDCategory: Black Temple
 EndScriptData */
 
-#include "precompiled.h"
+#include "ScriptedPch.h"
 #include "def_black_temple.h"
 
 #define SAY_AGGRO                       -1564000

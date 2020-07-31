@@ -28,7 +28,7 @@ EndScriptData */
 npc_spirit_of_olum
 EndContentData */
 
-#include "precompiled.h"
+#include "ScriptedPch.h"
 #include "def_black_temple.h"
 
 /*###

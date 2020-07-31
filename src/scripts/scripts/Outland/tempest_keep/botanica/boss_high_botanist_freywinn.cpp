@@ -24,7 +24,7 @@ SDComment: some strange visual related to tree form(if aura lost before normal d
 SDCategory: Tempest Keep, The Botanica
 EndScriptData */
 
-#include "precompiled.h"
+#include "ScriptedPch.h"
 
 #define SAY_AGGRO                   -1553000
 #define SAY_KILL_1                  -1553001

@@ -31,7 +31,7 @@ npc_witch_doctor_mauari
 npc_haleh
 EndContentData */
 
-#include "precompiled.h"
+#include "ScriptedPch.h"
 
 /*######
 ## npc_lorax

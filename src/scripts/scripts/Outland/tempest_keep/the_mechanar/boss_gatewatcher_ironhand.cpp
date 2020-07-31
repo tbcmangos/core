@@ -24,7 +24,7 @@ SDComment:
 SDCategory: Tempest Keep, The Mechanar
 EndScriptData */
 
-#include "precompiled.h"
+#include "ScriptedPch.h"
 #include "def_mechanar.h"
 
 #define SAY_AGGRO_1                     -1554006
