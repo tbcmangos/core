@@ -73,6 +73,7 @@ message(
 	NOT_USE_ELUNA_HOOKS: Do not use Elunas HookMgr
     CLI   : Build with CLI (default)
     TBB_USE_EXTERNAL: Use external TBB library instead of built in (default)
+    ACE_USE_EXTERNAL: Use external ACE library instead of built in (default)
     USE_STD_MALLOC  : Use standard malloc instead of TBB
     LARGE_CELL      : Use large cell size
     ADD_COMPILE_F   : Add additional compile flags (default)
@@ -107,6 +108,7 @@ option(DEBUG "Debug mode" 0)
 option(CLI "With CLI" 1)
 option(TBB_USE_EXTERNAL "Use external TBB" 1)
 option(USE_STD_MALLOC "Use standard malloc instead of TBB" 0)
+option(ACE_USE_EXTERNAL "Use external ACE" 1)
 option(LARGE_CELL "Use large cell size" 0)
 option(NOT_USE_ELUNA_HOOKS "Do not use Elunas HookMgr" 1)
 option(ADD_COMPILE_F "Add additional compile flags" 1)
@@ -168,13 +170,20 @@ unset(ACE_LIBRARIES_DIR CACHE)
 unset(ACE_INCLUDE_DIR)
 unset(ACE_LIBRARIES)
 unset(ACE_LIBRARIES_DIR)
-include(cmake/ImportACE.cmake)
-#find_package(ACE)
-#if(NOT ACE_FOUND)
-#  message(FATAL_ERROR
-#    "This project requires ACE installed. Please download the ACE Micro Release Kit from http://download.dre.vanderbilt.edu/ and install it. If this script didn't find ACE and it was correctly installed please set ACE_ROOT to the correct path."
-#  )
-#endif()
+if(ACE_USE_EXTERNAL)
+  find_package(ACE)
+  if(NOT ACE_FOUND)
+    message(FATAL_ERROR
+      "This project requires ACE installed when ACE_USE_EXTERNAL is set. Please download the ACE Micro Release Kit from http://download.dre.vanderbilt.edu/ and install it. If this script didn't find ACE and it was correctly installed please set ACE_ROOT to the correct path."
+    )
+  endif()
+  if(EXISTS ${ACE_INCLUDE_DIR}/ace/Stack_Trace.h)
+    set(HAVE_ACE_STACK_TRACE_H ON) # config.h.cmake
+  endif()
+else()
+  include(cmake/ImportACE.cmake)
+endif()
+
 
 unset(TBB_INCLUDE_DIR CACHE)
 unset(TBB_LIBRARIES CACHE)
