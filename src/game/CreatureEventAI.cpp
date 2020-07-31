@@ -1347,33 +1347,33 @@ void CreatureEventAI::DoScriptText(int32 textEntry, WorldObject* pSource, Unit* 
         return;
     }
 
-    sLog.outDebug("CreatureEventAI: DoScriptText: text entry=%i, Sound=%u, Type=%u, Language=%u, Emote=%u",textEntry,(*i).second.SoundId,(*i).second.Type,(*i).second.Language,(*i).second.Emote);
+    sLog.outDebug("CreatureEventAI: DoScriptText: text entry=%i, Sound=%u, Type=%u, Language=%u, Emote=%u",textEntry,(*i).second.uiSoundId,(*i).second.uiType,(*i).second.uiLanguage,(*i).second.uiEmote);
 
-    if ((*i).second.SoundId)
+    if ((*i).second.uiSoundId)
     {
-        if (GetSoundEntriesStore()->LookupEntry((*i).second.SoundId))
-            pSource->SendPlaySound((*i).second.SoundId,false);
+        if (GetSoundEntriesStore()->LookupEntry((*i).second.uiSoundId))
+            pSource->SendPlaySound((*i).second.uiSoundId,false);
         else
-            sLog.outLog(LOG_DB_ERR, "CreatureEventAI: DoScriptText entry %i tried to process invalid sound id %u.",textEntry,(*i).second.SoundId);
+            sLog.outLog(LOG_DB_ERR, "CreatureEventAI: DoScriptText entry %i tried to process invalid sound id %u.",textEntry,(*i).second.uiSoundId);
     }
 
-    if ((*i).second.Emote)
+    if ((*i).second.uiEmote)
     {
         if (pSource->GetTypeId() == TYPEID_UNIT || pSource->GetTypeId() == TYPEID_PLAYER)
         {
-            ((Unit*)pSource)->HandleEmoteCommand((*i).second.Emote);
+            ((Unit*)pSource)->HandleEmoteCommand((*i).second.uiEmote);
         }
         else
             sLog.outLog(LOG_DB_ERR, "CreatureEventAI: DoScriptText entry %i tried to process emote for invalid TypeId (%u).",textEntry,pSource->GetTypeId());
     }
 
-    switch ((*i).second.Type)
+    switch ((*i).second.uiType)
     {
         case CHAT_TYPE_SAY:
-            pSource->MonsterSay(textEntry, (*i).second.Language, target ? target->GetGUID() : 0);
+            pSource->MonsterSay(textEntry, (*i).second.uiLanguage, target ? target->GetGUID() : 0);
             break;
         case CHAT_TYPE_YELL:
-            pSource->MonsterYell(textEntry, (*i).second.Language, target ? target->GetGUID() : 0);
+            pSource->MonsterYell(textEntry, (*i).second.uiLanguage, target ? target->GetGUID() : 0);
             break;
         case CHAT_TYPE_TEXT_EMOTE:
             pSource->MonsterTextEmote(textEntry, target ? target->GetGUID() : 0);
@@ -1394,7 +1394,7 @@ void CreatureEventAI::DoScriptText(int32 textEntry, WorldObject* pSource, Unit* 
             else sLog.outLog(LOG_DB_ERR, "CreatureEventAI: DoScriptText entry %i cannot whisper without target unit (TYPEID_PLAYER).", textEntry);
         }break;
         case CHAT_TYPE_ZONE_YELL:
-            pSource->MonsterYellToZone(textEntry, (*i).second.Language, target ? target->GetGUID() : 0);
+            pSource->MonsterYellToZone(textEntry, (*i).second.uiLanguage, target ? target->GetGUID() : 0);
             break;
     }
 }
