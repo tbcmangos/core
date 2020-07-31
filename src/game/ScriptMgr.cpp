@@ -51,7 +51,7 @@ Script *m_scripts[MAX_SCRIPTS];
 void FillSpellSummary();
 
 // -------------------
-void LoadDatabase()
+void ScriptMgr::LoadDatabase()
 {
     pSystemMgr.LoadVersion();
     pSystemMgr.LoadScriptTexts();
@@ -63,7 +63,7 @@ struct TSpellSummary
 {
     uint8 Targets;                                          // set of enum SelectTarget
     uint8 Effects;                                          // set of enum SelectEffect
-} extern *SpellSummary;
+} *SpellSummary;
 
 ScriptMgr::ScriptMgr()
 {
