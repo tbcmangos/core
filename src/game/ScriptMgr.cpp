@@ -624,18 +624,6 @@ bool ScriptMgr::OnProcessEvent(uint32 uiEventId, Object* pSource, Object* pTarge
     return pTempScript->pProcessEventId(uiEventId, pSource, pTarget, bIsStart);
 }
 
-
-CreatureAI* GetCreatureAI(Creature* pCreature)
-{
-    Script* pTempScript = m_scripts[pCreature->GetScriptId()];
-
-    if (!pTempScript || !pTempScript->GetAI)
-        return NULL;
-
-    return pTempScript->GetAI(pCreature);
-}
-
-
 bool ScriptMgr::OnItemUse(Player* pPlayer, Item* pItem, SpellCastTargets const& targets)
 {
     // used by eluna
