@@ -22,7 +22,7 @@
 
 #include "DBCStores.h"
 
-#include "../ScriptMgr.h"
+#include "ScriptMgr.h"
 #include "Cell.h"
 #include "CellImpl.h"
 #include "GridNotifiers.h"
@@ -30,7 +30,7 @@
 #include "Unit.h"
 #include "GameObject.h"
 #include "SpellMgr.h"
-#include "ScriptedCreature"
+#include "ScriptedCreature.h"
 #include "ScriptedGossip.h"
 #include "ScriptedInstance.h"
 #include "CombatAI.h"

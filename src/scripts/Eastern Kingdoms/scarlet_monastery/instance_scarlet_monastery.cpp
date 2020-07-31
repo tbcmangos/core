@@ -26,7 +26,7 @@ EndScriptData */
 
 #include "ScriptedPch.h"
 #include "def_scarlet_monastery.h"
-#include "ScriptedCreature"
+#include "ScriptedCreature.h"
 
 #define ENTRY_PUMPKIN_SHRINE    186267
 #define ENTRY_HORSEMAN          23682
