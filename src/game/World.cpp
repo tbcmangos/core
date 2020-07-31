@@ -1410,7 +1410,7 @@ void World::SetInitialWorldSettings()
     sCreatureEAIMgr.LoadCreatureEventAI_Scripts();
 
     sLog.outString("Initializing Scripts...");
-    sScriptMgr.LoadScriptLibrary(HELLGROUND_SCRIPT_NAME);
+    sScriptMgr.InitScriptLibrary();
 
     ///- Initialize Lua Engine
     sLog.outString("Initialize Eluna Lua Engine...");
