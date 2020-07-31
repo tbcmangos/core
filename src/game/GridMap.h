@@ -66,7 +66,7 @@ struct GridMapAreaHeader
 };
 
 template<typename Countable>
-class HELLGROUND_IMPORT_EXPORT Referencable
+class  Referencable
 {
     public:
         Referencable() { m_count = 0; }
@@ -229,7 +229,7 @@ typedef struct MapTemplate
 } TerrainSpecifics;
 
 //class for sharing and managing GridMap objects
-class HELLGROUND_IMPORT_EXPORT TerrainInfo : public Referencable<AtomicLong>
+class  TerrainInfo : public Referencable<AtomicLong>
 {
     public:
         TerrainInfo(uint32 mapid, TerrainSpecifics terrainspecifics);

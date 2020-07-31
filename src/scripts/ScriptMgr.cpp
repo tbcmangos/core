@@ -53,7 +53,7 @@ struct TSpellSummary
     uint8 Effects;                                          // set of enum SelectEffect
 } extern *SpellSummary;
 
-HELLGROUND_DLL_EXPORT
+
 void FreeScriptLibrary()
 {
     // Free Spell Summary
@@ -66,7 +66,7 @@ void FreeScriptLibrary()
     num_sc_scripts = 0;
 }
 
-HELLGROUND_DLL_EXPORT
+
 void InitScriptLibrary()
 {
     //Hellground Script startup
@@ -264,13 +264,13 @@ void Script::RegisterSelf(bool bReportError)
 //********************************
 //*** Functions to be Exported ***
 
-HELLGROUND_DLL_EXPORT
+
 char const* GetScriptLibraryVersion()
 {
     return "Default Hellground scripting library";
 }
 
-HELLGROUND_DLL_EXPORT
+
 bool GossipHello(Player* pPlayer, Creature* pCreature)
 {
     Script* pTempScript = m_scripts[pCreature->GetScriptId()];
@@ -283,7 +283,7 @@ bool GossipHello(Player* pPlayer, Creature* pCreature)
     return pTempScript->pGossipHello(pPlayer, pCreature);
 }
 
-HELLGROUND_DLL_EXPORT
+
 bool GossipSelect(Player* pPlayer, Creature* pCreature, uint32 uiSender, uint32 uiAction)
 {
     debug_log("SD2: Gossip selection, sender: %u, action: %u", uiSender, uiAction);
@@ -298,7 +298,7 @@ bool GossipSelect(Player* pPlayer, Creature* pCreature, uint32 uiSender, uint32 
     return pTempScript->pGossipSelect(pPlayer, pCreature, uiSender, uiAction);
 }
 
-HELLGROUND_DLL_EXPORT
+
 bool GOGossipSelect(Player* pPlayer, GameObject* pGo, uint32 uiSender, uint32 uiAction)
 {
     debug_log("SD2: GO Gossip selection, sender: %u, action: %u", uiSender, uiAction);
@@ -313,7 +313,7 @@ bool GOGossipSelect(Player* pPlayer, GameObject* pGo, uint32 uiSender, uint32 ui
     return pTempScript->pGossipSelectGO(pPlayer, pGo, uiSender, uiAction);
 }
 
-HELLGROUND_DLL_EXPORT
+
 bool GossipSelectWithCode(Player* pPlayer, Creature* pCreature, uint32 uiSender, uint32 uiAction, const char* sCode)
 {
     debug_log("SD2: Gossip selection with code, sender: %u, action: %u", uiSender, uiAction);
@@ -328,7 +328,7 @@ bool GossipSelectWithCode(Player* pPlayer, Creature* pCreature, uint32 uiSender,
     return pTempScript->pGossipSelectWithCode(pPlayer, pCreature, uiSender, uiAction, sCode);
 }
 
-HELLGROUND_DLL_EXPORT
+
 bool GOGossipSelectWithCode(Player* pPlayer, GameObject* pGo, uint32 uiSender, uint32 uiAction, const char* sCode)
 {
     debug_log("SD2: GO Gossip selection with code, sender: %u, action: %u", uiSender, uiAction);
@@ -343,7 +343,7 @@ bool GOGossipSelectWithCode(Player* pPlayer, GameObject* pGo, uint32 uiSender, u
     return pTempScript->pGossipSelectGOWithCode(pPlayer, pGo, uiSender, uiAction, sCode);
 }
 
-HELLGROUND_DLL_EXPORT
+
 bool QuestAccept(Player* pPlayer, Creature* pCreature, const Quest* pQuest)
 {
     Script* pTempScript = m_scripts[pCreature->GetScriptId()];
@@ -356,7 +356,7 @@ bool QuestAccept(Player* pPlayer, Creature* pCreature, const Quest* pQuest)
     return pTempScript->pQuestAcceptNPC(pPlayer, pCreature, pQuest);
 }
 
-HELLGROUND_DLL_EXPORT
+
 bool QuestRewarded(Player* pPlayer, Creature* pCreature, Quest const* pQuest)
 {
     Script* pTempScript = m_scripts[pCreature->GetScriptId()];
@@ -369,7 +369,7 @@ bool QuestRewarded(Player* pPlayer, Creature* pCreature, Quest const* pQuest)
     return pTempScript->pQuestRewardedNPC(pPlayer, pCreature, pQuest);
 }
 
-HELLGROUND_DLL_EXPORT
+
 uint32 GetNPCDialogStatus(Player* pPlayer, Creature* pCreature)
 {
     Script* pTempScript = m_scripts[pCreature->GetScriptId()];
@@ -382,7 +382,7 @@ uint32 GetNPCDialogStatus(Player* pPlayer, Creature* pCreature)
     return pTempScript->pDialogStatusNPC(pPlayer, pCreature);
 }
 
-HELLGROUND_DLL_EXPORT
+
 uint32 GetGODialogStatus(Player* pPlayer, GameObject* pGo)
 {
     Script* pTempScript = m_scripts[pGo->GetGOInfo()->ScriptId];
@@ -395,7 +395,7 @@ uint32 GetGODialogStatus(Player* pPlayer, GameObject* pGo)
     return pTempScript->pDialogStatusGO(pPlayer, pGo);
 }
 
-HELLGROUND_DLL_EXPORT
+
 bool ItemQuestAccept(Player* pPlayer, Item* pItem, Quest const* pQuest)
 {
     Script* pTempScript = m_scripts[pItem->GetProto()->ScriptId];
@@ -408,7 +408,7 @@ bool ItemQuestAccept(Player* pPlayer, Item* pItem, Quest const* pQuest)
     return pTempScript->pQuestAcceptItem(pPlayer, pItem, pQuest);
 }
 
-HELLGROUND_DLL_EXPORT
+
 bool GOUse(Player* pPlayer, GameObject* pGo)
 {
     Script* pTempScript = m_scripts[pGo->GetGOInfo()->ScriptId];
@@ -419,7 +419,7 @@ bool GOUse(Player* pPlayer, GameObject* pGo)
     return pTempScript->pGOUse(pPlayer, pGo);
 }
 
-HELLGROUND_DLL_EXPORT
+
 bool GOQuestAccept(Player* pPlayer, GameObject* pGo, const Quest* pQuest)
 {
     Script* pTempScript = m_scripts[pGo->GetGOInfo()->ScriptId];
@@ -432,7 +432,7 @@ bool GOQuestAccept(Player* pPlayer, GameObject* pGo, const Quest* pQuest)
     return pTempScript->pQuestAcceptGO(pPlayer, pGo, pQuest);
 }
 
-HELLGROUND_DLL_EXPORT
+
 bool GOQuestRewarded(Player* pPlayer, GameObject* pGo, Quest const* pQuest)
 {
     Script* pTempScript = m_scripts[pGo->GetGOInfo()->ScriptId];
@@ -445,7 +445,7 @@ bool GOQuestRewarded(Player* pPlayer, GameObject* pGo, Quest const* pQuest)
     return pTempScript->pQuestRewardedGO(pPlayer, pGo, pQuest);
 }
 
-HELLGROUND_DLL_EXPORT
+
 bool AreaTrigger(Player* pPlayer, AreaTriggerEntry const* atEntry)
 {
     Script* pTempScript = m_scripts[GetAreaTriggerScriptId(atEntry->id)];
@@ -456,7 +456,7 @@ bool AreaTrigger(Player* pPlayer, AreaTriggerEntry const* atEntry)
     return pTempScript->pAreaTrigger(pPlayer, atEntry);
 }
 
-HELLGROUND_DLL_EXPORT
+
 bool CompletedCinematic(Player* pPlayer, CinematicSequencesEntry const* cinematic)
 {
     Script* pTempScript = m_scripts[GetCompletedCinematicScriptId(cinematic->Id)];
@@ -467,7 +467,7 @@ bool CompletedCinematic(Player* pPlayer, CinematicSequencesEntry const* cinemati
     return pTempScript->pCompletedCinematic(pPlayer, cinematic);
 }
 
-HELLGROUND_DLL_EXPORT
+
 bool ProcessEvent(uint32 uiEventId, Object* pSource, Object* pTarget, bool bIsStart)
 {
     Script* pTempScript = m_scripts[GetEventIdScriptId(uiEventId)];
@@ -479,7 +479,7 @@ bool ProcessEvent(uint32 uiEventId, Object* pSource, Object* pTarget, bool bIsSt
     return pTempScript->pProcessEventId(uiEventId, pSource, pTarget, bIsStart);
 }
 
-HELLGROUND_DLL_EXPORT
+
 CreatureAI* GetCreatureAI(Creature* pCreature)
 {
     Script* pTempScript = m_scripts[pCreature->GetScriptId()];
@@ -490,7 +490,7 @@ CreatureAI* GetCreatureAI(Creature* pCreature)
     return pTempScript->GetAI(pCreature);
 }
 
-HELLGROUND_DLL_EXPORT
+
 bool ItemUse(Player* pPlayer, Item* pItem, SpellCastTargets const& targets)
 {
     Script* pTempScript = m_scripts[pItem->GetProto()->ScriptId];
@@ -501,7 +501,7 @@ bool ItemUse(Player* pPlayer, Item* pItem, SpellCastTargets const& targets)
     return pTempScript->pItemUse(pPlayer, pItem, targets);
 }
 
-HELLGROUND_DLL_EXPORT
+
 bool EffectDummyCreature(Unit* pCaster, uint32 spellId, uint32 effIndex, Creature* pTarget)
 {
     Script* pTempScript = m_scripts[pTarget->GetScriptId()];
@@ -512,7 +512,7 @@ bool EffectDummyCreature(Unit* pCaster, uint32 spellId, uint32 effIndex, Creatur
     return pTempScript->pEffectDummyNPC(pCaster, spellId, effIndex, pTarget);
 }
 
-HELLGROUND_DLL_EXPORT
+
 bool EffectDummyGameObject(Unit* pCaster, uint32 spellId, uint32 effIndex, GameObject* pTarget)
 {
     Script* pTempScript = m_scripts[pTarget->GetGOInfo()->ScriptId];
@@ -523,7 +523,7 @@ bool EffectDummyGameObject(Unit* pCaster, uint32 spellId, uint32 effIndex, GameO
     return pTempScript->pEffectDummyGO(pCaster, spellId, effIndex, pTarget);
 }
 
-HELLGROUND_DLL_EXPORT
+
 bool EffectDummyItem(Unit* pCaster, uint32 spellId, uint32 effIndex, Item* pTarget)
 {
     Script* pTempScript = m_scripts[pTarget->GetProto()->ScriptId];
@@ -534,7 +534,7 @@ bool EffectDummyItem(Unit* pCaster, uint32 spellId, uint32 effIndex, Item* pTarg
     return pTempScript->pEffectDummyItem(pCaster, spellId, effIndex, pTarget);
 }
 
-HELLGROUND_DLL_EXPORT
+
 bool AuraDummy(Aura const* pAura, bool bApply)
 {
     Script* pTempScript = m_scripts[((Creature*)pAura->GetTarget())->GetScriptId()];
@@ -545,7 +545,7 @@ bool AuraDummy(Aura const* pAura, bool bApply)
     return pTempScript->pEffectAuraDummy(pAura, bApply);
 }
 
-HELLGROUND_DLL_EXPORT
+
 bool ReceiveEmote( Player *player, Creature *_Creature, uint32 emote )
 {
     Script *tmpscript = m_scripts[_Creature->GetScriptId()];
@@ -554,7 +554,7 @@ bool ReceiveEmote( Player *player, Creature *_Creature, uint32 emote )
     return tmpscript->pReceiveEmote(player, _Creature, emote);
 }
 
-HELLGROUND_DLL_EXPORT
+
 InstanceData* CreateInstanceData(Map* pMap)
 {
     if (!pMap->IsDungeon())
@@ -567,7 +567,7 @@ InstanceData* CreateInstanceData(Map* pMap)
     return pTempScript->GetInstanceData(pMap);
 }
 
-HELLGROUND_DLL_EXPORT
+
 bool SpellSetTargetMap(Unit* pCaster, std::list<Unit*> &unitList, SpellCastTargets const& targets, SpellEntry const *pSpell, uint32 effectIndex)
 {
     Script* pTempScript = m_scripts[GetSpellIdScriptId(pSpell->Id)];
@@ -578,7 +578,7 @@ bool SpellSetTargetMap(Unit* pCaster, std::list<Unit*> &unitList, SpellCastTarge
     return pTempScript->pSpellTargetMap(pCaster, unitList, targets, pSpell, effectIndex);
 }
 
-HELLGROUND_DLL_EXPORT
+
 bool SpellHandleEffect(Unit *pCaster, Unit* pUnit, Item* pItem, GameObject* pGameObject, SpellEntry const *pSpell, uint32 effectIndex)
 {
     Script* pTempScript = m_scripts[GetSpellIdScriptId(pSpell->Id)];

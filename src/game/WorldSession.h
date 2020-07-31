@@ -149,7 +149,7 @@ class WorldSessionFilter : public PacketFilter
 };
 
 /// Player session in the World
-class HELLGROUND_IMPORT_EXPORT WorldSession
+class  WorldSession
 {
     friend class CharacterHandler;
     public:

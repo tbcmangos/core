@@ -41,7 +41,7 @@ enum SelectAggroTarget
     SELECT_TARGET_HIGHEST_HP,
 };
 
-class HELLGROUND_EXPORT UnitAI
+class  UnitAI
 {
     protected:
         Unit * const me;

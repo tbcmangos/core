@@ -1647,7 +1647,7 @@ void GameEventMgr::SendWorldStateUpdate(Player * plr, uint16 event_id)
     }
 }
 
-HELLGROUND_EXPORT bool isGameEventActive(uint16 event_id)
+ bool isGameEventActive(uint16 event_id)
 {
     GameEventMgr::ActiveEvents const& ae = sGameEventMgr.GetActiveEventList();
 
@@ -1658,7 +1658,7 @@ HELLGROUND_EXPORT bool isGameEventActive(uint16 event_id)
     return false;
 }
 
-HELLGROUND_EXPORT void HandleWorldEventGossip(Player* p, Creature* c)
+ void HandleWorldEventGossip(Player* p, Creature* c)
 {
     sGameEventMgr.HandleWorldEventGossip(p, c);
 }

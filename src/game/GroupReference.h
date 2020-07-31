@@ -26,7 +26,7 @@
 class Group;
 class Player;
 
-class HELLGROUND_IMPORT_EXPORT GroupReference : public Reference<Group, Player>
+class  GroupReference : public Reference<Group, Player>
 {
     protected:
         uint8 iSubGroup;

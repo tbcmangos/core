@@ -63,7 +63,7 @@ class AssistanceMovementGenerator : public PointMovementGenerator<Creature>
 };
 
 // Does almost nothing - just doesn't allows previous movegen interrupt current effect.
-class HELLGROUND_IMPORT_EXPORT EffectMovementGenerator : public MovementGenerator
+class  EffectMovementGenerator : public MovementGenerator
 {
     public:
         explicit EffectMovementGenerator(uint32 Id) : m_Id(Id) {}

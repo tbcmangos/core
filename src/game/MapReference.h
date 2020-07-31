@@ -23,7 +23,7 @@
 #include "Utilities/LinkedReference/Reference.h"
 #include "Map.h"
 
-class HELLGROUND_IMPORT_EXPORT MapReference : public Reference<Map, Player>
+class  MapReference : public Reference<Map, Player>
 {
     protected:
         void targetObjectBuildLink()

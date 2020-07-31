@@ -657,7 +657,7 @@ class CoreBalancer
 };
 
 /// The World
-class HELLGROUND_EXPORT World
+class  World
 {
     friend class ACE_Singleton<World, ACE_Null_Mutex>;
 

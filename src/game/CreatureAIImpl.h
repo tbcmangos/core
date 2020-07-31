@@ -484,7 +484,7 @@ struct AISpellEntryType
     float maxRange;
 };
 
-HELLGROUND_IMPORT_EXPORT AISpellEntryType * GetAISpellEntry(uint32 i);
+ AISpellEntryType * GetAISpellEntry(uint32 i);
 
 
 inline void CreatureAI::SetGazeOn(Unit *target)

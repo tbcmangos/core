@@ -25,9 +25,9 @@
 #include "Database/DatabaseEnv.h"
 
 #if PLATFORM == PLATFORM_WINDOWS
-HELLGROUND_IMPORT_EXPORT DatabaseType GameDataDatabase;                              ///< Accessor to the world database
-HELLGROUND_IMPORT_EXPORT DatabaseType RealmDataDatabase;                             ///< Accessor to the character database
-HELLGROUND_IMPORT_EXPORT DatabaseType AccountsDatabase;                              ///< Accessor to the realm/login database
+ DatabaseType GameDataDatabase;                              ///< Accessor to the world database
+ DatabaseType RealmDataDatabase;                             ///< Accessor to the character database
+ DatabaseType AccountsDatabase;                              ///< Accessor to the realm/login database
 #endif
 
 SystemMgr::SystemMgr()

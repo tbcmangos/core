@@ -24,7 +24,7 @@
 #include "CreatureAI.h"
 //#include "CreatureAIImpl.h"
 
-class HELLGROUND_IMPORT_EXPORT PassiveAI : public CreatureAI
+class  PassiveAI : public CreatureAI
 {
     public:
         explicit PassiveAI(Creature *c);
@@ -52,7 +52,7 @@ class PossessedAI : public CreatureAI
         static int Permissible(const Creature *) { return PERMIT_BASE_IDLE;  }
 };
 
-class HELLGROUND_IMPORT_EXPORT NullCreatureAI : public CreatureAI
+class  NullCreatureAI : public CreatureAI
 {
     public:
         explicit NullCreatureAI(Creature *c);
@@ -75,7 +75,7 @@ class CritterAI : public PassiveAI
         void EnterEvadeMode();
 };
 
-class HELLGROUND_IMPORT_EXPORT TriggerAI : public NullCreatureAI
+class  TriggerAI : public NullCreatureAI
 {
     public:
         explicit TriggerAI(Creature *c) : NullCreatureAI(c) {}

@@ -27,7 +27,7 @@
 class Creature;
 class GameObject;
 
-class HELLGROUND_IMPORT_EXPORT ZoneScript
+class  ZoneScript
 {
     public:
         explicit ZoneScript() {}

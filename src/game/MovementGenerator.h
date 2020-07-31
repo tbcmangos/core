@@ -29,7 +29,7 @@
 #include "MotionMaster.h"
 #include "StateMgr.h"
 
-class HELLGROUND_IMPORT_EXPORT MovementGenerator : public UnitAction
+class  MovementGenerator : public UnitAction
 {
     public:
         virtual ~MovementGenerator();
@@ -67,7 +67,7 @@ class HELLGROUND_IMPORT_EXPORT MovementGenerator : public UnitAction
 };
 
 template<class T, class D>
-class HELLGROUND_IMPORT_EXPORT MovementGeneratorMedium : public MovementGenerator
+class  MovementGeneratorMedium : public MovementGenerator
 {
     public:
         void Initialize(Unit &u)

@@ -828,7 +828,7 @@ enum ReactiveType
 
 struct SpellProcEventEntry;                                 // used only privately
 
-class HELLGROUND_IMPORT_EXPORT Unit : public WorldObject
+class  Unit : public WorldObject
 {
     public:
         typedef std::set<Unit*> AttackerSet;

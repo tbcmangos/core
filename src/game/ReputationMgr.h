@@ -55,7 +55,7 @@ typedef std::map<uint32,ReputationRank> ForcedReactions;
 
 class Player;
 
-class HELLGROUND_EXPORT ReputationMgr
+class  ReputationMgr
 {
     public:                                                 // constructors and global modifiers
         explicit ReputationMgr(Player* owner) : m_player(owner) {}

@@ -199,7 +199,7 @@ enum ConditionType
     CONDITION_SKILL                 = 7,                    // skill_id     skill_value
     CONDITION_QUESTREWARDED         = 8,                    // quest_id     0
     CONDITION_QUESTTAKEN            = 9,                    // quest_id     0,      for condition true while quest active.
-    CONDITION_AD_COMMISSION_AURA    = 10,                   // 0            0,      for condition true while one from AD �ommission aura active
+    CONDITION_AD_COMMISSION_AURA    = 10,                   // 0            0,      for condition true while one from AD ommission aura active
     CONDITION_NO_AURA               = 11,                   // spell_id     effindex
     CONDITION_ACTIVE_EVENT          = 12,                   // event_id
     CONDITION_INSTANCE_DATA         = 13,                   // entry        data
@@ -248,7 +248,7 @@ SkillRangeType GetSkillRangeType(SkillLineEntry const *pSkill, bool racial);
 
 bool normalizePlayerName(std::string& name);
 
-struct HELLGROUND_IMPORT_EXPORT LanguageDesc
+struct  LanguageDesc
 {
     Language lang_id;
     uint32   spell_id;
@@ -256,7 +256,7 @@ struct HELLGROUND_IMPORT_EXPORT LanguageDesc
 };
 
 extern LanguageDesc lang_description[LANGUAGES_COUNT];
-HELLGROUND_IMPORT_EXPORT LanguageDesc const* GetLanguageDescByID(uint32 lang);
+ LanguageDesc const* GetLanguageDescByID(uint32 lang);
 
 class ObjectMgr
 {
@@ -875,10 +875,10 @@ class ObjectMgr
 #define sObjectMgr (*ACE_Singleton<ObjectMgr, ACE_Null_Mutex>::instance())
 
 // scripting access functions
-HELLGROUND_IMPORT_EXPORT bool LoadHellgroundStrings(DatabaseType& db, char const* table,int32 start_value = MAX_CREATURE_AI_TEXT_STRING_ID, int32 end_value = std::numeric_limits<int32>::min());
-HELLGROUND_IMPORT_EXPORT GameObjectInfo const *GetGameObjectInfo(uint32 id);
-HELLGROUND_IMPORT_EXPORT CreatureInfo const *GetCreatureInfo(uint32 id);
-HELLGROUND_IMPORT_EXPORT CreatureInfo const* GetCreatureTemplateStore(uint32 entry);
-HELLGROUND_IMPORT_EXPORT Quest const* GetQuestTemplateStore(uint32 entry);
+ bool LoadHellgroundStrings(DatabaseType& db, char const* table,int32 start_value = MAX_CREATURE_AI_TEXT_STRING_ID, int32 end_value = std::numeric_limits<int32>::min());
+ GameObjectInfo const *GetGameObjectInfo(uint32 id);
+ CreatureInfo const *GetCreatureInfo(uint32 id);
+ CreatureInfo const* GetCreatureTemplateStore(uint32 entry);
+ Quest const* GetQuestTemplateStore(uint32 entry);
 
 #endif

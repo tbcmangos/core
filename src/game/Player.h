@@ -896,7 +896,7 @@ struct AccessRequirement
     std::string missingAuraText;
 };
 
-class HELLGROUND_IMPORT_EXPORT PlayerTaxi
+class  PlayerTaxi
 {
     public:
         PlayerTaxi();
@@ -959,7 +959,7 @@ class HELLGROUND_IMPORT_EXPORT PlayerTaxi
         std::deque<uint32> m_TaxiDestinations;
 };
 
-class HELLGROUND_EXPORT Player : public Unit
+class  Player : public Unit
 {
     friend class WorldSession;
     friend void Item::AddToUpdateQueueOf(Player *player);
