@@ -82,7 +82,7 @@ ScriptMgr::~ScriptMgr()
 }
 
 
-void InitScriptLibrary()
+void ScriptMgr::InitScriptLibrary()
 {
     //Hellground Script startup
     outstring_log(" _   _      _ _ _____                           _ ");
