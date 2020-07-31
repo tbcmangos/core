@@ -73,7 +73,6 @@ message(
 	NOT_USE_ELUNA_HOOKS: Do not use Elunas HookMgr
     CLI   : Build with CLI (default)
     TBB_USE_EXTERNAL: Use external TBB library instead of built in (default)
-    ACE_USE_EXTERNAL: Use external ACE library instead of built in (default)
     USE_STD_MALLOC  : Use standard malloc instead of TBB
     LARGE_CELL      : Use large cell size
     ADD_COMPILE_F   : Add additional compile flags (default)
@@ -103,19 +102,6 @@ if(WIN32)
   endif()
 endif()
 
-# if(WIN32)
-#   if(PLATFORM MATCHES X86)
-#     set(ARCH_FLAGS "/MACHINE:X86")
-#   else()
-#     set(ARCH_FLAGS "/MACHINE:X64")
-#   endif()
-# elseif(UNIX)
-#   if(PLATFORM MATCHES X86)
-#     set(ARCH_FLAGS "-m32")
-#   else()
-#     set(ARCH_FLAGS "-m64")
-#   endif()
-# endif()
 
 option(DEBUG "Debug mode" 0)
 option(CLI "With CLI" 1)
@@ -158,12 +144,14 @@ else()
   set(PREFIX ${CMAKE_INSTALL_PREFIX} CACHE PATH "Install path prefix.")
 endif()
 
-set(BIN_DIR ${CMAKE_INSTALL_PREFIX}/bin)
-set(CONF_DIR ${CMAKE_INSTALL_PREFIX}/etc)
 # If win32 put it in the bin dir not lib
 if(WIN32)
-  set(LIBS_DIR ${CMAKE_INSTALL_PREFIX}/bin)
+  set(BIN_DIR ${CMAKE_INSTALL_PREFIX})
+  set(CONF_DIR ${CMAKE_INSTALL_PREFIX})
+  set(LIBS_DIR ${CMAKE_INSTALL_PREFIX})
 else()
+  set(BIN_DIR ${CMAKE_INSTALL_PREFIX}/bin)
+  set(CONF_DIR ${CMAKE_INSTALL_PREFIX}/etc)
   set(LIBS_DIR ${CMAKE_INSTALL_PREFIX}/lib)
 endif()
 
@@ -172,6 +160,7 @@ set(CMAKE_INSTALL_RPATH ${LIBS_DIR})
 set(CMAKE_INSTALL_NAME_DIR ${LIBS_DIR})
 # Run out of build tree
 set(CMAKE_BUILD_WITH_INSTALL_RPATH OFF)
+set(CMAKE_INSTALL_RPATH_USE_LINK_PATH 1)
 
 # Find needed packages and if necessery abort if something important is missing
 unset(ACE_INCLUDE_DIR CACHE)
@@ -209,12 +198,12 @@ endif()
 find_package(OpenSSL REQUIRED)
 
 # Win32 delifered packages
-if(WIN32)
-  set(MYSQL_INCLUDE_DIR ${CMAKE_SOURCE_DIR}/dep/include/mysql)
-  set(MYSQL_LIBRARY ${CMAKE_SOURCE_DIR}/dep/lib/${DEP_ARCH}_release/libmySQL.lib)
-  set(MYSQL_DEBUG_LIBRARY ${CMAKE_SOURCE_DIR}/dep/lib/${DEP_ARCH}_debug/libmySQL.lib)
-  # zlib is build
-endif()
+# if(WIN32)
+#   set(MYSQL_INCLUDE_DIR ${CMAKE_SOURCE_DIR}/dep/include/mysql)
+#   set(MYSQL_LIBRARY ${CMAKE_SOURCE_DIR}/dep/lib/${DEP_ARCH}_release/libmySQL.lib)
+#   set(MYSQL_DEBUG_LIBRARY ${CMAKE_SOURCE_DIR}/dep/lib/${DEP_ARCH}_debug/libmySQL.lib)
+#   # zlib is build
+# endif()
 find_package(MySQL REQUIRED)
 # *nix-specific packages
 if(UNIX)
