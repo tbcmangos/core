@@ -35,7 +35,22 @@ before_install:
 # build matrix
 matrix:
   include:
-    # linux builds without Eluna gcc x64
+    # linux builds gcc4 x64
+    - os: linux
+      arch: amd64
+      name: "Eluna Disabled gcc x64"
+      compiler: gcc
+      env:
+        - CC=gcc-4
+        - CXX=g++-4
+      install:
+        - mkdir build
+        - mkdir _install
+        - cd build
+        - cmake ../ -DCMAKE_INSTALL_PREFIX=../_install -DCMAKE_C_COMPILER="gcc" -DCMAKE_CXX_COMPILER="g++" -DWITH_WARNINGS=1 -DWITH_COREDEBUG=0 -DUSE_COREPCH=1 -DUSE_SCRIPTPCH=1 -DTOOLS=1 -DCMAKE_BUILD_TYPE=Release -DCMAKE_C_FLAGS="-w" -DCMAKE_CXX_FLAGS="-w"
+        - cd ..
+        
+    # linux builds gcc7 x64
     - os: linux
       arch: amd64
       name: "Eluna Disabled gcc x64"
@@ -50,7 +65,7 @@ matrix:
         - cmake ../ -DCMAKE_INSTALL_PREFIX=../_install -DCMAKE_C_COMPILER="gcc" -DCMAKE_CXX_COMPILER="g++" -DWITH_WARNINGS=1 -DWITH_COREDEBUG=0 -DUSE_COREPCH=1 -DUSE_SCRIPTPCH=1 -DTOOLS=1 -DCMAKE_BUILD_TYPE=Release -DCMAKE_C_FLAGS="-w" -DCMAKE_CXX_FLAGS="-w"
         - cd ..
 
-    # linux builds without Eluna clang x64
+    # linux builds clang x64
     - os: linux
       arch: amd64
       name: "Eluna Disabled clang x64"
