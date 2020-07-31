@@ -49,3 +49,5 @@ Either edit CMakeLists to your liking or provide MySQL or put your MySQL librari
 
 ### notice for linux
 - install tbb and ace lib, ACE_USE_EXTERNAL TBB_USE_EXTERNAL is on by default
+- however in centos7 it is easier to add -DACE_USE_EXTERNAL=0 to use internal ace
+- for ubuntu can just install the libace-dev and use default -DACE_USE_EXTERNAL=1(no need add, it is default on)
