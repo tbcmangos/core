@@ -41,3 +41,11 @@ CMake expects ACE, MySQL and TBB (if you want to use the latter) to be under dep
 There are already precompiled libraries you can find under dep/lib/precompiled/Release.
 
 Either edit CMakeLists to your liking or provide MySQL or put your MySQL libraries under dep/lib/[x64_release|win32_release]/*.
+
+### notice for windows
+- uncheck ACE_USE_EXTERNAL to compile use dep/acelite
+- uncheck TBB_USE_EXTERNAL to compile use dep/tbb
+- uncheck USE_STD_MALLOC
+
+### notice for linux
+- install tbb and ace lib, ACE_USE_EXTERNAL TBB_USE_EXTERNAL is on by default
