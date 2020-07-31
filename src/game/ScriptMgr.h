@@ -27,6 +27,8 @@
 //src/scripts/scriptmgr.h
 #include "Platform/CompilerDefs.h"
 #include "DBCStructure.h"
+#include "ScriptMgr.h"
+#include "ScriptSystem.h"
 
 class Player;
 class Creature;
@@ -50,13 +52,13 @@ struct ItemPrototype;
 struct Script
 {
     Script() :
-        pGossipHello(NULL), pGossipSelect(NULL), pGossipSelectGO(NULL),
-        pGossipSelectWithCode(NULL), pGossipSelectGOWithCode(NULL),
+        pOnChat(NULL), pGossipHello(NULL), pGossipSelect(NULL), pGossipSelectGO(NULL),pGossipSelectITEM(NULL),
+        pGossipSelectWithCode(NULL), pGossipSelectGOWithCode(NULL),pGossipSelectITEMWithCode(NULL),
         pDialogStatusNPC(NULL), pDialogStatusGO(NULL),
         pQuestAcceptNPC(NULL), pQuestAcceptGO(NULL), pQuestAcceptItem(NULL),
         pQuestRewardedNPC(NULL), pQuestRewardedGO(NULL),
         pGOUse(NULL), pItemUse(NULL), pAreaTrigger(NULL), pCompletedCinematic(NULL),
-        pProcessEventId(NULL), pReceiveEmote(NULL),
+        pProcessEventId(NULL), pReceiveEmote(NULL), pPVPKill(NULL), pCreatureKill(NULL),
         pEffectDummyNPC(NULL), pEffectDummyGO(NULL), pEffectDummyItem(NULL), pEffectAuraDummy(NULL),
         GetAI(NULL), GetInstanceData(NULL),
 
@@ -66,11 +68,15 @@ struct Script
 
     std::string Name;
 
+	bool (*pOnChat                  )(Player*, uint32, uint32, std::string&);
     bool (*pGossipHello             )(Player*, Creature*);
+    bool (*pGossipHelloGO           )(Player*, GameObject*);
     bool (*pGossipSelect            )(Player*, Creature*, uint32, uint32);
     bool (*pGossipSelectGO          )(Player*, GameObject*, uint32, uint32);
+	bool (*pGossipSelectITEM        )(Player*, Item*, uint32, uint32);
     bool (*pGossipSelectWithCode    )(Player*, Creature*, uint32, uint32, const char*);
     bool (*pGossipSelectGOWithCode  )(Player*, GameObject*, uint32, uint32, const char*);
+	bool (*pGossipSelectITEMWithCode)(Player*, Item*, uint32, uint32, const char*);
     uint32 (*pDialogStatusNPC       )(Player*, Creature*);
     uint32 (*pDialogStatusGO        )(Player*, GameObject*);
     bool (*pQuestAcceptNPC          )(Player*, Creature*, Quest const*);
@@ -90,6 +96,8 @@ struct Script
 
     bool (*pReceiveEmote            )(Player*, Creature*, uint32);
 
+	bool (*pPVPKill                 )(Player*, Player*);
+	bool (*pCreatureKill            )(Player*, Creature*);
     //spell scripts
     bool (*pSpellTargetMap          )(Unit*, std::list<Unit*> &, SpellCastTargets const&, SpellEntry const *, uint32);
     bool (*pSpellHandleEffect       )(Unit *pCaster, Unit* pUnit, Item* pItem, GameObject* pGameObject, SpellEntry const *pSpell, uint32 effectIndex);
@@ -99,25 +107,7 @@ struct Script
 
     void RegisterSelf(bool bReportError = true);
 };
-
-//Generic scripting text function
-void DoScriptText(int32 textEntry, WorldObject* pSource, Unit* target = NULL, bool withoutPrename = false);
-void DoGlobalScriptText(int32 iTextEntry, const char *npcName, Map *map);
-void ScriptText(int32 textEntry, Unit* pSource, Unit* target = NULL);
-
-#if COMPILER == COMPILER_GNU
-#define FUNC_PTR(name, callconvention, returntype, parameters)    typedef returntype(*name)parameters __attribute__ ((callconvention));
-#else
-#define FUNC_PTR(name, callconvention, returntype, parameters)    typedef returntype(callconvention *name)parameters;
-#endif
-
-#ifdef WIN32
-#define HELLGROUND_DLL_EXPORT extern "C" __declspec(dllexport)
-#elif defined( __GNUC__ )
-#define HELLGROUND_DLL_EXPORT extern "C"
-#else
-#define HELLGROUND_DLL_EXPORT extern "C" export
-
+//src/game/scriptmgr.h
 struct AreaTriggerEntry;
 struct CinematicSequencesEntry;
 class Aura;
@@ -165,11 +155,11 @@ extern ScriptMapMap sWaypointScripts;
 class ScriptMgr
 {
     friend class ACE_Singleton<ScriptMgr, ACE_Null_Mutex>;
-    ScriptMgr();
 
     typedef std::vector<std::string> ScriptNameMap;
 
     public:
+        ScriptMgr();
         ~ScriptMgr();
 
         void LoadGameObjectScripts();
@@ -180,7 +170,9 @@ class ScriptMgr
         void LoadSpellIdScripts();
         void LoadSpellScripts();
         void LoadWaypointScripts();
-
+		
+        void InitScriptLibrary();
+        void LoadDatabase();
         void LoadDbScriptStrings();
 
         void LoadScriptNames();
@@ -196,16 +188,21 @@ class ScriptMgr
         const char * GetScriptName(uint32 id) { return id < m_scriptNames.size() ? m_scriptNames[id].c_str() : ""; }
         uint32 GetScriptId(const char *name);
 
-        bool LoadScriptLibrary(const char* libName);
-        void UnloadScriptLibrary();
+        //bool LoadScriptLibrary(const char* libName);
+        //void UnloadScriptLibrary();
 
-        CreatureAI* GetCreatureAI(Creature* pCreature);
-        InstanceData* CreateInstanceData(Map* pMap);
+        CreatureAI* GetAI(Creature* pCreature);
+        InstanceData* CreateInstanceData(Map* map);
 
+		bool OnChat(Player* pPlayer, uint32 type, uint32 lang, std::string& msg);
         bool OnGossipHello(Player* pPlayer, Creature* pCreature);
         bool OnGossipHello(Player* pPlayer, GameObject* pGameObject);
-        bool OnGossipSelect(Player* pPlayer, Creature* pCreature, uint32 sender, uint32 action, const char* code);
-        bool OnGossipSelect(Player* pPlayer, GameObject* pGameObject, uint32 sender, uint32 action, const char* code);
+        bool OnGossipSelect(Player* pPlayer, Creature* pCreature, uint32 sender, uint32 action);
+        bool OnGossipSelect(Player* pPlayer, GameObject* pGameObject, uint32 sender, uint32 action);
+        bool OnGossipSelect(Player* pPlayer, Item* pGameObject, uint32 sender, uint32 action);
+        bool OnGossipSelectCode(Player* pPlayer, Creature* pCreature, uint32 sender, uint32 action, const char* code);
+        bool OnGossipSelectCode(Player* pPlayer, GameObject* pGameObject, uint32 sender, uint32 action, const char* code);
+		bool OnGossipSelectCode(Player* pPlayer, Item* pItem, uint32 sender, uint32 action, const char* code);
         bool OnQuestAccept(Player* pPlayer, Creature* pCreature, Quest const* pQuest);
         bool OnQuestAccept(Player* pPlayer, GameObject* pGameObject, Quest const* pQuest);
         bool OnQuestAccept(Player* pPlayer, Item* pItem, Quest const* pQuest);
@@ -224,20 +221,22 @@ class ScriptMgr
         bool OnAuraDummy(Aura const* pAura, bool apply);
 
         bool OnReceiveEmote(Player *pPlayer, Creature *pCreature, uint32 emote);
+		bool OnPVPKill(Player *pKiller, Player *pKilled);
+		bool OnCreatureKill(Player *pKiller, Creature *cKilled);
 
         // spell scripts
         bool OnSpellSetTargetMap(Unit* pCaster, std::list<Unit*> &unitList, SpellCastTargets const&, SpellEntry const *pSpell, uint32 effectIndex);
         bool OnSpellHandleEffect(Unit *pCaster, Unit* pUnit, Item* pItem, GameObject* pGameObject, SpellEntry const *pSpell, uint32 effectIndex);
-
+		
     private:
         void LoadScripts(ScriptMapMap& scripts, const char* tablename);
         void CheckScripts(ScriptMapMap const& scripts,std::set<int32>& ids);
 
-        template<class T>
-        void GetScriptHookPtr(T& ptr, const char* name)
-        {
-            ptr = (T)HELLGROUND_GET_PROC_ADDR(m_hScriptLib, name);
-        }
+  //      template<class T>
+  //      void GetScriptHookPtr(T& ptr, const char* name)
+  //      {
+  //          ptr = (T)LOOKING4GROUP_GET_PROC_ADDR(m_hScriptLib, name);
+  //      }
 
         typedef UNORDERED_MAP<uint32, uint32> AreaTriggerScriptMap;
         typedef UNORDERED_MAP<uint32, uint32> CompletedCinematicScriptMap;
@@ -251,44 +250,53 @@ class ScriptMgr
 
         ScriptNameMap           m_scriptNames;
 
-        HELLGROUND_LIBRARY_HANDLE   m_hScriptLib;
+   //     HELLGROUND_LIBRARY_HANDLE   m_hScriptLib;
 
-        void (* m_pOnInitScriptLibrary)(char const*);
-        void (* m_pOnFreeScriptLibrary)();
-        const char* (* m_pGetScriptLibraryVersion)();
+  //      void (* m_pOnInitScriptLibrary)(char const*);
+  //      void (* m_pOnFreeScriptLibrary)();
+  //      const char* (* m_pGetScriptLibraryVersion)();
 
-        CreatureAI* (* m_pGetCreatureAI) (Creature*);
-        InstanceData* (* m_pCreateInstanceData) (Map*);
+        //CreatureAI* (* m_pGetCreatureAI) (Creature*);
+        //InstanceData* (* m_pCreateInstanceData) (Map*);
 
-        bool (* m_pOnGossipHello) (Player*, Creature*);
-        bool (* m_pOnGossipSelect) (Player*, Creature*, uint32, uint32);
-        bool (* m_pOnGOGossipSelect) (Player*, GameObject*, uint32, uint32);
-        bool (* m_pOnGossipSelectWithCode) (Player*, Creature*, uint32, uint32, const char*);
-        bool (* m_pOnGOGossipSelectWithCode) (Player*, GameObject*, uint32, uint32, const char*);
-        bool (* m_pOnQuestAccept) (Player*, Creature*, Quest const*);
-        bool (* m_pOnGOQuestAccept) (Player*, GameObject*, Quest const*);
-        bool (* m_pOnItemQuestAccept) (Player*, Item*, Quest const*);
-        bool (* m_pOnQuestRewarded) (Player*, Creature*, Quest const*);
-        bool (* m_pOnGOQuestRewarded) (Player*, GameObject*, Quest const*);
-        uint32 (* m_pGetNPCDialogStatus) (Player*, Creature*);
-        uint32 (* m_pGetGODialogStatus) (Player*, GameObject*);
-        bool (* m_pOnGOUse) (Player*, GameObject*);
-        bool (* m_pOnItemUse) (Player*, Item*, SpellCastTargets const&);
-        bool (* m_pOnAreaTrigger) (Player*, AreaTriggerEntry const*);
-        bool (* m_pOnCompletedCinematic) (Player*, CinematicSequencesEntry const*);
-        bool (* m_pOnProcessEvent) (uint32, Object*, Object*, bool);
-        bool (* m_pOnEffectDummyCreature) (Unit*, uint32, uint32, Creature*);
-        bool (* m_pOnEffectDummyGO) (Unit*, uint32, uint32, GameObject*);
-        bool (* m_pOnEffectDummyItem) (Unit*, uint32, uint32, Item*);
-        bool (* m_pOnAuraDummy) (Aura const*, bool);
+		//bool (* m_pOnChat) (Player*, uint32, uint32, std::string&);
+  //      bool (* m_pOnGossipHello) (Player*, Creature*);
+  //      bool (* m_pOnGossipSelect) (Player*, Creature*, uint32, uint32);
+  //      bool (* m_pOnGOGossipSelect) (Player*, GameObject*, uint32, uint32);
+		//bool (* m_pOnITEMGossipSelect) (Player*, Item*, uint32, uint32);
+  //      bool (* m_pOnGossipSelectWithCode) (Player*, Creature*, uint32, uint32, const char*);
+  //      bool (* m_pOnGOGossipSelectWithCode) (Player*, GameObject*, uint32, uint32, const char*);
+		//bool (* m_pOnITEMGossipSelectWithCode) (Player*, Item*, uint32, uint32, const char*);
+  //      bool (* m_pOnQuestAccept) (Player*, Creature*, Quest const*);
+  //      bool (* m_pOnGOQuestAccept) (Player*, GameObject*, Quest const*);
+  //      bool (* m_pOnItemQuestAccept) (Player*, Item*, Quest const*);
+  //      bool (* m_pOnQuestRewarded) (Player*, Creature*, Quest const*);
+  //      bool (* m_pOnGOQuestRewarded) (Player*, GameObject*, Quest const*);
+  //      uint32 (* m_pGetNPCDialogStatus) (Player*, Creature*);
+  //      uint32 (* m_pGetGODialogStatus) (Player*, GameObject*);
+  //      bool (* m_pOnGOUse) (Player*, GameObject*);
+  //      bool (* m_pOnItemUse) (Player*, Item*, SpellCastTargets const&);
+  //      bool (* m_pOnAreaTrigger) (Player*, AreaTriggerEntry const*);
+  //      bool (* m_pOnCompletedCinematic) (Player*, CinematicSequencesEntry const*);
+  //      bool (* m_pOnProcessEvent) (uint32, Object*, Object*, bool);
+  //      bool (* m_pOnEffectDummyCreature) (Unit*, uint32, uint32, Creature*);
+  //      bool (* m_pOnEffectDummyGO) (Unit*, uint32, uint32, GameObject*);
+  //      bool (* m_pOnEffectDummyItem) (Unit*, uint32, uint32, Item*);
+  //      bool (* m_pOnAuraDummy) (Aura const*, bool);
 
-        bool (* m_pOnReceiveEmote) (Player *pPlayer, Creature *pCreature, uint32 emote);
-
-        // spell scripts
-        bool (* m_pOnSpellSetTargetMap) (Unit* pCaster, std::list<Unit*> &unitList, SpellCastTargets const&, SpellEntry const *pSpell, uint32 effectIndex);
-        bool (* m_pOnSpellHandleEffect) (Unit *pCaster, Unit* pUnit, Item* pItem, GameObject* pGameObject, SpellEntry const *pSpell, uint32 effectIndex);
+  //      bool (* m_pOnReceiveEmote) (Player *pPlayer, Creature *pCreature, uint32 emote);
+		//bool (* m_pOnPVPKill) (Player *pKiller, Player *pKilled);
+		//bool (* m_pOnCreatureKill) (Player *pKiller, Creature *cKilled);
+  //      // spell scripts
+  //      bool (* m_pOnSpellSetTargetMap) (Unit* pCaster, std::list<Unit*> &unitList, SpellCastTargets const&, SpellEntry const *pSpell, uint32 effectIndex);
+  //      bool (* m_pOnSpellHandleEffect) (Unit *pCaster, Unit* pUnit, Item* pItem, GameObject* pGameObject, SpellEntry const *pSpell, uint32 effectIndex);
 };
 
+
+//Generic scripting text function
+void DoScriptText(int32 textEntry, WorldObject* pSource, Unit* target = NULL, bool withoutPrename = false);
+void DoGlobalScriptText(int32 iTextEntry, const char *npcName, Map *map);
+void ScriptText(int32 textEntry, Unit* pSource, Unit* target = NULL);
 #define sScriptMgr (*ACE_Singleton<ScriptMgr, ACE_Null_Mutex>::instance())
 
  uint32 GetAreaTriggerScriptId(uint32 triggerId);
