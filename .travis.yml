@@ -24,7 +24,7 @@ git:
   depth: 1
 
 before_install:
-  - sudo apt-get -qq install libtool make cmake cmake-data openssl
+  - sudo apt-get -qq install libtool make cmake cmake-data openssl  gcc-4.8 g++-4.8 gcc-7 g++-7
   - sudo apt-get -qq install libssl-dev libmysqlclient-dev libmysql++-dev libreadline6-dev zlib1g-dev libbz2-dev
 #  - sudo apt-get -qq install libboost1.55-dev libboost-thread1.55-dev libboost-filesystem1.55-dev libboost-system1.55-dev libboost-program-options1.55-dev libboost-iostreams1.55-dev libboost-regex1.55-dev
   - sudo apt-get -qq install libace-dev
@@ -41,13 +41,13 @@ matrix:
       name: "linux builds gcc4 x64"
       compiler: gcc
       env:
-        - CC=gcc-4
-        - CXX=g++-4
+        - CC=gcc-4.8
+        - CXX=g++-4.8
       install:
         - mkdir build
         - mkdir _install
         - cd build
-        - cmake ../ -DCMAKE_INSTALL_PREFIX=../_install -DCMAKE_C_COMPILER="gcc" -DCMAKE_CXX_COMPILER="g++" -DWITH_WARNINGS=1 -DWITH_COREDEBUG=0 -DUSE_COREPCH=1 -DUSE_SCRIPTPCH=1 -DTOOLS=1 -DCMAKE_BUILD_TYPE=Release -DCMAKE_C_FLAGS="-w" -DCMAKE_CXX_FLAGS="-w"
+        - cmake ../ -DCMAKE_INSTALL_PREFIX=../_install -DCMAKE_C_COMPILER="/usr/bin/gcc-4.8" -DCMAKE_CXX_COMPILER="/usr/bin/g++-4.8" -DWITH_WARNINGS=1 -DWITH_COREDEBUG=0 -DUSE_COREPCH=1 -DUSE_SCRIPTPCH=1 -DTOOLS=1 -DCMAKE_BUILD_TYPE=Release -DCMAKE_C_FLAGS="-w" -DCMAKE_CXX_FLAGS="-w"
         - cd ..
         
     # linux builds gcc7 x64
@@ -62,7 +62,7 @@ matrix:
         - mkdir build
         - mkdir _install
         - cd build
-        - cmake ../ -DCMAKE_INSTALL_PREFIX=../_install -DCMAKE_C_COMPILER="gcc" -DCMAKE_CXX_COMPILER="g++" -DWITH_WARNINGS=1 -DWITH_COREDEBUG=0 -DUSE_COREPCH=1 -DUSE_SCRIPTPCH=1 -DTOOLS=1 -DCMAKE_BUILD_TYPE=Release -DCMAKE_C_FLAGS="-w" -DCMAKE_CXX_FLAGS="-w"
+        - cmake ../ -DCMAKE_INSTALL_PREFIX=../_install -DCMAKE_C_COMPILER="/user/bin/gcc-7" -DCMAKE_CXX_COMPILER="/user/bin/g++-7" -DWITH_WARNINGS=1 -DWITH_COREDEBUG=0 -DUSE_COREPCH=1 -DUSE_SCRIPTPCH=1 -DTOOLS=1 -DCMAKE_BUILD_TYPE=Release -DCMAKE_C_FLAGS="-w" -DCMAKE_CXX_FLAGS="-w"
         - cd ..
 
     # linux builds clang x64
@@ -82,6 +82,6 @@ matrix:
              
         
 script:
-  - $CXX --version
+  # - $CXX --version
   - cd build
   - make -j 8 -k && make install
