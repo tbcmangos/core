@@ -21,11 +21,8 @@
 
 #include "ScriptedPch.h"
 #include "Item.h"
-#include "ScriptedCreature.h"
-
 #include "Spell.h"
 #include "ObjectMgr.h"
-#include "ScriptMgr.h"
 
 // Spell summary for ScriptedAI::SelectSpell
 struct TSpellSummary
