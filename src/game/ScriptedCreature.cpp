@@ -27,6 +27,13 @@
 #include "ObjectMgr.h"
 #include "ScriptMgr.h"
 
+// Spell summary for ScriptedAI::SelectSpell
+struct TSpellSummary
+{
+    uint8 Targets;                                          // set of enum SelectTarget
+    uint8 Effects;                                          // set of enum SelectEffect
+} *SpellSummary;
+
 void SummonList::DoAction(uint32 entry, uint32 info)
 {
     for (iterator i = begin(); i != end(); )
