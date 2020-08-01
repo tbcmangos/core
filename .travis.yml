@@ -29,7 +29,7 @@ git:
   depth: 1
 
 before_install:
-  - sudo apt-get -qq install libtool make cmake cmake-data openssl  gcc-4.8 g++-4.8
+  - sudo apt-get -qq install libtool make cmake cmake-data openssl
   - sudo apt-get -qq install libssl-dev libmysqlclient-dev libmysql++-dev libreadline6-dev zlib1g-dev libbz2-dev
 #  - sudo apt-get -qq install libboost1.55-dev libboost-thread1.55-dev libboost-filesystem1.55-dev libboost-system1.55-dev libboost-program-options1.55-dev libboost-iostreams1.55-dev libboost-regex1.55-dev
   - sudo apt-get -qq install libace-dev
@@ -44,15 +44,19 @@ matrix:
     - os: linux
       arch: amd64
       name: "linux builds gcc4 x64"
-      compiler: gcc
+      addons:
+        apt:
+          sources:
+            - ubuntu-toolchain-r-test
+          packages:
+            - g++-4.8
       env:
-        - CC=gcc-4.8
-        - CXX=g++-4.8
+        - MATRIX_EVAL="CC=gcc-4.8 && CXX=g++-4.8"
       install:
         - mkdir build
         - mkdir _install
         - cd build
-        - cmake ../ -DCMAKE_INSTALL_PREFIX=../_install -DCMAKE_C_COMPILER="/usr/bin/gcc-4.8" -DCMAKE_CXX_COMPILER="/usr/bin/g++-4.8" -DWITH_WARNINGS=1 -DWITH_COREDEBUG=0 -DUSE_COREPCH=1 -DUSE_SCRIPTPCH=1 -DTOOLS=1 -DCMAKE_BUILD_TYPE=Release -DCMAKE_C_FLAGS="-w" -DCMAKE_CXX_FLAGS="-w"
+        - cmake ../ -DCMAKE_INSTALL_PREFIX=../_install -DWITH_WARNINGS=1 -DWITH_COREDEBUG=0 -DUSE_COREPCH=1 -DUSE_SCRIPTPCH=1 -DTOOLS=1 -DCMAKE_BUILD_TYPE=Release -DCMAKE_C_FLAGS="-w" -DCMAKE_CXX_FLAGS="-w"
         - cd ..
         
     # linux builds gcc7 x64
@@ -60,14 +64,19 @@ matrix:
       arch: amd64
       name: "linux builds gcc7 x64"
       compiler: gcc
+      addons:
+        apt:
+          sources:
+            - ubuntu-toolchain-r-test
+          packages:
+            - g++-7
       env:
-        - CC=gcc-7
-        - CXX=g++-7
+        - MATRIX_EVAL="CC=gcc-7 && CXX=g++-7"
       install:
         - mkdir build
         - mkdir _install
         - cd build
-        - cmake ../ -DCMAKE_INSTALL_PREFIX=../_install -DCMAKE_C_COMPILER="/user/bin/gcc-7" -DCMAKE_CXX_COMPILER="/user/bin/g++-7" -DWITH_WARNINGS=1 -DWITH_COREDEBUG=0 -DUSE_COREPCH=1 -DUSE_SCRIPTPCH=1 -DTOOLS=1 -DCMAKE_BUILD_TYPE=Release -DCMAKE_C_FLAGS="-w" -DCMAKE_CXX_FLAGS="-w"
+        - cmake ../ -DCMAKE_INSTALL_PREFIX=../_install -DWITH_WARNINGS=1 -DWITH_COREDEBUG=0 -DUSE_COREPCH=1 -DUSE_SCRIPTPCH=1 -DTOOLS=1 -DCMAKE_BUILD_TYPE=Release -DCMAKE_C_FLAGS="-w" -DCMAKE_CXX_FLAGS="-w"
         - cd ..
 
     # linux builds clang x64
@@ -75,9 +84,15 @@ matrix:
       arch: amd64
       name: "linux builds clang x64"
       compiler: clang
+      addons:
+        apt:
+          sources:
+            - ubuntu-toolchain-r-test
+            - llvm-toolchain-precise-3.6
+          packages:
+            - clang-3.6
       env:
-        - CC=clang
-        - CXX=clang++
+        - MATRIX_EVAL="CC=clang-3.6 && CXX=clang++-3.6"
       install:
         - mkdir build
         - mkdir _install
