@@ -1,3 +1,8 @@
+# https://docs.travis-ci.com/user/languages/c/#gcc-on-linux
+# Precise ships with GCC 4.6.3
+# Trusty ships with GCC 4.8.2
+# Xenial ships with GCC 5.4.0
+# Bionic ships with GCC 7.4.0
 dist: xenial
 language: cpp
 # compiler: gcc
