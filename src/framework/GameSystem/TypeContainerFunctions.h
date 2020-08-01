@@ -31,7 +31,7 @@
 #include "Utilities/TypeList.h"
 #include <map>
 
-namespace Hellground
+namespace MaNGOS
 {
     /* ContainerMapList Helpers */
     // count functions

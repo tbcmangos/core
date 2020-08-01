@@ -84,7 +84,7 @@ enum SpellNotifyPushType
 
 bool IsQuestTameSpell(uint32 spellId);
 
-namespace Hellground
+namespace MaNGOS
 {
     struct SpellNotifierCreatureAndPlayer;
 }
@@ -651,7 +651,7 @@ class Spell
         PathFinder _path;
 };
 
-namespace Hellground
+namespace MaNGOS
 {
     struct SpellNotifierGameObject
     {

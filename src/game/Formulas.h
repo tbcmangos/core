@@ -24,7 +24,7 @@
 #include "World.h"
 #include "DBCStores.h"
 
-namespace Hellground
+namespace MaNGOS
 {
     namespace Honor
     {

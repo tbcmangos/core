@@ -1358,7 +1358,7 @@ void Object::ForceValuesUpdateAtIndex(uint32 i)
     }
 }
 
-namespace Hellground
+namespace MaNGOS
 {
     class MonsterChatBuilder
     {
@@ -1380,7 +1380,7 @@ namespace Hellground
             uint64 i_targetGUID;
             bool i_withoutPrename;
     };
-}                                                           // namespace Hellground
+}                                                           // namespace MaNGOS
 
 void WorldObject::MonsterSay(int32 textId, uint32 language, uint64 TargetGuid)
 {

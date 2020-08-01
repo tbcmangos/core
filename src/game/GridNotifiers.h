@@ -38,7 +38,7 @@
 class Player;
 //class Map;
 
-namespace Hellground
+namespace MaNGOS
 {
     struct VisibleNotifier
     {

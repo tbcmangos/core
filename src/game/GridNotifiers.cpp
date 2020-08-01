@@ -31,7 +31,7 @@
 #include "CellImpl.h"
 #include "SpellAuras.h"
 
-using namespace Hellground;
+using namespace MaNGOS;
 
 void VisibleNotifier::SendToSelf()
 {

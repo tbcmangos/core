@@ -1724,7 +1724,7 @@ class  Unit : public WorldObject
 typedef std::set<Unit*> UnitSet;
 typedef std::list<Unit*> UnitList;
 
-namespace Hellground
+namespace MaNGOS
 {
     template<class T>
     void RandomResizeList(std::list<T> &_list, uint32 _size)

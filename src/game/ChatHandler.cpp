@@ -565,7 +565,7 @@ void WorldSession::HandleEmoteOpcode(WorldPacket & recv_data)
     GetPlayer()->HandleEmoteCommand(emote);
 }
 
-namespace Hellground
+namespace MaNGOS
 {
     class EmoteChatBuilder
     {
@@ -595,7 +595,7 @@ namespace Hellground
             uint32        i_emote_num;
             Unit const*   i_target;
     };
-}                                                           // namespace Hellground
+}                                                           // namespace MaNGOS
 
 void WorldSession::HandleTextEmoteOpcode(WorldPacket & recv_data)
 {

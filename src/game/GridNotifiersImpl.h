@@ -29,7 +29,7 @@
 #include "CreatureAI.h"
 #include "SpellAuras.h"
 
-namespace Hellground
+namespace MaNGOS
 {
 
 template<class T>

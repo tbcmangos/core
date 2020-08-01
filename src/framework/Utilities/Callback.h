@@ -48,7 +48,7 @@ struct null { null() {} };
 
 /// ------------ BASE CLASSES ------------
 
-namespace Hellground
+namespace MaNGOS
 {
     template<class Class, typename ParamType1 = void, typename ParamType2 = void, typename ParamType3 = void, typename ParamType4 = void>
     class _Callback
@@ -309,7 +309,7 @@ namespace Hellground
 
 /// --------- GENERIC CALLBACKS ----------
 
-namespace Hellground
+namespace MaNGOS
 {
     class ICallback
     {
@@ -408,7 +408,7 @@ namespace Hellground
 #include "QueryResult.h"
 class QueryResult;
 
-namespace Hellground
+namespace MaNGOS
 {
     class IQueryCallback
     {
