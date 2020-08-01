@@ -51,7 +51,7 @@ Script *m_scripts[MAX_SCRIPTS];
 void FillSpellSummary();
 
 // -------------------
-void LoadDatabase()
+void ScriptMgr::LoadDatabase()
 {
     pSystemMgr.LoadVersion();
     pSystemMgr.LoadScriptTexts();
