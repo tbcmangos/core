@@ -1,4 +1,35 @@
 [![Build Status](https://travis-ci.com/tbcmangos/core.svg?branch=master)](https://travis-ci.com/tbcmangos/core)
+######################
+#   Disclaimer2020   #
+######################
+This core is a server emulator for World of Warcraft: The Burning Crusade. The server serves full world content including authentication & scripts support. Compatible with World of Warcraft client 2.4.3(8606).
+As you can see it is based on hellgroundcore which had stopped for 4 years. if you dont familar with the background below is the timeframe of each emulator.
+
+* timeline 
+* mangos         2005 -------------2010-------------------- now(2020)    , https://github.com/mangos/MaNGOS
+* trinity                 2008----------------------------- now(2020)    , https://github.com/trinitycore
+* HellGroundCore          2008-----------------2016                      , https://github.com/hellground-tbc
+* Looking4Group                                2016--2017                , https://github.com/Looking4Group/L4G_Core
+
+* thiscore                2008--HellGroundCore-2016 ....... now(2020)    , https://github.com/tbcmangos/core  
+
+the original hellground pserver was a very good server and was stopped around 2016, Looking4Group pretty much using the same HellgroundCore and adding/fixing a few stuff. 
+I was able to merge Looking4Group fixes into HellGroundCore but majority code still HellGroundCore, A lot of the structures are very similar to MaNGOS, as it is based on TrinityCore 2009.
+
+although hellground lived for 8 years, this public source still filled with problems and bad code and should not be used in a production server.
+A lot of effort was put into the content, so it may still a good source for dev/learning purpose.
+
+The orignal source has been tested on Ubuntu and compilled with gcc4.8, and with windows2010 project files that you can compile under windows and running smoothly. 
+
+This is an eductional project for people to learn stuffs like server/communication/c++/cmake/sql/travis. also enjoy the good tbc memory back in the day.
+my plan for now is to do below at spare time and maybe later fixing some game content and such.
+
+* fix cmake for windows
+* merge script system into core
+* upgrade core to latest compiler
+* attempt to learn the framework and compare with latest mangos/trinity functions
+* interact with travis with multiple build and some more research
+* fix bugs etc..
 
 ######################
 #   HellGroundCore   #
