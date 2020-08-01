@@ -894,8 +894,8 @@ struct npc_kaelthas_imageAI : public ScriptedAI
         {
             std::list<Unit*> PlayerList;
             uint32 shattrathRadius = 1000;
-            Hellground::AnyUnitInObjectRangeCheck  check(me, shattrathRadius);
-            Hellground::UnitListSearcher<Hellground::AnyUnitInObjectRangeCheck > searcher(PlayerList, check);
+            MaNGOS::AnyUnitInObjectRangeCheck  check(me, shattrathRadius);
+            MaNGOS::UnitListSearcher<MaNGOS::AnyUnitInObjectRangeCheck > searcher(PlayerList, check);
             Cell::VisitWorldObjects(me, searcher, shattrathRadius);
 
             for(std::list<Unit*>::iterator i = PlayerList.begin(); i != PlayerList.end(); i++)

@@ -247,7 +247,7 @@ enum SpellTargets
 
 class Spell
 {
-    friend struct Hellground::SpellNotifierCreatureAndPlayer;
+    friend struct MaNGOS::SpellNotifierCreatureAndPlayer;
     public:
 
         void EffectNULL(uint32);

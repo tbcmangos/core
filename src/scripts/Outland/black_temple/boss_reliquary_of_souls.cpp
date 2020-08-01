@@ -572,7 +572,7 @@ struct boss_essence_of_sufferingAI : public ScriptedAI
         if(targets.empty())
             return; // No targets added for some reason. No point continuing.
 
-        targets.sort(Hellground::ObjectDistanceOrder(me)); // Sort players by distance.
+        targets.sort(MaNGOS::ObjectDistanceOrder(me)); // Sort players by distance.
         targets.resize(1); // Only need closest target.
 
         Unit* target = targets.front();

@@ -155,7 +155,7 @@ template void Camera::UpdateVisibilityOf(DynamicObject*, UpdateData&, std::set<W
 
 void Camera::UpdateVisibilityForOwner()
 {
-    Hellground::VisibleNotifier notifier(*this);
+    MaNGOS::VisibleNotifier notifier(*this);
     Cell::VisitAllObjects(_source, notifier, _source->GetMap()->GetVisibilityDistance(_source, &_owner), false);
     notifier.SendToSelf();
 }

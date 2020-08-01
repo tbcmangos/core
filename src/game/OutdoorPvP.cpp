@@ -296,8 +296,8 @@ bool OPvPCapturePoint::Update(uint32 diff)
     }
 
     std::list<Player*> players;
-    Hellground::AnyPlayerInObjectRangeCheck checker(m_capturePoint, radius);
-    Hellground::ObjectListSearcher<Player, Hellground::AnyPlayerInObjectRangeCheck> searcher(players, checker);
+    MaNGOS::AnyPlayerInObjectRangeCheck checker(m_capturePoint, radius);
+    MaNGOS::ObjectListSearcher<Player, MaNGOS::AnyPlayerInObjectRangeCheck> searcher(players, checker);
     Cell::VisitWorldObjects(m_capturePoint, searcher, radius);
 
     for (std::list<Player*>::iterator itr = players.begin(); itr != players.end(); ++itr)

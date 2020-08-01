@@ -1139,8 +1139,8 @@ struct npc_letollAI : public npc_escortAI
         float x, y, z;
         me->GetPosition(x, y, z);
 
-        Hellground::AllCreaturesOfEntryInRange check(me, NPC_RESEARCHER, 25.0f);
-        Hellground::ObjectListSearcher<Creature, Hellground::AllCreaturesOfEntryInRange> searcher(ResearchersList, check);
+        MaNGOS::AllCreaturesOfEntryInRange check(me, NPC_RESEARCHER, 25.0f);
+        MaNGOS::ObjectListSearcher<Creature, MaNGOS::AllCreaturesOfEntryInRange> searcher(ResearchersList, check);
         Cell::VisitGridObjects(me, searcher, 25.0f);
 
         if (!ResearchersList.empty())
@@ -2440,8 +2440,8 @@ bool go_veil_skith_cage(Player* player, GameObject* go)
 
     if(player->GetQuestStatus(QUEST_FRIENDS) == QUEST_STATUS_INCOMPLETE)
     {
-        Hellground::AllCreaturesOfEntryInRange check(player, NPC_CHILD_CAPITIVE, 5.0f);
-        Hellground::ObjectListSearcher<Creature, Hellground::AllCreaturesOfEntryInRange> searcher(ChildrenList, check);
+        MaNGOS::AllCreaturesOfEntryInRange check(player, NPC_CHILD_CAPITIVE, 5.0f);
+        MaNGOS::ObjectListSearcher<Creature, MaNGOS::AllCreaturesOfEntryInRange> searcher(ChildrenList, check);
         Cell::VisitGridObjects(player, searcher, 5.0f);
 
         if(!ChildrenList.empty())

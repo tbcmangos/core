@@ -373,7 +373,7 @@ struct boss_kalecgos_kjAI : public ScriptedAI
     {
         std::list<GameObject*> orbList;
         AllOrbsInGrid check;
-        Hellground::GameObjectListSearcher<AllOrbsInGrid> searcher(orbList, check);
+        MaNGOS::GameObjectListSearcher<AllOrbsInGrid> searcher(orbList, check);
         Cell::VisitGridObjects(me, searcher, me->GetMap()->GetVisibilityDistance());
         if(orbList.empty())
             return;

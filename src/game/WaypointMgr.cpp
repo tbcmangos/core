@@ -69,8 +69,8 @@ void WaypointMgr::Load()
         y = fields[3].GetFloat();
         z = fields[4].GetFloat();
 
-        Hellground::NormalizeMapCoord(x);
-        Hellground::NormalizeMapCoord(y);
+        MaNGOS::NormalizeMapCoord(x);
+        MaNGOS::NormalizeMapCoord(y);
 
         wp->id = fields[1].GetUInt32();
         wp->x = x;
@@ -121,8 +121,8 @@ void WaypointMgr::UpdatePath(uint32 id)
         y = fields[3].GetFloat();
         z = fields[4].GetFloat();
 
-        Hellground::NormalizeMapCoord(x);
-        Hellground::NormalizeMapCoord(y);
+        MaNGOS::NormalizeMapCoord(x);
+        MaNGOS::NormalizeMapCoord(y);
 
         wp->id = fields[1].GetUInt32();
         wp->x = x;

@@ -253,8 +253,8 @@ struct boss_janalaiAI : public ScriptedAI
         m_creature->GetPosition(x, y, z);
 
         {
-            Hellground::AllCreaturesOfEntryInRange check(m_creature, MOB_EGG, 100);
-            Hellground::ObjectListSearcher<Creature, Hellground::AllCreaturesOfEntryInRange> searcher(templist, check);
+            MaNGOS::AllCreaturesOfEntryInRange check(m_creature, MOB_EGG, 100);
+            MaNGOS::ObjectListSearcher<Creature, MaNGOS::AllCreaturesOfEntryInRange> searcher(templist, check);
 
             Cell::VisitGridObjects(me, searcher, 100);
         }
@@ -280,8 +280,8 @@ struct boss_janalaiAI : public ScriptedAI
         m_creature->GetPosition(x, y, z);
 
         {
-            Hellground::AllCreaturesOfEntryInRange check(m_creature, MOB_FIRE_BOMB, 100);
-            Hellground::ObjectListSearcher<Creature, Hellground::AllCreaturesOfEntryInRange> searcher(templist, check);
+            MaNGOS::AllCreaturesOfEntryInRange check(m_creature, MOB_FIRE_BOMB, 100);
+            MaNGOS::ObjectListSearcher<Creature, MaNGOS::AllCreaturesOfEntryInRange> searcher(templist, check);
 
             Cell::VisitGridObjects(me, searcher, me->GetMap()->GetVisibilityDistance());
         }
@@ -544,8 +544,8 @@ struct mob_amanishi_hatcherAI : public ScriptedAI
         m_creature->GetPosition(x, y, z);
 
         {
-            Hellground::AllCreaturesOfEntryInRange check(m_creature, 23817, 50);
-            Hellground::ObjectListSearcher<Creature, Hellground::AllCreaturesOfEntryInRange> searcher(templist, check);
+            MaNGOS::AllCreaturesOfEntryInRange check(m_creature, 23817, 50);
+            MaNGOS::ObjectListSearcher<Creature, MaNGOS::AllCreaturesOfEntryInRange> searcher(templist, check);
 
             Cell::VisitGridObjects(me, searcher, 50);
         }

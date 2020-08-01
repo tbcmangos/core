@@ -83,12 +83,12 @@ class MapManager
 
         static bool IsValidMapCoord(uint32 mapid, float x,float y)
         {
-            return IsValidMAP(mapid) && Hellground::IsValidMapCoord(x,y);
+            return IsValidMAP(mapid) && MaNGOS::IsValidMapCoord(x,y);
         }
 
         static bool IsValidMapCoord(uint32 mapid, float x,float y,float z)
         {
-            return IsValidMAP(mapid) && Hellground::IsValidMapCoord(x,y,z);
+            return IsValidMAP(mapid) && MaNGOS::IsValidMapCoord(x,y,z);
         }
 
         static bool IsValidMapCoord(WorldLocation const& loc)
@@ -98,7 +98,7 @@ class MapManager
 
         static bool IsValidMapCoord(uint32 mapid, float x,float y,float z,float o)
         {
-            return IsValidMAP(mapid) && Hellground::IsValidMapCoord(x,y,z,o);
+            return IsValidMAP(mapid) && MaNGOS::IsValidMapCoord(x,y,z,o);
         }
 
         // modulos a radian orientation to the range of 0..2PI

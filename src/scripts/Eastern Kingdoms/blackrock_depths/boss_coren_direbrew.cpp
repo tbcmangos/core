@@ -57,8 +57,8 @@ struct boss_coren_direbrewAI : public ScriptedAI
         //me->setFaction(35);
 
         std::list<Creature*> antagonistList;
-        Hellground::AllCreaturesOfEntryInRange check(me, NPC_DARK_IRON_ANTAGONIST, 100);
-        Hellground::ObjectListSearcher<Creature, Hellground::AllCreaturesOfEntryInRange> searcher(antagonistList, check);
+        MaNGOS::AllCreaturesOfEntryInRange check(me, NPC_DARK_IRON_ANTAGONIST, 100);
+        MaNGOS::ObjectListSearcher<Creature, MaNGOS::AllCreaturesOfEntryInRange> searcher(antagonistList, check);
 
         Cell::VisitGridObjects(me, searcher, 100);
 
@@ -182,8 +182,8 @@ struct direbrew_starter_triggerAI : public ScriptedAI
                 Coren->setFaction(54);
 
                 std::list<Creature*> antagonistList;
-                Hellground::AllCreaturesOfEntryInRange check(me, NPC_DARK_IRON_ANTAGONIST, 100);
-                Hellground::ObjectListSearcher<Creature, Hellground::AllCreaturesOfEntryInRange> searcher(antagonistList, check);
+                MaNGOS::AllCreaturesOfEntryInRange check(me, NPC_DARK_IRON_ANTAGONIST, 100);
+                MaNGOS::ObjectListSearcher<Creature, MaNGOS::AllCreaturesOfEntryInRange> searcher(antagonistList, check);
 
                 Cell::VisitGridObjects(me, searcher, 100);
 

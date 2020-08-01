@@ -644,9 +644,9 @@ void WorldSession::HandleTextEmoteOpcode(WorldPacket & recv_data)
 
     Unit* unit = player->GetMap()->GetUnit(guid);
 
-    Hellground::EmoteChatBuilder emote_builder(*player, text_emote, emoteNum, unit);
-    Hellground::LocalizedPacketDo<Hellground::EmoteChatBuilder > emote_do(emote_builder);
-    Hellground::CameraDistWorker<Hellground::LocalizedPacketDo<Hellground::EmoteChatBuilder > > emote_worker(player, sWorld.getConfig(CONFIG_LISTEN_RANGE_TEXTEMOTE), emote_do);
+    MaNGOS::EmoteChatBuilder emote_builder(*player, text_emote, emoteNum, unit);
+    MaNGOS::LocalizedPacketDo<MaNGOS::EmoteChatBuilder > emote_do(emote_builder);
+    MaNGOS::CameraDistWorker<MaNGOS::LocalizedPacketDo<MaNGOS::EmoteChatBuilder > > emote_worker(player, sWorld.getConfig(CONFIG_LISTEN_RANGE_TEXTEMOTE), emote_do);
     Cell::VisitWorldObjects(player, emote_worker,  sWorld.getConfig(CONFIG_LISTEN_RANGE_TEXTEMOTE));
 
     //Send scripted event call

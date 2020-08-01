@@ -272,7 +272,7 @@ void MapManager::Update(uint32 diff)
 
 bool MapManager::ExistMapAndVMap(uint32 mapid, float x,float y)
 {
-    GridPair p = Hellground::ComputeGridPair(x,y);
+    GridPair p = MaNGOS::ComputeGridPair(x,y);
 
     int gx=63-p.x_coord;
     int gy=63-p.y_coord;

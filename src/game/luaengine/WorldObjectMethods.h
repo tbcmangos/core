@@ -100,7 +100,7 @@ namespace LuaWorldObject
         Unit* target = NULL;
         Eluna::WorldObjectInRangeCheck checker(true, obj, range, TYPEMASK_PLAYER);
 
-        Hellground::UnitLastSearcher<Eluna::WorldObjectInRangeCheck> searcher(target, checker);
+        MaNGOS::UnitLastSearcher<Eluna::WorldObjectInRangeCheck> searcher(target, checker);
         Cell::VisitWorldObjects(obj, searcher, range);
 
         sEluna->Push(L, target);
@@ -114,7 +114,7 @@ namespace LuaWorldObject
         GameObject* target = NULL;
         Eluna::WorldObjectInRangeCheck checker(true, obj, range, TYPEMASK_GAMEOBJECT, entry);
 
-        Hellground::ObjectLastSearcher<GameObject,Eluna::WorldObjectInRangeCheck> searcher(target, checker);
+        MaNGOS::ObjectLastSearcher<GameObject,Eluna::WorldObjectInRangeCheck> searcher(target, checker);
         Cell::VisitGridObjects(obj, searcher, range);
 
         sEluna->Push(L, target);
@@ -128,7 +128,7 @@ namespace LuaWorldObject
         Creature* target = NULL;
         Eluna::WorldObjectInRangeCheck checker(true, obj, range, TYPEMASK_UNIT, entry);
 
-        Hellground::ObjectLastSearcher<Creature, Eluna::WorldObjectInRangeCheck> searcher(target, checker);
+        MaNGOS::ObjectLastSearcher<Creature, Eluna::WorldObjectInRangeCheck> searcher(target, checker);
         Cell::VisitGridObjects(obj, searcher, range);
 
         sEluna->Push(L, target);
@@ -141,7 +141,7 @@ namespace LuaWorldObject
         std::list<Player*> list;
         Eluna::WorldObjectInRangeCheck checker(false, obj, range, TYPEMASK_PLAYER);
 
-        Hellground::ObjectListSearcher<Player, Eluna::WorldObjectInRangeCheck> searcher(list, checker);
+        MaNGOS::ObjectListSearcher<Player, Eluna::WorldObjectInRangeCheck> searcher(list, checker);
         Cell::VisitWorldObjects(obj, searcher, range);
 
         lua_newtable(L);
@@ -166,7 +166,7 @@ namespace LuaWorldObject
         std::list<Creature*> list;
         Eluna::WorldObjectInRangeCheck checker(false, obj, range, TYPEMASK_UNIT, entry);
 
-        Hellground::ObjectListSearcher<Creature, Eluna::WorldObjectInRangeCheck> searcher(list, checker);
+        MaNGOS::ObjectListSearcher<Creature, Eluna::WorldObjectInRangeCheck> searcher(list, checker);
         Cell::VisitGridObjects(obj, searcher, range);
 
         lua_newtable(L);
@@ -191,7 +191,7 @@ namespace LuaWorldObject
         std::list<GameObject*> list;
         Eluna::WorldObjectInRangeCheck checker(false, obj, range, TYPEMASK_GAMEOBJECT, entry);
 
-        Hellground::ObjectListSearcher<GameObject, Eluna::WorldObjectInRangeCheck> searcher(list, checker);
+        MaNGOS::ObjectListSearcher<GameObject, Eluna::WorldObjectInRangeCheck> searcher(list, checker);
         Cell::VisitGridObjects(obj, searcher, range);
 
         lua_newtable(L);
@@ -223,7 +223,7 @@ namespace LuaWorldObject
         {
             WorldObject* target = NULL;
 
-            Hellground::ObjectLastSearcher<WorldObject, Eluna::WorldObjectInRangeCheck> searcher(target, checker);
+            MaNGOS::ObjectLastSearcher<WorldObject, Eluna::WorldObjectInRangeCheck> searcher(target, checker);
             Cell::VisitAllObjects(obj, searcher, range);
 
             sEluna->Push(L, target);
@@ -233,7 +233,7 @@ namespace LuaWorldObject
         {
             std::list<WorldObject*> list;
 
-            Hellground::ObjectListSearcher<WorldObject, Eluna::WorldObjectInRangeCheck> searcher(list, checker);
+            MaNGOS::ObjectListSearcher<WorldObject, Eluna::WorldObjectInRangeCheck> searcher(list, checker);
             Cell::VisitAllObjects(obj, searcher, range);
 
             lua_newtable(L);

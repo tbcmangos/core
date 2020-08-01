@@ -416,8 +416,8 @@ struct npc_demoniac_scryerAI : public ScriptedAI
 
         std::list<Unit*> PlayerList;
         uint32 questDist = 60;                      // sWorld.getConfig(CONFIG_GROUP_XP_DISTANCE);
-        Hellground::AnyUnitInObjectRangeCheck  check(me, questDist);
-        Hellground::UnitListSearcher<Hellground::AnyUnitInObjectRangeCheck > searcher(PlayerList, check);
+        MaNGOS::AnyUnitInObjectRangeCheck  check(me, questDist);
+        MaNGOS::UnitListSearcher<MaNGOS::AnyUnitInObjectRangeCheck > searcher(PlayerList, check);
         Cell::VisitAllObjects(me, searcher, questDist);
 
         for(std::list<Unit*>::iterator i = PlayerList.begin(); i != PlayerList.end(); i++)

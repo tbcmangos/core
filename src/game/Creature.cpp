@@ -2100,8 +2100,8 @@ void Creature::DoFleeToGetAssistance()
     {
         Creature* pCreature = NULL;
 
-        Hellground::NearestAssistCreatureInCreatureRangeCheck u_check(this, getVictim(), radius);
-        Hellground::ObjectLastSearcher<Creature, Hellground::NearestAssistCreatureInCreatureRangeCheck> searcher(pCreature, u_check);
+        MaNGOS::NearestAssistCreatureInCreatureRangeCheck u_check(this, getVictim(), radius);
+        MaNGOS::ObjectLastSearcher<Creature, MaNGOS::NearestAssistCreatureInCreatureRangeCheck> searcher(pCreature, u_check);
 
         Cell::VisitGridObjects(this, searcher, radius);
 
@@ -2119,8 +2119,8 @@ Unit* Creature::SelectNearestTarget(float dist) const
 {
     Unit *target = NULL;
     {
-        Hellground::NearestHostileUnitInAttackDistanceCheck u_check(this, dist);
-        Hellground::UnitLastSearcher<Hellground::NearestHostileUnitInAttackDistanceCheck> searcher(target, u_check);
+        MaNGOS::NearestHostileUnitInAttackDistanceCheck u_check(this, dist);
+        MaNGOS::UnitLastSearcher<MaNGOS::NearestHostileUnitInAttackDistanceCheck> searcher(target, u_check);
 
         Cell::VisitAllObjects(this, searcher, dist);
     }
@@ -2149,8 +2149,8 @@ void Creature::CallAssistance()
         {
             std::list<Creature*> assistList;
             {
-                Hellground::AnyAssistCreatureInRangeCheck u_check(this, getVictim(), radius);
-                Hellground::ObjectListSearcher<Creature, Hellground::AnyAssistCreatureInRangeCheck> searcher(assistList, u_check);
+                MaNGOS::AnyAssistCreatureInRangeCheck u_check(this, getVictim(), radius);
+                MaNGOS::ObjectListSearcher<Creature, MaNGOS::AnyAssistCreatureInRangeCheck> searcher(assistList, u_check);
 
                 Cell::VisitGridObjects(this, searcher, radius);
             }
@@ -2175,8 +2175,8 @@ void Creature::CallForHelp(float fRadius)
     if (fRadius <= 0.0f || !getVictim() || isPet() || isCharmed())
         return;
 
-    Hellground::CallOfHelpCreatureInRangeDo u_do(this, getVictim(), fRadius);
-    Hellground::ObjectWorker<Creature, Hellground::CallOfHelpCreatureInRangeDo> worker(u_do);
+    MaNGOS::CallOfHelpCreatureInRangeDo u_do(this, getVictim(), fRadius);
+    MaNGOS::ObjectWorker<Creature, MaNGOS::CallOfHelpCreatureInRangeDo> worker(u_do);
 
     Cell::VisitGridObjects(this, worker, fRadius);
 }
@@ -2503,7 +2503,7 @@ void Creature::GetRespawnCoord(float &x, float &y, float &z, float* ori, float* 
             *dist = 0;
     }
     //lets check if our creatures have valid spawn coordinates
-    if(!Hellground::IsValidMapCoord(x, y, z))
+    if(!MaNGOS::IsValidMapCoord(x, y, z))
     {
         sLog.outLog(LOG_DEFAULT, "ERROR: Creature with invalid respawn coordinates: mapid = %u, guid = %u, x = %f, y = %f, z = %f", GetMapId(), GetGUIDLow(), x, y, z);
         ASSERT(false);

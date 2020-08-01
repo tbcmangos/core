@@ -1606,8 +1606,8 @@ struct totem_ashtongue_mysticAI : public Scripted_NoMovementAI
         if(me->GetEntry() == NPC_SUMMONED_WINDFURY_TOTEM)
         {
             std::list<Creature*> pList;
-            Hellground::AllFriendlyCreaturesInGrid u_check(me);
-            Hellground::ObjectListSearcher<Creature, Hellground::AllFriendlyCreaturesInGrid> searcher(pList, u_check);
+            MaNGOS::AllFriendlyCreaturesInGrid u_check(me);
+            MaNGOS::ObjectListSearcher<Creature, MaNGOS::AllFriendlyCreaturesInGrid> searcher(pList, u_check);
             Cell::VisitAllObjects(me, searcher, 60.0);  // range than of aura, in case mobs moved too far from totem when killed
 
             if(!pList.empty())
@@ -4961,7 +4961,7 @@ enum TempleConcubine
     SPELL_LOVE_TAP  = 41338
 };
 
-#define YELL_TEMPLE_CONCUBINE "Business… or pleasure?"
+#define YELL_TEMPLE_CONCUBINE "Business?or pleasure?"
 
 struct mob_temple_concubineAI: public ScriptedAI
 {

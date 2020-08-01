@@ -235,7 +235,7 @@ void Map::RemoveFromGrid(DynamicObject* obj, NGridType *grid, Cell const& cell)
 template<class T>
 void Map::SwitchGridContainers(T* obj, bool on)
 {
-    CellPair p = Hellground::ComputeCellPair(obj->GetPositionX(), obj->GetPositionY());
+    CellPair p = MaNGOS::ComputeCellPair(obj->GetPositionX(), obj->GetPositionY());
     if (p.x_coord >= TOTAL_NUMBER_OF_CELLS_PER_MAP || p.y_coord >= TOTAL_NUMBER_OF_CELLS_PER_MAP)
     {
         sLog.outLog(LOG_DEFAULT, "ERROR: Map::SwitchGridContainers: Object " I64FMT " have invalid coordinates X:%f Y:%f grid cell [%u:%u]", obj->GetGUID(), obj->GetPositionX(), obj->GetPositionY(), p.x_coord, p.y_coord);
@@ -341,7 +341,7 @@ bool Map::EnsureGridLoaded(const Cell &cell)
 
 void Map::LoadGrid(float x, float y)
 {
-    CellPair pair = Hellground::ComputeCellPair(x, y);
+    CellPair pair = MaNGOS::ComputeCellPair(x, y);
     Cell cell(pair);
     EnsureGridLoaded(cell);
 }
@@ -350,7 +350,7 @@ bool Map::Add(Player *player)
 {
     player->SetInstanceId(GetInstanceId());
 
-    CellPair p = Hellground::ComputeCellPair(player->GetPositionX(), player->GetPositionY());
+    CellPair p = MaNGOS::ComputeCellPair(player->GetPositionX(), player->GetPositionY());
     if(p.x_coord >= TOTAL_NUMBER_OF_CELLS_PER_MAP || p.y_coord >= TOTAL_NUMBER_OF_CELLS_PER_MAP )
     {
         sLog.outLog(LOG_DEFAULT, "ERROR: Map::Add: Player (GUID: %u) have invalid coordinates X:%f Y:%f grid cell [%u:%u]", player->GetGUIDLow(), player->GetPositionX(), player->GetPositionY(), p.x_coord, p.y_coord);
@@ -379,7 +379,7 @@ bool Map::Add(Player *player)
 template<class T>
 void Map::Add(T *obj)
 {
-    CellPair p = Hellground::ComputeCellPair(obj->GetPositionX(), obj->GetPositionY());
+    CellPair p = MaNGOS::ComputeCellPair(obj->GetPositionX(), obj->GetPositionY());
 
     if (p.x_coord >= TOTAL_NUMBER_OF_CELLS_PER_MAP || p.y_coord >= TOTAL_NUMBER_OF_CELLS_PER_MAP)
     {
@@ -416,19 +416,19 @@ void Map::Add(T *obj)
 
 void Map::BroadcastPacket(WorldObject* sender, WorldPacket *msg, bool toSelf)
 {
-    Hellground::PacketBroadcaster post_man(*sender, msg, toSelf ? NULL : sender->ToPlayer());
+    MaNGOS::PacketBroadcaster post_man(*sender, msg, toSelf ? NULL : sender->ToPlayer());
     Cell::VisitWorldObjects(sender, post_man, GetVisibilityDistance());
 }
 
 void Map::BroadcastPacketInRange(WorldObject* sender, WorldPacket *msg, float dist, bool toSelf, bool ownTeam)
 {
-    Hellground::PacketBroadcaster post_man(*sender, msg, toSelf ? NULL : sender->ToPlayer(), dist, ownTeam);
+    MaNGOS::PacketBroadcaster post_man(*sender, msg, toSelf ? NULL : sender->ToPlayer(), dist, ownTeam);
     Cell::VisitWorldObjects(sender, post_man, GetVisibilityDistance());
 }
 
 void Map::BroadcastPacketExcept(WorldObject* sender, WorldPacket* msg, Player* except)
 {
-    Hellground::PacketBroadcaster post_man(*sender, msg, except);
+    MaNGOS::PacketBroadcaster post_man(*sender, msg, except);
     Cell::VisitWorldObjects(sender, post_man, GetVisibilityDistance());
 }
 
@@ -476,14 +476,14 @@ void Map::Update(const uint32 &t_diff)
 
     resetMarkedCells();
 
-    Hellground::ObjectUpdater updater(t_diff);
+    MaNGOS::ObjectUpdater updater(t_diff);
     // for creature
-    TypeContainerVisitor<Hellground::ObjectUpdater, GridTypeMapContainer> grid_object_update(updater);
+    TypeContainerVisitor<MaNGOS::ObjectUpdater, GridTypeMapContainer> grid_object_update(updater);
 
     MAP_UPDATE_DIFF(sWorld.MapUpdateDiff().CumulateDiffFor(DIFF_CREATURE_UPDATE, diff.RecordTimeFor(""), GetId()))
 
     // for pets
-    TypeContainerVisitor<Hellground::ObjectUpdater, WorldTypeMapContainer> world_object_update(updater);
+    TypeContainerVisitor<MaNGOS::ObjectUpdater, WorldTypeMapContainer> world_object_update(updater);
 
     MAP_UPDATE_DIFF(sWorld.MapUpdateDiff().CumulateDiffFor(DIFF_PET_UPDATE, diff.RecordTimeFor(""), GetId()))
 
@@ -621,7 +621,7 @@ void Map::Remove(Player *player, bool remove)
         m_mapRefIter = m_mapRefIter->nocheck_prev();
 
     player->GetMapRef().unlink();
-    CellPair p = Hellground::ComputeCellPair(player->GetPositionX(), player->GetPositionY());
+    CellPair p = MaNGOS::ComputeCellPair(player->GetPositionX(), player->GetPositionY());
     if (p.x_coord >= TOTAL_NUMBER_OF_CELLS_PER_MAP || p.y_coord >= TOTAL_NUMBER_OF_CELLS_PER_MAP)
     {
         // invalid coordinates
@@ -662,7 +662,7 @@ void Map::Remove(Player *player, bool remove)
 template<class T>
 void Map::Remove(T *obj, bool remove)
 {
-    CellPair p = Hellground::ComputeCellPair(obj->GetPositionX(), obj->GetPositionY());
+    CellPair p = MaNGOS::ComputeCellPair(obj->GetPositionX(), obj->GetPositionY());
     if (p.x_coord >= TOTAL_NUMBER_OF_CELLS_PER_MAP || p.y_coord >= TOTAL_NUMBER_OF_CELLS_PER_MAP)
     {
         sLog.outLog(LOG_DEFAULT, "ERROR: Map::Remove: Object " I64FMT " have invalid coordinates X:%f Y:%f grid cell [%u:%u]", obj->GetGUID(), obj->GetPositionX(), obj->GetPositionY(), p.x_coord, p.y_coord);
@@ -697,8 +697,8 @@ void Map::Remove(T *obj, bool remove)
 
 void Map::PlayerRelocation(Player* player, float x, float y, float z, float orientation)
 {
-    Cell old_cell(Hellground::ComputeCellPair(player->GetPositionX(), player->GetPositionY()));
-    Cell new_cell(Hellground::ComputeCellPair(x, y));
+    Cell old_cell(MaNGOS::ComputeCellPair(player->GetPositionX(), player->GetPositionY()));
+    Cell new_cell(MaNGOS::ComputeCellPair(x, y));
 
     player->Relocate(x, y, z, orientation);
 
@@ -728,7 +728,7 @@ void Map::CreatureRelocation(Creature *creature, float x, float y, float z, floa
 
     Cell old_cell = creature->GetCurrentCell();
 
-    CellPair new_val = Hellground::ComputeCellPair(x, y);
+    CellPair new_val = MaNGOS::ComputeCellPair(x, y);
     Cell new_cell(new_val);
 
     // delay creature move for grid/cell to grid/cell moves
@@ -762,7 +762,7 @@ void Map::MoveAllCreaturesInMoveList()
         i_creaturesToMove.erase(iter);
 
         // calculate cells
-        CellPair new_val = Hellground::ComputeCellPair(cm.x, cm.y);
+        CellPair new_val = MaNGOS::ComputeCellPair(cm.x, cm.y);
         Cell new_cell(new_val);
 
         // do move or do move to respawn or remove creature if previous all fail
@@ -819,7 +819,7 @@ bool Map::CreatureRespawnRelocation(Creature *c)
     float resp_x, resp_y, resp_z, resp_o;
     c->GetRespawnCoord(resp_x, resp_y, resp_z, &resp_o);
 
-    CellPair resp_val = Hellground::ComputeCellPair(resp_x, resp_y);
+    CellPair resp_val = MaNGOS::ComputeCellPair(resp_x, resp_y);
     Cell resp_cell(resp_val);
 
     c->CombatStop();
@@ -908,7 +908,7 @@ bool Map::CheckGridIntegrity(Creature* c, bool moved) const
 {
     Cell const& cur_cell = c->GetCurrentCell();
 
-    CellPair xy_val = Hellground::ComputeCellPair(c->GetPositionX(), c->GetPositionY());
+    CellPair xy_val = MaNGOS::ComputeCellPair(c->GetPositionX(), c->GetPositionY());
     Cell xy_cell(xy_val);
     if (xy_cell != cur_cell)
     {
@@ -1165,7 +1165,7 @@ bool Map::ActiveObjectsNearGrid(uint32 x, uint32 y) const
     {
         Player* plr = iter->getSource();
 
-        CellPair p = Hellground::ComputeCellPair(plr->GetPositionX(), plr->GetPositionY());
+        CellPair p = MaNGOS::ComputeCellPair(plr->GetPositionX(), plr->GetPositionY());
         if ((cell_min.x_coord <= p.x_coord && p.x_coord <= cell_max.x_coord) &&
             (cell_min.y_coord <= p.y_coord && p.y_coord <= cell_max.y_coord))
             return true;
@@ -1175,7 +1175,7 @@ bool Map::ActiveObjectsNearGrid(uint32 x, uint32 y) const
     {
         WorldObject* obj = *iter;
 
-        CellPair p = Hellground::ComputeCellPair(obj->GetPositionX(), obj->GetPositionY());
+        CellPair p = MaNGOS::ComputeCellPair(obj->GetPositionX(), obj->GetPositionY());
         if ((cell_min.x_coord <= p.x_coord && p.x_coord <= cell_max.x_coord) &&
             (cell_min.y_coord <= p.y_coord && p.y_coord <= cell_max.y_coord))
             return true;
@@ -1195,12 +1195,12 @@ void Map::AddToActive(WorldObject* obj)
         {
             float x,y,z;
             c->GetRespawnCoord(x,y,z);
-            GridPair p = Hellground::ComputeGridPair(x, y);
+            GridPair p = MaNGOS::ComputeGridPair(x, y);
             if (getNGrid(p.x_coord, p.y_coord))
                 getNGrid(p.x_coord, p.y_coord)->incUnloadActiveLock();
             else
             {
-                GridPair p2 = Hellground::ComputeGridPair(c->GetPositionX(), c->GetPositionY());
+                GridPair p2 = MaNGOS::ComputeGridPair(c->GetPositionX(), c->GetPositionY());
                 sLog.outLog(LOG_DEFAULT, "ERROR: Active creature (GUID: %u Entry: %u) added to grid[%u,%u] but spawn grid[%u,%u] not loaded.",
                               c->GetGUIDLow(), c->GetEntry(), p.x_coord, p.y_coord, p2.x_coord, p2.y_coord);
             }
@@ -1229,12 +1229,12 @@ void Map::RemoveFromActive(WorldObject* obj)
         {
             float x,y,z;
             c->GetRespawnCoord(x,y,z);
-            GridPair p = Hellground::ComputeGridPair(x, y);
+            GridPair p = MaNGOS::ComputeGridPair(x, y);
             if (getNGrid(p.x_coord, p.y_coord))
                 getNGrid(p.x_coord, p.y_coord)->decUnloadActiveLock();
             else
             {
-                GridPair p2 = Hellground::ComputeGridPair(c->GetPositionX(), c->GetPositionY());
+                GridPair p2 = MaNGOS::ComputeGridPair(c->GetPositionX(), c->GetPositionY());
                 sLog.outLog(LOG_DEFAULT, "ERROR: Active creature (GUID: %u Entry: %u) removed from grid[%u,%u] but spawn grid[%u,%u] not loaded.",
                               c->GetGUIDLow(), c->GetEntry(), p.x_coord, p.y_coord, p2.x_coord, p2.y_coord);
             }
@@ -1621,8 +1621,8 @@ void Map::ScriptsProcess()
                 GameObject *go = NULL;
                 int32 time_to_despawn = step.script->datalong2<5 ? 5 : (int32)step.script->datalong2;
 
-                Hellground::GameObjectWithDbGUIDCheck go_check(*summoner,step.script->datalong);
-                Hellground::ObjectSearcher<GameObject, Hellground::GameObjectWithDbGUIDCheck> checker(go,go_check);
+                MaNGOS::GameObjectWithDbGUIDCheck go_check(*summoner,step.script->datalong);
+                MaNGOS::ObjectSearcher<GameObject, MaNGOS::GameObjectWithDbGUIDCheck> checker(go,go_check);
 
                 Cell::VisitGridObjects(summoner, checker, GetVisibilityDistance());
 
@@ -1676,8 +1676,8 @@ void Map::ScriptsProcess()
                 GameObject *door = NULL;
                 int32 time_to_close = step.script->datalong2 < 15 ? 15 : (int32)step.script->datalong2;
 
-                Hellground::GameObjectWithDbGUIDCheck go_check(*caster,step.script->datalong);
-                Hellground::ObjectSearcher<GameObject, Hellground::GameObjectWithDbGUIDCheck> checker(door,go_check);
+                MaNGOS::GameObjectWithDbGUIDCheck go_check(*caster,step.script->datalong);
+                MaNGOS::ObjectSearcher<GameObject, MaNGOS::GameObjectWithDbGUIDCheck> checker(door,go_check);
 
                 Cell::VisitGridObjects(caster, checker, GetVisibilityDistance());
 
@@ -1726,8 +1726,8 @@ void Map::ScriptsProcess()
                 GameObject *door = NULL;
                 int32 time_to_open = step.script->datalong2 < 15 ? 15 : (int32)step.script->datalong2;
 
-                Hellground::GameObjectWithDbGUIDCheck go_check(*caster,step.script->datalong);
-                Hellground::ObjectSearcher<GameObject, Hellground::GameObjectWithDbGUIDCheck> checker(door,go_check);
+                MaNGOS::GameObjectWithDbGUIDCheck go_check(*caster,step.script->datalong);
+                MaNGOS::ObjectSearcher<GameObject, MaNGOS::GameObjectWithDbGUIDCheck> checker(door,go_check);
 
                 Cell::VisitGridObjects(caster, checker, GetVisibilityDistance());
 
@@ -1937,8 +1937,8 @@ void Map::ScriptsProcess()
                 if (source) //using grid searcher
                 {
                     //sLog.outDebug("Attempting to find Creature: Db GUID: %i", step.script->datalong);
-                    Hellground::CreatureWithDbGUIDCheck target_check(((Unit*)source), step.script->datalong);
-                    Hellground::ObjectSearcher<Creature, Hellground::CreatureWithDbGUIDCheck> checker(target,target_check);
+                    MaNGOS::CreatureWithDbGUIDCheck target_check(((Unit*)source), step.script->datalong);
+                    MaNGOS::ObjectSearcher<Creature, MaNGOS::CreatureWithDbGUIDCheck> checker(target,target_check);
 
                     Cell::VisitGridObjects((Unit*)source, checker, GetVisibilityDistance());
                 }
@@ -2597,14 +2597,14 @@ Creature * Map::GetCreature(uint64 guid, float x, float y)
 
     if (creaturesMap.find(a, guid))
     {
-        CellPair p = Hellground::ComputeCellPair(x,y);
+        CellPair p = MaNGOS::ComputeCellPair(x,y);
         if (p.x_coord >= TOTAL_NUMBER_OF_CELLS_PER_MAP || p.y_coord >= TOTAL_NUMBER_OF_CELLS_PER_MAP)
         {
             sLog.outLog(LOG_DEFAULT, "ERROR: Map::GetCorpse: invalid coordinates supplied X:%f Y:%f grid cell [%u:%u]", x, y, p.x_coord, p.y_coord);
             return NULL;
         }
 
-        CellPair q = Hellground::ComputeCellPair(a->second->GetPositionX(), a->second->GetPositionY());
+        CellPair q = MaNGOS::ComputeCellPair(a->second->GetPositionX(), a->second->GetPositionY());
         if (q.x_coord >= TOTAL_NUMBER_OF_CELLS_PER_MAP || q.y_coord >= TOTAL_NUMBER_OF_CELLS_PER_MAP)
         {
             sLog.outLog(LOG_DEFAULT, "ERROR: Map::GetCorpse: object " UI64FMTD " has invalid coordinates X:%f Y:%f grid cell [%u:%u]", a->second->GetGUID(), a->second->GetPositionX(), a->second->GetPositionY(), q.x_coord, q.y_coord);
@@ -3116,13 +3116,13 @@ bool Map::CanUnload(uint32 diff)
 
 bool Map::IsRemovalGrid(float x, float y) const
 {
-    GridPair p = Hellground::ComputeGridPair(x, y);
+    GridPair p = MaNGOS::ComputeGridPair(x, y);
     return(!getNGrid(p.x_coord, p.y_coord) || getNGrid(p.x_coord, p.y_coord)->GetGridState() == GRID_STATE_REMOVAL);
 }
 
 bool Map::IsLoaded(float x, float y) const
 {
-    GridPair p = Hellground::ComputeGridPair(x, y);
+    GridPair p = MaNGOS::ComputeGridPair(x, y);
     return loaded(p);
 }
 

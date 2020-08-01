@@ -899,7 +899,7 @@ bool ChatHandler::HandleGPSCommand(const char* args)
             return false;
         }
     }
-    CellPair cell_val = Hellground::ComputeCellPair(obj->GetPositionX(), obj->GetPositionY());
+    CellPair cell_val = MaNGOS::ComputeCellPair(obj->GetPositionX(), obj->GetPositionY());
     Cell cell(cell_val);
 
     uint32 zone_id, area_id;
@@ -927,7 +927,7 @@ bool ChatHandler::HandleGPSCommand(const char* args)
     float ground_z = map->GetHeight(obj->GetPositionX(), obj->GetPositionY(), MAX_HEIGHT);
     float floor_z = map->GetHeight(obj->GetPositionX(), obj->GetPositionY(), obj->GetPositionZ());
 
-    GridPair p = Hellground::ComputeGridPair(obj->GetPositionX(), obj->GetPositionY());
+    GridPair p = MaNGOS::ComputeGridPair(obj->GetPositionX(), obj->GetPositionY());
 
     int gx=63-p.x_coord;
     int gy=63-p.y_coord;

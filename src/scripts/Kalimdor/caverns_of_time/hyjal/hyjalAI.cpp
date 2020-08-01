@@ -999,8 +999,8 @@ void hyjalAI::HideNearPos(float x, float y)
 {
     // First get all creatures.
     std::list<Creature*> creatures;
-    Hellground::AllFriendlyCreaturesInGrid creature_check(m_creature);
-    Hellground::ObjectListSearcher<Creature, Hellground::AllFriendlyCreaturesInGrid> creature_searcher(creatures, creature_check);
+    MaNGOS::AllFriendlyCreaturesInGrid creature_check(m_creature);
+    MaNGOS::ObjectListSearcher<Creature, MaNGOS::AllFriendlyCreaturesInGrid> creature_searcher(creatures, creature_check);
     Cell::VisitGridObjects(x, y, me->GetMap(), creature_searcher, me->GetMap()->GetVisibilityDistance());
 
     if(!creatures.empty())
@@ -1033,7 +1033,7 @@ class RespawnDo
 void hyjalAI::RespawnNearPos(float x, float y)
 {
     RespawnDo u_do;
-    Hellground::ObjectWorker<Creature, RespawnDo> worker(u_do);
+    MaNGOS::ObjectWorker<Creature, RespawnDo> worker(u_do);
     Cell::VisitGridObjects(x, y, me->GetMap(), worker, me->GetMap()->GetVisibilityDistance());
 }
 
@@ -1059,8 +1059,8 @@ void hyjalAI::WaypointReached(uint32 i)
         }
         // First get all creatures.
         std::list<Creature*> creatures;
-        Hellground::AllFriendlyCreaturesInGrid creature_check(m_creature);
-        Hellground::ObjectListSearcher<Creature, Hellground::AllFriendlyCreaturesInGrid> creature_searcher(creatures, creature_check);
+        MaNGOS::AllFriendlyCreaturesInGrid creature_check(m_creature);
+        MaNGOS::ObjectListSearcher<Creature, MaNGOS::AllFriendlyCreaturesInGrid> creature_searcher(creatures, creature_check);
         Cell::VisitGridObjects(me, creature_searcher, me->GetMap()->GetVisibilityDistance());
 
         if(!creatures.empty())
@@ -1092,8 +1092,8 @@ void hyjalAI::DoOverrun(uint32 faction, const uint32 diff)
         if(TeleportTimer < diff)
         {
             std::list<Creature*> creatures;
-            Hellground::AllFriendlyCreaturesInGrid creature_check(m_creature);
-            Hellground::ObjectListSearcher<Creature, Hellground::AllFriendlyCreaturesInGrid> creature_searcher(creatures, creature_check);
+            MaNGOS::AllFriendlyCreaturesInGrid creature_check(m_creature);
+            MaNGOS::ObjectListSearcher<Creature, MaNGOS::AllFriendlyCreaturesInGrid> creature_searcher(creatures, creature_check);
             Cell::VisitGridObjects(me, creature_searcher, me->GetMap()->GetVisibilityDistance());
 
             if(!creatures.empty())

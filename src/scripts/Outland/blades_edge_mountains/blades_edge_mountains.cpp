@@ -460,8 +460,8 @@ struct npc_vim_bunnyAI : public ScriptedAI
     bool GetPlayer()
     {
         Player* pPlayer = NULL;
-        Hellground::AnyPlayerInObjectRangeCheck p_check(me, 3.0f);
-        Hellground::ObjectSearcher<Player, Hellground::AnyPlayerInObjectRangeCheck> searcher(pPlayer, p_check);
+        MaNGOS::AnyPlayerInObjectRangeCheck p_check(me, 3.0f);
+        MaNGOS::ObjectSearcher<Player, MaNGOS::AnyPlayerInObjectRangeCheck> searcher(pPlayer, p_check);
 
         Cell::VisitAllObjects(me, searcher, 3.0f);
         return pPlayer;
@@ -975,8 +975,8 @@ struct npc_simon_bunnyAI : public ScriptedAI
         me->SetFloatValue(OBJECT_FIELD_SCALE_X, large ? 2 : 1);
 
         std::list<GameObject*> ClusterList;
-        Hellground::AllGameObjectsInRange objects(me, searchDistance);
-        Hellground::ObjectListSearcher<GameObject, Hellground::AllGameObjectsInRange> searcher(ClusterList, objects);
+        MaNGOS::AllGameObjectsInRange objects(me, searchDistance);
+        MaNGOS::ObjectListSearcher<GameObject, MaNGOS::AllGameObjectsInRange> searcher(ClusterList, objects);
         Cell::VisitGridObjects(me, searcher, searchDistance);
 
         for (std::list<GameObject*>::const_iterator i = ClusterList.begin(); i != ClusterList.end(); ++i)

@@ -344,8 +344,8 @@ struct npc_ice_spear_bunnyAI : public Scripted_NoMovementAI
     {
         std::list<Unit*> PlayerList;
         uint32 knockbackRadius = 3;
-        Hellground::AnyUnitInObjectRangeCheck  check(me, knockbackRadius);
-        Hellground::UnitListSearcher<Hellground::AnyUnitInObjectRangeCheck > searcher(PlayerList, check);
+        MaNGOS::AnyUnitInObjectRangeCheck  check(me, knockbackRadius);
+        MaNGOS::UnitListSearcher<MaNGOS::AnyUnitInObjectRangeCheck > searcher(PlayerList, check);
         Cell::VisitWorldObjects(me, searcher, knockbackRadius);
 
         for(std::list<Unit*>::iterator i = PlayerList.begin(); i != PlayerList.end(); i++)

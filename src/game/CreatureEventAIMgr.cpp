@@ -173,7 +173,7 @@ void CreatureEventAIMgr::LoadCreatureEventAI_Summons(bool check_entry_use)
             temp.orientation = fields[4].GetFloat();
             temp.SpawnTimeSecs = fields[5].GetUInt32();
 
-            if (!Hellground::IsValidMapCoord(temp.position_x,temp.position_y,temp.position_z,temp.orientation))
+            if (!MaNGOS::IsValidMapCoord(temp.position_x,temp.position_y,temp.position_z,temp.orientation))
             {
                 sLog.outLog(LOG_DB_ERR, "CreatureEventAI:  Summon id %u have wrong coordinates (%f,%f,%f,%f), skipping.", i,temp.position_x,temp.position_y,temp.position_z,temp.orientation);
                 continue;

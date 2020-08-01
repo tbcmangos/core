@@ -1004,7 +1004,7 @@ void WorldObject::SetOrientation(float orientation)
 
 uint32 WorldObject::GetZoneId() const
 {
-    if (!Hellground::IsValidMapCoord(m_positionX, m_positionY, m_positionZ))
+    if (!MaNGOS::IsValidMapCoord(m_positionX, m_positionY, m_positionZ))
     {
         sLog.outDebug("Unit::GetZoneId()(%f, %f, %f) .. bad coordinates!",m_positionX, m_positionY, m_positionZ);
         return 0;
@@ -1015,7 +1015,7 @@ uint32 WorldObject::GetZoneId() const
 
 uint32 WorldObject::GetAreaId() const
 {
-    if (!Hellground::IsValidMapCoord(m_positionX, m_positionY, m_positionZ))
+    if (!MaNGOS::IsValidMapCoord(m_positionX, m_positionY, m_positionZ))
     {
         sLog.outDebug("Unit::GetAreaId()(%f, %f, %f) .. bad coordinates!",m_positionX, m_positionY, m_positionZ);
         return 0;
@@ -1299,7 +1299,7 @@ bool WorldObject::HasInArc(const float arcangle, WorldObject const* obj) const
 
 bool WorldObject::IsPositionValid() const
 {
-    return Hellground::IsValidMapCoord(m_positionX,m_positionY,m_positionZ,m_orientation);
+    return MaNGOS::IsValidMapCoord(m_positionX,m_positionY,m_positionZ,m_orientation);
 }
 
 void WorldObject::MonsterSay(const char* text, uint32 language, uint64 TargetGuid)
@@ -1385,10 +1385,10 @@ namespace Hellground
 void WorldObject::MonsterSay(int32 textId, uint32 language, uint64 TargetGuid)
 {
     float range = sWorld.getConfig(CONFIG_LISTEN_RANGE_SAY);
-    Hellground::MonsterChatBuilder say_build(*this, CHAT_MSG_MONSTER_SAY, textId, language, TargetGuid);
-    Hellground::LocalizedPacketDo<Hellground::MonsterChatBuilder> say_do(say_build);
-    Hellground::CameraDistWorker<Hellground::LocalizedPacketDo<Hellground::MonsterChatBuilder> > say_worker(this, range, say_do);
-    TypeContainerVisitor<Hellground::CameraDistWorker<Hellground::LocalizedPacketDo<Hellground::MonsterChatBuilder> >, WorldTypeMapContainer > message(say_worker);
+    MaNGOS::MonsterChatBuilder say_build(*this, CHAT_MSG_MONSTER_SAY, textId, language, TargetGuid);
+    MaNGOS::LocalizedPacketDo<MaNGOS::MonsterChatBuilder> say_do(say_build);
+    MaNGOS::CameraDistWorker<MaNGOS::LocalizedPacketDo<MaNGOS::MonsterChatBuilder> > say_worker(this, range, say_do);
+    TypeContainerVisitor<MaNGOS::CameraDistWorker<MaNGOS::LocalizedPacketDo<MaNGOS::MonsterChatBuilder> >, WorldTypeMapContainer > message(say_worker);
     //cell_lock->Visit(cell_lock, message, *GetMap());
     Cell::VisitWorldObjects(this, say_worker, range);
 }
@@ -1396,16 +1396,16 @@ void WorldObject::MonsterSay(int32 textId, uint32 language, uint64 TargetGuid)
 void WorldObject::MonsterYell(int32 textId, uint32 language, uint64 TargetGuid)
 {
     float range = sWorld.getConfig(CONFIG_LISTEN_RANGE_YELL);
-    Hellground::MonsterChatBuilder say_build(*this, CHAT_MSG_MONSTER_YELL, textId, language, TargetGuid);
-    Hellground::LocalizedPacketDo<Hellground::MonsterChatBuilder> say_do(say_build);
-    Hellground::CameraDistWorker<Hellground::LocalizedPacketDo<Hellground::MonsterChatBuilder> > say_worker(this, range, say_do);
+    MaNGOS::MonsterChatBuilder say_build(*this, CHAT_MSG_MONSTER_YELL, textId, language, TargetGuid);
+    MaNGOS::LocalizedPacketDo<MaNGOS::MonsterChatBuilder> say_do(say_build);
+    MaNGOS::CameraDistWorker<MaNGOS::LocalizedPacketDo<MaNGOS::MonsterChatBuilder> > say_worker(this, range, say_do);
     Cell::VisitWorldObjects(this, say_worker, range);
 }
 
 void WorldObject::MonsterYellToZone(int32 textId, uint32 language, uint64 TargetGuid)
 {
-    Hellground::MonsterChatBuilder say_build(*this, CHAT_MSG_MONSTER_YELL, textId, language, TargetGuid);
-    Hellground::LocalizedPacketDo<Hellground::MonsterChatBuilder> say_do(say_build);
+    MaNGOS::MonsterChatBuilder say_build(*this, CHAT_MSG_MONSTER_YELL, textId, language, TargetGuid);
+    MaNGOS::LocalizedPacketDo<MaNGOS::MonsterChatBuilder> say_do(say_build);
 
     uint32 zoneid = GetZoneId();
 
@@ -1418,16 +1418,16 @@ void WorldObject::MonsterYellToZone(int32 textId, uint32 language, uint64 Target
 void WorldObject::MonsterTextEmote(int32 textId, uint64 TargetGuid, bool IsBossEmote, bool withoutPrename)
 {
     float range = sWorld.getConfig(IsBossEmote ? CONFIG_LISTEN_RANGE_YELL : CONFIG_LISTEN_RANGE_TEXTEMOTE);
-    Hellground::MonsterChatBuilder say_build(*this, IsBossEmote ? CHAT_MSG_RAID_BOSS_EMOTE : CHAT_MSG_MONSTER_EMOTE, textId, LANG_UNIVERSAL, TargetGuid, withoutPrename);
-    Hellground::LocalizedPacketDo<Hellground::MonsterChatBuilder> say_do(say_build);
-    Hellground::CameraDistWorker<Hellground::LocalizedPacketDo<Hellground::MonsterChatBuilder> > say_worker(this, range, say_do);
+    MaNGOS::MonsterChatBuilder say_build(*this, IsBossEmote ? CHAT_MSG_RAID_BOSS_EMOTE : CHAT_MSG_MONSTER_EMOTE, textId, LANG_UNIVERSAL, TargetGuid, withoutPrename);
+    MaNGOS::LocalizedPacketDo<MaNGOS::MonsterChatBuilder> say_do(say_build);
+    MaNGOS::CameraDistWorker<MaNGOS::LocalizedPacketDo<MaNGOS::MonsterChatBuilder> > say_worker(this, range, say_do);
     Cell::VisitWorldObjects(this, say_worker, range);
 }
 
 void WorldObject::MonsterTextEmoteToZone(int32 textId, uint64 TargetGuid, bool IsBossEmote, bool withoutPrename)
 {
-    Hellground::MonsterChatBuilder say_build(*this, IsBossEmote ? CHAT_MSG_RAID_BOSS_EMOTE : CHAT_MSG_MONSTER_EMOTE, textId, LANG_UNIVERSAL, TargetGuid, withoutPrename);
-    Hellground::LocalizedPacketDo<Hellground::MonsterChatBuilder> say_do(say_build);
+    MaNGOS::MonsterChatBuilder say_build(*this, IsBossEmote ? CHAT_MSG_RAID_BOSS_EMOTE : CHAT_MSG_MONSTER_EMOTE, textId, LANG_UNIVERSAL, TargetGuid, withoutPrename);
+    MaNGOS::LocalizedPacketDo<MaNGOS::MonsterChatBuilder> say_do(say_build);
 
     uint32 zoneid = GetZoneId();
 
@@ -1777,8 +1777,8 @@ void WorldObject::GetGroundPoint(float &x, float &y, float &z, float dist, float
     angle += GetOrientation();
     x += dist * cos(angle);
     y += dist * sin(angle);
-    Hellground::NormalizeMapCoord(x);
-    Hellground::NormalizeMapCoord(y);
+    MaNGOS::NormalizeMapCoord(x);
+    MaNGOS::NormalizeMapCoord(y);
     UpdateGroundPositionZ(x, y, z);
 }
 
@@ -1792,7 +1792,7 @@ void WorldObject::UpdateVisibilityAndView()
 void WorldObject::UpdateObjectVisibility(bool /*forced*/)
 {
     //updates object's visibility for nearby players
-    Hellground::VisibleChangesNotifier notifier(*this);
+    MaNGOS::VisibleChangesNotifier notifier(*this);
     float radius = World::GetVisibleObjectGreyDistance();
 
     if ( ToCorpse() != nullptr || !IsInWorld() )
@@ -1992,8 +1992,8 @@ void WorldObject::GetValidPointInAngle(Position &pos, float dist, float angle, b
         }
     }
 
-    Hellground::NormalizeMapCoord(pos.x);
-    Hellground::NormalizeMapCoord(pos.y);
+    MaNGOS::NormalizeMapCoord(pos.x);
+    MaNGOS::NormalizeMapCoord(pos.y);
     UpdateAllowedPositionZ(pos.x, pos.y, pos.z);
 }
 

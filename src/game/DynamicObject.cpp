@@ -127,7 +127,7 @@ void DynamicObject::Update(uint32 update_diff, uint32 p_time)
     {
         if (m_updateTimer <= p_time)
         {
-            Hellground::DynamicObjectUpdater notifier(*this,caster);
+            MaNGOS::DynamicObjectUpdater notifier(*this,caster);
             Cell::VisitAllObjects(this, notifier, m_radius);
             m_updateTimer += 600 - p_time; // is this official-like?
         }

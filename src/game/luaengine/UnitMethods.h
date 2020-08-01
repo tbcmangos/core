@@ -1109,8 +1109,8 @@ namespace LuaUnit
 
         std::list<Unit*> list;
 
-        Hellground::AnyFriendlyUnitInObjectRangeCheck checker(unit, unit, range);
-        Hellground::UnitListSearcher<Hellground::AnyFriendlyUnitInObjectRangeCheck> searcher(list, checker);
+        MaNGOS::AnyFriendlyUnitInObjectRangeCheck checker(unit, unit, range);
+        MaNGOS::UnitListSearcher<MaNGOS::AnyFriendlyUnitInObjectRangeCheck> searcher(list, checker);
         Cell::VisitAllObjects(unit, searcher, range);
 
         Eluna::ObjectGUIDCheck guidCheck(unit->GetGUID());
@@ -1137,8 +1137,8 @@ namespace LuaUnit
 
         std::list<Unit*> list;
 
-        Hellground::AnyUnfriendlyUnitInObjectRangeCheck checker(unit, unit, range);
-        Hellground::UnitListSearcher<Hellground::AnyUnfriendlyUnitInObjectRangeCheck> searcher(list, checker);
+        MaNGOS::AnyUnfriendlyUnitInObjectRangeCheck checker(unit, unit, range);
+        MaNGOS::UnitListSearcher<MaNGOS::AnyUnfriendlyUnitInObjectRangeCheck> searcher(list, checker);
          Cell::VisitAllObjects(unit, searcher, range);
 
         Eluna::ObjectGUIDCheck guidCheck(unit->GetGUID());
