@@ -1,107 +1,33 @@
-# https://docs.travis-ci.com/user/languages/c/#gcc-on-linux
-# Precise ships with GCC 4.6.3
-# Trusty ships with GCC 4.8.2
-# Xenial ships with GCC 5.4.0
-# Bionic ships with GCC 7.4.0
-dist: xenial
-language: cpp
-# compiler: gcc
+#Copied from TinityCore.
+#Editied to match our environment.
 
-# whitelisted packages can be obtained quickly without downloading
-# doxygen is out of date, tho so we download its binaries
-addons:
-  apt:
-    packages:
-      - cmake
-      - build-essential
-      - cppcheck
-      - git
-      - make
-      - binutils-dev
-      - libiberty-dev
-      - openssl
-      - libssl-dev
-      - zlib1g-dev
-      - zip
-      - unzip
+sudo: required
+dist: trusty
+
+language: cpp
+compiler:
+  - g++
 
 git:
   depth: 1
 
 before_install:
-  - sudo apt-get -qq install libtool make cmake cmake-data openssl
+  - sudo apt-get -qq install build-essential libtool make cmake cmake-data openssl
   - sudo apt-get -qq install libssl-dev libmysqlclient-dev libmysql++-dev libreadline6-dev zlib1g-dev libbz2-dev
-#  - sudo apt-get -qq install libboost1.55-dev libboost-thread1.55-dev libboost-filesystem1.55-dev libboost-system1.55-dev libboost-program-options1.55-dev libboost-iostreams1.55-dev libboost-regex1.55-dev
+  - sudo apt-get -qq install libboost1.55-dev libboost-thread1.55-dev libboost-filesystem1.55-dev libboost-system1.55-dev libboost-program-options1.55-dev libboost-iostreams1.55-dev libboost-regex1.55-dev
   - sudo apt-get -qq install libace-dev
   - sudo apt-get -qq install libtbb-dev
   - git config user.email "travis@build.bot" && git config user.name "Travis CI"
   - git tag -a -m "Travis build" init
-  - if [[ $TRAVIS_PULL_REQUEST == 'true' ]]; then exit; fi
-# build matrix
-matrix:
-  include:
-    # linux builds gcc4 x64
-    - os: linux
-      arch: amd64
-      name: "linux builds gcc4 x64"
-      addons:
-        apt:
-          sources:
-            - ubuntu-toolchain-r-test
-          packages:
-            - g++-4.8
-      env:
-        - MATRIX_EVAL="CC=gcc-4.8 && CXX=g++-4.8"
-      install:
-        - mkdir build
-        - mkdir _install
-        - cd build
-        - cmake ../ -DCMAKE_INSTALL_PREFIX=../_install -DWITH_WARNINGS=1 -DWITH_COREDEBUG=0 -DUSE_COREPCH=1 -DUSE_SCRIPTPCH=1 -DTOOLS=1 -DCMAKE_BUILD_TYPE=Release -DCMAKE_C_FLAGS="-w" -DCMAKE_CXX_FLAGS="-w"
-        - cd ..
-        
-    # linux builds gcc7 x64
-    - os: linux
-      arch: amd64
-      name: "linux builds gcc7 x64"
-      compiler: gcc
-      addons:
-        apt:
-          sources:
-            - ubuntu-toolchain-r-test
-          packages:
-            - g++-7
-      env:
-        - MATRIX_EVAL="CC=gcc-7 && CXX=g++-7"
-      install:
-        - mkdir build
-        - mkdir _install
-        - cd build
-        - cmake ../ -DCMAKE_INSTALL_PREFIX=../_install -DWITH_WARNINGS=1 -DWITH_COREDEBUG=0 -DUSE_COREPCH=1 -DUSE_SCRIPTPCH=1 -DTOOLS=1 -DCMAKE_BUILD_TYPE=Release -DCMAKE_C_FLAGS="-w" -DCMAKE_CXX_FLAGS="-w"
-        - cd ..
 
-    # linux builds clang x64
-    - os: linux
-      arch: amd64
-      name: "linux builds clang x64"
-      compiler: clang
-      addons:
-        apt:
-          sources:
-            - ubuntu-toolchain-r-test
-            - llvm-toolchain-precise-3.6
-          packages:
-            - clang-3.6
-      env:
-        - MATRIX_EVAL="CC=clang-3.6 && CXX=clang++-3.6"
-      install:
-        - mkdir build
-        - mkdir _install
-        - cd build
-        - cmake ../ -DCMAKE_INSTALL_PREFIX=../_install -DCMAKE_C_COMPILER="clang" -DCMAKE_CXX_COMPILER="clang++" -DWITH_WARNINGS=1 -DWITH_COREDEBUG=0 -DUSE_COREPCH=1 -DUSE_SCRIPTPCH=1 -DTOOLS=1 -DCMAKE_BUILD_TYPE=Release -DCMAKE_C_FLAGS="-w" -DCMAKE_CXX_FLAGS="-w"
-        - cd ..
-             
-        
+install:
+  - mkdir build
+  - mkdir _install
+  - cd build
+  - cmake ../ -DCMAKE_INSTALL_PREFIX=../_install -DWITH_WARNINGS=1 -DWITH_COREDEBUG=0 -DUSE_COREPCH=1 -DUSE_SCRIPTPCH=1 -DTOOLS=1 -DSCRIPTS="dynamic" -DSERVERS=1 -DNOJEM=1 -DWITH_DYNAMIC_LINKING=1 -DCMAKE_BUILD_TYPE=Release -DCMAKE_C_FLAGS="-w" -DCMAKE_CXX_FLAGS="-w" -DCMAKE_INSTALL_PREFIX=check_install
+  - cd ..
+
 script:
-  # - $CXX --version
+  - $CXX --version
   - cd build
   - make -j 8 -k && make install
