@@ -766,15 +766,15 @@ void AreaAura::Update(uint32 diff)
                     break;
                 case AREA_AURA_FRIEND:
                 {
-                    Hellground::AnyFriendlyUnitInObjectRangeCheck u_check(caster, caster, m_radius);
-                    Hellground::UnitListSearcher<Hellground::AnyFriendlyUnitInObjectRangeCheck> searcher(targets, u_check);
+                    MaNGOS::AnyFriendlyUnitInObjectRangeCheck u_check(caster, caster, m_radius);
+                    MaNGOS::UnitListSearcher<MaNGOS::AnyFriendlyUnitInObjectRangeCheck> searcher(targets, u_check);
                     Cell::VisitAllObjects(caster, searcher, m_radius);
                     break;
                 }
                 case AREA_AURA_ENEMY:
                 {
-                    Hellground::AnyAoETargetUnitInObjectRangeCheck u_check(caster, caster, m_radius); // No GetCharmer in searcher
-                    Hellground::UnitListSearcher<Hellground::AnyAoETargetUnitInObjectRangeCheck> searcher(targets, u_check);
+                    MaNGOS::AnyAoETargetUnitInObjectRangeCheck u_check(caster, caster, m_radius); // No GetCharmer in searcher
+                    MaNGOS::UnitListSearcher<MaNGOS::AnyAoETargetUnitInObjectRangeCheck> searcher(targets, u_check);
                     Cell::VisitAllObjects(caster, searcher, m_radius);
                     break;
                 }
@@ -3821,7 +3821,7 @@ void Aura::HandleChannelDeathItem(bool apply, bool Real)
 
         // Soul Shard only from non-grey units and non-totems
         if (spellInfo->EffectItemType[m_effIndex] == 6265 &&
-            (victim->getLevel() <= Hellground::XP::GetGrayLevel(caster->getLevel()) ||
+            (victim->getLevel() <= MaNGOS::XP::GetGrayLevel(caster->getLevel()) ||
             (victim->GetTypeId()==TYPEID_UNIT && (!((Player*)caster)->isAllowedToLoot((Creature*)victim) || ((Creature*)victim)->isTotem()))))
             return;
 
@@ -4020,8 +4020,8 @@ void Aura::HandleFeignDeath(bool apply, bool Real)
     {
         // feign death in pvp: clear target and interrupt casts
         std::list<Unit*> targets;
-        Hellground::AnyUnfriendlyUnitInObjectRangeCheck u_check(m_target, m_target, m_target->GetMap()->GetVisibilityDistance());
-        Hellground::UnitListSearcher<Hellground::AnyUnfriendlyUnitInObjectRangeCheck> searcher(targets, u_check);
+        MaNGOS::AnyUnfriendlyUnitInObjectRangeCheck u_check(m_target, m_target, m_target->GetMap()->GetVisibilityDistance());
+        MaNGOS::UnitListSearcher<MaNGOS::AnyUnfriendlyUnitInObjectRangeCheck> searcher(targets, u_check);
 
         Cell::VisitAllObjects(m_target, searcher, m_target->GetMap()->GetVisibilityDistance());
 
@@ -7949,8 +7949,8 @@ void Aura::PeriodicDummyTick()
         case 50493:
         {
             Creature* target = NULL;
-            Hellground::AllCreaturesOfEntryInRange check(m_target, 27989, 10.0f);
-            Hellground::ObjectSearcher<Creature, Hellground::AllCreaturesOfEntryInRange> searcher(target, check);
+            MaNGOS::AllCreaturesOfEntryInRange check(m_target, 27989, 10.0f);
+            MaNGOS::ObjectSearcher<Creature, MaNGOS::AllCreaturesOfEntryInRange> searcher(target, check);
             Cell::VisitAllObjects(m_target, searcher, 10.0f);
 
             if (target)

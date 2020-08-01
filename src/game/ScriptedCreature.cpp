@@ -1008,8 +1008,8 @@ Unit* FindCreature(uint32 entry, float range, Unit* Finder)
         return NULL;
 
     Creature* target = NULL;
-    Hellground::AllCreaturesOfEntryInRange check(Finder, entry, range);
-    Hellground::ObjectSearcher<Creature, Hellground::AllCreaturesOfEntryInRange> searcher(target, check);
+    MaNGOS::AllCreaturesOfEntryInRange check(Finder, entry, range);
+    MaNGOS::ObjectSearcher<Creature, MaNGOS::AllCreaturesOfEntryInRange> searcher(target, check);
 
     Cell::VisitAllObjects(Finder, searcher, range);
     return target;
@@ -1020,8 +1020,8 @@ GameObject* FindGameObject(uint32 entry, float range, Unit* Finder)
     if(!Finder)
         return NULL;
     GameObject* target = NULL;
-    Hellground::AllGameObjectsWithEntryInGrid go_check(entry);
-    Hellground::ObjectSearcher<GameObject, Hellground::AllGameObjectsWithEntryInGrid> searcher(target, go_check);
+    MaNGOS::AllGameObjectsWithEntryInGrid go_check(entry);
+    MaNGOS::ObjectSearcher<GameObject, MaNGOS::AllGameObjectsWithEntryInGrid> searcher(target, go_check);
     Cell::VisitGridObjects(Finder, searcher, range);
     return target;
 }
@@ -1129,8 +1129,8 @@ void BossAI::SummonedCreatureDespawn(Creature *summon)
 Creature* GetClosestCreatureWithEntry(WorldObject* pSource, uint32 Entry, float MaxSearchRange, bool alive, bool inLoS)
 {
     Creature *pCreature = NULL;
-    Hellground::NearestCreatureEntryWithLiveStateInObjectRangeCheck creature_check(*pSource, Entry, alive, MaxSearchRange, inLoS);
-    Hellground::ObjectLastSearcher<Creature, Hellground::NearestCreatureEntryWithLiveStateInObjectRangeCheck> searcher(pCreature, creature_check);
+    MaNGOS::NearestCreatureEntryWithLiveStateInObjectRangeCheck creature_check(*pSource, Entry, alive, MaxSearchRange, inLoS);
+    MaNGOS::ObjectLastSearcher<Creature, MaNGOS::NearestCreatureEntryWithLiveStateInObjectRangeCheck> searcher(pCreature, creature_check);
 
     Cell::VisitGridObjects(pSource, searcher, MaxSearchRange);
     return pCreature;
@@ -1139,8 +1139,8 @@ Creature* GetClosestCreatureWithEntry(WorldObject* pSource, uint32 Entry, float 
 GameObject* GetClosestGameObjectWithEntry(WorldObject* source, uint32 entry, float maxSearchRange)
 {
     GameObject *pGameObject = NULL;
-    Hellground::NearestGameObjectEntryInObjectRangeCheck go_check(*source, entry, maxSearchRange);
-    Hellground::ObjectLastSearcher<GameObject, Hellground::NearestGameObjectEntryInObjectRangeCheck> searcher(pGameObject, go_check);
+    MaNGOS::NearestGameObjectEntryInObjectRangeCheck go_check(*source, entry, maxSearchRange);
+    MaNGOS::ObjectLastSearcher<GameObject, MaNGOS::NearestGameObjectEntryInObjectRangeCheck> searcher(pGameObject, go_check);
 
     Cell::VisitGridObjects(source, searcher, maxSearchRange);
     return pGameObject;
@@ -1163,7 +1163,7 @@ Player* GetClosestPlayer(WorldObject* source, float maxSearchRange)
 {
     Player* player = NULL;
     AnyAlivePlayerExceptGm check(source);
-    Hellground::ObjectSearcher<Player, AnyAlivePlayerExceptGm> checker(player, check);
+    MaNGOS::ObjectSearcher<Player, AnyAlivePlayerExceptGm> checker(player, check);
 
     Cell::VisitWorldObjects(source, checker, maxSearchRange);
     return player;
