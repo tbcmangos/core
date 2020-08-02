@@ -71,7 +71,7 @@
 
 #include <cmath>
 #include <cctype>
-#include "luaengine/HookMgr.h"
+#include "LuaEngine/HookMgr.h"
 #include <iomanip>      // std::setfill, std::setw
 #include <iostream>
 

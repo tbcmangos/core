@@ -49,7 +49,7 @@
 #include "CellImpl.h"
 #include "AccountMgr.h"
 #include "Group.h"
-#include "luaengine/HookMgr.h"
+#include "LuaEngine/HookMgr.h"
 #include "GuildMgr.h"
 
 void WorldSession::HandleRepopRequestOpcode(WorldPacket & /*recv_data*/)

@@ -27,7 +27,7 @@
 #include "TicketMgr.h"
 #include "World.h"
 #include "Chat.h"
-#include "luaengine/HookMgr.h"
+#include "LuaEngine/HookMgr.h"
 
 void WorldSession::HandleGMTicketCreateOpcode(WorldPacket & recv_data)
 {

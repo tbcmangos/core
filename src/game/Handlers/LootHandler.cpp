@@ -31,7 +31,7 @@
 #include "Group.h"
 #include "World.h"
 #include "Util.h"
-#include "luaengine/HookMgr.h"
+#include "LuaEngine/HookMgr.h"
 
 void WorldSession::HandleAutostoreLootItemOpcode(WorldPacket & recv_data)
 {

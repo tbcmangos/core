@@ -20,6 +20,7 @@
 #define HELLGROUND_VMAPCLUSTER_H
 
 #include "PipeWrapper.h"
+#include <unordered_map>
 #include "Common.h"
 
 #define VMAP_CLUSTER_PREFIX                 "VMAP_CLUSTER_"
@@ -56,8 +57,8 @@ namespace VMAP
 
     };
 
-    typedef UNORDERED_MAP<ACE_thread_t, SendPipeWrapper*> ThreadSendCallback;
-    typedef UNORDERED_MAP<ACE_thread_t, RecvPipeWrapper*> ThreadRecvCallback;
+    typedef std::unordered_map<ACE_thread_t, SendPipeWrapper*> ThreadSendCallback;
+    typedef std::unordered_map<ACE_thread_t, RecvPipeWrapper*> ThreadRecvCallback;
 
     class LoSProxy
     {
@@ -105,7 +106,7 @@ namespace VMAP
         static int SpawnVMapProcess(const char* runnable, const char* cfg_file, const char* name, int32 id = -1);
     };
 
-    typedef UNORDERED_MAP<uint32, bool*> GridLoadedMap;
+    typedef std::unordered_map<uint32, bool*> GridLoadedMap;
 
     class VMapClusterProcess
     {

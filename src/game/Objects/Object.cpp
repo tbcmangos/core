@@ -49,8 +49,8 @@
 #include "TemporarySummon.h"
 #include "OutdoorPvPMgr.h"
 
-#include "movement/packet_builder.h"
-#include "luaengine/HookMgr.h"
+#include "packet_builder.h"
+#include "LuaEngine/HookMgr.h"
 
 uint32 GuidHigh2TypeId(uint32 guid_hi)
 {
