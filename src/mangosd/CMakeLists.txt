@@ -25,8 +25,8 @@ set (EXECUTABLE_SRCS
 #	soapH.h
 #	soapStub.h
 	WorldRunnable.h
-	stdsoap2.h
-	TCSoap.h
+#	stdsoap2.h
+#	TCSoap.h
 #	ChatSocket.cpp
 	CliRunnable.cpp
 	Main.cpp
