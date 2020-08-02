@@ -2,7 +2,7 @@
 #Editied to match our environment.
 
 sudo: required
-dist: trusty
+dist: xenial 
 
 language: cpp
 compiler:
