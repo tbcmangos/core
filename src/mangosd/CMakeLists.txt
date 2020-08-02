@@ -86,6 +86,8 @@ include_directories(
   ${ACE_INCLUDE_DIR}
   ${MYSQL_INCLUDE_DIR}
   ${OPENSSL_INCLUDE_DIR}
+  ${TBB_INCLUDE_DIRS}
+  ${ZLIB_INCLUDE_DIRS}
 )
 
 if(WIN32)
