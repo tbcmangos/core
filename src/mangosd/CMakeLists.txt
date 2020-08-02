@@ -81,7 +81,7 @@ include_directories(
   ${CMAKE_SOURCE_DIR}/src/game/Transports
   ${CMAKE_SOURCE_DIR}/src/game/vmap
   ${CMAKE_BINARY_DIR}/src/shared
-  ${CMAKE_BINARY_DIR}/src/shared/Database
+  ${CMAKE_SOURCE_DIR}/src/shared/Database
   ${CMAKE_BINARY_DIR}
   ${ACE_INCLUDE_DIR}
   ${MYSQL_INCLUDE_DIR}
