@@ -49,8 +49,8 @@ if(SCRIPTS)
     g3dlite
     gsoap
     ${ACE_LIBRARIES}
-      ${OPENSSL_LIBRARIES}
-  ${ZLIB_LIBRARIES}
+    ${OPENSSL_LIBRARIES}
+    ${ZLIB_LIBRARIES}
   )
 else()
   target_link_libraries(${EXECUTABLE_NAME}
@@ -61,8 +61,8 @@ else()
     g3dlite
     gsoap
     ${ACE_LIBRARIES}
-  ${OPENSSL_LIBRARIES}
-  ${ZLIB_LIBRARIES}
+    ${OPENSSL_LIBRARIES}
+    ${ZLIB_LIBRARIES}
   )
 endif()
 
