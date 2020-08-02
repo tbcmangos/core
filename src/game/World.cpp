@@ -1861,6 +1861,9 @@ void World::UpdateSessions(const uint32 & diff)
     while (addSessQueue.next(sess))
         AddSession_ (sess);
 
+    //TODO, ASSERTION at debug mode
+    //Assertion my_grainsize > 0 failed on line 69 of file C : \tbb\include\tbb / blocked_range.h
+    //    Detailed description : grainsize must be positive  maybe i didnt use debugmode tbb.dll?
     if (sessionThreads)
         tbb::parallel_for(tbb::blocked_range<int>(0, m_sessions.size(), m_sessions.size()/sessionThreads), SessionsUpdater(&m_sessions, diff));
     else
