@@ -31,7 +31,7 @@
 
 #define FILENAMEBUFFER_SIZE 500
 
-#define sLoSProxy (*ACE_Singleton<VMAP::LoSProxy, ACE_Null_Mutex>::instance())
+//#define sLoSProxy (*ACE_Singleton<VMAP::LoSProxy, ACE_Null_Mutex>::instance())
 
 /**
 This is the main Class to manage loading and unloading of maps, line of sight, height calculation and so on.
