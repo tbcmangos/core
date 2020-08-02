@@ -166,7 +166,7 @@ namespace LuaGlobalFunctions
 
     int GetCoreVersion(lua_State* L)
     {
-        sEluna->Push(L, _REVISION);
+        sEluna->Push(L, REVISION_HASH);
         return 1;
     }
 
