@@ -31,7 +31,6 @@
 #include "ProgressBar.h"
 #include "Log.h"
 #include "Master.h"
-#include "vmap/VMapCluster.h"
 
 #include <ace/Get_Opt.h>
 
@@ -169,26 +168,6 @@ extern int main(int argc, char **argv)
         return 1;
     }
 
-    int vmapProcesses = sConfig.GetIntDefault("vmap.clusterProcesses", 1);
-    bool vmapCluster = sConfig.GetBoolDefault("vmap.enableCluster", false);
-
-    if(process)
-    {
-        if(strcmp(process, VMAP_CLUSTER_MANAGER_PROCESS) == 0)
-        {
-            VMAP::VMapClusterManager vmap_manager(vmapProcesses);
-            return vmap_manager.Start();
-        }
-        else if(strcmp(process, VMAP_CLUSTER_PROCESS) == 0)
-        {
-            VMAP::VMapClusterProcess vmapProcess(process_id);
-            return vmapProcess.Start();
-        }
-        else
-            printf("Runtime-Error: bad format of process arguments\n");
-            return 1;
-    }
-
 #ifdef USING_FIFO_PIPES
     if(vmapCluster)
     {
@@ -227,10 +206,6 @@ extern int main(int argc, char **argv)
     }
 
     BarGoLink::SetOutputState(sConfig.GetBoolDefault("ShowProgressBars", false));
-
-
-    if(vmapCluster)
-        VMAP::VMapClusterManager::SpawnVMapProcesses(argv[0], cfg_file, vmapProcesses);
 
     ///- and run the 'Master'
     /// \todo Why do we need this 'Master'? Can't all of this be in the Main as for Realmd?
