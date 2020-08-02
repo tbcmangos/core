@@ -17,7 +17,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
  */
 
-#include "Auth/SARC4.h"
+#include "Auth/ARC4.h"
 #include <openssl/sha.h>
 
 SARC4::SARC4(uint8 len) : m_ctx()

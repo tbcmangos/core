@@ -20,7 +20,7 @@
 #ifndef HELLGROUND_WARDEN_BASE_H
 #define HELLGROUND_WARDEN_BASE_H
 
-#include "Auth/SARC4.h"
+#include "Auth/ARC4.h"
 #include <map>
 #include "Auth/BigNumber.h"
 #include "ByteBuffer.h"
