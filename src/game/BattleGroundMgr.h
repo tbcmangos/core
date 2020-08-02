@@ -33,7 +33,7 @@ typedef std::list<BattleGround*> BGFreeSlotQueueType;
 
 #define MAX_BATTLEGROUND_QUEUES 7                           // for level ranges 10-19, 20-29, 30-39, 40-49, 50-59, 60-69, 70+
 
-typedef UNORDERED_MAP<uint32, BattleGroundTypeId> BattleMastersMap;
+typedef std::unordered_map<uint32, BattleGroundTypeId> BattleMastersMap;
 
 #define BATTLEGROUND_ARENA_POINT_DISTRIBUTION_DAY   86400   // seconds in a day
 

@@ -793,7 +793,7 @@ class  WorldSession
 
         uint16 m_opcodesDisabled;
 
-        typedef UNORDERED_MAP<uint16,ShortIntervalTimer> OpcodesCooldown;
+        typedef std::unordered_map<uint16,ShortIntervalTimer> OpcodesCooldown;
         OpcodesCooldown _opcodesCooldown;
 
         ACE_Based::LockedQueue<WorldPacket*, ACE_Thread_Mutex> _recvQueue;

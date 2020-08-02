@@ -2408,7 +2408,7 @@ void SpellMgr::LoadSpellChains()
     mSpellChains[27168].last = spell_id;
 
 //uncomment these two lines to print yourself list of spell_chains on startup
-//    for (UNORDERED_MAP<uint32, SpellChainNode>::iterator itr=mSpellChains.begin();itr!=mSpellChains.end();itr++)
+//    for (std::unordered_map<uint32, SpellChainNode>::iterator itr=mSpellChains.begin();itr!=mSpellChains.end();itr++)
 //       sLog.outString("Id: %u, Rank: %d , %s",itr->first,itr->second.rank, sSpellStore.LookupEntry(itr->first)->Rank[sWorld.GetDefaultDbcLocale()]);
 
     sLog.outString();

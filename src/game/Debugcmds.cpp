@@ -868,9 +868,9 @@ bool ChatHandler::HandleGetPoolObjectStatsCommand(const char *args)
     MaNGOS::ObjectListSearcher<GameObject, MaNGOS::AllGameObjectsWithEntryInGrid> searcher(pList, u_check);
     Cell::VisitAllObjects(m_session->GetPlayer(), searcher, range, false);
 
-    UNORDERED_MAP<uint16, uint32> map_unspawned;
-    UNORDERED_MAP<uint16, uint32> map_poolspawned;
-    UNORDERED_MAP<uint16, uint32> map_worldspawned;
+    std::unordered_map<uint16, uint32> map_unspawned;
+    std::unordered_map<uint16, uint32> map_poolspawned;
+    std::unordered_map<uint16, uint32> map_worldspawned;
 
     for(std::list<GameObject*>::iterator it = pList.begin(); it != pList.end(); it++)
     {
@@ -887,11 +887,11 @@ bool ChatHandler::HandleGetPoolObjectStatsCommand(const char *args)
         {
             if(map_unspawned.find(poolid) == map_unspawned.end())
             {
-                map_unspawned[poolid] = 0; // .insert(UNORDERED_MAP<unit16, uint32>::mapped_type(poolid, 0));
-                map_poolspawned[poolid] = 0; //.insert(UNORDERED_MAP<unit16, uint32>::mapped_type(poolid, 0));
-                map_worldspawned[poolid] = 0; //.insert(UNORDERED_MAP<unit16, uint32>::mapped_type(poolid, 0));
+                map_unspawned[poolid] = 0; // .insert(std::unordered_map<unit16, uint32>::mapped_type(poolid, 0));
+                map_poolspawned[poolid] = 0; //.insert(std::unordered_map<unit16, uint32>::mapped_type(poolid, 0));
+                map_worldspawned[poolid] = 0; //.insert(std::unordered_map<unit16, uint32>::mapped_type(poolid, 0));
             }
-            UNORDERED_MAP<uint16, uint32> *mapToAdd = NULL;
+            std::unordered_map<uint16, uint32> *mapToAdd = NULL;
             if(gospawned)
                 mapToAdd = &map_worldspawned;
             else if(poolspawned)
@@ -907,7 +907,7 @@ bool ChatHandler::HandleGetPoolObjectStatsCommand(const char *args)
     else
         PSendSysMessage("Poolid | spawned in world | spawned in pool | not spawned");
 
-    for(UNORDERED_MAP<uint16, uint32>::iterator it = map_unspawned.begin(); it != map_unspawned.end(); it++)
+    for(std::unordered_map<uint16, uint32>::iterator it = map_unspawned.begin(); it != map_unspawned.end(); it++)
     {
         PSendSysMessage("%u | %u | %u | %u", (uint32)(it->first), map_worldspawned.find(it->first)->second, map_poolspawned.find(it->first)->second, it->second);
     }*/

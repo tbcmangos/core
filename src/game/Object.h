@@ -82,7 +82,7 @@ class CreatureAI;
 class ZoneScript;
 class TerrainInfo;
 
-typedef UNORDERED_MAP<Player*, UpdateData> UpdateDataMapType;
+typedef std::unordered_map<Player*, UpdateData> UpdateDataMapType;
 
 struct Position
 {

@@ -1715,7 +1715,7 @@ class  Unit : public WorldObject
         uint32 m_procDeep;
 
         uint64 m_GMToSendCombatStats;
-        UNORDERED_MAP<uint32, uint32> m_PRDMap;
+        std::unordered_map<uint32, uint32> m_PRDMap;
 
         void UpdateSplineMovement(uint32 t_diff);
         TimeTrackerSmall m_movesplineTimer;

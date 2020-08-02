@@ -238,10 +238,10 @@ class ScriptMgr
   //          ptr = (T)LOOKING4GROUP_GET_PROC_ADDR(m_hScriptLib, name);
   //      }
 
-        typedef UNORDERED_MAP<uint32, uint32> AreaTriggerScriptMap;
-        typedef UNORDERED_MAP<uint32, uint32> CompletedCinematicScriptMap;
-        typedef UNORDERED_MAP<uint32, uint32> EventIdScriptMap;
-        typedef UNORDERED_MAP<uint32, uint32> SpellIdScriptMap;
+        typedef std::unordered_map<uint32, uint32> AreaTriggerScriptMap;
+        typedef std::unordered_map<uint32, uint32> CompletedCinematicScriptMap;
+        typedef std::unordered_map<uint32, uint32> EventIdScriptMap;
+        typedef std::unordered_map<uint32, uint32> SpellIdScriptMap;
 
         AreaTriggerScriptMap            m_AreaTriggerScripts;
         CompletedCinematicScriptMap     m_CompletedCinematicScripts;

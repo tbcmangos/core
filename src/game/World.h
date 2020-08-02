@@ -556,7 +556,7 @@ struct CliCommandHolder
 #define MAX_PVP_RANKS 14
 
 typedef tbb::concurrent_hash_map<uint32, std::list<uint64> > LfgContainerType;
-typedef UNORDERED_MAP<uint32, WorldSession*> SessionMap;
+typedef std::unordered_map<uint32, WorldSession*> SessionMap;
 
 enum CumulateMapDiff
 {
@@ -928,10 +928,10 @@ class  World
 
         CoreBalancer _coreBalancer;
 
-        typedef UNORDERED_MAP<uint32, Weather*> WeatherMap;
+        typedef std::unordered_map<uint32, Weather*> WeatherMap;
         WeatherMap m_weathers;
         SessionMap m_sessions;
-        typedef UNORDERED_MAP<uint32, time_t> DisconnectMap;
+        typedef std::unordered_map<uint32, time_t> DisconnectMap;
         DisconnectMap m_disconnects;
         uint32 m_maxActiveSessionCount;
         uint32 m_maxQueuedSessionCount;

@@ -21,7 +21,7 @@
 #define HELLGROUND_VMAPMANAGER2_H
 
 #include "IVMapManager.h"
-#include "Utilities/UnorderedMap.h"
+#include <unordered_map>
 #include "Platform/Define.h"
 #include <G3D/Vector3.h>
 
@@ -59,8 +59,8 @@ namespace VMAP
             int iRefCount;
     };
 
-    typedef UNORDERED_MAP<uint32 , StaticMapTree *> InstanceTreeMap;
-    typedef UNORDERED_MAP<std::string, ManagedModel> ModelFileMap;
+    typedef std::unordered_map<uint32 , StaticMapTree *> InstanceTreeMap;
+    typedef std::unordered_map<std::string, ManagedModel> ModelFileMap;
 
     class VMapManager2 : public IVMapManager
     {
@@ -68,8 +68,8 @@ namespace VMAP
             // Tree to check collision
             ModelFileMap iLoadedModelFiles;
             InstanceTreeMap iInstanceMapTrees;
-            // UNORDERED_MAP<unsigned int , bool> iMapsSplitIntoTiles;
-            // UNORDERED_MAP<unsigned int , bool> iIgnoreMapIds;
+            // std::unordered_map<unsigned int , bool> iMapsSplitIntoTiles;
+            // std::unordered_map<unsigned int , bool> iIgnoreMapIds;
 
             bool _loadMap(uint32 pMapId, const std::string &basePath, uint32 tileX, uint32 tileY);
             /* void _unloadMap(uint32 pMapId, uint32 x, uint32 y); */

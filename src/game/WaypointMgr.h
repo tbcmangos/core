@@ -24,7 +24,7 @@
 #include <ace/Singleton.h>
 
 #include <vector>
-#include "Utilities/UnorderedMap.h"
+#include <unordered_map>
 
 enum WaypointMoveType
 {
@@ -44,7 +44,7 @@ struct WaypointData
 };
 
 typedef std::vector<WaypointData*> WaypointPath;
-typedef UNORDERED_MAP<uint32, WaypointPath*> WaypointPathMap;
+typedef std::unordered_map<uint32, WaypointPath*> WaypointPathMap;
 
 class WaypointMgr
 {

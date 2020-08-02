@@ -416,7 +416,7 @@ struct TrainerSpell
     uint32 reqLevel;
 };
 
-typedef UNORDERED_MAP<uint32 /*spellid*/, TrainerSpell> TrainerSpellMap;
+typedef std::unordered_map<uint32 /*spellid*/, TrainerSpell> TrainerSpellMap;
 
 struct TrainerSpellData
 {

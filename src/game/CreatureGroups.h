@@ -40,7 +40,7 @@ namespace CreatureGroupManager
     void LoadCreatureFormations();
 };
 
-typedef UNORDERED_MAP<uint32/*memberDBGUID*/, FormationInfo*> CreatureGroupInfoType;
+typedef std::unordered_map<uint32/*memberDBGUID*/, FormationInfo*> CreatureGroupInfoType;
 
 extern CreatureGroupInfoType CreatureGroupMap;
 

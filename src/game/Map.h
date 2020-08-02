@@ -102,7 +102,7 @@ enum LevelRequirementVsMode
 #define INVALID_HEIGHT       -100000.0f                     // for check, must be equal to VMAP_INVALID_HEIGHT, real value for unknown height is VMAP_INVALID_HEIGHT_VALUE
 #define MIN_UNLOAD_DELAY      1                             // immediate unload
 
-typedef UNORDERED_MAP<Creature*, CreatureMover>                 CreatureMoveList;
+typedef std::unordered_map<Creature*, CreatureMover>                 CreatureMoveList;
 typedef std::map<uint32/*leaderDBGUID*/, CreatureGroup*>        CreatureGroupHolderType;
 typedef tbb::concurrent_hash_map<uint64, GameObject*>           GObjectMapType;
 typedef tbb::concurrent_hash_map<uint64, DynamicObject*>        DObjectMapType;

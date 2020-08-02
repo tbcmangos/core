@@ -144,7 +144,7 @@ class  InstanceData : public ZoneScript
         std::string LoadBossState(const char * data);
         std::string GetBossSaveData();
 
-        UNORDERED_MAP<uint32, std::vector<uint64> > requiredEncounterToMobs;
+        std::unordered_map<uint32, std::vector<uint64> > requiredEncounterToMobs;
 
     private:
         std::vector<BossInfo> bosses;

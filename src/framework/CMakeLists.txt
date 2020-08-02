@@ -46,7 +46,6 @@ set (framework_SRCS
 
 	Utilities/EventProcessor.cpp
 
-	Utilities/UnorderedMap.h
 
 )
 

@@ -209,7 +209,7 @@ struct EventMgr
 
     typedef std::set<LuaEvent*> EventSet;
     typedef std::map<EventProcessor*, EventSet> EventMap;
-    // typedef UNORDERED_MAP<uint64, EventProcessor> ProcessorMap;
+    // typedef std::unordered_map<uint64, EventProcessor> ProcessorMap;
 
     EventMap LuaEvents; // LuaEvents[processor] = {LuaEvent, LuaEvent...}
     // ProcessorMap Processors; // Processors[guid] = processor

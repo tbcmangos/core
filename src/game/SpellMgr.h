@@ -31,7 +31,7 @@
 #include "DBCStores.h"
 #include "Database/SQLStorage.h"
 
-#include "Utilities/UnorderedMap.h"
+#include <unordered_map>
 #include <map>
 
 class Player;
@@ -238,7 +238,7 @@ struct SpellProcEventEntry
     uint32      cooldown;                                   // hidden cooldown used for some spell proc events, applied to _triggered_spell_
 };
 
-typedef UNORDERED_MAP<uint32, SpellProcEventEntry> SpellProcEventMap;
+typedef std::unordered_map<uint32, SpellProcEventEntry> SpellProcEventMap;
 
 struct SpellEnchantProcEntry
 {
@@ -248,7 +248,7 @@ struct SpellEnchantProcEntry
     uint32      procEx;
 };
 
-typedef UNORDERED_MAP<uint32, SpellEnchantProcEntry> SpellEnchantProcEventMap;
+typedef std::unordered_map<uint32, SpellEnchantProcEntry> SpellEnchantProcEventMap;
 
 struct SpellBonusData
 {
@@ -298,7 +298,7 @@ struct SpellTargetPosition
     float  target_Orientation;
 };
 
-typedef UNORDERED_MAP<uint32, SpellTargetPosition> SpellTargetPositionMap;
+typedef std::unordered_map<uint32, SpellTargetPosition> SpellTargetPositionMap;
 
 // Spell pet auras
 class PetAura
@@ -363,10 +363,10 @@ struct SpellChainNode
     uint8  rank;
 };
 
-typedef UNORDERED_MAP<uint32, SpellChainNode> SpellChainMap;
+typedef std::unordered_map<uint32, SpellChainNode> SpellChainMap;
 
 //                 spell_id  req_spell
-typedef UNORDERED_MAP<uint32, uint32> SpellRequiredMap;
+typedef std::unordered_map<uint32, uint32> SpellRequiredMap;
 
 typedef std::multimap<uint32, uint32> SpellsRequiringSpellMap;
 

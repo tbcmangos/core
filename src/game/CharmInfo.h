@@ -70,7 +70,7 @@ struct Cooldown
     uint32 cast_time;
 };
 
-typedef UNORDERED_MAP<uint32 /*category*/, Cooldown> CooldownList;
+typedef std::unordered_map<uint32 /*category*/, Cooldown> CooldownList;
 
 class  CooldownMgr
 {

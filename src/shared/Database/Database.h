@@ -21,7 +21,7 @@
 #define HELLGROUND_DATABASE_H
 
 #include "Threading.h"
-#include "Utilities/UnorderedMap.h"
+#include <unordered_map>
 #include "Database/SqlDelayThread.h"
 #include <ace/Recursive_Thread_Mutex.h>
 #include <ace/TSS_T.h>
@@ -297,7 +297,7 @@ class Database
         typedef ACE_Guard<LOCK_TYPE> LOCK_GUARD;
 
         mutable LOCK_TYPE m_stmtGuard;
-        typedef UNORDERED_MAP<std::string, int> PreparedStmtRegistry;
+        typedef std::unordered_map<std::string, int> PreparedStmtRegistry;
 
         PreparedStmtRegistry m_stmtRegistry;                 ///< 
 

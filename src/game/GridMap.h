@@ -308,8 +308,8 @@ class TerrainManager
     friend class ACE_Singleton<TerrainManager, ACE_Thread_Mutex>;
     TerrainManager();
 
-    typedef UNORDERED_MAP<uint32, TerrainInfo *> TerrainDataMap;
-    typedef UNORDERED_MAP<uint32, TerrainSpecifics > TerrainsSpecificsMap;
+    typedef std::unordered_map<uint32, TerrainInfo *> TerrainDataMap;
+    typedef std::unordered_map<uint32, TerrainSpecifics > TerrainsSpecificsMap;
 
     public:
         void LoadTerrainSpecifics();

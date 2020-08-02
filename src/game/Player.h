@@ -119,10 +119,10 @@ struct SpellModifier
     Spell const* lastAffected;
 };
 
-typedef UNORDERED_MAP<uint16, PlayerSpell> PlayerSpellMap;
+typedef std::unordered_map<uint16, PlayerSpell> PlayerSpellMap;
 typedef std::list<SpellModifier*> SpellModList;
 
-typedef UNORDERED_MAP<uint64, std::pair<uint32, uint64>> ConsecutiveKillsMap;
+typedef std::unordered_map<uint64, std::pair<uint32, uint64>> ConsecutiveKillsMap;
 
 struct SpellCooldown
 {
@@ -1455,7 +1455,7 @@ class  Player : public Unit
         uint8 unReadMails;
         time_t m_nextMailDelivereTime;
 
-        typedef UNORDERED_MAP<uint32, Item*> ItemMap;
+        typedef std::unordered_map<uint32, Item*> ItemMap;
 
         ItemMap mMitems;                                    //template defined in objectmgr.cpp
 
@@ -2204,7 +2204,7 @@ class  Player : public Unit
         /***                 INSTANCE SYSTEM                   ***/
         /*********************************************************/
 
-        typedef UNORDERED_MAP< uint32 /*mapId*/, InstancePlayerBind > BoundInstancesMap;
+        typedef std::unordered_map< uint32 /*mapId*/, InstancePlayerBind > BoundInstancesMap;
 
         void UpdateHomebindTime(uint32 time);
 

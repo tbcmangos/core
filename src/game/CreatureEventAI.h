@@ -197,7 +197,7 @@ enum SpawnedEventMode
 //};
 
 // Text Maps
-typedef UNORDERED_MAP<int32, StringTextData> CreatureEventAI_TextMap;
+typedef std::unordered_map<int32, StringTextData> CreatureEventAI_TextMap;
 
 struct CreatureEventAI_Action
 {
@@ -576,7 +576,7 @@ struct CreatureEventAI_Event
 
 //Event_Map
 typedef std::vector<CreatureEventAI_Event> CreatureEventAI_Event_Vec;
-typedef UNORDERED_MAP<int64, CreatureEventAI_Event_Vec> CreatureEventAI_Event_Map;
+typedef std::unordered_map<int64, CreatureEventAI_Event_Vec> CreatureEventAI_Event_Map;
 
 struct CreatureEventAI_Summon
 {
@@ -590,7 +590,7 @@ struct CreatureEventAI_Summon
 };
 
 //EventSummon_Map
-typedef UNORDERED_MAP<uint32, CreatureEventAI_Summon> CreatureEventAI_Summon_Map;
+typedef std::unordered_map<uint32, CreatureEventAI_Summon> CreatureEventAI_Summon_Map;
 
 struct CreatureEventAIHolder
 {

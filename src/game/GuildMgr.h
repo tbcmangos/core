@@ -22,13 +22,13 @@
 #define HELLGROUND_GUILDMGR_H
 
 #include "ace/Singleton.h"
-#include "Utilities/UnorderedMap.h"
+#include <unordered_map>
 
 class Guild;
 
-typedef UNORDERED_MAP< uint32, Guild * >    GuildMap;
+typedef std::unordered_map< uint32, Guild * >    GuildMap;
 typedef std::vector< uint32 >               GuildBankTabPriceMap;
-typedef UNORDERED_MAP<uint32,time_t>        GuildCooldowns;
+typedef std::unordered_map<uint32,time_t>        GuildCooldowns;
 
 class GuildMgr
 {
