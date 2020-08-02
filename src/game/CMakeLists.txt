@@ -74,14 +74,7 @@ source_group("World/Handlers"
 )
 
 source_group("Motion generators"
-  REGULAR_EXPRESSION MoveMap|MoveMapSharedDefines|Generator|MotionMaster|Holder
-)
-
-source_group("Movement"
-  REGULAR_EXPRESSION spline|Spline|packet_builder
-  FILES
-    movement/typedefs.h
-    movement/util.cpp
+  REGULAR_EXPRESSION MoveMap|MoveMapSharedDefines|Movement|Holder|Motion|Traveller
 )
 
 source_group("Server"
@@ -97,7 +90,7 @@ source_group("Chat Commands"
 )
 
 source_group("Tool"
-  REGULAR_EXPRESSION Language
+  REGULAR_EXPRESSION DatabaseCleaner|Language|PlayerDump
 )
 
 source_group("Lua Engine"

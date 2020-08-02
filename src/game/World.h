@@ -32,7 +32,6 @@
 #include "SharedDefines.h"
 #include "ace/Atomic_Op.h"
 #include "DelayExecutor.h"
-#include "QueryResult.h"
 #include "WorldSession.h"
 
 #include <map>

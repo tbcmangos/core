@@ -28,7 +28,6 @@
 #include "Common.h"
 #include "Log.h"
 #include "SharedDefines.h"
-#include "QueryResult.h"
 #include "AuctionHouseMgr.h"
 #include "WardenBase.h"
 #include "Item.h"
