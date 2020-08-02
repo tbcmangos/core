@@ -1,28 +1,110 @@
-# use glob syntax.
-syntax: glob
+#
+# NOTE! Don't add files that are generated in specific
+# subdirectories here. Add them in the ".gitignore" file
+# in that subdirectory instead.
+#
+# NOTE! Please use 'git-ls-files -i --exclude-standard'
+# command after changing this file, to see if there are
+# any tracked files which get ignored after the change.
+#
+# Normal rules
+#
+.*
+*.o
+*.o.*
+*.a
+*.so
+*.so.dbg
+*.bin
+*.gz
 
-.hgsub
+# Visual studio solution files
+*.tlog
+*.vcxproj
+*.vcxproj.filters
+*.sln
+*.db
+*.opendb
+*.exp
+*.res
 
-build/
-bin/
-.directory
-.git/
+# CLion files
+cmake-build-debug
+
+#
+# Top-level generic files
+#
+bin
+build
+tags
+TAGS
+!.gitignore
+!.gitattributes
+
+#
+# Build generated files
+#
+autom4te.cache
+
+#
+# Editors / debuggers / other output files
+#
 *~
+*.bak
 *.orig
-*.rej
+*.patch
+callgrind.out.*
+
+#
+# Git stuff
+#
+# stgit directories
+patches-*
+
+#
+# VS binaries output
+#
+bin/*
+win/*
+
+#
+# VS temporary files
+#
 *.ncb
+*.suo
 *.sdf
 *.opensdf
-*.suo
-*.ipch
+*.sln.cache
+*.vsp
+ipch
 *.user
-*.gitignore
-dep/lib/*/ACE*
-dep/lib/*/Detour*
-dep/acelite/lib/*
-dep/acelite/ace/Release*/*/*
-dep/acelite/ace/Debug*/*/*
-win/VC1*0/*/*
-win/_*/
 
-src/shared/revision.h
+
+#
+# CMake temporary files
+#
+CMakeFiles
+CMakeCache.txt
+cmake_install.cmake
+
+#
+# OS specific
+#
+# MacOS
+.DS_Store
+
+# Nostalrius
+newsletter
+patch
+php
+
+sql/migrations/*.py
+sql/migrations/characters_db_updates.sql
+sql/migrations/logon_db_updates.sql
+sql/migrations/logs_db_updates.sql
+sql/migrations/world_db_updates.sql
+
+# Generating by CMake
+revision.h
+migrations_list.h
+Progression.h
