@@ -1,5 +1,8 @@
+
 set(LIBRARY_NAME scripts)
+
 file(GLOB_RECURSE scripts_SRCS RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} *.cpp *.h)
+
 set(scripts_STAT_SRCS
   ${scripts_STAT_SRCS}
   ../game/AI/ScriptedEscortAI.cpp
@@ -11,6 +14,7 @@ set(scripts_STAT_SRCS
   ../game/AI/ScriptedFollowerAI.h
   ../game/AI/ScriptedInstance.h
   ../game/ScriptMgr.h
+  ../game/ScriptLoader.h
 )
 
 if(WIN32)
@@ -60,8 +64,10 @@ include_directories(
   ${CMAKE_BINARY_DIR}
   ${CMAKE_BINARY_DIR}/src/shared
   ${CMAKE_CURRENT_SOURCE_DIR}/PrecompiledHeaders
-  ${MYSQL_INCLUDE_DIR}
+  ${TBB_INCLUDE_DIRS}
   ${ACE_INCLUDE_DIR}
+  ${MYSQL_INCLUDE_DIR}
+
 )
 
 source_group("Scripts"
