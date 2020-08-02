@@ -55,6 +55,12 @@ void utf8print(const char* str)
 #endif
 }
 
+void commandFinished(void*, bool sucess)
+{
+	printf("TC> ");
+	fflush(stdout);
+}
+
 /// Delete a user account and all associated characters in this realm
 /// \todo This function has to be enhanced to respect the login/realm split (delete char, delete account chars in realm, delete account chars in realm then delete account
 bool ChatHandler::HandleAccountDeleteCommand(const char* args)
