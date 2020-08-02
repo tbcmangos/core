@@ -96,7 +96,7 @@ source_group("Tool"
 source_group("Lua Engine"
   REGULAR_EXPRESSION Methods|Lua|Hook
     FILES
-    luaengine/Includes.h
+    LuaEngine/Includes.h
 )
 
 source_group("References"
@@ -119,8 +119,6 @@ SET_TARGET_PROPERTIES (game PROPERTIES FOLDER "Game Libs")
 target_link_libraries(game
   shared
   Detour
-  lualib
- #  scripts
 )
 
 #add_dependencies(game revision.h)
