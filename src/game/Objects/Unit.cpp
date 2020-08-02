@@ -53,8 +53,8 @@
 #include "VMapFactory.h"
 #include "UnitAI.h"
 #include "MovementGenerator.h"
-#include "movement/MoveSplineInit.h"
-#include "movement/MoveSpline.h"
+#include "MoveSplineInit.h"
+#include "MoveSpline.h"
 #include "LuaEngine/HookMgr.h"
 
 #include <math.h>

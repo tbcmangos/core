@@ -24,7 +24,7 @@
 #include "Log.h"
 #include "ObjectAccessor.h"
 #include "Player.h"
-#include "TicketMgr.h"
+#include "GMTicketMgr.h"
 #include "World.h"
 #include "Chat.h"
 #include "LuaEngine/HookMgr.h"
