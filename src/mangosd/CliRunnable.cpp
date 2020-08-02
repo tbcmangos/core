@@ -420,9 +420,7 @@ void CliRunnable::run()
 
             if(!*command_str)
             {
-                #if PLATFORM == WINDOWS
-                    printf("TC> ");
-                #endif
+                printf("mangos>");
                 continue;
             }
 
@@ -434,9 +432,7 @@ void CliRunnable::run()
             }
             fflush(stdout);
             sWorld.QueueCliCommand(&utf8print,command.c_str());
-            #if PLATFORM != WINDOWS
-            add_history(command.c_str());
-            #endif
+
         }
         else if (feof(stdin))
         {
