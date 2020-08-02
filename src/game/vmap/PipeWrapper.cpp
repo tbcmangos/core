@@ -118,15 +118,15 @@ namespace VMAP
 
         m_stream = new ACE_SPIPE_Stream();
 
-        ACE_SPIPE_Acceptor acceptor = ACE_SPIPE_Acceptor(addr);
-        if(acceptor.accept(*m_stream) == -1)
-        {
-            sLog.outLog(LOG_DEFAULT, "ERROR: Accept: failed to accept on stream %s becaus of error %d", addr.get_path_name(), ACE_OS::last_error());
-            delete m_stream;
-            m_stream = 0;
-        }
-        else
-            m_connected = true;
+        //ACE_SPIPE_Acceptor acceptor = ACE_SPIPE_Acceptor(addr);
+        //if(acceptor.accept(*m_stream) == -1)
+        //{
+        //    sLog.outLog(LOG_DEFAULT, "ERROR: Accept: failed to accept on stream %s becaus of error %d", addr.get_path_name(), ACE_OS::last_error());
+        //    delete m_stream;
+        //    m_stream = 0;
+        //}
+        //else
+        //    m_connected = true;
     }
 
     template<>
