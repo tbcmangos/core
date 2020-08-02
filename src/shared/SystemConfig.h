@@ -48,8 +48,8 @@
 # define SYSCONFDIR ""
 #endif
 
-#define _HELLGROUND_CORE_CONFIG SYSCONFDIR "hellgroundcore.conf"
-#define _HELLGROUND_REALM_CONFIG SYSCONFDIR "hellgroundrealm.conf"
+#define _HELLGROUND_CORE_CONFIG SYSCONFDIR "mangosd.conf"
+#define _HELLGROUND_REALM_CONFIG SYSCONFDIR "realmd.conf"
 
 // Format is YYYYMMDDRR where RR is the change in the conf file
 // for that day.

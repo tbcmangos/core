@@ -217,7 +217,7 @@ extern int main(int argc, char **argv)
     if (confVersion < _HELLGROUND_CORE_CONFVER)
     {
         sLog.outLog(LOG_DEFAULT, "ERROR: *********************************************************************************");
-        sLog.outLog(LOG_DEFAULT, "ERROR:  WARNING: Your hellgroundcore.conf version indicates your conf file is out of date!");
+        sLog.outLog(LOG_DEFAULT, "ERROR:  WARNING: Your mangosd.conf version indicates your conf file is out of date!");
         sLog.outLog(LOG_DEFAULT, "ERROR:           Please check for updates, as your current default values may cause");
         sLog.outLog(LOG_DEFAULT, "ERROR:           strange behavior.");
         sLog.outLog(LOG_DEFAULT, "ERROR: *********************************************************************************");

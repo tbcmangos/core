@@ -194,7 +194,7 @@ extern int main(int argc, char **argv)
     if (confVersion < _REALMDCONFVERSION)
     {
         sLog.outLog(LOG_DEFAULT, "ERROR: **********************************************************************************");
-        sLog.outLog(LOG_DEFAULT, "ERROR:  WARNING: Your hellgroundrealm.conf version indicates your conf file is out of date!");
+        sLog.outLog(LOG_DEFAULT, "ERROR:  WARNING: Your realmd.conf version indicates your conf file is out of date!");
         sLog.outLog(LOG_DEFAULT, "ERROR:           Please check for updates, as your current default values may cause");
         sLog.outLog(LOG_DEFAULT, "ERROR:           strange behavior.");
         sLog.outLog(LOG_DEFAULT, "ERROR: **********************************************************************************");

@@ -118,7 +118,7 @@ source_group("AI"
 
 add_library(scripts STATIC ${scripts_SRCS})
 
-add_definitions(-D_TRINITY_SCRIPT_CONFIG='"${CONF_DIR}/mangoscore.conf"')
+add_definitions(-D_TRINITY_SCRIPT_CONFIG='"${CONF_DIR}/mangosd.conf"')
 
 # IF (CMAKE_SYSTEM_NAME MATCHES "Darwin")
 #     SET_TARGET_PROPERTIES(trinityscript PROPERTIES LINK_FLAGS "-flat_namespace -undefined suppress")

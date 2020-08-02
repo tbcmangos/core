@@ -42,7 +42,7 @@
 #define _FULLVERSION "HellgroundScript"
 
 #ifndef _HELLGROUND_SCRIPT_CONFIG
-# define _HELLGROUND_SCRIPT_CONFIG  "hellgroundcore.conf"
+# define _HELLGROUND_SCRIPT_CONFIG  "mangosd.conf"
 #endif // _HELLGROUND_SCRIPT_CONFIG
 
 int num_sc_scripts;
