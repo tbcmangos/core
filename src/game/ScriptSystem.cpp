@@ -24,11 +24,7 @@
 #include "ObjectMgr.h"
 #include "Database/DatabaseEnv.h"
 
-#if PLATFORM == PLATFORM_WINDOWS
- DatabaseType GameDataDatabase;                              ///< Accessor to the world database
- DatabaseType RealmDataDatabase;                             ///< Accessor to the character database
- DatabaseType AccountsDatabase;                              ///< Accessor to the realm/login database
-#endif
+
 
 SystemMgr::SystemMgr()
 {
