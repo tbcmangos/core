@@ -21,6 +21,7 @@
 #define HELLGROUND_MOVE_MAP_H
 
 #include <unordered_map>
+#include "Common.h"
 #include <vector>
 
 #include "../../dep/recastnavigation/Detour/Include/DetourAlloc.h"
