@@ -1,5 +1,5 @@
-set(LIBRARY_NAME script)
-file(GLOB_RECURSE script_SRCS RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} *.cpp *.h)
+set(LIBRARY_NAME scripts)
+file(GLOB_RECURSE scripts_SRCS RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} *.cpp *.h)
 set(scripts_STAT_SRCS
   ${scripts_STAT_SRCS}
   ../game/ScriptedEscortAI.cpp
@@ -14,12 +14,12 @@ set(scripts_STAT_SRCS
 )
 
 if(WIN32)
-  list(APPEND hellgroundscript_SRCS
+  list(APPEND scripts_SRCS
     ${scripts_STAT_SRCS}
 	${sources_Debugging}
   )
 endif()
-  list(APPEND hellgroundscript_SRCS
+  list(APPEND scripts_SRCS
     ${scripts_STAT_SRCS}
   )
 
@@ -87,7 +87,7 @@ source_group("AI"
 #add_dependencies(${LIBRARY_NAME} revision.h)
 
 
-add_library(script STATIC ${trinityscript_SRCS})
+add_library(scripts STATIC ${scripts_SRCS})
 
 add_definitions(-D_TRINITY_SCRIPT_CONFIG='"${CONF_DIR}/mangoscore.conf"')
 
@@ -95,8 +95,8 @@ add_definitions(-D_TRINITY_SCRIPT_CONFIG='"${CONF_DIR}/mangoscore.conf"')
 #     SET_TARGET_PROPERTIES(trinityscript PROPERTIES LINK_FLAGS "-flat_namespace -undefined suppress")
 # ENDIF (CMAKE_SYSTEM_NAME MATCHES "Darwin")
 
-target_link_libraries(script)
+target_link_libraries(scripts)
 
-# set_target_properties(trinityscript PROPERTIES VERSION 4.2.0 SOVERSION 4)
+# set_target_properties(scripts PROPERTIES VERSION 4.2.0 SOVERSION 4)
 # install(TARGETS trinityscript DESTINATION lib)
 
