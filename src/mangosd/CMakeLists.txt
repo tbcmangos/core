@@ -82,6 +82,7 @@ include_directories(
   ${CMAKE_SOURCE_DIR}/src/game/vmap
   ${CMAKE_BINARY_DIR}/src/shared
   ${CMAKE_SOURCE_DIR}/src/shared/Database
+  ${CMAKE_SOURCE_DIR}/src/scripts
   ${CMAKE_SOURCE_DIR}/dep/lualib
   ${CMAKE_BINARY_DIR}
   ${ACE_INCLUDE_DIR}
@@ -119,11 +120,13 @@ if(SCRIPTS)
     ${ACE_LIBRARIES}
     ${OPENSSL_LIBRARIES}
     ${ZLIB_LIBRARIES}
+    ${TBB_LIBRARIES}
+    
   )
 else()
   target_link_libraries(${EXECUTABLE_NAME}
     game
-    #scripts
+    scripts
     shared
     framework
     g3dlite
@@ -131,6 +134,7 @@ else()
     ${ACE_LIBRARIES}
     ${OPENSSL_LIBRARIES}
     ${ZLIB_LIBRARIES}
+    ${TBB_LIBRARIES}
   )
 endif()
 

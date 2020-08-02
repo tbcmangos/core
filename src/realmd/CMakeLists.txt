@@ -49,6 +49,8 @@ target_link_libraries(${EXECUTABLE_NAME}
   shared
   framework
   ${ACE_LIBRARIES}
+  ${OPENSSL_LIBRARIES}
+  ${TBB_LIBRARIES}
 )
 
 if(WIN32)
