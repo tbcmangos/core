@@ -57,7 +57,7 @@ bool StartEluna()
     // Check config file for eluna is enabled or disabled
     if (!sWorld.getConfig(CONFIG_ELUNA_ENABLED))
     {
-        sLog.outLog(LOG_DEFAULT,"[Eluna]: LuaEngine is Disabled. (If you want to use it please set config in 'hellgroundcore.conf')");
+        sLog.outLog(LOG_DEFAULT,"[Eluna]: LuaEngine is Disabled. (If you want to use it please set config in 'mangosd.conf')");
         return false;
     }
 
