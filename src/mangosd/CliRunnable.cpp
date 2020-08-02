@@ -395,9 +395,12 @@ void CliRunnable::run()
     ///- Display the list of available CLI functions then beep
     sLog.outString();
 
-    if(sConfig.GetBoolDefault("BeepAtStart", true))
+    if (sConfig.GetBoolDefault("BeepAtStart", true))
         printf("\a");                                       // \a = Alert
 
+    // print this here the first time
+    // later it will be printed after command queue updates
+    printf("mangos>");
     ///- As long as the World is running (no World::m_stopEvent), get the command line and handle it
     while (!World::IsStopped())
     {
@@ -409,7 +412,8 @@ void CliRunnable::run()
         if (World::IsStopped())
             break;
         #endif
-        if (command_str != NULL)
+        char *command_str = fgets(commandbuf,sizeof(commandbuf),stdin);
+        if (command_str != nullptr)
         {
             for(int x=0;command_str[x];x++)
                 if(command_str[x]=='\r'||command_str[x]=='\n')
@@ -420,9 +424,7 @@ void CliRunnable::run()
 
             if(!*command_str)
             {
-                #if PLATFORM == WINDOWS
-                    printf("TC> ");
-                #endif
+                printf("mangos>");
                 continue;
             }
 
@@ -433,10 +435,9 @@ void CliRunnable::run()
                 continue;
             }
             fflush(stdout);
-            sWorld.QueueCliCommand(&utf8print,command.c_str());
-            #if PLATFORM != WINDOWS
-            add_history(command.c_str());
-            #endif
+            //sWorld.QueueCliCommand(&utf8print,command.c_str());
+			sWorld.QueueCliCommand(new CliCommandHolder(NULL, command.c_str(), &utf8print, &commandFinished));
+
         }
         else if (feof(stdin))
         {

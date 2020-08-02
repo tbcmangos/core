@@ -46,6 +46,8 @@ include_directories(
   ${CMAKE_SOURCE_DIR}/dep/recastnavigation
   ${CMAKE_SOURCE_DIR}/dep/include
   ${CMAKE_SOURCE_DIR}/src/shared/Database
+  ${CMAKE_SOURCE_DIR}/src/shared/Auth
+  ${CMAKE_SOURCE_DIR}/src/shared/Config
   ${CMAKE_SOURCE_DIR}/src/framework
 
   ${CMAKE_SOURCE_DIR}/src/shared
