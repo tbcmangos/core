@@ -22,7 +22,7 @@
 #include "Database/DatabaseEnv.h"
 #include "Opcodes.h"
 #include "Log.h"
-#include "zlib/zlib.h"
+#include <zlib.h>
 
 bool AddonHandler::BuildAddonPacket(WorldPacket *Source, WorldPacket *Target)
 {

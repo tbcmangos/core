@@ -37,7 +37,7 @@
 #include "Chat.h"
 #include "ScriptMgr.h"
 #include "SpellMgr.h"
-#include <zlib/zlib.h>
+#include <zlib.h>
 #include "MapManager.h"
 #include "ObjectAccessor.h"
 #include "Object.h"
