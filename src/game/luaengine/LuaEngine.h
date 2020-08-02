@@ -15,7 +15,7 @@ extern "C"
 }
 
 #include "Includes.h"
-#include "luaengine/HookMgr.h"
+#include "LuaEngine/HookMgr.h"
 
 // Required
 #include "AccountMgr.h"

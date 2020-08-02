@@ -2,14 +2,14 @@ set(LIBRARY_NAME scripts)
 file(GLOB_RECURSE scripts_SRCS RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} *.cpp *.h)
 set(scripts_STAT_SRCS
   ${scripts_STAT_SRCS}
-  ../game/ScriptedEscortAI.cpp
-  ../game/ScriptedEscortAI.h
-  ../game/ScriptedGossip.h
+  ../game/AI/ScriptedEscortAI.cpp
+  ../game/AI/ScriptedEscortAI.h
+  ../game/AI/ScriptedGossip.h
   ../game/ScriptedCreature.cpp
   ../game/ScriptedCreature.h
-  ../game/ScriptedFollowerAI.cpp
-  ../game/ScriptedFollowerAI.h
-  ../game/ScriptedInstance.h
+  ../game/AI/ScriptedFollowerAI.cpp
+  ../game/AI/ScriptedFollowerAI.h
+  ../game/AI/ScriptedInstance.h
   ../game/ScriptMgr.h
 )
 
@@ -29,7 +29,30 @@ include_directories(
   ${CMAKE_SOURCE_DIR}/dep/include/g3dlite
   ${CMAKE_SOURCE_DIR}/dep/include
   ${CMAKE_SOURCE_DIR}/src/game
-  ${CMAKE_SOURCE_DIR}/src/game/movemap
+  ${CMAKE_SOURCE_DIR}/src/game/AI
+  ${CMAKE_SOURCE_DIR}/src/game/Anticheat
+  ${CMAKE_SOURCE_DIR}/src/game/Anticheat/WardenAnticheat
+  ${CMAKE_SOURCE_DIR}/src/game/AuctionHouse
+  ${CMAKE_SOURCE_DIR}/src/game/Battlegrounds
+  ${CMAKE_SOURCE_DIR}/src/game/Chat
+  ${CMAKE_SOURCE_DIR}/src/game/Commands
+  ${CMAKE_SOURCE_DIR}/src/game/Database
+  ${CMAKE_SOURCE_DIR}/src/game/Group
+  ${CMAKE_SOURCE_DIR}/src/game/Guild
+  ${CMAKE_SOURCE_DIR}/src/game/Handlers
+  ${CMAKE_SOURCE_DIR}/src/game/LFG
+  ${CMAKE_SOURCE_DIR}/src/game/Mail
+  ${CMAKE_SOURCE_DIR}/src/game/Maps
+  ${CMAKE_SOURCE_DIR}/src/game/Maps/Pool
+  ${CMAKE_SOURCE_DIR}/src/game/Movement
+  ${CMAKE_SOURCE_DIR}/src/game/Movement/spline
+  ${CMAKE_SOURCE_DIR}/src/game/Objects
+  ${CMAKE_SOURCE_DIR}/src/game/OutdoorPvP
+  ${CMAKE_SOURCE_DIR}/src/game/PlayerBots
+  ${CMAKE_SOURCE_DIR}/src/game/Protocol
+  ${CMAKE_SOURCE_DIR}/src/game/Spells
+  ${CMAKE_SOURCE_DIR}/src/game/Threat
+  ${CMAKE_SOURCE_DIR}/src/game/Transports
   ${CMAKE_SOURCE_DIR}/src/game/vmap
   ${CMAKE_SOURCE_DIR}/src/shared
   ${CMAKE_SOURCE_DIR}/src/shared/Database

@@ -31,6 +31,8 @@
 
 #define FILENAMEBUFFER_SIZE 500
 
+#define sLoSProxy (*ACE_Singleton<VMAP::LoSProxy, ACE_Null_Mutex>::instance())
+
 /**
 This is the main Class to manage loading and unloading of maps, line of sight, height calculation and so on.
 For each map or map tile to load it reads a directory file that contains the ModelContainer files used by this map or map tile.

@@ -5,7 +5,7 @@
 */
 
 #include "LuaEngine.h"
-#include "luaengine/HookMgr.h"
+#include "LuaEngine/HookMgr.h"
 
 extern bool StartEluna();
 bool HookMgr::OnCommand(Player* player, const char* text)

@@ -46,7 +46,7 @@
 #include "WardenWin.h"
 #include "WardenMac.h"
 #include "WardenChat.h"
-#include "luaengine/HookMgr.h"
+#include "LuaEngine/HookMgr.h"
 #include "GuildMgr.h"
 
 bool MapSessionFilter::Process(WorldPacket * packet)

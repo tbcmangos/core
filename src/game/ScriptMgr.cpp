@@ -23,7 +23,7 @@
 #include "ObjectMgr.h"
 #include "WaypointMgr.h"
 #include "World.h"
-#include "luaengine/HookMgr.h"
+#include "LuaEngine/HookMgr.h"
 
 #include "../shared/Config/Config.h"
 
