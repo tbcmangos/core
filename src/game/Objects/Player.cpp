@@ -17,7 +17,7 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
  */
-
+#include <iomanip>      // std::setfill, std::setw
 #include "Common.h"
 #include "Language.h"
 #include "Database/DatabaseEnv.h"
@@ -72,7 +72,7 @@
 #include <cmath>
 #include <cctype>
 #include "LuaEngine/HookMgr.h"
-#include <iomanip>      // std::setfill, std::setw
+
 #include <iostream>
 
 #define ZONE_UPDATE_INTERVAL 1000
