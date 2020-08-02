@@ -1,4 +1,4 @@
-// $Id: Process.cpp 92218 2010-10-14 13:18:15Z mcorino $
+// $Id: Process.cpp 97924 2014-10-11 21:15:17Z shuston $
 
 #include "ace/Process.h"
 
@@ -10,7 +10,7 @@
 #include "ace/Auto_Ptr.h"
 #include "ace/Signal.h"
 #include "ace/SString.h"
-#include "ace/Log_Msg.h"
+#include "ace/Log_Category.h"
 #include "ace/OS_NS_stdio.h"
 #include "ace/OS_NS_stdlib.h"
 #include "ace/OS_NS_sys_socket.h"
@@ -24,12 +24,10 @@
 #include "ace/Vector_T.h"
 #include "ace/Tokenizer_T.h"
 
-#if defined (ACE_VXWORKS) && (ACE_VXWORKS > 0x600) && defined (__RTP__)
+#if defined (ACE_VXWORKS) && defined (__RTP__)
 # include <rtpLib.h>
 # include <taskLib.h>
 #endif
-
-
 
 // This function acts as a signal handler for SIGCHLD. We don't really want
 // to do anything with the signal - it's just needed to interrupt a sleep.
@@ -104,9 +102,8 @@ ACE_Process::spawn (ACE_Process_Options &options)
   if (set_p && !ACE_BIT_ENABLED (options.creation_flags (),
                                  ACE_Process_Options::NO_EXEC))
     {
-      int maxlen = 0;
-      ACE_TCHAR *cmd_line_buf = options.command_line_buf (&maxlen);
-      size_t max_len = static_cast<size_t> (maxlen);
+      size_t max_len = 0;
+      ACE_TCHAR *cmd_line_buf = options.command_line_buf (&max_len);
       size_t curr_len = ACE_OS::strlen (cmd_line_buf);
       ACE_Handle_Set_Iterator h_iter (*set_p);
       // Because the length of the to-be-formatted +H option is not
@@ -118,9 +115,18 @@ ACE_Process::spawn (ACE_Process_Options &options)
         {
 #if defined (ACE_WIN32)
 # if defined (ACE_WIN64)
+// silence warnings coming from MinGW64 compilers
+#  if defined (__GNUC__)
+#   pragma GCC diagnostic push
+#   pragma GCC diagnostic ignored "-Wformat"
+#   pragma GCC diagnostic ignored "-Wformat-extra-args"
+#  endif /* __GNUC__ */
           curr_len += ACE_OS::sprintf (&cmd_line_buf[curr_len],
                                        ACE_TEXT (" +H %I64p"),
                                        h);
+#  if defined (__GNUC__)
+#   pragma GCC diagnostic pop
+#  endif /* __GNUC__ */
 # else
           curr_len += ACE_OS::sprintf (&cmd_line_buf[curr_len],
                                        ACE_TEXT (" +H %p"),
@@ -255,7 +261,7 @@ ACE_Process::spawn (ACE_Process_Options &options)
   }
 
   return this->child_id_;
-#elif (defined (ACE_VXWORKS) && (ACE_VXWORKS > 0x600)) && defined (__RTP__)
+#elif defined (ACE_VXWORKS) && defined (__RTP__)
   if (ACE_BIT_ENABLED (options.creation_flags (),
                        ACE_Process_Options::NO_EXEC))
     ACE_NOTSUP_RETURN (ACE_INVALID_PID);
@@ -375,10 +381,10 @@ ACE_Process::spawn (ACE_Process_Options &options)
                               options.getgroup ()) < 0)
         {
 #if !defined (ACE_HAS_THREADS)
-          // We can't emit this log message because ACE_ERROR(), etc.
+          // We can't emit this log message because ACELIB_ERROR(), etc.
           // will invoke async signal unsafe functions, which results
           // in undefined behavior in threaded programs.
-          ACE_ERROR ((LM_ERROR,
+          ACELIB_ERROR ((LM_ERROR,
                       ACE_TEXT ("%p.\n"),
                       ACE_TEXT ("ACE_Process::spawn: setpgid failed.")));
 #endif
@@ -392,10 +398,10 @@ ACE_Process::spawn (ACE_Process_Options &options)
                               options.getegid ()) == -1)
           {
 #if !defined (ACE_HAS_THREADS)
-            // We can't emit this log message because ACE_ERROR(), etc.
+            // We can't emit this log message because ACELIB_ERROR(), etc.
             // will invoke async signal unsafe functions, which results
             // in undefined behavior in threaded programs.
-            ACE_ERROR ((LM_ERROR,
+            ACELIB_ERROR ((LM_ERROR,
                         ACE_TEXT ("%p.\n"),
                         ACE_TEXT ("ACE_Process::spawn: setregid failed.")));
 #endif
@@ -410,10 +416,10 @@ ACE_Process::spawn (ACE_Process_Options &options)
                               options.geteuid ()) == -1)
           {
 #if !defined (ACE_HAS_THREADS)
-            // We can't emit this log message because ACE_ERROR(), etc.
+            // We can't emit this log message because ACELIB_ERROR(), etc.
             // will invoke async signal unsafe functions, which results
             // in undefined behavior in threaded programs.
-            ACE_ERROR ((LM_ERROR,
+            ACELIB_ERROR ((LM_ERROR,
                         ACE_TEXT ("%p.\n"),
                         ACE_TEXT ("ACE_Process::spawn: setreuid failed.")));
 #endif
@@ -519,13 +525,7 @@ ACE_Process::spawn (ACE_Process_Options &options)
           }
         else
           {
-# if defined (ghs)
-            // GreenHills 1.8.8 (for VxWorks 5.3.x) can't compile this
-            // code.  Processes aren't supported on VxWorks anyways.
-            ACE_NOTSUP_RETURN (ACE_INVALID_PID);
-# else
             result = ACE_OS::execve (procname, procargv, procenv);
-# endif /* ghs */
           }
         if (result == -1)
           {
@@ -624,7 +624,7 @@ ACE_Process::wait (const ACE_Time_Value &tv,
 # if defined (ACE_VXWORKS)
     {
       pid_t retv;
-      while ( (retv = this->wait (status)) == ACE_INVALID_PID && errno == EINTR ) ;
+      while ((retv = this->wait (status)) == ACE_INVALID_PID && errno == EINTR) ;
       return retv;
     }
 # else
@@ -909,7 +909,7 @@ ACE_Process_Options::inherit_environment (void)
       // Add the string to our env buffer.
       if (this->setenv_i (existing_environment + slot, len) == -1)
         {
-          ACE_ERROR ((LM_ERROR,
+          ACELIB_ERROR ((LM_ERROR,
                       ACE_TEXT ("%p.\n"),
                       ACE_TEXT ("ACE_Process_Options::ACE_Process_Options")));
           break;
@@ -962,16 +962,31 @@ ACE_Process_Options::setenv (const ACE_TCHAR *format, ...)
 {
   ACE_TCHAR stack_buf[DEFAULT_COMMAND_LINE_BUF_LEN];
 
+  int status;
   // Start varargs.
   va_list argp;
   va_start (argp, format);
 
   // Add the rest of the varargs.
-  ACE_OS::vsprintf (stack_buf,
-                    format,
-                    argp);
+  // At the time of this writing, only one platform does not support
+  // vsnprintf (LynxOS). Should we get to the point where no platform
+  // sets ACE_LACKS_VSNPRINTF, this condition can be removed.
+#if defined (ACE_LACKS_VSNPRINTF)
+  status = ACE_OS::vsprintf (stack_buf,
+                             format,
+                             argp);
+#else
+  status = ACE_OS::vsnprintf (stack_buf,
+                              DEFAULT_COMMAND_LINE_BUF_LEN,
+                              format,
+                              argp);
+#endif /* ACE_LACKS_VSNPRINTF */
+
   // End varargs.
   va_end (argp);
+
+  if (status == -1)
+    return -1;
 
   // Append the string to are environment buffer.
   if (this->setenv_i (stack_buf,
@@ -997,15 +1012,17 @@ ACE_Process_Options::setenv (const ACE_TCHAR *variable_name,
   ACE_NEW_RETURN (newformat, ACE_TCHAR[buflen], -1);
   ACE_Auto_Basic_Array_Ptr<ACE_TCHAR> safe_newformat (newformat);
 
+# if !defined (ACE_WIN32) && defined (ACE_USES_WCHAR)
+  const ACE_TCHAR *fmt = ACE_TEXT ("%ls=%ls");
+# else
+  const ACE_TCHAR *fmt = ACE_TEXT ("%s=%s");
+# endif
+
   // Add in the variable name.
   ACE_OS::sprintf (safe_newformat.get (),
-                   ACE_TEXT ("%s=%s"),
+                   fmt,
                    variable_name,
                    format);
-
-  // Start varargs.
-  va_list argp;
-  va_start (argp, format);
 
   // Add the rest of the varargs.
   size_t tmp_buflen = buflen;
@@ -1021,7 +1038,15 @@ ACE_Process_Options::setenv (const ACE_TCHAR *variable_name,
 
   do
     {
+      // Must restart varargs on each time through this loop,
+      va_list argp;
+      va_start (argp, format);
+
       retval = ACE_OS::vsnprintf (safe_stack_buf.get (), tmp_buflen, safe_newformat.get (), argp);
+
+      // End varargs.
+      va_end (argp);
+
       if (retval > ACE_Utils::truncate_cast<int> (tmp_buflen))
         {
           tmp_buflen *= 2;
@@ -1043,7 +1068,10 @@ ACE_Process_Options::setenv (const ACE_TCHAR *variable_name,
           // ALERT: Since we have to use vsprintf here, there is still a chance that
           // the stack_buf overflows, i.e., the length of the resulting string
           // can still possibly go beyond the allocated stack_buf.
+          va_list argp;
+          va_start (argp, format);
           retval = ACE_OS::vsprintf (safe_stack_buf.get (), safe_newformat.get (), argp);
+          va_end (argp);
           if (retval == -1)
             // vsprintf is failed.
             return -1;
@@ -1052,9 +1080,6 @@ ACE_Process_Options::setenv (const ACE_TCHAR *variable_name,
         // vsnprintf is failed.
         return -1;
     }
-
-  // End varargs.
-  va_end (argp);
 
   // Append the string to our environment buffer.
   if (this->setenv_i (safe_stack_buf.get (),
@@ -1206,7 +1231,7 @@ ACE_Process_Options::command_line (const ACE_TCHAR *const argv[])
 
           if (cur_len > command_line_buf_len_)
             {
-              ACE_ERROR_RETURN ((LM_ERROR,
+              ACELIB_ERROR_RETURN ((LM_ERROR,
                                  ACE_TEXT ("ACE_Process:command_line: ")
                                  ACE_TEXT ("command line is ")
                                  ACE_TEXT ("longer than %d\n"),
@@ -1231,7 +1256,10 @@ ACE_Process_Options::command_line (const ACE_TCHAR *format, ...)
   va_start (argp, format);
 
   if (command_line_buf_len_ < 1)
-    return -1;
+    {
+      va_end (argp);
+      return -1;
+    }
 
 #if !defined (ACE_LACKS_VSNPRINTF) || defined (ACE_HAS_TRIO)
   // vsnprintf the format and args into command_line_buf__.
@@ -1325,7 +1353,7 @@ ACE_Process_Options::command_line_argv (void)
       do
         command_line_argv_[x] = parser.next ();
       while (command_line_argv_[x] != 0
-             // substract one for the ending zero.
+             // subtract one for the ending zero.
              && ++x < max_command_line_args_ - 1);
 
       command_line_argv_[x] = 0;

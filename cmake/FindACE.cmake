@@ -10,9 +10,11 @@
 # also defined, but not for general use are
 # ACE_LIBRARY, where to find the ACE library.
 
-set( ACE_FOUND 0 )
-if ( UNIX )
-  FIND_PATH( ACE_INCLUDE_DIR
+set(ACE_FOUND 0)
+
+if (UNIX)
+
+    FIND_PATH(ACE_INCLUDE_DIR
     NAMES
       ace/ACE.h
     PATHS

@@ -1,4 +1,5 @@
-file(GLOB_RECURSE hellgroundscript_SRCS RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} *.cpp *.h)
+set(LIBRARY_NAME script)
+file(GLOB_RECURSE script_SRCS RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} *.cpp *.h)
 set(scripts_STAT_SRCS
   ${scripts_STAT_SRCS}
   ../game/ScriptedEscortAI.cpp
@@ -83,15 +84,18 @@ source_group("AI"
   REGULAR_EXPRESSION escort_ai|follower_ai|simple_ai|sc_creature
 )
 
-add_library(hellgroundscript SHARED ${hellgroundscript_SRCS})
+#add_dependencies(${LIBRARY_NAME} revision.h)
 
-add_definitions(-D_TRINITY_SCRIPT_CONFIG='"${CONF_DIR}/hellgroundcore.conf"' -DTHIS_IS_SCRIPT_DLL)
+
+add_library(script STATIC ${trinityscript_SRCS})
+
+add_definitions(-D_TRINITY_SCRIPT_CONFIG='"${CONF_DIR}/mangoscore.conf"')
 
 # IF (CMAKE_SYSTEM_NAME MATCHES "Darwin")
 #     SET_TARGET_PROPERTIES(trinityscript PROPERTIES LINK_FLAGS "-flat_namespace -undefined suppress")
 # ENDIF (CMAKE_SYSTEM_NAME MATCHES "Darwin")
 
-target_link_libraries(hellgroundscript)
+target_link_libraries(script)
 
 # set_target_properties(trinityscript PROPERTIES VERSION 4.2.0 SOVERSION 4)
 # install(TARGETS trinityscript DESTINATION lib)

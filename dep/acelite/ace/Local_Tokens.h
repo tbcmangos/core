@@ -4,7 +4,7 @@
 /**
  *  @file    Local_Tokens.h
  *
- *  $Id: Local_Tokens.h 91626 2010-09-07 10:59:20Z johnnyw $
+ *  $Id: Local_Tokens.h 96985 2013-04-11 15:50:32Z huangh $
  *
  *  @author Karl-Heinz Dorn <kdorn@erlh.siemens.de>
  *  @author Douglas C. Schmidt <schmidt@cs.wustl.edu>
@@ -59,7 +59,7 @@
 #include "ace/Containers.h"
 #include "ace/Synch_Options.h"
 #include "ace/Map_Manager.h"
-#include "ace/Log_Msg.h"
+#include "ace/Log_Category.h"
 #include "ace/OS_NS_string.h"
 #include "ace/os_include/os_netdb.h"
 
@@ -408,13 +408,13 @@ public:
   typedef ACE_Unbounded_Stack<ACE_TPQ_Entry *> OWNER_STACK;
 
   /// Returns a stack of the current owners.  Returns -1 on error, 0 on
-  /// success.  If <id> is non-zero, returns 1 if id is an owner.
+  /// success.  If @a id is non-zero, returns 1 if id is an owner.
   virtual int owners (OWNER_STACK &o, const ACE_TCHAR *id) = 0;
 
-  /// Returns 1 if <id> is waiting for this token.  0 otherwise.
+  /// Returns 1 if @a id is waiting for this token.  0 otherwise.
   virtual int is_waiting_for (const ACE_TCHAR *id) = 0;
 
-  /// Returns 1 if <id> is an owner of this token.  0 otherwise.
+  /// Returns 1 if @a id is an owner of this token.  0 otherwise.
   virtual int is_owner (const ACE_TCHAR *id) = 0;
 
   /// Return the queue of waiters.
@@ -562,13 +562,13 @@ public:
   virtual int type (void) const;
 
   /// Returns a stack of the current owners.  Returns -1 on error, 0 on
-  /// success.  If <id> is non-zero, returns 1 if id is an owner.
+  /// success.  If @a id is non-zero, returns 1 if id is an owner.
   virtual int owners (OWNER_STACK &o, const ACE_TCHAR *id);
 
-  /// Returns 1 if <id> is waiting for this token.  0 otherwise.
+  /// Returns 1 if @a id is waiting for this token.  0 otherwise.
   virtual int is_waiting_for (const ACE_TCHAR *id);
 
-  /// Returns 1 if <id> is an owner of this token.  0 otherwise.
+  /// Returns 1 if @a id is an owner of this token.  0 otherwise.
   virtual int is_owner (const ACE_TCHAR *id);
 
 private:
@@ -660,13 +660,13 @@ public:
   virtual int type (void) const;
 
   /// Returns a stack of the current owners.  Returns -1 on error, 0 on
-  /// success.  If <id> is non-zero, returns 1 if id is an owner.
+  /// success.  If @a id is non-zero, returns 1 if id is an owner.
   virtual int owners (OWNER_STACK &o, const ACE_TCHAR *id);
 
-  /// Returns 1 if <id> is waiting for this token.  0 otherwise.
+  /// Returns 1 if @a id is waiting for this token.  0 otherwise.
   virtual int is_waiting_for (const ACE_TCHAR *id);
 
-  /// Returns 1 if <id> is an owner of this token.  0 otherwise.
+  /// Returns 1 if @a id is an owner of this token.  0 otherwise.
   virtual int is_owner (const ACE_TCHAR *id);
 
 protected:

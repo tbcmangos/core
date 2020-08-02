@@ -1,5 +1,5 @@
 /* -*- C++ -*- */
-// $Id: config-macosx-leopard.h 91688 2010-09-09 11:21:50Z johnnyw $
+// $Id: config-macosx-leopard.h 97737 2014-05-02 14:30:47Z mesnier_p $
 
 // This configuration file is designed to work with the MacOS X operating system.
 
@@ -24,6 +24,8 @@
 #  define ACE_SIZEOF_LONG_DOUBLE 16
 # endif // GCC 3.3
 #endif // ACE_SIZEOF_LONG_DOUBLE
+
+#define ACE_UINT64_TYPE unsigned long long
 
 #if defined (__GNUG__)
 # include "ace/config-g++-common.h"
@@ -86,6 +88,8 @@
 #define ACE_HAS_SIGWAIT
 
 #define ACE_HAS_AIO_CALLS
+
+#define ACE_HAS_ICMP_SUPPORT 1
 
 //Platform supports sigsuspend()
 #define ACE_HAS_SIGSUSPEND
@@ -176,7 +180,6 @@
 # define ACE_HAS_THREADS
 // And they're even POSIX pthreads
 # define ACE_HAS_PTHREADS
-# define ACE_HAS_PTHREADS_STD
 # define ACE_HAS_PTHREAD_SCHEDPARAM
 # define ACE_HAS_THREAD_SPECIFIC_STORAGE
 #endif  /* ACE_MT_SAFE == 1 */
@@ -205,6 +208,10 @@
 #define ACE_HAS_VOID_UNSETENV
 #endif
 
+#define ACE_LACKS_CONDATTR_SETCLOCK
+#define ACE_LACKS_CLOCKID_T
+#define ACE_LACKS_CLOCK_MONOTONIC
+#define ACE_LACKS_CLOCK_REALTIME
 
 // dlcompat package (not part of base Darwin) is needed for dlopen().
 // You may download directly from sourceforge and install or use fink

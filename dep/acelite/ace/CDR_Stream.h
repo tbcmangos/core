@@ -4,7 +4,7 @@
 /**
  *  @file   CDR_Stream.h
  *
- *  $Id: CDR_Stream.h 84527 2009-02-19 14:01:42Z johnnyw $
+ *  $Id: CDR_Stream.h 97972 2014-11-10 15:46:10Z johnnyw $
  *
  * ACE Common Data Representation (CDR) marshaling and demarshaling
  * classes.
@@ -318,6 +318,12 @@ public:
    */
   char* write_long_placeholder (void);
   char* write_short_placeholder (void);
+  char* write_boolean_placeholder (void);
+  char* write_char_placeholder (void);
+  char* write_longlong_placeholder (void);
+  char* write_octet_placeholder (void);
+  char* write_float_placeholder (void);
+  char* write_double_placeholder (void);
 
   /**
    * Writes a new value into a specific location. This is commonly
@@ -336,7 +342,16 @@ public:
    * @sa write_long_placeholder(), write_short_placeholder ()
    */
   ACE_CDR::Boolean replace (ACE_CDR::Long x, char* loc);
+  ACE_CDR::Boolean replace (ACE_CDR::ULong x, char* loc);
   ACE_CDR::Boolean replace (ACE_CDR::Short x, char* loc);
+  ACE_CDR::Boolean replace (ACE_CDR::UShort x, char* loc);
+  ACE_CDR::Boolean replace (ACE_CDR::Boolean x, char* loc);
+  ACE_CDR::Boolean replace (ACE_CDR::Char x, char* loc);
+  ACE_CDR::Boolean replace (ACE_CDR::LongLong x, char* loc);
+  ACE_CDR::Boolean replace (ACE_CDR::ULongLong x, char* loc);
+  ACE_CDR::Boolean replace (ACE_CDR::Octet x, char* loc);
+  ACE_CDR::Boolean replace (ACE_CDR::Float x, char* loc);
+  ACE_CDR::Boolean replace (ACE_CDR::Double x, char* loc);
   //@}
 
   /**
@@ -411,7 +426,7 @@ public:
 
   /**
    * Utility function to allow the user more flexibility.
-   * Pads the stream up to the nearest <alignment>-byte boundary.
+   * Pads the stream up to the nearest @a alignment byte boundary.
    * Argument MUST be a power of 2.
    * Returns 0 on success and -1 on failure.
    */
@@ -473,7 +488,7 @@ public:
   /// gateway.
   void reset_byte_order (int byte_order);
 
-  /// set GIOP version info
+  /// Set GIOP version info
   void set_version (ACE_CDR::Octet major, ACE_CDR::Octet minor);
 
   /// Set the underlying GIOP version..
@@ -503,13 +518,13 @@ private:
 
   /**
    * write an array of @a length elements, each of @a size bytes and the
-   * start aligned at a multiple of <align>. The elements are assumed
+   * start aligned at a multiple of @a align. The elements are assumed
    * to be packed with the right alignment restrictions.  It is mostly
    * designed for buffers of the basic types.
    *
-   * This operation uses <memcpy>; as explained above it is expected
-   * that using assignment is faster that <memcpy> for one element,
-   * but for several elements <memcpy> should be more efficient, it
+   * This operation uses @c memcpy; as explained above it is expected
+   * that using assignment is faster that @c memcpy for one element,
+   * but for several elements @c memcpy should be more efficient, it
    * could be interesting to find the break even point and optimize
    * for that case, but that would be too platform dependent.
    */
@@ -526,7 +541,7 @@ private:
   /**
    * Grow the CDR stream. When it returns @a buf contains a pointer to
    * memory in the CDR stream, with at least @a size bytes ahead of it
-   * and aligned to an <align> boundary. It moved the <wr_ptr> to <buf
+   * and aligned to an @a align boundary. It moved the <wr_ptr> to <buf
    * + size>.
    */
   int grow_and_adjust (size_t size,
@@ -566,8 +581,9 @@ private:
    * for such a beast is that in some setting a few (fast) machines
    * can be serving hundreds of slow machines with the opposite byte
    * order, so it makes sense (as a load balancing device) to put the
-   * responsibility in the writers.  THIS IS NOT A STANDARD IN CORBA,
-   * USE AT YOUR OWN RISK
+   * responsibility in the writers.
+   *
+   * @warning THIS IS NOT A STANDARD IN CORBA, USE AT YOUR OWN RISK
    */
   bool do_byte_swap_;
 
@@ -722,7 +738,7 @@ public:
   ACE_InputCDR (Transfer_Contents rhs);
 
   /// Destructor
-  ~ACE_InputCDR (void);
+  virtual ~ACE_InputCDR (void);
 
   /// Disambiguate overloading when extracting octets, chars,
   /// booleans, and bounded strings
@@ -1035,13 +1051,13 @@ private:
 
   /**
    * Read an array of @a length elements, each of @a size bytes and the
-   * start aligned at a multiple of <align>. The elements are assumed
+   * start aligned at a multiple of @a align. The elements are assumed
    * to be packed with the right alignment restrictions.  It is mostly
    * designed for buffers of the basic types.
    *
-   * This operation uses <memcpy>; as explained above it is expected
-   * that using assignment is faster that <memcpy> for one element,
-   * but for several elements <memcpy> should be more efficient, it
+   * This operation uses @c memcpy; as explained above it is expected
+   * that using assignment is faster that @c memcpy for one element,
+   * but for several elements @c memcpy should be more efficient, it
    * could be interesting to find the break even point and optimize
    * for that case, but that would be too platform dependent.
    */
@@ -1131,7 +1147,7 @@ protected:
                             const ACE_CDR::Octet *x);
 
   /// Efficiently read @a length elements of size @a size each from
-  /// <input> into <x>; the data must be aligned to <align>.
+  /// @a input into @a x; the data must be aligned to @a align.
   ACE_CDR::Boolean read_array (ACE_InputCDR& input,
                                void* x,
                                size_t size,
@@ -1154,7 +1170,7 @@ protected:
    * Exposes the stream implementation of <adjust>, this is useful in
    * many cases to minimize memory allocations during marshaling.
    * On success @a buf will contain a contiguous area in the CDR stream
-   * that can hold @a size bytes aligned to <align>.
+   * that can hold @a size bytes aligned to @a align.
    * Results
    */
   int adjust (ACE_OutputCDR& out,
@@ -1224,7 +1240,7 @@ protected:
                             const ACE_CDR::ULong *x);
 
   /// Efficiently read @a length elements of size @a size each from
-  /// <input> into <x>; the data must be aligned to <align>.
+  /// @a input into @a x; the data must be aligned to @a align.
   ACE_CDR::Boolean read_array (ACE_InputCDR& input,
                                void* x,
                                size_t size,
@@ -1232,9 +1248,9 @@ protected:
                                ACE_CDR::ULong length);
 
   /**
-   * Efficiently write @a length elements of size @a size from <x> into
-   * <output>. Before inserting the elements enough padding is added
-   * to ensure that the elements will be aligned to <align> in the
+   * Efficiently write @a length elements of size @a size from @a x into
+   * @a output. Before inserting the elements enough padding is added
+   * to ensure that the elements will be aligned to @a align in the
    * stream.
    */
   ACE_CDR::Boolean write_array (ACE_OutputCDR& output,
@@ -1244,10 +1260,10 @@ protected:
                                 ACE_CDR::ULong length);
 
   /**
-   * Exposes the stream implementation of <adjust>, this is useful in
+   * Exposes the stream implementation of @a adjust, this is useful in
    * many cases to minimize memory allocations during marshaling.
    * On success @a buf will contain a contiguous area in the CDR stream
-   * that can hold @a size bytes aligned to <align>.
+   * that can hold @a size bytes aligned to @a align.
    * Results
    */
   int adjust (ACE_OutputCDR& out,

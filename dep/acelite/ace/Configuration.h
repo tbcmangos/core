@@ -18,7 +18,7 @@
  *  classes, you are responsible for serializing access.
  *
  *  For examples of using this class, see:
- *   -# The test code in acelite/test
+ *   -# The test code in ACE_wrappers/test
  *   -# wxConfigViewer, a Windows like Registry Editor for ACE_Configuration
  *   -# TAO's IFR, it makes extensive use of ACE_Configuration
  *

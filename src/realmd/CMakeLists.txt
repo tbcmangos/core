@@ -6,6 +6,7 @@ if(WIN32)
     realmd.rc
     ${sources_Debugging}
   )
+  set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} /D__ACE_INLINE__")
 endif()
 
 include_directories(
@@ -16,29 +17,36 @@ include_directories(
   ${CMAKE_BINARY_DIR}/src/shared
   ${MYSQL_INCLUDE_DIR}
   ${ACE_INCLUDE_DIR}
+  ${OPENSSL_INCLUDE_DIR}
 )
 
+if(WIN32)
+  include_directories(
+    ${CMAKE_SOURCE_DIR}/dep/windows/include
+  )
+endif()
 add_executable(${EXECUTABLE_NAME}
   ${EXECUTABLE_SRCS}
 )
-
-add_dependencies(${EXECUTABLE_NAME} revision.h)
-if(NOT ACE_USE_EXTERNAL)
-  add_dependencies(${EXECUTABLE_NAME} ACE_Project)
-# add_dependencies(${EXECUTABLE_NAME} ace)
-endif()
 
 target_link_libraries(${EXECUTABLE_NAME}
   shared
   framework
   ${ACE_LIBRARIES}
-  ${OPENSSL_LIBRARIES}
 )
 
 if(WIN32)
   target_link_libraries(${EXECUTABLE_NAME}
-    ${MYSQL_LIBRARY}
+    optimized ${MYSQL_LIBRARY}
+    optimized ${OPENSSL_LIBRARIES}
+    debug ${MYSQL_DEBUG_LIBRARY}
+    debug ${OPENSSL_DEBUG_LIBRARIES}
   )
+  if(MINGW)
+    target_link_libraries(${EXECUTABLE_NAME}
+      -lws2_32
+    )
+  endif()
   if(PLATFORM MATCHES X86)
     target_link_libraries(${EXECUTABLE_NAME})
   endif()
@@ -47,8 +55,13 @@ endif()
 if(UNIX)
   target_link_libraries(${EXECUTABLE_NAME}
     ${MYSQL_LIBRARY}
+    ${OPENSSL_LIBRARIES}
     ${OPENSSL_EXTRA_LIBRARIES}
   )
+endif()
+
+if (USE_LIBCURL)
+  target_link_libraries(${EXECUTABLE_NAME} curl)
 endif()
 
 set(EXECUTABLE_LINK_FLAGS "")
