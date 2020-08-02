@@ -36,7 +36,7 @@
 # define _ENDIAN_STRING "little-endian"
 #endif
 
-#define _FULLVERSION _PACKAGENAME "Rev: " _REVISION
+#define _FULLVERSION _PACKAGENAME "Rev: " REVISION_HASH
 
 #define DEFAULT_PLAYER_LIMIT 100
 #define DEFAULT_WORLDSERVER_PORT 8085                       //8129
