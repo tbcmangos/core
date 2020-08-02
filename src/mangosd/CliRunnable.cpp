@@ -36,56 +36,8 @@
 #include "MapManager.h"
 #include "Player.h"
 #include "Chat.h"
+#include <iterator>
 
-#if PLATFORM != WINDOWS
-#include <readline/readline.h>
-#include <readline/history.h>
-
-char * command_finder(const char* text, int state)
-{
-  static int idx,len;
-  const char* ret;
-  ChatCommand *cmd = ChatHandler::getCommandTable();
-
-  if(!state)
-    {
-      idx = 0;
-      len = strlen(text);
-    }
-
-  while(ret = cmd[idx].Name)
-    {
-      if(!cmd[idx].AllowConsole)
-    {
-    idx++;
-    continue;
-    }
-
-      idx++;
-      //printf("Checking %s \n", cmd[idx].Name);
-      if (strncmp(ret, text, len) == 0)
-    return mangos_strdup(ret);
-      if(cmd[idx].Name == NULL)
-    break;
-    }
-
-  return ((char*)NULL);
-
-}
-
-char ** cli_completion(const char * text, int start, int end)
-{
-  char ** matches;
-  matches = (char**)NULL;
-
-  if(start == 0)
-    matches = rl_completion_matches((char*)text,&command_finder);
-  else
-    rl_bind_key('\t',rl_abort);
-  return (matches);
-}
-
-#endif
 
 void utf8print(const char* str)
 {
@@ -442,9 +394,7 @@ void CliRunnable::run()
     bool canflush = true;
     ///- Display the list of available CLI functions then beep
     sLog.outString();
-    #if PLATFORM != WINDOWS
-    rl_attempted_completion_function = cli_completion;
-    #endif
+
     if(sConfig.GetBoolDefault("BeepAtStart", true))
         printf("\a");                                       // \a = Alert
 
@@ -452,14 +402,12 @@ void CliRunnable::run()
     while (!World::IsStopped())
     {
         fflush(stdout);
-
-        char *command_str ;             // = fgets(commandbuf,sizeof(commandbuf),stdin);
-
-        #if PLATFORM == WINDOWS
-        command_str = fgets(commandbuf,sizeof(commandbuf),stdin);
-        #else
-        rl_bind_key('\t',rl_complete);
-        command_str = readline("TC> ");
+        #ifdef linux
+        while (!kb_hit_return() && !World::IsStopped())
+            // With this, we limit CLI to 10commands/second
+            usleep(100);
+        if (World::IsStopped())
+            break;
         #endif
         if (command_str != NULL)
         {
@@ -481,9 +429,7 @@ void CliRunnable::run()
             std::string command;
             if(!consoleToUtf8(command_str,command))         // convert from console encoding to utf8
             {
-                #if PLATFORM == WINDOWS
-                printf("TC> ");
-                #endif
+                printf("mangos>");
                 continue;
             }
             fflush(stdout);
