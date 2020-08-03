@@ -11,6 +11,7 @@ git:
   depth: 1
 
 before_install:
+  - eval "${MATRIX_EVAL}"
   - sudo apt-get -qq install libtool make cmake cmake-data openssl
   - sudo apt-get -qq install libssl-dev libmysqlclient-dev libmysql++-dev libreadline6-dev zlib1g zlib1g-dev libbz2-dev
 #  - sudo apt-get -qq install libboost1.55-dev libboost-thread1.55-dev libboost-filesystem1.55-dev libboost-system1.55-dev libboost-program-options1.55-dev libboost-iostreams1.55-dev libboost-regex1.55-dev
@@ -22,18 +23,35 @@ before_install:
 # build matrix
 matrix:
   include:
-    # linux builds gcc4 x64
+    # linux builds gcc4 works on Precise and Trusty
     - os: linux
-      arch: amd64
-      name: "linux builds gcc5 x64"
+      name: "linux builds gcc4.9"
       addons:
         apt:
           sources:
             - ubuntu-toolchain-r-test
           packages:
-            - g++-5.4
+            - g++-4.9
       env:
-        - MATRIX_EVAL="CC=gcc-5.4 && CXX=g++-5.4"
+         - MATRIX_EVAL="CC=gcc-4.9 && CXX=g++-4.9"
+      install:
+        - mkdir build
+        - mkdir _install
+        - cd build
+        - cmake ../ -DCMAKE_INSTALL_PREFIX=../_install -DNOT_USE_ELUNA_HOOKS=0 -DWITH_WARNINGS=1 -DWITH_COREDEBUG=0 -DUSE_COREPCH=1 -DUSE_SCRIPTPCH=1 -DTOOLS=1 -DSCRIPTS="dynamic" -DSERVERS=1 -DNOJEM=1 -DWITH_DYNAMIC_LINKING=1 -DCMAKE_BUILD_TYPE=Release -DCMAKE_C_FLAGS="-w" -DCMAKE_CXX_FLAGS="-w" -DCMAKE_INSTALL_PREFIX=check_install
+        - cd ..
+
+    # linux builds gcc5 works on Precise and Trusty
+    - os: linux
+      name: "linux builds gcc5"
+      addons:
+        apt:
+          sources:
+            - ubuntu-toolchain-r-test
+          packages:
+            - g++-5
+      env:
+         - MATRIX_EVAL="CC=gcc-5 && CXX=g++-5"
       install:
         - mkdir build
         - mkdir _install
@@ -41,11 +59,27 @@ matrix:
         - cmake ../ -DCMAKE_INSTALL_PREFIX=../_install -DNOT_USE_ELUNA_HOOKS=0 -DWITH_WARNINGS=1 -DWITH_COREDEBUG=0 -DUSE_COREPCH=1 -DUSE_SCRIPTPCH=1 -DTOOLS=1 -DSCRIPTS="dynamic" -DSERVERS=1 -DNOJEM=1 -DWITH_DYNAMIC_LINKING=1 -DCMAKE_BUILD_TYPE=Release -DCMAKE_C_FLAGS="-w" -DCMAKE_CXX_FLAGS="-w" -DCMAKE_INSTALL_PREFIX=check_install
         - cd ..
         
-    # linux builds gcc7 x64
+    # linux builds gcc6 works on Precise and Trusty
     - os: linux
-      arch: amd64
-      name: "linux builds gcc7 x64"
-      compiler: gcc
+      name: "linux builds gcc6"
+      addons:
+        apt:
+          sources:
+            - ubuntu-toolchain-r-test
+          packages:
+            - g++-6
+      env:
+        - MATRIX_EVAL="CC=gcc-6 && CXX=g++-6"
+      install:
+        - mkdir build
+        - mkdir _install
+        - cd build
+        - cmake ../ -DCMAKE_INSTALL_PREFIX=../_install -DNOT_USE_ELUNA_HOOKS=0 -DWITH_WARNINGS=1 -DWITH_COREDEBUG=0 -DUSE_COREPCH=1 -DUSE_SCRIPTPCH=1 -DTOOLS=1 -DSCRIPTS="dynamic" -DSERVERS=1 -DNOJEM=1 -DWITH_DYNAMIC_LINKING=1 -DCMAKE_BUILD_TYPE=Release -DCMAKE_C_FLAGS="-w" -DCMAKE_CXX_FLAGS="-w" -DCMAKE_INSTALL_PREFIX=check_install
+        - cd ..
+        
+    # linux builds gcc7 works on Precise and Trusty
+    - os: linux
+      name: "linux builds gcc7"
       addons:
         apt:
           sources:
@@ -60,7 +94,7 @@ matrix:
         - cd build
         - cmake ../ -DCMAKE_INSTALL_PREFIX=../_install -DNOT_USE_ELUNA_HOOKS=0 -DWITH_WARNINGS=1 -DWITH_COREDEBUG=0 -DUSE_COREPCH=1 -DUSE_SCRIPTPCH=1 -DTOOLS=1 -DSCRIPTS="dynamic" -DSERVERS=1 -DNOJEM=1 -DWITH_DYNAMIC_LINKING=1 -DCMAKE_BUILD_TYPE=Release -DCMAKE_C_FLAGS="-w" -DCMAKE_CXX_FLAGS="-w" -DCMAKE_INSTALL_PREFIX=check_install
         - cd ..
-
+        
     # linux builds clang x64
     - os: linux
       arch: amd64
@@ -80,8 +114,7 @@ matrix:
         - mkdir _install
         - cd build
         - cmake ../ -DCMAKE_INSTALL_PREFIX=../_install -DNOT_USE_ELUNA_HOOKS=0 -DWITH_WARNINGS=1 -DWITH_COREDEBUG=0 -DUSE_COREPCH=1 -DUSE_SCRIPTPCH=1 -DTOOLS=1 -DSCRIPTS="dynamic" -DSERVERS=1 -DNOJEM=1 -DWITH_DYNAMIC_LINKING=1 -DCMAKE_BUILD_TYPE=Release -DCMAKE_C_FLAGS="-w" -DCMAKE_CXX_FLAGS="-w" -DCMAKE_INSTALL_PREFIX=check_install
-        - cd ..
-             
+        - cd ..        
         
 script:
   # - $CXX --version
