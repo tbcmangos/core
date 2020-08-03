@@ -348,7 +348,8 @@ if(UNIX)
     endif()
     #set(BUILD_ADDITIONAL_FLAGS "${BUILD_ADDITIONAL_FLAGS} -fsanitize=unsigned-integer-overflow")
   endif()
-
+  
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14")
   #set(BUILD_ADDITIONAL_FLAGS "${BUILD_ADDITIONAL_FLAGS} -std=c++14 --no-warnings -fexceptions -fnon-call-exceptions -march=native -O3 -pipe ")
   set(BUILD_ADDITIONAL_FLAGS "${BUILD_ADDITIONAL_FLAGS} --no-warnings -fexceptions -fnon-call-exceptions -march=native -O3 -pipe ")
   if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
