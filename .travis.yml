@@ -27,6 +27,7 @@ matrix:
     # linux builds gcc5 works on Precise and Trusty
     - os: linux
       name: "linux builds gcc5"
+      compiler: gcc
       addons:
         apt:
           sources:
@@ -45,6 +46,7 @@ matrix:
     # linux builds gcc6 works on Precise and Trusty
     - os: linux
       name: "linux builds gcc6"
+      compiler: gcc
       addons:
         apt:
           sources:
@@ -63,6 +65,7 @@ matrix:
     # linux builds gcc7 works on Precise and Trusty
     - os: linux
       name: "linux builds gcc7"
+      compiler: gcc
       addons:
         apt:
           sources:
@@ -78,10 +81,10 @@ matrix:
         - cmake ../ -DCMAKE_INSTALL_PREFIX=../_install -DNOT_USE_ELUNA_HOOKS=0 -DWITH_WARNINGS=1 -DWITH_COREDEBUG=0 -DUSE_COREPCH=1 -DUSE_SCRIPTPCH=1 -DTOOLS=1 -DSCRIPTS="dynamic" -DSERVERS=1 -DNOJEM=1 -DWITH_DYNAMIC_LINKING=1 -DCMAKE_BUILD_TYPE=Release -DCMAKE_C_FLAGS="-w" -DCMAKE_CXX_FLAGS="-w" -DCMAKE_INSTALL_PREFIX=check_install
         - cd ..
         
-    # linux builds clang x64
+    # linux builds clang3.8
     - os: linux
       arch: amd64
-      name: "linux builds clang x64"
+      name: "linux builds clang 3.8"
       compiler: clang
       addons:
         apt:
@@ -99,20 +102,20 @@ matrix:
         - cmake ../ -DCMAKE_INSTALL_PREFIX=../_install -DNOT_USE_ELUNA_HOOKS=0 -DWITH_WARNINGS=1 -DWITH_COREDEBUG=0 -DUSE_COREPCH=1 -DUSE_SCRIPTPCH=1 -DTOOLS=1 -DSCRIPTS="dynamic" -DSERVERS=1 -DNOJEM=1 -DWITH_DYNAMIC_LINKING=1 -DCMAKE_BUILD_TYPE=Release -DCMAKE_C_FLAGS="-w" -DCMAKE_CXX_FLAGS="-w" -DCMAKE_INSTALL_PREFIX=check_install
         - cd ..  
         
-    # linux builds clang4 x64
+    # linux builds clang4
     - os: linux
       arch: amd64
-      name: "linux builds clang x64"
+      name: "linux builds clang 4.0"
       compiler: clang
       addons:
         apt:
           sources:
             - ubuntu-toolchain-r-test
-            - llvm-toolchain-precise-4
+            - llvm-toolchain-precise-4.0
           packages:
-            - clang-4
+            - clang-4.0
       env:
-        - MATRIX_EVAL="CC=clang-4 && CXX=clang++-4"
+        - MATRIX_EVAL="CC=clang-4.0 && CXX=clang++-4.0"
       install:
         - mkdir build
         - mkdir _install
@@ -120,7 +123,7 @@ matrix:
         - cmake ../ -DCMAKE_INSTALL_PREFIX=../_install -DNOT_USE_ELUNA_HOOKS=0 -DWITH_WARNINGS=1 -DWITH_COREDEBUG=0 -DUSE_COREPCH=1 -DUSE_SCRIPTPCH=1 -DTOOLS=1 -DSCRIPTS="dynamic" -DSERVERS=1 -DNOJEM=1 -DWITH_DYNAMIC_LINKING=1 -DCMAKE_BUILD_TYPE=Release -DCMAKE_C_FLAGS="-w" -DCMAKE_CXX_FLAGS="-w" -DCMAKE_INSTALL_PREFIX=check_install
         - cd ..      
 
-    # linux builds clang5 x64
+    # linux builds clang5
     - os: linux
       arch: amd64
       name: "linux builds clang x64"
@@ -129,11 +132,11 @@ matrix:
         apt:
           sources:
             - ubuntu-toolchain-r-test
-            - llvm-toolchain-precise-5
+            - llvm-toolchain-precise-5.0
           packages:
-            - clang-5
+            - clang-5.0
       env:
-        - MATRIX_EVAL="CC=clang-5 && CXX=clang++-5"
+        - MATRIX_EVAL="CC=clang-5.0 && CXX=clang++-5.0"
       install:
         - mkdir build
         - mkdir _install
@@ -141,20 +144,20 @@ matrix:
         - cmake ../ -DCMAKE_INSTALL_PREFIX=../_install -DNOT_USE_ELUNA_HOOKS=0 -DWITH_WARNINGS=1 -DWITH_COREDEBUG=0 -DUSE_COREPCH=1 -DUSE_SCRIPTPCH=1 -DTOOLS=1 -DSCRIPTS="dynamic" -DSERVERS=1 -DNOJEM=1 -DWITH_DYNAMIC_LINKING=1 -DCMAKE_BUILD_TYPE=Release -DCMAKE_C_FLAGS="-w" -DCMAKE_CXX_FLAGS="-w" -DCMAKE_INSTALL_PREFIX=check_install
         - cd ..   
 
-    # linux builds clang6 x64
+    # linux builds clang6
     - os: linux
       arch: amd64
-      name: "linux builds clang x64"
+      name: "linux builds clang 6.0"
       compiler: clang
       addons:
         apt:
           sources:
             - ubuntu-toolchain-r-test
-            - llvm-toolchain-precise-6
+            - llvm-toolchain-precise-6.0
           packages:
-            - clang-6
+            - clang-6.0
       env:
-        - MATRIX_EVAL="CC=clang-6 && CXX=clang++-6"
+        - MATRIX_EVAL="CC=clang-6.0 && CXX=clang++-6.0"
       install:
         - mkdir build
         - mkdir _install
