@@ -4,6 +4,8 @@
 /**
  *  @file    Dynamic_Message_Strategy.h
  *
+ *  $Id: Dynamic_Message_Strategy.h 97262 2013-08-09 08:32:10Z johnnyw $
+ *
  *  @author Douglas C. Schmidt <schmidt@cs.wustl.edu>
  */
 //==========================================================================

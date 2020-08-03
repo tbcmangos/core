@@ -1,4 +1,7 @@
 // -*- C++ -*-
+//
+// $Id: Vector_T.inl 81478 2008-04-28 13:22:26Z schmidt $
+
 #include <algorithm>
 
 ACE_BEGIN_VERSIONED_NAMESPACE_DECL

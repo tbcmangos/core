@@ -4,6 +4,8 @@
 /**
  *  @file    Dev_Poll_Reactor.h
  *
+ *  $Id: Dev_Poll_Reactor.h 97130 2013-05-13 17:36:26Z mesnier_p $
+ *
  *  @c /dev/poll (or Linux @c sys_epoll) based Reactor implementation.
  *
  *  @author  Ossama Othman <ossama@dre.vanderbilt.edu>
@@ -166,8 +168,6 @@ public:
   ///            0 if there were only wake-ups (no handlers to dispatch).
   int dequeue_one (ACE_Notification_Buffer &nb);
 
-  ACE_ALLOC_HOOK_DECLARE;
-
 protected:
 
   /**
@@ -292,8 +292,6 @@ class ACE_Export ACE_Dev_Poll_Reactor : public ACE_Reactor_Impl
 
     /// Flag to say whether or not this handle is registered with epoll.
     bool controlled;
-
-    ACE_ALLOC_HOOK_DECLARE;
   };
 
 

@@ -4,6 +4,8 @@
 /**
  *  @file    MEM_Addr.h
  *
+ *  $Id: MEM_Addr.h 97326 2013-09-11 07:52:09Z johnnyw $
+ *
  *  @author Nanbor Wang <nanbor@cs.wustl.edu>
  */
 //==========================================================================
@@ -76,7 +78,7 @@ public:
   virtual void *get_addr (void) const;
 
   /// Set a pointer to the address.
-  virtual void set_addr (const void *, int len);
+  virtual void set_addr (void *, int len);
 
   /// Transform the external ACE_MEM_Addr address into string
   /// format.

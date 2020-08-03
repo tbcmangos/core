@@ -1,6 +1,7 @@
+// $Id: DLL_Manager.cpp 97888 2014-09-11 10:29:17Z mcorino $
+
 #include "ace/DLL_Manager.h"
 
-#include "ace/Auto_Ptr.h"
 #include "ace/Log_Category.h"
 #include "ace/ACE.h"
 #include "ace/Framework_Component.h"
@@ -29,14 +30,8 @@ ACE_DLL_Handle::~ACE_DLL_Handle (void)
 {
   ACE_TRACE ("ACE_DLL_Handle::~ACE_DLL_Handle");
   this->close (1);
-#if defined (ACE_HAS_ALLOC_HOOKS)
-  ACE_Allocator::instance()->free(this->dll_name_);
-#else
   delete[] this->dll_name_;
-#endif /* ACE_HAS_ALLOC_HOOKS */
 }
-
-ACE_ALLOC_HOOK_DEFINE(ACE_DLL_Handle)
 
 const ACE_TCHAR  *
 ACE_DLL_Handle::dll_name (void) const
@@ -603,8 +598,6 @@ ACE_DLL_Manager::~ACE_DLL_Manager (void)
                 ACE_TEXT ("properly.\n")));
 }
 
-ACE_ALLOC_HOOK_DEFINE(ACE_DLL_Manager)
-
 ACE_DLL_Handle *
 ACE_DLL_Manager::open_dll (const ACE_TCHAR *dll_name,
                            int open_mode,
@@ -720,15 +713,9 @@ ACE_DLL_Manager::open (int size)
 
   ACE_DLL_Handle **temp = 0;
 
-#if defined (ACE_HAS_ALLOC_HOOKS)
-  ACE_ALLOCATOR_RETURN (temp,
-                        static_cast<ACE_DLL_Handle**> (ACE_Allocator::instance()->malloc(sizeof (ACE_DLL_Handle*) * size)),
-                        -1);
-#else
   ACE_NEW_RETURN (temp,
                   ACE_DLL_Handle *[size],
                   -1);
-#endif /* ACE_HAS_ALLOC_HOOKS */
 
   this->handle_vector_ = temp;
   this->total_size_ = size;
@@ -757,12 +744,7 @@ ACE_DLL_Manager::close (void)
             }
         }
 
-#if defined (ACE_HAS_ALLOC_HOOKS)
-      ACE_Allocator::instance()->free(this->handle_vector_);
-#else
       delete [] this->handle_vector_;
-#endif /* ACE_HAS_ALLOC_HOOKS */
-
       this->handle_vector_ = 0;
       this->current_size_ = 0;
     }

@@ -4,6 +4,8 @@
 /**
  *  @file    DLL_Manager.h
  *
+ *  $Id: DLL_Manager.h 97888 2014-09-11 10:29:17Z mcorino $
+ *
  *  @author Don Hinton <dhinton@ieee.org>
  */
 //=============================================================================
@@ -18,6 +20,7 @@
 # pragma once
 #endif /* ACE_LACKS_PRAGMA_ONCE */
 
+#include "ace/Auto_Ptr.h"
 #include "ace/Containers_T.h"
 #include "ace/SString.h"
 #include "ace/os_include/os_dlfcn.h"
@@ -49,6 +52,7 @@ ACE_BEGIN_VERSIONED_NAMESPACE_DECL
  * Most of this class came from the original ACE_DLL class.  ACE_DLL
  * is now just an interface that passed all it's calls either directly
  * or via ACE_DLL_Manager to this class for execution.
+ *
  */
 class ACE_Export ACE_DLL_Handle
 {
@@ -138,8 +142,6 @@ public:
    */
   ACE_SHLIB_HANDLE get_handle (bool become_owner = false);
 
-  ACE_ALLOC_HOOK_DECLARE;
-
 private:
 
   /// Returns a string explaining why <symbol> or <open>
@@ -215,6 +217,7 @@ class ACE_Framework_Repository;
  *
  *  ACE_DLL_UNLOAD_POLICY_DEFAULT - Default policy allows dlls to control
  *  their own destinies, but will unload those that don't make a choice eagerly.
+ *
  */
 class ACE_Export ACE_DLL_Manager
 {
@@ -247,8 +250,6 @@ public:
   /// LAZY to EAGER, then it will also unload any dlls with zero
   /// refcounts.
   void unload_policy (u_long unload_policy);
-
-  ACE_ALLOC_HOOK_DECLARE;
 
 protected:
 

@@ -4,6 +4,8 @@
 /**
  *  @file   OS_NS_sys_socket.h
  *
+ *  $Id: OS_NS_sys_socket.h 95533 2012-02-14 22:59:17Z wotte $
+ *
  *  @author Douglas C. Schmidt <schmidt@cs.wustl.edu>
  *  @author Jesper S. M|ller<stophph@diku.dk>
  *  @author and a cast of thousands...
