@@ -15,6 +15,12 @@ big image may be buffered
 
 [![Build Status](https://travis-badge.herokuapp.com/repos/tbcmangos/core/branches/master?use_travis_com=true)](https://travis-ci.com/github/tbcmangos/core)
 
+test another badge
+
+https://github.com/exogen/badge-matrix 
+
+![BADGE=test1](https://badges.herokuapp.com/travis/tbcmangos/core?branch=master&env=BADGE=test1&label=BADGE=test1)
+
 ######################
 #   HellGroundCore   #
 ######################
