@@ -31,9 +31,9 @@ matrix:
           sources:
             - ubuntu-toolchain-r-test
           packages:
-            - g++-5.2
+            - g++-5.4
       env:
-        - MATRIX_EVAL="CC=gcc-5.2 && CXX=g++-5.2"
+        - MATRIX_EVAL="CC=gcc-5.4 && CXX=g++-5.4"
       install:
         - mkdir build
         - mkdir _install
