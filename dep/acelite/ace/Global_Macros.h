@@ -4,8 +4,6 @@
 /**
  *  @file   Global_Macros.h
  *
- *  $Id: Global_Macros.h 97884 2014-09-08 18:00:53Z johnnyw $
- *
  *  @author Douglas C. Schmidt <schmidt@cs.wustl.edu>
  *  @author Jesper S. M|ller<stophph@diku.dk>
  *  @author and a cast of thousands...
@@ -97,7 +95,7 @@ ACE_END_VERSIONED_NAMESPACE_DECL
 #  define ACE_ENDLESS_LOOP
 # endif /* ! ACE_ENDLESS_LOOP */
 
-# if defined (ACE_NEEDS_FUNC_DEFINITIONS)
+# if defined (ACE_NEEDS_FUNC_DEFINITIONS) && !defined (ACE_HAS_CPP11)
     // It just evaporated ;-)  Not pleasant.
 #   define ACE_UNIMPLEMENTED_FUNC(f)
 # else
@@ -108,12 +106,14 @@ ACE_END_VERSIONED_NAMESPACE_DECL
 #   endif
 # endif /* ACE_NEEDS_FUNC_DEFINITIONS */
 
-// C++11 has deprecated the register keyword
+// noexcept(false) specification to specify that the operation can
+// throw an exception
 #if defined (ACE_HAS_CPP11)
-# define ACE_REGISTER
+#define ACE_NOEXCEPT_FALSE noexcept(false)
 #else
-# define ACE_REGISTER register
+#define ACE_NOEXCEPT_FALSE
 #endif
+
 // ----------------------------------------------------------------
 
 // FUZZ: disable check_for_ACE_Guard
@@ -253,6 +253,13 @@ ACE_END_VERSIONED_NAMESPACE_DECL
             (POINTER)->~CLASS (); \
             DEALLOCATOR (POINTER); \
           } \
+      } \
+   while (0)
+
+# define ACE_DES_FREE_THIS(DEALLOCATOR,CLASS) \
+   do { \
+        this->~CLASS (); \
+        DEALLOCATOR (this); \
       } \
    while (0)
 
@@ -668,7 +675,6 @@ static ACE_Static_Svc_##SERVICE_CLASS ace_static_svc_##SERVICE_CLASS;
  *        service.
  * @param SERVICE_CLASS must match the name of the class that
  *        implements the service.
- *
  */
 # define ACE_FACTORY_DECLARE(CLS,SERVICE_CLASS) \
 extern "C" CLS##_Export ACE_VERSIONED_NAMESPACE_NAME::ACE_Service_Object * \
@@ -801,7 +807,6 @@ ACE_MAKE_SVC_CONFIG_FACTORY_NAME(ACE_VERSIONED_NAMESPACE_NAME,SERVICE_CLASS) (AC
  *
  * The ACE services defined in netsvcs use this helper macros for
  * simplicity.
- *
  */
 //@{
 # define ACE_SVC_FACTORY_DECLARE(X) ACE_FACTORY_DECLARE (ACE_Svc, X)
@@ -871,7 +876,7 @@ ACE_MAKE_SVC_CONFIG_FACTORY_NAME(ACE_VERSIONED_NAMESPACE_NAME,SERVICE_CLASS) (AC
 #endif /* ACE_WIN32 */
 
 
-// Some useful abstrations for expressions involving
+// Some useful abstractions for expressions involving
 // ACE_Allocator.malloc ().  The difference between ACE_NEW_MALLOC*
 // with ACE_ALLOCATOR* is that they call constructors also.
 
@@ -1037,16 +1042,6 @@ ACE_MAKE_SVC_CONFIG_FACTORY_NAME(ACE_VERSIONED_NAMESPACE_NAME,SERVICE_CLASS) (AC
 #   define ACE_SHARED_MEMORY_POOL ACE_Shared_Memory_Pool
 #   define ACE_LOCAL_MEMORY_POOL ACE_Local_Memory_Pool
 #   define ACE_PAGEFILE_MEMORY_POOL ACE_Pagefile_Memory_Pool
-
-// Work around compilers that don't like in-class static integral
-// constants.  Constants in this case are meant to be compile-time
-// constants so that they may be used as template arguments, for
-// example.  BOOST provides a similar macro.
-#ifndef ACE_LACKS_STATIC_IN_CLASS_CONSTANTS
-# define ACE_STATIC_CONSTANT(TYPE, ASSIGNMENT) static TYPE const ASSIGNMENT
-#else
-# define ACE_STATIC_CONSTANT(TYPE, ASSIGNMENT) enum { ASSIGNMENT }
-#endif  /* !ACE_LACKS_STATIC_IN_CLASS_CONSTANTS */
 
 #include /**/ "ace/post.h"
 

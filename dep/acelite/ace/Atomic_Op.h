@@ -4,8 +4,6 @@
 /**
  *  @file    Atomic_Op.h
  *
- *  $Id: Atomic_Op.h 96147 2012-09-15 01:13:21Z shuston $
- *
  *  @author Douglas C. Schmidt <schmidt@uci.edu>
  */
 //=============================================================================

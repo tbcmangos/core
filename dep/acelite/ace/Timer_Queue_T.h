@@ -4,8 +4,6 @@
 /**
  *  @file    Timer_Queue_T.h
  *
- *  $Id: Timer_Queue_T.h 97644 2014-03-07 11:59:51Z johnnyw $
- *
  *  @author Doug Schmidt <schmidt@cs.wustl.edu>
  *  @author Irfan Pyarali <irfan@cs.wustl.edu> and
  *  @author Darrell Brunsch <brunsch@cs.wustl.edu>

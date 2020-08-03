@@ -1,5 +1,3 @@
-// $Id: Sig_Handler.cpp 97246 2013-08-07 07:10:20Z johnnyw $
-
 #include "ace/Sig_Handler.h"
 #include "ace/Sig_Adapter.h"
 #include "ace/Signal.h"

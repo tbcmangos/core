@@ -4,8 +4,6 @@
 /**
  *  @file    Obstack_T.h
  *
- *  $Id: Obstack_T.h 96230 2012-11-06 22:18:13Z schmidt $
- *
  *  @author Doug Schmidt <schmidt@cs.wustl.edu>
  *  @author Nanbor Wang <nanbor@cs.wustl.edu>
  */

@@ -1,4 +1,5 @@
-// $Id: Auto_Event.cpp 96220 2012-11-06 10:03:41Z mcorino $
+#ifndef AUTOEVENTCPP
+#define AUTOEVENTCPP
 
 #include "ace/Auto_Event.h"
 
@@ -6,7 +7,13 @@
 #include "ace/Auto_Event.inl"
 #endif /* __ACE_INLINE__ */
 
+#if defined (ACE_HAS_ALLOC_HOOKS)
+# include "ace/Malloc_Base.h"
+#endif /* ACE_HAS_ALLOC_HOOKS */
+
 ACE_BEGIN_VERSIONED_NAMESPACE_DECL
+
+ACE_ALLOC_HOOK_DEFINE_Tc(ACE_Auto_Event_T)
 
 template <class TIME_POLICY>
 ACE_Auto_Event_T<TIME_POLICY>::ACE_Auto_Event_T (
@@ -48,3 +55,4 @@ ACE_Auto_Event_T<TIME_POLICY>::dump (void) const
 }
 
 ACE_END_VERSIONED_NAMESPACE_DECL
+#endif

@@ -1,5 +1,3 @@
-// $Id: Timer_Queue_Adapters.cpp 97493 2013-12-31 07:45:27Z johnnyw $
-
 #ifndef ACE_TIMER_QUEUE_ADAPTERS_CPP
 #define ACE_TIMER_QUEUE_ADAPTERS_CPP
 

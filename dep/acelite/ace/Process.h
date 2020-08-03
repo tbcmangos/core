@@ -4,8 +4,6 @@
 /**
  *  @file    Process.h
  *
- *  $Id: Process.h 97553 2014-01-30 17:01:44Z shuston $
- *
  *  @author Tim Harrison <harrison@cs.wustl.edu>
  */
 //=============================================================================
@@ -116,6 +114,7 @@ public:
   /// Release the standard handles previously set with set_handles;
   void release_handles (void);
 
+#ifndef ACE_LACKS_VA_FUNCTIONS
   /// @param format must be of the form "VARIABLE=VALUE".  There can not be
   /// any spaces between VARIABLE and the equal sign.
   int setenv (const ACE_TCHAR *format,
@@ -132,6 +131,7 @@ public:
   int setenv (const ACE_TCHAR *variable_name,
               const ACE_TCHAR *format,
               ...);
+#endif // ACE_LACKS_VA_FUNCTIONS
 
   /// Same as above with argv format.  @a envp must be null terminated.
   int setenv (ACE_TCHAR *envp[]);
@@ -145,6 +145,7 @@ public:
   void working_directory (const wchar_t *wd);
 #endif /* ACE_HAS_WCHAR */
 
+#ifndef ACE_LACKS_VA_FUNCTIONS
   /**
    * Set the command-line arguments.  @a format can use any printf
    * formats.  The first token in @a format should be the path to the
@@ -160,6 +161,7 @@ public:
   /// Anti-TChar version of command_line ()
   int command_line (const ACE_ANTI_TCHAR *format, ...);
 #endif /* ACE_HAS_WCHAR && !ACE_HAS_WINCE */
+#endif // ACE_LACKS_VA_FUNCTIONS
 
   /// Same as above in argv format.  @a argv must be null terminated.
   int command_line (const ACE_TCHAR * const argv[]);
@@ -663,6 +665,8 @@ public:
 
   /// Cleanup by deleting @c this.
   virtual void unmanage (void);
+
+  ACE_ALLOC_HOOK_DECLARE;
 
 protected:
 

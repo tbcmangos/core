@@ -4,8 +4,6 @@
 /**
  *  @file    WFMO_Reactor.h
  *
- *  $Id: WFMO_Reactor.h 97645 2014-03-07 12:01:21Z johnnyw $
- *
  *  @author Irfan Pyarali <irfan@cs.wustl.edu>
  *  @author Tim Harrison <harrison@cs.wustl.edu>
  *  @author Doug Schmidt <schmidt@cs.wustl.edu>
@@ -73,11 +71,10 @@ int WSAEnumNetworkEvents (SOCKET s,
 
 #endif /* !defined ACE_HAS_WINSOCK2 */
 
-class ACE_WFMO_Reactor_Test;  // Must be out of versioned namespace.
-
 ACE_BEGIN_VERSIONED_NAMESPACE_DECL
 
 // Forward decl.
+class ACE_WFMO_Reactor_Test;
 class ACE_WFMO_Reactor;
 class ACE_Handle_Set;
 
@@ -115,7 +112,7 @@ public:
    * Event_Handler entry. The reason the event is not in this
    * structure is because we need to pass an event array into
    * WaitForMultipleObjects and therefore keeping the events
-   * seperate makes sense.
+   * separate makes sense.
    */
   class Common_Info
   {

@@ -1,7 +1,4 @@
 // -*- C++ -*-
-//
-// $Id: Process.inl 97660 2014-03-17 09:49:33Z johnnyw $
-
 #include "ace/ACE.h"
 #include "ace/OS_NS_sys_wait.h"
 #include "ace/OS_NS_signal.h"

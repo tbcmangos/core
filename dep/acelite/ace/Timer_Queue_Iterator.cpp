@@ -1,9 +1,12 @@
-//$Id: Timer_Queue_Iterator.cpp 96985 2013-04-11 15:50:32Z huangh $
-
 #ifndef ACE_TIMER_QUEUE_ITERATOR_CPP
 #define ACE_TIMER_QUEUE_ITERATOR_CPP
 
+#include "ace/Timer_Queue_Iterator.h"
+
 #include "ace/config-all.h"
+#if defined (ACE_HAS_ALLOC_HOOKS)
+# include "ace/Malloc_Base.h"
+#endif /* ACE_HAS_ALLOC_HOOKS */
 
 #if !defined (ACE_LACKS_PRAGMA_ONCE)
 # pragma once
@@ -13,7 +16,10 @@
 #include "ace/Timer_Queue_Iterator.inl"
 #endif /* __ACE_INLINE__ */
 
+
 ACE_BEGIN_VERSIONED_NAMESPACE_DECL
+
+ACE_ALLOC_HOOK_DEFINE_Tc(ACE_Timer_Node_T)
 
 template <class TYPE> void
 ACE_Timer_Node_T<TYPE>::dump (void) const

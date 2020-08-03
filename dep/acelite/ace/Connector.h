@@ -4,8 +4,6 @@
 /**
  *  @file    Connector.h
  *
- *  $Id: Connector.h 97180 2013-05-29 16:51:19Z schmidt $
- *
  *  @author Douglas C. Schmidt <schmidt@cs.wustl.edu>
  */
 //=============================================================================
@@ -72,7 +70,7 @@ public:
 
   /// Close up and return underlying SVC_HANDLER through @c sh.
   /**
-   * If the return value is true the close was performed succesfully,
+   * If the return value is true the close was performed successfully,
    * implying that this object was removed from the reactor and thereby
    * (by means of reference counting decremented to 0) deleted.
    * If the return value is false, the close was not successful.
@@ -480,6 +478,9 @@ public:
   virtual ACE_Creation_Strategy<SVC_HANDLER> *creation_strategy (void) const;
   virtual ACE_Connect_Strategy<SVC_HANDLER, PEER_CONNECTOR> *connect_strategy (void) const;
   virtual ACE_Concurrency_Strategy<SVC_HANDLER> *concurrency_strategy (void) const;
+
+  /// Declare the dynamic allocation hooks.
+  ACE_ALLOC_HOOK_DECLARE;
 
 protected:
   // = The following three methods define the <Connector>'s strategies
