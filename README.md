@@ -1,6 +1,6 @@
 [![Build Status](https://travis-ci.com/tbcmangos/core.svg?branch=master)](https://travis-ci.com/tbcmangos/core)
 
-| gcc5              | gcc6              | gcc7              | clang3.8          | clang4            | clang5            | clang6            |
+| gcc5              | gcc6              | gcc7              | clang4            | clang5            | clang6            | clang7            |
 |-------------------|-------------------|-------------------|-------------------|-------------------|-------------------|-------------------|
 | [![Build1][1]][10]| [![Build2][2]][10]| [![Build3][3]][10]| [![Build4][4]][10]| [![Build5][5]][10]| [![Build6][6]][10]| [![Build7][7]][10]|
 
