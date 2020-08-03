@@ -1,15 +1,17 @@
 [![Build Status](https://travis-ci.com/tbcmangos/core.svg?branch=master)](https://travis-ci.com/tbcmangos/core)
 
-| gcc5              | gcc6              | gcc7              | clang7            |
+| job1.gcc5         | job2.gcc6         | job3.gcc7         | job4.clang7       |
 |-------------------|-------------------|-------------------|-------------------|
 | [![Build1][1]][10]| [![Build2][2]][10]| [![Build3][3]][10]| [![Build4][4]][10]|
 
-[1]: https://travis-matrix-badges.herokuapp.com/repos/tbcmangos/core/branches/master/1?use_travis_com=true
-[2]: https://travis-matrix-badges.herokuapp.com/repos/tbcmangos/core/branches/master/2?use_travis_com=true
-[3]: https://travis-matrix-badges.herokuapp.com/repos/tbcmangos/core/branches/master/3?use_travis_com=true
-[4]: https://travis-matrix-badges.herokuapp.com/repos/tbcmangos/core/branches/master/4?use_travis_com=true
+[1]: https://travis-badge.herokuapp.com/repos/tbcmangos/core/branches/master/1?use_travis_com=true
+[2]: https://travis-badge.herokuapp.com/repos/tbcmangos/core/branches/master/2?use_travis_com=true
+[3]: https://travis-badge.herokuapp.com/repos/tbcmangos/core/branches/master/3?use_travis_com=true
+[4]: https://travis-badge.herokuapp.com/repos/tbcmangos/core/branches/master/4?use_travis_com=true
 
 [10]: https://travis-ci.com/github/tbcmangos/core
+
+[![Build Status](https://travis-badge.herokuapp.com/repos/tbcmangos/core/branches/master?use_travis_com=true)](https://travis-ci.com/github/tbcmangos/core)
 
 ######################
 #   HellGroundCore   #
