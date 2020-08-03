@@ -81,88 +81,25 @@ matrix:
         - cmake ../ -DCMAKE_INSTALL_PREFIX=../_install -DNOT_USE_ELUNA_HOOKS=0 -DWITH_WARNINGS=1 -DWITH_COREDEBUG=0 -DUSE_COREPCH=1 -DUSE_SCRIPTPCH=1 -DTOOLS=1 -DSCRIPTS="dynamic" -DSERVERS=1 -DNOJEM=1 -DWITH_DYNAMIC_LINKING=1 -DCMAKE_BUILD_TYPE=Release -DCMAKE_C_FLAGS="-w" -DCMAKE_CXX_FLAGS="-w" -DCMAKE_INSTALL_PREFIX=check_install
         - cd ..
         
-    # linux builds clang4
-    - os: linux
-      arch: amd64
-      name: "linux builds clang 4.0"
-      compiler: clang
-      addons:
-        apt:
-          sources:
-            - ubuntu-toolchain-r-test
-            - llvm-toolchain-precise-4.0
-          packages:
-            - clang-4.0
-      env:
-        - MATRIX_EVAL="CC=clang-4.0 && CXX=clang++-4.0"
-      install:
-        - mkdir build
-        - mkdir _install
-        - cd build
-        - cmake ../ -DCMAKE_INSTALL_PREFIX=../_install -DACE_USE_EXTERNAL=0 -DNOT_USE_ELUNA_HOOKS=0 -DWITH_WARNINGS=1 -DWITH_COREDEBUG=0 -DUSE_COREPCH=1 -DUSE_SCRIPTPCH=1 -DTOOLS=1 -DSCRIPTS="dynamic" -DSERVERS=1 -DNOJEM=1 -DWITH_DYNAMIC_LINKING=1 -DCMAKE_BUILD_TYPE=Release -DCMAKE_C_FLAGS="-w" -DCMAKE_CXX_FLAGS="-w" -DCMAKE_INSTALL_PREFIX=check_install
-        - cd ..      
-
-    # linux builds clang5
-    - os: linux
-      arch: amd64
-      name: "linux builds clang 5.0"
-      compiler: clang
-      addons:
-        apt:
-          sources:
-            - ubuntu-toolchain-r-test
-            - llvm-toolchain-precise-5.0
-          packages:
-            - clang-5.0
-      env:
-        - MATRIX_EVAL="CC=clang-5.0 && CXX=clang++-5.0"
-      install:
-        - mkdir build
-        - mkdir _install
-        - cd build
-        - cmake ../ -DCMAKE_INSTALL_PREFIX=../_install -DACE_USE_EXTERNAL=0 -DNOT_USE_ELUNA_HOOKS=0 -DWITH_WARNINGS=1 -DWITH_COREDEBUG=0 -DUSE_COREPCH=1 -DUSE_SCRIPTPCH=1 -DTOOLS=1 -DSCRIPTS="dynamic" -DSERVERS=1 -DNOJEM=1 -DWITH_DYNAMIC_LINKING=1 -DCMAKE_BUILD_TYPE=Release -DCMAKE_C_FLAGS="-w" -DCMAKE_CXX_FLAGS="-w" -DCMAKE_INSTALL_PREFIX=check_install
-        - cd ..   
-
-    # linux builds clang6
-    - os: linux
-      arch: amd64
-      name: "linux builds clang 6.0"
-      compiler: clang
-      addons:
-        apt:
-          sources:
-            - ubuntu-toolchain-r-test
-            - llvm-toolchain-precise-6.0
-          packages:
-            - clang-6.0
-      env:
-        - MATRIX_EVAL="CC=clang-6.0 && CXX=clang++-6.0"
-      install:
-        - mkdir build
-        - mkdir _install
-        - cd build
-        - cmake ../ -DCMAKE_INSTALL_PREFIX=../_install -DACE_USE_EXTERNAL=0 -DNOT_USE_ELUNA_HOOKS=0 -DWITH_WARNINGS=1 -DWITH_COREDEBUG=0 -DUSE_COREPCH=1 -DUSE_SCRIPTPCH=1 -DTOOLS=1 -DSCRIPTS="dynamic" -DSERVERS=1 -DNOJEM=1 -DWITH_DYNAMIC_LINKING=1 -DCMAKE_BUILD_TYPE=Release -DCMAKE_C_FLAGS="-w" -DCMAKE_CXX_FLAGS="-w" -DCMAKE_INSTALL_PREFIX=check_install
-        - cd ..   
-
-    # linux builds clang7
+    # linux builds clang7 Xenial default
     - os: linux
       arch: amd64
       name: "linux builds clang 7.0"
       compiler: clang
-      addons:
-        apt:
-          sources:
-            - ubuntu-toolchain-r-test
-            - llvm-toolchain-precise-7.0
-          packages:
-            - clang-7.0
+      #addons:
+      #  apt:
+      #    sources:
+      #      - ubuntu-toolchain-r-test
+      #      - llvm-toolchain-precise-7.0
+      #    packages:
+      #      - clang-7.0
       env:
-        - MATRIX_EVAL="CC=clang-7.0 && CXX=clang++-7.0"
+        - MATRIX_EVAL="CC=clang && CXX=clang++"
       install:
         - mkdir build
         - mkdir _install
         - cd build
-        - cmake ../ -DCMAKE_INSTALL_PREFIX=../_install -DACE_USE_EXTERNAL=0 -DNOT_USE_ELUNA_HOOKS=0 -DWITH_WARNINGS=1 -DWITH_COREDEBUG=0 -DUSE_COREPCH=1 -DUSE_SCRIPTPCH=1 -DTOOLS=1 -DSCRIPTS="dynamic" -DSERVERS=1 -DNOJEM=1 -DWITH_DYNAMIC_LINKING=1 -DCMAKE_BUILD_TYPE=Release -DCMAKE_C_FLAGS="-w" -DCMAKE_CXX_FLAGS="-w" -DCMAKE_INSTALL_PREFIX=check_install
+        - cmake ../ -DCMAKE_INSTALL_PREFIX=../_install -DCMAKE_C_COMPILER="clang" -DCMAKE_CXX_COMPILER="clang++" -DACE_USE_EXTERNAL=0 -DNOT_USE_ELUNA_HOOKS=0 -DWITH_WARNINGS=1 -DWITH_COREDEBUG=0 -DUSE_COREPCH=1 -DUSE_SCRIPTPCH=1 -DTOOLS=1 -DSCRIPTS="dynamic" -DSERVERS=1 -DNOJEM=1 -DWITH_DYNAMIC_LINKING=1 -DCMAKE_BUILD_TYPE=Release -DCMAKE_C_FLAGS="-w" -DCMAKE_CXX_FLAGS="-w" -DCMAKE_INSTALL_PREFIX=check_install
         - cd ..          
 script:
   # - $CXX --version
