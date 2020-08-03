@@ -11,6 +11,8 @@
 
 [10]: https://travis-ci.com/github/tbcmangos/core
 
+big image may be buffered
+
 [![Build Status](https://travis-badge.herokuapp.com/repos/tbcmangos/core/branches/master?use_travis_com=true)](https://travis-ci.com/github/tbcmangos/core)
 
 ######################
