@@ -23,23 +23,6 @@ before_install:
 # build matrix
 matrix:
   include:
-    # linux builds gcc4 works on Precise and Trusty
-    - os: linux
-      name: "linux builds gcc4.9"
-      addons:
-        apt:
-          sources:
-            - ubuntu-toolchain-r-test
-          packages:
-            - g++-4.9
-      env:
-         - MATRIX_EVAL="CC=gcc-4.9 && CXX=g++-4.9"
-      install:
-        - mkdir build
-        - mkdir _install
-        - cd build
-        - cmake ../ -DCMAKE_INSTALL_PREFIX=../_install -DNOT_USE_ELUNA_HOOKS=0 -DWITH_WARNINGS=1 -DWITH_COREDEBUG=0 -DUSE_COREPCH=1 -DUSE_SCRIPTPCH=1 -DTOOLS=1 -DSCRIPTS="dynamic" -DSERVERS=1 -DNOJEM=1 -DWITH_DYNAMIC_LINKING=1 -DCMAKE_BUILD_TYPE=Release -DCMAKE_C_FLAGS="-w" -DCMAKE_CXX_FLAGS="-w" -DCMAKE_INSTALL_PREFIX=check_install
-        - cd ..
 
     # linux builds gcc5 works on Precise and Trusty
     - os: linux
@@ -104,11 +87,11 @@ matrix:
         apt:
           sources:
             - ubuntu-toolchain-r-test
-            - llvm-toolchain-precise-3.6
+            - llvm-toolchain-precise-3.8
           packages:
-            - clang-3.6
+            - clang-3.8
       env:
-        - MATRIX_EVAL="CC=clang-3.6 && CXX=clang++-3.6"
+        - MATRIX_EVAL="CC=clang-3.8 && CXX=clang++-3.8"
       install:
         - mkdir build
         - mkdir _install
