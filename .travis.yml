@@ -14,7 +14,7 @@ before_install:
   - eval "${MATRIX_EVAL}"
   - sudo apt-get -qq install libtool make cmake cmake-data openssl
   - sudo apt-get -qq install libssl-dev libmysqlclient-dev libmysql++-dev libreadline6-dev zlib1g zlib1g-dev libbz2-dev
-  - sudo apt-get -qq install libboost-all-dev
+#  - sudo apt-get -qq install libboost-all-dev
   - sudo apt-get -qq install libace-dev
   - sudo apt-get -qq install libtbb-dev
   - git config user.email "travis@build.bot" && git config user.name "Travis CI"
