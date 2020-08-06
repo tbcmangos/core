@@ -19,60 +19,36 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-//lets use Intel scalable_allocator by default and
-//switch to OS specific allocator only when _STANDARD_MALLOC is defined
-#ifndef USE_STANDARD_MALLOC
+#ifndef MANGOS_OBJECTLIFETIME_H
+#define MANGOS_OBJECTLIFETIME_H
 
-#include "tbb/scalable_allocator.h"
+#include <stdexcept>
+#include "Platform/Define.h"
 
-void* operator new(size_t sz)
+typedef void (* Destroyer)(void);
+
+namespace MaNGOS
 {
-    void *res = scalable_malloc(sz);
+    void at_exit(void (*func)());
 
-    if (res == nullptr)
-        throw std::bad_alloc();
+    template<class T>
+    class ObjectLifeTime
+    {
+        public:
 
-    return res;
-}
+            static void ScheduleCall(void (*destroyer)())
+            {
+                at_exit(destroyer);
+            }
 
-void* operator new[](size_t sz)
-{
-    void *res = scalable_malloc(sz);
+            DECLSPEC_NORETURN static void OnDeadReference() ATTR_NORETURN;
+    };
 
-    if (res == nullptr)
-        throw std::bad_alloc();
-
-    return res;
-}
-
-void operator delete(void* ptr) throw()
-{
-    scalable_free(ptr);
-}
-
-void operator delete[](void* ptr) throw()
-{
-    scalable_free(ptr);
-}
-
-void* operator new(size_t sz, const std::nothrow_t&) throw()
-{
-    return scalable_malloc(sz);
-}
-
-void* operator new[](size_t sz, const std::nothrow_t&) throw()
-{
-    return scalable_malloc(sz);
-}
-
-void operator delete(void* ptr, const std::nothrow_t&) throw()
-{
-    scalable_free(ptr);
-}
-
-void operator delete[](void* ptr, const std::nothrow_t&) throw()
-{
-    scalable_free(ptr);
+    template <class T>
+    void ObjectLifeTime<T>::OnDeadReference()           // We don't handle Dead Reference for now
+    {
+        throw std::runtime_error("Dead Reference");
+    }
 }
 
 #endif

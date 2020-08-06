@@ -19,60 +19,52 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-//lets use Intel scalable_allocator by default and
-//switch to OS specific allocator only when _STANDARD_MALLOC is defined
-#ifndef USE_STANDARD_MALLOC
+#ifndef MANGOS_SINGLETON_H
+#define MANGOS_SINGLETON_H
 
-#include "tbb/scalable_allocator.h"
+/**
+ * @brief class Singleton
+ */
 
-void* operator new(size_t sz)
+#include "CreationPolicy.h"
+#include "ThreadingModel.h"
+#include "ObjectLifeTime.h"
+
+namespace MaNGOS
 {
-    void *res = scalable_malloc(sz);
+    template
+    <
+    typename T,
+    class ThreadingModel = MaNGOS::SingleThreaded<T>,
+    class CreatePolicy = MaNGOS::OperatorNew<T>,
+    class LifeTimePolicy = MaNGOS::ObjectLifeTime<T>
+    >
+    class Singleton
+    {
+        public:
 
-    if (res == nullptr)
-        throw std::bad_alloc();
+            static T& Instance();
 
-    return res;
-}
+        protected:
 
-void* operator new[](size_t sz)
-{
-    void *res = scalable_malloc(sz);
+            Singleton()
+            {
+            }
 
-    if (res == nullptr)
-        throw std::bad_alloc();
+        private:
 
-    return res;
-}
+            // Prohibited actions...this does not prevent hijacking.
+            Singleton(const Singleton&);
+            Singleton& operator=(const Singleton&);
 
-void operator delete(void* ptr) throw()
-{
-    scalable_free(ptr);
-}
+            // Singleton Helpers
+            static void DestroySingleton();
 
-void operator delete[](void* ptr) throw()
-{
-    scalable_free(ptr);
-}
-
-void* operator new(size_t sz, const std::nothrow_t&) throw()
-{
-    return scalable_malloc(sz);
-}
-
-void* operator new[](size_t sz, const std::nothrow_t&) throw()
-{
-    return scalable_malloc(sz);
-}
-
-void operator delete(void* ptr, const std::nothrow_t&) throw()
-{
-    scalable_free(ptr);
-}
-
-void operator delete[](void* ptr, const std::nothrow_t&) throw()
-{
-    scalable_free(ptr);
+            // data structure
+            typedef typename ThreadingModel::Lock Guard;
+            static T *si_instance;
+            static bool si_destroyed;
+    };
 }
 
 #endif
