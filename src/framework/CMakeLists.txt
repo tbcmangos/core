@@ -29,23 +29,29 @@ set (framework_SRCS
 	GameSystem/TypeContainerFunctions.h
 	GameSystem/TypeContainerFunctionsPtr.h
 	GameSystem/TypeContainerVisitor.h
-
+	Network/MangosSocket.h
+	Network/MangosSocketImpl.h
+	Network/MangosSocketMgr.h
+	Network/MangosSocketMgrImpl.h
 	Platform/CompilerDefs.h
 	Platform/Define.h
-
-
+	Policies/CreationPolicy.h
+	Policies/ObjectLifeTime.h
+	Policies/Singleton.h
+	Policies/SingletonImp.h
+	Policies/ThreadingModel.h
 	Utilities/ByteConverter.h
 	Utilities/Callback.h
 	Utilities/EventProcessor.h
-
+	Utilities/EventMap.h
 	Utilities/LinkedList.h
 	Utilities/TypeList.h
 	Utilities/LinkedReference/Reference.h
 	Utilities/LinkedReference/RefManager.h
 	Policies/MemoryManagement.cpp
-
+	Policies/ObjectLifeTime.cpp
 	Utilities/EventProcessor.cpp
-
+	Utilities/EventMap.cpp
 
 )
 
