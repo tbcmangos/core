@@ -19,7 +19,7 @@ test another badge
 
 https://github.com/exogen/badge-matrix 
 
-![BADGE=test1](https://badges.herokuapp.com/travis/tbcmangos/core?branch=master&env=BADGE=TEST11&label=BADGE=TEST11)
+![BADGE=test1](https://badges.herokuapp.com/travis/tbcmangos/core?branch=master&env=BADGE=TEST1&label=BADGE=TEST1)
 
 ######################
 #   HellGroundCore   #
