@@ -1,6 +1,5 @@
 /*
- * Copyright (C) 2005-2010 MaNGOS <http://getmangos.com/>
- * Copyright (C) 2008-2014 Hellground <http://hellground.net/>
+ * This file is part of the CMaNGOS Project. See AUTHORS file for Copyright information
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -9,22 +8,24 @@
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#ifndef HELLGROUND_TILEASSEMBLER_H
-#define HELLGROUND_TILEASSEMBLER_H
+#ifndef _TILEASSEMBLER_H_
+#define _TILEASSEMBLER_H_
 
 #include <G3D/Vector3.h>
 #include <G3D/Matrix3.h>
 #include <map>
+#include <set>
 
 #include "ModelInstance.h"
+#include "WorldModel.h"
 
 namespace VMAP
 {
@@ -44,10 +45,10 @@ namespace VMAP
             float iScale;
             void init()
             {
-                iRotation = G3D::Matrix3::fromEulerAnglesZYX(G3D::pi()*iDir.y/180.f, G3D::pi()*iDir.x/180.f, G3D::pi()*iDir.z/180.f);
+                iRotation = G3D::Matrix3::fromEulerAnglesZYX(G3D::pi() * iDir.y / 180.f, G3D::pi() * iDir.x / 180.f, G3D::pi() * iDir.z / 180.f);
             }
-            G3D::Vector3 transform(const G3D::Vector3& pIn) const;
-            void moveToBasePos(const G3D::Vector3& pBasePos) { iPos -= pBasePos; }
+            G3D::Vector3 transform(G3D::Vector3 const& pIn) const;
+            void moveToBasePos(G3D::Vector3 const& pBasePos) { iPos -= pBasePos; }
     };
 
     typedef std::map<uint32, ModelSpawn> UniqueEntryMap;
@@ -62,29 +63,53 @@ namespace VMAP
     typedef std::map<uint32, MapSpawns*> MapData;
     //===============================================
 
+    struct GroupModel_Raw
+    {
+        uint32 mogpflags;
+        uint32 GroupWMOID;
+
+        G3D::AABox bounds;
+        uint32 liquidflags;
+        std::vector<MeshTriangle> triangles;
+        std::vector<G3D::Vector3> vertexArray;
+        class WmoLiquid* liquid;
+
+        GroupModel_Raw() : mogpflags(0), GroupWMOID(0), liquidflags(0), liquid(nullptr) {}
+        ~GroupModel_Raw();
+
+        bool Read(FILE* rf);
+    };
+
+    struct WorldModel_Raw
+    {
+        uint32 RootWMOID;
+        std::vector<GroupModel_Raw> groupsArray;
+
+        bool Read(char const* path);
+    };
+
     class TileAssembler
     {
         private:
             std::string iDestDir;
             std::string iSrcDir;
-            bool (*iFilterMethod)(char *pName);
+            bool (*iFilterMethod)(char* pName);
             G3D::Table<std::string, unsigned int > iUniqueNameIds;
             unsigned int iCurrentUniqueNameId;
             MapData mapData;
+            std::set<std::string> spawnedModelFiles;
 
         public:
-            TileAssembler(const std::string& pSrcDirName, const std::string& pDestDirName);
+            TileAssembler(std::string const& pSrcDirName, std::string const& pDestDirName);
             virtual ~TileAssembler();
 
             bool convertWorld2();
             bool readMapSpawns();
-            bool calculateTransformedBound(ModelSpawn &spawn);
+            bool calculateTransformedBound(ModelSpawn& spawn);
 
-            bool convertRawFile(const std::string& pModelFilename);
-            void setModelNameFilterMethod(bool (*pFilterMethod)(char *pName)) { iFilterMethod = pFilterMethod; }
-            std::string getDirEntryNameFromModName(unsigned int pMapId, const std::string& pModPosName);
-            unsigned int getUniqueNameId(const std::string pName);
+            void exportGameobjectModels();
+            bool convertRawFile(std::string const& pModelFilename);
+            void setModelNameFilterMethod(bool (*pFilterMethod)(char* pName)) { iFilterMethod = pFilterMethod; }
     };
-
 }                                                           // VMAP
 #endif                                                      /*_TILEASSEMBLER_H_*/

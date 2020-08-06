@@ -1,6 +1,5 @@
 /*
- * Copyright (C) 2005-2010 MaNGOS <http://getmangos.com/>
- * Copyright (C) 2008-2014 Hellground <http://hellground.net/>
+ * This file is part of the CMaNGOS Project. See AUTHORS file for Copyright information
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -9,45 +8,61 @@
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#ifndef HELLGROUND_VMAPDEFINITIONS_H
-#define HELLGROUND_VMAPDEFINITIONS_H
-#include <cstring>
+#ifndef _VMAPDEFINITIONS_H
+#define _VMAPDEFINITIONS_H
 
 #define LIQUID_TILE_SIZE (533.333f / 128.f)
 
+#include "SharedDefines.h"
 namespace VMAP
 {
+
+//version used in VmapExtractor
+#ifdef USING_CM_MAP
+    const char VMAP_MAGIC[] = "VMAP_6.0";                   // used in final vmap files
+    const char RAW_VMAP_MAGIC[] = "VMAPs05";                // used in extracted vmap files with raw data
+#elif defined USING_VM_MAP
+    char const VMAP_MAGIC[] = "VMAP_6.0";                   // used in final vmap files
+    char const RAW_VMAP_MAGIC[] = "VMAP005";                // used in extracted vmap files with raw data
+#else
     const char VMAP_MAGIC[] = "VMAP_3.0";                   // used in final vmap files
     const char RAW_VMAP_MAGIC[] = "VMAP003";                // used in extracted vmap files with raw data
 
+#endif
+
+    char const GAMEOBJECT_MODELS[] = "temp_gameobject_models";
+
     // defined in TileAssembler.cpp currently...
-    bool readChunk(FILE *rf, char *dest, const char *compare, uint32 len);
+    bool readChunk(FILE* rf, char* dest, char const* compare, uint32 len);
 }
 
 #ifndef NO_CORE_FUNCS
-    #include "Log.h"
-    #define ERROR_LOG(...) sLog.outLog(LOG_DEFAULT, __VA_ARGS__);
-    #define DETAIL_LOG(...) sLog.outDetail(__VA_ARGS__);
+#include "Log.h"
+#define ERROR_LOG(...) do{ sLog.outError(__VA_ARGS__); } while(0)
 #elif defined MMAP_GENERATOR
-    #include <assert.h>
-    #define ASSERT(x) assert(x)
-    #define DEBUG_LOG(...) 0
-    #define DETAIL_LOG(...) 0
-    #define ERROR_LOG(...) do{ printf("ERROR:"); printf(__VA_ARGS__); printf("\n"); } while(0)
+#include <assert.h>
+#define MANGOS_ASSERT(x) assert(x)
+#define DEBUG_LOG(...) 0
+#define DETAIL_LOG(...) 0
+#define LOG_FILTER_MAP_LOADING true
+#define DEBUG_FILTER_LOG(F,...) do{ if (F) DEBUG_LOG(__VA_ARGS__); } while(0)
+#define ERROR_LOG(...) do{ printf("ERROR:"); printf(__VA_ARGS__); printf("\n"); } while(0)
 #else
-    #include <assert.h>
-    #define ASSERT(x) assert(x)
-    #define DEBUG_LOG(...) do{ printf(__VA_ARGS__); printf("\n"); } while(0)
-    #define DETAIL_LOG(...) do{ printf(__VA_ARGS__); printf("\n"); } while(0)
-    #define ERROR_LOG(...) do{ printf("ERROR:"); printf(__VA_ARGS__); printf("\n"); } while(0)
+#include <assert.h>
+#define MANGOS_ASSERT(x) assert(x)
+#define DEBUG_LOG(...) do{ printf(__VA_ARGS__); printf("\n"); } while(0)
+#define DETAIL_LOG(...) do{ printf(__VA_ARGS__); printf("\n"); } while(0)
+#define LOG_FILTER_MAP_LOADING true
+#define DEBUG_FILTER_LOG(F,...) do{ if (F) DEBUG_LOG(__VA_ARGS__); } while(0)
+#define ERROR_LOG(...) do{ printf("ERROR:"); printf(__VA_ARGS__); printf("\n"); } while(0)
 #endif
 
 #endif // _VMAPDEFINITIONS_H

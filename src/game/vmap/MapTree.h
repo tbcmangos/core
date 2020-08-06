@@ -1,6 +1,5 @@
 /*
- * Copyright (C) 2005-2010 MaNGOS <http://getmangos.com/>
- * Copyright (C) 2008-2014 Hellground <http://hellground.net/>
+ * This file is part of the CMaNGOS Project. See AUTHORS file for Copyright information
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -9,16 +8,16 @@
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#ifndef HELLGROUND_MAPTREE_H
-#define HELLGROUND_MAPTREE_H
+#ifndef _MAPTREE_H
+#define _MAPTREE_H
 
 #include "Platform/Define.h"
 #include <unordered_map>
@@ -32,21 +31,21 @@ namespace VMAP
 
     struct LocationInfo
     {
-        LocationInfo(): hitInstance(0), hitModel(0), ground_Z(-G3D::inf()) {};
-        const ModelInstance *hitInstance;
-        const GroupModel *hitModel;
+        LocationInfo() : hitInstance(nullptr), hitModel(nullptr), ground_Z(-G3D::inf()) {};
+        const ModelInstance* hitInstance;
+        GroupModel const* hitModel;
         float ground_Z;
     };
 
     class StaticMapTree
     {
-        typedef std::unordered_map<uint32, bool> loadedTileMap;
-        typedef std::unordered_map<uint32, uint32> loadedSpawnMap;
+            typedef std::unordered_map<uint32, bool> loadedTileMap;
+            typedef std::unordered_map<uint32, uint32> loadedSpawnMap;
         private:
             uint32 iMapID;
             bool iIsTiled;
             BIH iTree;
-            ModelInstance *iTreeValues; // the tree entries
+            ModelInstance* iTreeValues; // the tree entries
             uint32 iNTreeValues;
 
             // Store all the map tile idents that are loaded for that map
@@ -58,39 +57,41 @@ namespace VMAP
             std::string iBasePath;
 
         private:
-            bool getIntersectionTime(const G3D::Ray& pRay, float &pMaxDist, bool pStopAtFirstHit) const;
-            //bool containsLoadedMapTile(unsigned int pTileIdent) const { return(iLoadedMapTiles.containsKey(pTileIdent)); }
+            bool getIntersectionTime(G3D::Ray const& pRay, float& pMaxDist, bool pStopAtFirstHit, bool isLosCheck) const;
+            // bool containsLoadedMapTile(unsigned int pTileIdent) const { return(iLoadedMapTiles.containsKey(pTileIdent)); }
         public:
             static std::string getTileFileName(uint32 mapID, uint32 tileX, uint32 tileY);
-            static uint32 packTileID(uint32 tileX, uint32 tileY) { return tileX<<16 | tileY; }
-            static void unpackTileID(uint32 ID, uint32 &tileX, uint32 &tileY) { tileX = ID>>16; tileY = ID&0xFF; }
-            static bool CanLoadMap(const std::string &basePath, uint32 mapID, uint32 tileX, uint32 tileY);
+            static uint32 packTileID(uint32 tileX, uint32 tileY) { return tileX << 16 | tileY; }
+            static void unpackTileID(uint32 ID, uint32& tileX, uint32& tileY) { tileX = ID >> 16; tileY = ID & 0xFF; }
+            static bool CanLoadMap(std::string const& vmapPath, uint32 mapID, uint32 tileX, uint32 tileY);
 
-            StaticMapTree(uint32 mapID, const std::string &basePath);
+            StaticMapTree(uint32 mapID, std::string const& basePath);
             ~StaticMapTree();
 
-            bool isInLineOfSight(const G3D::Vector3& pos1, const G3D::Vector3& pos2) const;
-            bool getObjectHitPos(const G3D::Vector3& pos1, const G3D::Vector3& pos2, G3D::Vector3& pResultHitPos, float pModifyDist) const;
-            float getHeight(const G3D::Vector3& pPos, float maxSearchDist) const;
-            bool getAreaInfo(G3D::Vector3 &pos, uint32 &flags, int32 &adtId, int32 &rootId, int32 &groupId) const;
-            bool GetLocationInfo(const Vector3 &pos, LocationInfo &info) const;
+            bool isInLineOfSight(G3D::Vector3 const& pos1, G3D::Vector3 const& pos2) const;
+            ModelInstance* FindCollisionModel(G3D::Vector3 const& pos1, G3D::Vector3 const& pos2);
+            bool getObjectHitPos(G3D::Vector3 const& pos1, G3D::Vector3 const& pos2, G3D::Vector3& pResultHitPos, float pModifyDist) const;
+            float getHeight(G3D::Vector3 const& pPos, float maxSearchDist) const;
+            bool getAreaInfo(G3D::Vector3& pos, uint32& flags, int32& adtId, int32& rootId, int32& groupId) const;
+            bool isUnderModel(G3D::Vector3& pos, float* outDist = nullptr, float* inDist = nullptr) const;
+            bool GetLocationInfo(Vector3 const& pos, LocationInfo& info) const;
 
-            bool InitMap(const std::string &fname, VMapManager2 *vm);
-            void UnloadMap(VMapManager2 *vm);
-            bool LoadMapTile(uint32 tileX, uint32 tileY, VMapManager2 *vm);
-            void UnloadMapTile(uint32 tileX, uint32 tileY, VMapManager2 *vm);
+            bool InitMap(std::string const& fname, VMapManager2* vm);
+            void UnloadMap(VMapManager2* vm);
+            bool LoadMapTile(uint32 tileX, uint32 tileY, VMapManager2* vm);
+            void UnloadMapTile(uint32 tileX, uint32 tileY, VMapManager2* vm);
             bool isTiled() const { return iIsTiled; }
             uint32 numLoadedTiles() const { return iLoadedTiles.size(); }
 
 #ifdef MMAP_GENERATOR
         public:
-            void getModelInstances(ModelInstance* &models, uint32 &count);
+            void getModelInstances(ModelInstance*& models, uint32& count);
 #endif
     };
 
     struct AreaInfo
     {
-        AreaInfo(): result(false), ground_Z(-G3D::inf()) {};
+        AreaInfo() : result(false), ground_Z(-G3D::inf()), flags(0), adtId(0), rootId(0), groupId(0) {};
         bool result;
         float ground_Z;
         uint32 flags;
