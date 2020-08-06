@@ -34,7 +34,13 @@
 #include "Util.h"
 
 char const* MAP_MAGIC         = "MAPS";
+#ifdef USING_CM_MAP
+char const* MAP_VERSION_MAGIC = "s1.4";
+#elif defined USING_VM_MAP
+char const* MAP_VERSION_MAGIC = "z1.4";
+#else
 char const* MAP_VERSION_MAGIC = "v1.2";
+#endif
 char const* MAP_AREA_MAGIC    = "AREA";
 char const* MAP_HEIGHT_MAGIC  = "MHGT";
 char const* MAP_LIQUID_MAGIC  = "MLIQ";
@@ -81,9 +87,14 @@ bool GridMap::loadData(char *filename)
         return true;
 
     fread(&header, sizeof(header),1,in);
-    if (header.mapMagic     == *((uint32 const*)(MAP_MAGIC)) &&
+#ifdef USING_CM_MAP
+    if (header.mapMagic == *((uint32 const*)(MAP_MAGIC)) &&
+        header.versionMagic == *((uint32 const*)(MAP_VERSION_MAGIC)))
+#else
+    if (header.mapMagic == *((uint32 const*)(MAP_MAGIC)) &&
         header.versionMagic == *((uint32 const*)(MAP_VERSION_MAGIC)) &&
         IsAcceptableClientBuild(header.buildMagic))
+#endif
     {
         // loadup area data
         if (header.areaMapOffset && !loadAreaData(in, header.areaMapOffset, header.areaMapSize))
@@ -579,9 +590,14 @@ bool GridMap::ExistMap(uint32 mapid,int gx,int gy)
 
     GridMapFileHeader header;
     fread(&header, sizeof(header), 1, pf);
-    if (header.mapMagic     != *((uint32 const*)(MAP_MAGIC)) ||
+#ifdef USING_CM_MAP
+    if (header.mapMagic != *((uint32 const*)(MAP_MAGIC)) ||
+        header.versionMagic != *((uint32 const*)(MAP_VERSION_MAGIC)))
+#else
+    if (header.mapMagic != *((uint32 const*)(MAP_MAGIC)) ||
         header.versionMagic != *((uint32 const*)(MAP_VERSION_MAGIC)) ||
         !IsAcceptableClientBuild(header.buildMagic))
+#endif
     {
         sLog.outLog(LOG_DEFAULT, "ERROR: Map file '%s' is non-compatible version (outdated?). Please, create new using ad.exe program.",tmp);
         delete [] tmp;

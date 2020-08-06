@@ -24,6 +24,9 @@
 #include "Platform/Define.h"
 #include <cassert>
 
+//#define USING_CM_MAP  //enable if using CMangos map, comment out if using L4G map
+//#define USING_VM_MAP  //enable if using vMangos map, comment out if using L4G map
+
 enum Gender
 {
     GENDER_MALE                        = 0,

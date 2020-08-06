@@ -25,7 +25,7 @@
 namespace VMAP
 {
 
-//version used in VmapExtractor
+//version used in VmapExtractor//
 #ifdef USING_CM_MAP
     const char VMAP_MAGIC[] = "VMAP_6.0";                   // used in final vmap files
     const char RAW_VMAP_MAGIC[] = "VMAPs05";                // used in extracted vmap files with raw data
