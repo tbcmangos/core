@@ -521,6 +521,11 @@ class  GameObject : public WorldObject
                 default: return true;
             }
         }
+        uint32 GetDisplayId() const { return GetUInt32Value(GAMEOBJECT_DISPLAYID); }
+        void SetDisplayId(uint32 modelId)
+        {
+            SetUInt32Value(GAMEOBJECT_DISPLAYID, modelId);
+        }
 
         time_t GetRespawnTime() const { return m_respawnTime; }
         time_t GetRespawnTimeEx() const
