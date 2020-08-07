@@ -1,7 +1,8 @@
 /*
- * Copyright (C) 2005-2008 MaNGOS <http://www.mangosproject.org/>
- *
- * Copyright (C) 2008 Trinity <http://www.trinitycore.org/>
+ * Copyright (C) 2005-2011 MaNGOS <http://getmangos.com/>
+ * Copyright (C) 2009-2011 MaNGOSZero <https://github.com/mangos/zero>
+ * Copyright (C) 2011-2016 Nostalrius <https://nostalrius.org>
+ * Copyright (C) 2016-2017 Elysium Project <https://github.com/elysium-project>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -10,12 +11,12 @@
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
 #ifndef TYPECONTAINER_FUNCTIONS_PTR_H
@@ -31,7 +32,7 @@
 #include "Utilities/TypeList.h"
 #include <map>
 
-namespace Trinity
+namespace MaNGOS
 {
     /* ContainerMapList Helpers */
     // count functions
@@ -64,17 +65,17 @@ namespace Trinity
     template<class SPECIFIC_TYPE> CountedPtr<SPECIFIC_TYPE>& Find(ContainerMapList<SPECIFIC_TYPE> &elements, OBJECT_HANDLE hdl, CountedPtr<SPECIFIC_TYPE>* /*fake*/)
     {
         typename std::map<OBJECT_HANDLE, CountedPtr<SPECIFIC_TYPE> >::iterator iter = elements._element.find(hdl);
-        return (iter == elements._element.end() ? NullPtr<SPECIFIC_TYPE>((SPECIFIC_TYPE*)NULL) : iter->second);
+        return (iter == elements._element.end() ? NullPtr<SPECIFIC_TYPE>((SPECIFIC_TYPE*)nullptr) : iter->second);
     };
 
     template<class SPECIFIC_TYPE> CountedPtr<SPECIFIC_TYPE>& Find(ContainerMapList<TypeNull> &elements, OBJECT_HANDLE hdl, CountedPtr<SPECIFIC_TYPE>* /*fake*/)
     {
-        return NullPtr<SPECIFIC_TYPE>((SPECIFIC_TYPE*)NULL);// terminate recursion
+        return NullPtr<SPECIFIC_TYPE>((SPECIFIC_TYPE*)nullptr);// terminate recursion
     }
 
     template<class SPECIFIC_TYPE, class T> CountedPtr<SPECIFIC_TYPE>& Find(ContainerMapList<T> &elements, OBJECT_HANDLE hdl, CountedPtr<SPECIFIC_TYPE>* /*fake*/)
     {
-        return NullPtr<SPECIFIC_TYPE>((SPECIFIC_TYPE*)NULL);// this is a missed
+        return NullPtr<SPECIFIC_TYPE>((SPECIFIC_TYPE*)nullptr);// this is a missed
     }
 
     template<class SPECIFIC_TYPE, class H, class T> CountedPtr<SPECIFIC_TYPE>& Find(ContainerMapList<TypeList<H, T> >&elements, OBJECT_HANDLE hdl, CountedPtr<SPECIFIC_TYPE>* fake)
@@ -87,17 +88,17 @@ namespace Trinity
     template<class SPECIFIC_TYPE> const CountedPtr<SPECIFIC_TYPE>& Find(const ContainerMapList<SPECIFIC_TYPE> &elements, OBJECT_HANDLE hdl, CountedPtr<SPECIFIC_TYPE>* /*fake*/)
     {
         typename CountedPtr<SPECIFIC_TYPE>::iterator iter = elements._element.find(hdl);
-        return (iter == elements._element.end() ? NullPtr<SPECIFIC_TYPE>((SPECIFIC_TYPE*)NULL) : iter->second);
+        return (iter == elements._element.end() ? NullPtr<SPECIFIC_TYPE>((SPECIFIC_TYPE*)nullptr) : iter->second);
     };
 
     template<class SPECIFIC_TYPE> const CountedPtr<SPECIFIC_TYPE>& Find(const ContainerMapList<TypeNull> &elements, OBJECT_HANDLE hdl, CountedPtr<SPECIFIC_TYPE>* /*fake*/)
     {
-        return NullPtr<SPECIFIC_TYPE>((SPECIFIC_TYPE*)NULL);
+        return NullPtr<SPECIFIC_TYPE>((SPECIFIC_TYPE*)nullptr);
     }
 
     template<class SPECIFIC_TYPE, class T> const CountedPtr<SPECIFIC_TYPE>& Find(const ContainerMapList<T> &elements, OBJECT_HANDLE hdl, CountedPtr<SPECIFIC_TYPE>* /*fake*/)
     {
-        return NullPtr<SPECIFIC_TYPE>((SPECIFIC_TYPE*)NULL);
+        return NullPtr<SPECIFIC_TYPE>((SPECIFIC_TYPE*)nullptr);
     }
 
     template<class SPECIFIC_TYPE, class H, class T> CountedPtr<SPECIFIC_TYPE>& Find(const ContainerMapList<TypeList<H, T> >&elements, OBJECT_HANDLE hdl, CountedPtr<SPECIFIC_TYPE>* fake)
@@ -118,13 +119,13 @@ namespace Trinity
 
     template<class SPECIFIC_TYPE> CountedPtr<SPECIFIC_TYPE>& Insert(ContainerMapList<TypeNull> &elements, CountedPtr<SPECIFIC_TYPE> &obj, OBJECT_HANDLE hdl)
     {
-        return NullPtr<SPECIFIC_TYPE>((SPECIFIC_TYPE*)NULL);
+        return NullPtr<SPECIFIC_TYPE>((SPECIFIC_TYPE*)nullptr);
     }
 
     // this is a missed
     template<class SPECIFIC_TYPE, class T> CountedPtr<SPECIFIC_TYPE>& Insert(ContainerMapList<T> &elements, CountedPtr<SPECIFIC_TYPE> &obj, OBJECT_HANDLE hdl)
     {
-        return NullPtr<SPECIFIC_TYPE>((SPECIFIC_TYPE*)NULL);// a missed
+        return NullPtr<SPECIFIC_TYPE>((SPECIFIC_TYPE*)nullptr);// a missed
     }
 
     // Recursion
@@ -167,4 +168,3 @@ namespace Trinity
 
 }
 #endif
-
