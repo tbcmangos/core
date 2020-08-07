@@ -72,7 +72,7 @@ set (shared_SRCS
     ServiceWin32.cpp
     Threading.cpp
     Util.cpp
-#    Duration.h
+    Duration.h
     WheatyExceptionReport.cpp
     Auth/ARC4.cpp
     Auth/AuthCrypt.cpp

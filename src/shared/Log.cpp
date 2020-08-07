@@ -156,15 +156,15 @@ FILE* Log::openGmlogPerAccount(uint32 account)
     if(m_gmlog_filename_format.empty())
         return NULL;
 
-    char namebuf[HELLGROUND_PATH_MAX];
-    snprintf(namebuf,HELLGROUND_PATH_MAX,m_gmlog_filename_format.c_str(),account);
+    char namebuf[MANGOS_PATH_MAX];
+    snprintf(namebuf,MANGOS_PATH_MAX,m_gmlog_filename_format.c_str(),account);
     return fopen(namebuf, "a");
 }
 
 void Log::outPacket(uint32 glow, const char * str, ...)
 {
-    char namebuf[HELLGROUND_PATH_MAX];
-    snprintf(namebuf, HELLGROUND_PATH_MAX, "packets//%u.txt", glow);
+    char namebuf[MANGOS_PATH_MAX];
+    snprintf(namebuf, MANGOS_PATH_MAX, "packets//%u.txt", glow);
 
     FILE* per_file = fopen(namebuf, "a");
     va_list ap;
@@ -180,8 +180,8 @@ FILE* Log::openWhisplogPerAccount(uint32 account)
     if(m_whisplog_filename_format.empty())
         return NULL;
 
-    char namebuf[HELLGROUND_PATH_MAX];
-    snprintf(namebuf,HELLGROUND_PATH_MAX,m_whisplog_filename_format.c_str(),account);
+    char namebuf[MANGOS_PATH_MAX];
+    snprintf(namebuf,MANGOS_PATH_MAX,m_whisplog_filename_format.c_str(),account);
     return fopen(namebuf, "a");
 }
 
