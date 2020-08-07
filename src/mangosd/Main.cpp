@@ -31,14 +31,13 @@
 #include "ProgressBar.h"
 #include "Log.h"
 #include "Master.h"
-#include "vmap/VMapCluster.h"
 
 #include <ace/Get_Opt.h>
 
 #ifdef WIN32
 #include "ServiceWin32.h"
-char serviceName[] = "Hellground";
-char serviceLongName[] = "hellground core service";
+char serviceName[] = "mangosd";
+char serviceLongName[] = "MaNGOS world service";
 char serviceDescription[] = "Massive Network Game Object Server";
 #else
 #include "PosixDaemon.h"
@@ -172,30 +171,6 @@ extern int main(int argc, char **argv)
     int vmapProcesses = sConfig.GetIntDefault("vmap.clusterProcesses", 1);
     bool vmapCluster = sConfig.GetBoolDefault("vmap.enableCluster", false);
 
-    if(process)
-    {
-        if(strcmp(process, VMAP_CLUSTER_MANAGER_PROCESS) == 0)
-        {
-            VMAP::VMapClusterManager vmap_manager(vmapProcesses);
-            return vmap_manager.Start();
-        }
-        else if(strcmp(process, VMAP_CLUSTER_PROCESS) == 0)
-        {
-            VMAP::VMapClusterProcess vmapProcess(process_id);
-            return vmapProcess.Start();
-        }
-        else
-            printf("Runtime-Error: bad format of process arguments\n");
-            return 1;
-    }
-
-#ifdef USING_FIFO_PIPES
-    if(vmapCluster)
-    {
-        ACE_OS::system("rm -f " VMAP_CLUSTER_PREFIX "*");
-    }
-#endif
-
 #ifndef WIN32                                               // posix daemon commands need apply after config read
     switch (serviceDaemonMode)
     {
@@ -210,7 +185,21 @@ extern int main(int argc, char **argv)
 #endif
 
     sLog.Initialize();
-
+    sLog.outString("Core revision: %s [world-daemon]", REVISION_HASH);
+    sLog.outString("<Ctrl-C> to stop.");
+    sLog.outString("\n\n"
+        "MM   MM         MM   MM  MMMMM   MMMM   MMMMM\n"
+        "MM   MM         MM   MM MMM MMM MM  MM MMM MMM\n"
+        "MMM MMM         MMM  MM MMM MMM MM  MM MMM\n"
+        "MM M MM         MMMM MM MMM     MM  MM  MMM\n"
+        "MM M MM  MMMMM  MM MMMM MMM     MM  MM   MMM\n"
+        "MM M MM M   MMM MM  MMM MMMMMMM MM  MM    MMM\n"
+        "MM   MM     MMM MM   MM MM  MMM MM  MM     MMM\n"
+        "MM   MM MMMMMMM MM   MM MMM MMM MM  MM MMM MMM\n"
+        "MM   MM MM  MMM MM   MM  MMMMMM  MMMM   MMMMM\n"
+        "        MM  MMM http://getmangos.com\n"
+        "        MMMMMM\n\n");
+    sLog.outString("tMaNGOS : https://github.com/tmangos");
     sLog.outString("Using configuration file %s.", cfg_file);
 
     uint32 confVersion = sConfig.GetIntDefault("ConfVersion", 0);
@@ -228,9 +217,6 @@ extern int main(int argc, char **argv)
 
     BarGoLink::SetOutputState(sConfig.GetBoolDefault("ShowProgressBars", false));
 
-
-    if(vmapCluster)
-        VMAP::VMapClusterManager::SpawnVMapProcesses(argv[0], cfg_file, vmapProcesses);
 
     ///- and run the 'Master'
     /// \todo Why do we need this 'Master'? Can't all of this be in the Main as for Realmd?
