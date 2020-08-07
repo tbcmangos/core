@@ -1,8 +1,7 @@
 /*
- * Copyright (C) 2005-2011 MaNGOS <http://getmangos.com/>
- * Copyright (C) 2009-2011 MaNGOSZero <https://github.com/mangos/zero>
- * Copyright (C) 2011-2016 Nostalrius <https://nostalrius.org>
- * Copyright (C) 2016-2017 Elysium Project <https://github.com/elysium-project>
+ * Copyright (C) 2005-2008 MaNGOS <http://getmangos.com/>
+ * Copyright (C) 2008 TrinityCore <http://www.trinitycore.org/>
+ * Copyright (C) 2008-2014 Hellground <http://hellground.net/>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -11,24 +10,23 @@
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
  */
 
-#ifndef MANGOS_OBJECTREGISTRY_H
-#define MANGOS_OBJECTREGISTRY_H
+#ifndef HELLGROUND_OBJECTREGISTRY_H
+#define HELLGROUND_OBJECTREGISTRY_H
 
 #include "Platform/Define.h"
-#include "Policies/Singleton.h"
+#include <unordered_map>
 
 #include <string>
 #include <vector>
 #include <map>
-#include <unordered_map>
 
 /** ObjectRegistry holds all registry item of the same type
  */
@@ -42,16 +40,16 @@ class ObjectRegistry
         const T* GetRegistryItem(Key key) const
         {
             typename RegistryMapType::const_iterator iter = i_registeredObjects.find(key);
-            return (iter == i_registeredObjects.end() ? nullptr : iter->second);
+            return( iter == i_registeredObjects.end() ? NULL : iter->second );
         }
 
         /// Inserts a registry item
-        bool InsertItem(T *obj, Key key, bool replace = false)
+        bool InsertItem(T *obj, Key key, bool override = false)
         {
             typename RegistryMapType::iterator iter = i_registeredObjects.find(key);
-            if (iter != i_registeredObjects.end())
+            if( iter != i_registeredObjects.end() )
             {
-                if (!replace)
+                if( !override )
                     return false;
                 delete iter->second;
                 i_registeredObjects.erase(iter);
@@ -65,9 +63,9 @@ class ObjectRegistry
         void RemoveItem(Key key, bool delete_object = true)
         {
             typename RegistryMapType::iterator iter = i_registeredObjects.find(key);
-            if (iter != i_registeredObjects.end())
+            if( iter != i_registeredObjects.end() )
             {
-                if (delete_object)
+                if( delete_object )
                     delete iter->second;
                 i_registeredObjects.erase(iter);
             }
@@ -84,7 +82,7 @@ class ObjectRegistry
         {
             unsigned int sz = l.size();
             l.resize(sz + i_registeredObjects.size());
-            for (typename RegistryMapType::const_iterator iter = i_registeredObjects.begin(); iter != i_registeredObjects.end(); ++iter)
+            for(typename RegistryMapType::const_iterator iter = i_registeredObjects.begin(); iter != i_registeredObjects.end(); ++iter)
                 l[sz++] = iter->first;
             return i_registeredObjects.size();
         }
@@ -95,17 +93,17 @@ class ObjectRegistry
             return i_registeredObjects;
         }
 
-    private:
-        RegistryMapType i_registeredObjects;
-        friend class MaNGOS::OperatorNew<ObjectRegistry<T, Key> >;
-
-        // protected for friend use since it should be a singleton
         ObjectRegistry() {}
         ~ObjectRegistry()
         {
-            for (typename RegistryMapType::iterator iter=i_registeredObjects.begin(); iter != i_registeredObjects.end(); ++iter)
+            for(typename RegistryMapType::iterator iter=i_registeredObjects.begin(); iter != i_registeredObjects.end(); ++iter)
                 delete iter->second;
             i_registeredObjects.clear();
         }
+
+    private:
+        RegistryMapType i_registeredObjects;
+
 };
+
 #endif
