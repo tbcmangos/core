@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html lang="en-GB" dir="ltr" class="client-nojs">
+
+<!-- Mirrored from wiki.hellground.net/index.php/Core_overview by HTTrack Website Copier/3.x [XR&CO'2014], Tue, 12 Apr 2016 10:48:26 GMT -->
+<!-- Added by HTTrack --><meta http-equiv="content-type" content="text/html;charset=UTF-8" /><!-- /Added by HTTrack -->
+<head>
+<title>Core overview - HellGroundCore MMORPG framework educational and hobby project</title>
+<meta charset="UTF-8" />
+<meta name="generator" content="MediaWiki 1.21.4" />
+<link rel="shortcut icon" href="http://wiki.hellground.net/favicon.ico" />
+<link rel="search" type="application/opensearchdescription+xml" href="http://wiki.hellground.net/opensearch_desc.php" title="HellGroundCore MMORPG framework educational and hobby project (en-gb)" />
+<link rel="EditURI" type="application/rsd+xml" href="http://wiki.hellground.net/api.php?action=rsd" />
+<link rel="alternate" type="application/atom+xml" title="HellGroundCore MMORPG framework educational and hobby project Atom feed" href="http://wiki.hellground.net/index.php?title=Special:RecentChanges&amp;feed=atom" />
+<link rel="stylesheet" href="http://wiki.hellground.net/load.php?debug=false&amp;lang=en-gb&amp;modules=mediawiki.legacy.commonPrint%2Cshared%7Cskins.vector&amp;only=styles&amp;skin=vector&amp;*" />
+<meta name="ResourceLoaderDynamicStyles" content="" />
+<style>a:lang(ar),a:lang(ckb),a:lang(fa),a:lang(kk-arab),a:lang(mzn),a:lang(ps),a:lang(ur){text-decoration:none}
+/* cache key: admin_wikia:resourceloader:filter:minify-css:7:584a0492c58c82e3a4daddd5656471fb */</style>
+
+<script src="http://wiki.hellground.net/load.php?debug=false&amp;lang=en-gb&amp;modules=startup&amp;only=scripts&amp;skin=vector&amp;*"></script>
+<script>if(window.mw){
+mw.config.set({"wgCanonicalNamespace":"","wgCanonicalSpecialPageName":false,"wgNamespaceNumber":0,"wgPageName":"Core_overview","wgTitle":"Core overview","wgCurRevisionId":1207,"wgArticleId":307,"wgIsArticle":true,"wgAction":"view","wgUserName":null,"wgUserGroups":["*"],"wgCategories":["HOWTOs"],"wgBreakFrames":false,"wgPageContentLanguage":"en-gb","wgSeparatorTransformTable":["",""],"wgDigitTransformTable":["",""],"wgDefaultDateFormat":"dmy","wgMonthNames":["","January","February","March","April","May","June","July","August","September","October","November","December"],"wgMonthNamesShort":["","Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"],"wgRelevantPageName":"Core_overview","wgRestrictionEdit":[],"wgRestrictionMove":[]});
+}</script><script>if(window.mw){
+mw.loader.implement("user.options",function(){mw.user.options.set({"ccmeonemails":0,"cols":80,"date":"default","diffonly":0,"disablemail":0,"disablesuggest":0,"editfont":"default","editondblclick":0,"editsection":1,"editsectiononrightclick":0,"enotifminoredits":0,"enotifrevealaddr":0,"enotifusertalkpages":1,"enotifwatchlistpages":0,"extendwatchlist":0,"externaldiff":0,"externaleditor":0,"fancysig":0,"forceeditsummary":0,"gender":"unknown","hideminor":0,"hidepatrolled":0,"imagesize":2,"justify":0,"math":1,"minordefault":0,"newpageshidepatrolled":0,"nocache":0,"noconvertlink":0,"norollbackdiff":0,"numberheadings":0,"previewonfirst":0,"previewontop":1,"quickbar":5,"rcdays":7,"rclimit":50,"rememberpassword":0,"rows":25,"searchlimit":20,"showhiddencats":0,"showjumplinks":1,"shownumberswatching":1,"showtoc":1,"showtoolbar":1,"skin":"vector","stubthreshold":0,"thumbsize":2,"underline":2,"uselivepreview":0,"usenewrc":0,"watchcreations":0,"watchdefault":0,"watchdeletion":0,"watchlistdays":3,
+"watchlisthideanons":0,"watchlisthidebots":0,"watchlisthideliu":0,"watchlisthideminor":0,"watchlisthideown":0,"watchlisthidepatrolled":0,"watchmoves":0,"wllimit":250,"variant":"en-gb","language":"en-gb","searchNs0":true,"searchNs1":false,"searchNs2":false,"searchNs3":false,"searchNs4":false,"searchNs5":false,"searchNs6":false,"searchNs7":false,"searchNs8":false,"searchNs9":false,"searchNs10":false,"searchNs11":false,"searchNs12":false,"searchNs13":false,"searchNs14":false,"searchNs15":false});;},{},{});mw.loader.implement("user.tokens",function(){mw.user.tokens.set({"editToken":"+\\","patrolToken":false,"watchToken":false});;},{},{});
+/* cache key: admin_wikia:resourceloader:filter:minify-js:7:811a3adb8f714f1f28210df16d324ee9 */
+}</script>
+<script>if(window.mw){
+mw.loader.load(["mediawiki.page.startup","mediawiki.legacy.wikibits","mediawiki.legacy.ajax"]);
+}</script>
+<!--[if lt IE 7]><style type="text/css">body{behavior:url("/skins/vector/csshover.min.htc")}</style><![endif]--></head>
+<body class="mediawiki ltr sitedir-ltr ns-0 ns-subject page-Core_overview skin-vector action-view vector-animateLayout">
+		<div id="mw-page-base" class="noprint"></div>
+		<div id="mw-head-base" class="noprint"></div>
+		<!-- content -->
+		<div id="content" class="mw-body" role="main">
+			<a id="top"></a>
+			<div id="mw-js-message" style="display:none;"></div>
+						<!-- firstHeading -->
+			<h1 id="firstHeading" class="firstHeading" lang="en-gb"><span dir="auto">Core overview</span></h1>
+			<!-- /firstHeading -->
+			<!-- bodyContent -->
+			<div id="bodyContent">
+								<!-- tagline -->
+				<div id="siteSub">From HellGroundCore MMORPG framework educational and hobby project</div>
+				<!-- /tagline -->
+								<!-- subtitle -->
+				<div id="contentSub"></div>
+				<!-- /subtitle -->
+																<!-- jumpto -->
+				<div id="jump-to-nav" class="mw-jump">
+					Jump to:					<a href="#mw-navigation">navigation</a>, 					<a href="#p-search">search</a>
+				</div>
+				<!-- /jumpto -->
+								<!-- bodycontent -->
+				<div id="mw-content-text" lang="en-GB" dir="ltr" class="mw-content-ltr"><div style="float: right; margin-left: 1em"><table id="toc" class="toc"><tr><td><div id="toctitle"><h2>Contents</h2></div>
+<ul>
+<li class="toclevel-1 tocsection-1"><a href="#HellgroundCore"><span class="tocnumber">1</span> <span class="toctext">HellgroundCore</span></a></li>
+<li class="toclevel-1 tocsection-2"><a href="#HellgroundRealm"><span class="tocnumber">2</span> <span class="toctext">HellgroundRealm</span></a></li>
+<li class="toclevel-1 tocsection-3"><a href="#HellgroundScripts"><span class="tocnumber">3</span> <span class="toctext">HellgroundScripts</span></a>
+<ul>
+<li class="toclevel-2 tocsection-4"><a href="#Scripts_sorting"><span class="tocnumber">3.1</span> <span class="toctext">Scripts sorting</span></a></li>
+<li class="toclevel-2 tocsection-5"><a href="#Script_files"><span class="tocnumber">3.2</span> <span class="toctext">Script files</span></a></li>
+<li class="toclevel-2 tocsection-6"><a href="#Script_functions"><span class="tocnumber">3.3</span> <span class="toctext">Script functions</span></a></li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-7"><a href="#game"><span class="tocnumber">4</span> <span class="toctext">game</span></a>
+<ul>
+<li class="toclevel-2 tocsection-8"><a href="#Artificial_Intelligence"><span class="tocnumber">4.1</span> <span class="toctext">Artificial Intelligence</span></a></li>
+<li class="toclevel-2 tocsection-9"><a href="#Objects"><span class="tocnumber">4.2</span> <span class="toctext">Objects</span></a></li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-10"><a href="#shared"><span class="tocnumber">5</span> <span class="toctext">shared</span></a></li>
+<li class="toclevel-1 tocsection-11"><a href="#others"><span class="tocnumber">6</span> <span class="toctext">others</span></a>
+<ul>
+<li class="toclevel-2 tocsection-12"><a href="#genrevision"><span class="tocnumber">6.1</span> <span class="toctext">genrevision</span></a></li>
+<li class="toclevel-2 tocsection-13"><a href="#framework"><span class="tocnumber">6.2</span> <span class="toctext">framework</span></a></li>
+<li class="toclevel-2 tocsection-14"><a href="#dependencies"><span class="tocnumber">6.3</span> <span class="toctext">dependencies</span></a></li>
+</ul>
+</li>
+</ul>
+</td></tr></table>
+</div>
+<p>This page gives you a short overview of the server's source code.
+</p>
+<h2> <span class="mw-headline" id="HellgroundCore"> HellgroundCore </span></h2>
+<p>Directory <a rel="nofollow" class="external text" href="https://bitbucket.org/_hellground/hellground-core/src/default/src/hellgroundcore"><i>src/hellgroundcore</i></a> contains the main program of project, the place where real server starts. This part of core consist of:
+</p>
+<dl><dt> Main
+</dt><dd> Entry point of the program, the <code>int main(...)</code> function is here. This is where the core processes input arguments, decides in what mode should it run (service for Windows, daemon for *nix or just simple casual program) and then wakes up the Master.
+</dd><dt> Master
+</dt><dd> A singleton class which prepares whole server to run. It:
+<ul><li> connects us to database;
+</li><li> initializes world settings (reads config file);
+</li><li> catches interrupt signals for program;
+</li><li> starts command line thread;
+</li><li> sets process priority and processor affinity for world thread;
+</li><li> launches freeze detector;
+</li><li> starts network socket listener.
+</li></ul>
+</dd><dd> After core finishes its work, it also closes database connections and do some clean-up before the program exits.
+</dd><dt> CLI Runnable
+</dt><dd> The mighty console, this is the user interface for server administrator. Also here we have implementations for console-only commands like account creation/deletion.
+</dd><dt> World Runnable
+</dt><dd> World thread, the <code>void WorldRunnable::run()</code> is the every heartbeat of game world. From here the world update function is called every 50 miliseconds.
+</dd></dl>
+<h2> <span class="mw-headline" id="HellgroundRealm"> HellgroundRealm </span></h2>
+<p>Directory <a rel="nofollow" class="external text" href="https://bitbucket.org/_hellground/hellground-core/src/default/src/hellgroundrealm"><i>src/hellgroundrealm</i></a> contains code for the realm list server. This is the program to which players connect first, it authorizes users and then gives them all necessary info about realms. Then the player chooses one of realms and connects to its HellgroundCore program. The structure of realm server is as follows:
+</p>
+<dl><dt> Main
+</dt><dd> The program entry point, the <code>int main(...)</code> function. Unlike HellgroundCore, there is no Master class, so all initialization stuff is done here. This is because HellgroundRealm is much simpler, it does not need any thread chewing data all the time (like World updates in the Core). It just needs to respond to incoming connections.
+<ul><li> processes input arguments, chooses mode (just like the Core main function);
+</li><li> opens config;
+</li><li> starts database connection (only accounts database is needed here);
+</li><li> cleans up expired bans;
+</li><li> starts network socket listener.
+</li></ul>
+</dd></dl>
+<dl><dt> AuthSocket
+</dt><dd> Class which handles a client connection. Every time a player connects to HellgroundRealm, an object of this class is created for him to process the connection. Here we have functions for each of the possible client commands that can be sent to realm server. Those functions handle all authorization of user using the SRP6 protocol. They also check if the user is banned, what version of client he has, and what operating system he is using. After authorization process is completed, HellgroundRealm sends realm list to the client and saves all necessary data to characters database, so that it can be used by HellgroundCore.
+</dd><dt> RealmList
+</dt><dd> Class which stores and updates realm server's information about running realms. It periodically queries database for information about the running servers.
+</dd><dt> TOTP
+</dt><dd> Time-based One-time Password Algorithm implementation. It gives us the possibility to increase account security, as the connection requires not only a normal password but also second one, which is generated using secret key and current time.
+</dd></dl>
+<h2> <span class="mw-headline" id="HellgroundScripts"> HellgroundScripts </span></h2>
+<p><a rel="nofollow" class="external text" href="https://bitbucket.org/_hellground/hellground-core/src/default/src/scripts"><i>Scripts</i></a> is the directory storing various in-game scripts. They are mostly used to determine the behaviour of NPCs and objects. HellgroundScripts are built as external library and the core calls every script only via few functions. This mechanics is very rarely modified, because it works. So for each developer most important part are the scripts themselves.
+</p>
+<h3> <span class="mw-headline" id="Scripts_sorting"> Scripts sorting </span></h3>
+<p>Basically all scripts are sorted by zone they are connected to. There are few exceptions:
+</p>
+<dl><dt> Spell scripts
+</dt><dd> Some spells are scripted, that is because making exceptions of exceptions of exceptions in core would be hard to implement and problematic in debugging.
+</dd><dt> Area trigger scripts
+</dt><dd> Scripts triggered when a player enters specified area, for example teleports other than simple instance entrances with more complicated triggering.
+</dd><dt> Item scripts
+</dt><dd> Generally there are quest items with some complicated requirements to activate. Some of scripts are used to prevent abusing of such items.
+</dd><dt> Commonly used scripts
+</dt><dd> Guard script, innkeeper script, profession master script etc.
+</dd><dt> Trans-zone scripts
+</dt><dd> Scripts for NPCs that can appear in many places, like non-combat pets.
+</dd><dt> Script structures
+</dt><dd> Those are not scripts in fact, just abstract structures to be filled with AI, eg. ScriptedAI or BossAI. All AI scripts are derived from them.
+</dd></dl>
+<h3> <span class="mw-headline" id="Script_files"> Script files </span></h3>
+<p>Each script file consists of:
+</p>
+<ul><li> header with licence info;
+</li><li> includes, we always <code>#include "precompiled.h"</code> which gives us nearly everything we need to script. Sometimes we additionally include a header with some definitions (eg. when scripting boss we need some definitions of instance script);
+</li><li> script structures and functions, more about them later;
+</li><li> <code>AddSC_...()</code> (add scripted creature) function, this is an important one. This function registers scripts in script manager, here we connect script functions with script names, every such function is called when loading scripts in <a rel="nofollow" class="external text" href="https://bitbucket.org/_hellground/hellground-core/src/default/src/scripts/system/ScriptLoader.cpp"><i>ScriptLoader.cpp</i></a>.
+</li></ul>
+<h3> <span class="mw-headline" id="Script_functions"> Script functions </span></h3>
+<p>Script manager mechanics basically connects a script name (like 'npc_some_dude') to some functions (like function defining what our dude will do if we talk to him). Most common functions are:
+</p>
+<dl><dt> Gossip hello
+</dt><dd> NPCs reaction to talking, here we usually add some options to the talk menu.
+</dd><dt> Gossip select
+</dt><dd> NPCs reaction to selecting an option from the talk menu (eg. NPC starts walking).
+</dd><dt> Quest accept
+</dt><dd> What happens after we accept quest from this NPC/object (eg. start escort).
+</dd><dt> Use gameobject
+</dt><dd> What happens after activating the object.
+</dd><dt> Get instance data
+</dt><dd> For use with instance scripts. An instance script is based on the <code>ScriptedInstance</code> structure. We first define a child structure like <code>struct instance_instancename&#160;: public ScriptedInstance</code> and Get instance data function is used to create new instances of this structure.
+</dd><dt> Get AI
+</dt><dd> For NPC scripts, if the NPC is supposed to have sophisticated AI (eg. most bosses), we define an AI structure <code>struct boss_some_one_AI&#160;: public ScriptedAI</code>, then create GetAI functions which returns us <code>new boss_some_one_AI(...)</code>.
+</dd></dl>
+<p>(Refer to the definition of Script in <a rel="nofollow" class="external text" href="https://bitbucket.org/_hellground/hellground-core/src/default/src/scripts/ScriptMgr.h"><i>ScriptMgr.h</i></a> for full list)
+</p>
+<h2> <span class="mw-headline" id="game"> game </span></h2>
+<p>This is the heart of the project. <a rel="nofollow" class="external text" href="https://bitbucket.org/_hellground/hellground-core/src/default/src/game"><i>Game</i></a> directory contains all rules of our game world. There is all kind of stuff here, so you'd better not try to understand everything at the beginning. Let's run quickly over major parts:
+</p>
+<dl><dt> Anticheat
+</dt><dd> Speed hack, fly hack, water walk hack and others can be detected and this is the place where it is done.
+</dd><dt> Battlegrounds
+</dt><dd> Battleground definitions along with the battleground manager. This is where battlegrounds queues are handled and where we define rules for a battleground.
+</dd><dt> Chat commands
+</dt><dd> Every in-game command, from ".account announce" to ".wp unload" has its function, here they are stored.
+</dd><dt> Handlers
+</dt><dd> Server reaction to data from client. Every packet sent by (and to) the client starts with its opcode, which tells us what this packet is about. Is it a chat message or logging out query, after reading an opcode, the server redirects data to appropriate methods called handlers.
+</dd><dt> Lua Engine
+</dt><dd> Our server has implemented Lua scripting language interpreter (based on Eluna project).
+</dd><dt> Maps
+</dt><dd> A map is a 'geographic' class. Kalimdor is a map, Eastern Kingdoms is a map, Hellfire Ramparts are maps, many maps. If two players are in instance on two different IDs, they are on two different maps — with the same map ID (eg. 543 for Ramparts) but with different instance ID (this is the ID you see in-game). It may seem complicated but in fact it is not, really.
+</dd><dt> Movemaps/vmaps
+</dt><dd> Hard stuff here, line of sight and movement calculations.
+</dd><dt> OutdoorPvP
+</dt><dd> Towers in HP, Haala in Nagrand etc. Zone-wide PvP objectives are here.
+</dd><dt> Server
+</dt><dd> Client-server communication.
+</dd><dt> Spells/skills
+</dt><dd> Each player's or npc's ability except meele attack is considered a spell. Important place is <code>SpellMgr::LoadSpellCustomAttr()</code> (<a rel="nofollow" class="external text" href="https://bitbucket.org/_hellground/hellground-core/src/default/src/game/SpellMgr.cpp"><i>SpellMgr.cpp</i></a>) where we override spells' data stored in dbc.
+</dd><dt> Warden
+</dt><dd> Our good friend, detects all kinds of cheats.
+</dd></dl>
+<h3> <span class="mw-headline" id="Artificial_Intelligence"> Artificial Intelligence </span></h3>
+<p>Every unit in game has its AI which determines behaviour (except when controlled by player). Here we have definitions of base classes and most common AIs. Process of selecting AI is defined in <a rel="nofollow" class="external text" href="https://bitbucket.org/_hellground/hellground-core/src/default/src/game/CreatureAISelector.cpp"><i>CreatureAISelector.cpp</i></a>, it can be determined based on various conditions. Some AI classes we have in the core:
+</p>
+<dl><dt> UnitAI &amp; CreatureAI
+</dt><dd> Those are the basic AI classes, they are not used in game, but are parent for all other AIs. UnitAI contains declarations of virtual functions (eg. <code>virtual void UpdateAI(...)</code>) and definitions of helper methods used for interaction with other units (eg. <code>std::list&lt;Player*&gt; FindAllPlayersInRange(...)</code>). CreatureAI is for units that fight, it contains <code>UpdateVictim(...)</code> function which handles choosing target to attack. It also has declarations of many virtual functions which are called as a result of combat event (like <code>virtual void MoveInLineOfSight(...)</code> or <code>virtual void OnSpellHit(...)</code>).
+</dd><dt> ScriptedAI
+</dt><dd> This is a class for special AIs, defined in <a rel="nofollow" class="external text" href="https://bitbucket.org/_hellground/hellground-core/src/default/src/scripts/include/sc_creature.h"><i>sc_creature.h</i></a>. More about scripted AI in the <a href="#HellgroundScripts">scripts</a> section.
+</dd><dt> AggresorAI &amp; CasterAI
+</dt><dd> Two simple AIs for common NPCs. Aggresor simply fights with melee weapon, Caster additionally casts some spells assigned in the creature template.
+</dd><dt> PetAI
+</dt><dd> Class for players' pets, it has additional functions helping with autocast settings.
+</dd><dt> PlayerAI
+</dt><dd> Those are AIs used when the player is mind-controlled by an NPC, each player class has its own AI class (WarriorAI, DruidAI etc.).
+</dd><dt> <a href="EventAI.html" title="EventAI">EventAI</a>
+</dt><dd> This is useful AI class, it creates the possibility to determine some NPC's behaviour based on database entries. Gives us more possibilities than standard AIs but not as many as ScriptedAI. Its large advantage is being based on database, not on code, so it can be modified and reloaded without restarting of the server.
+</dd></dl>
+<h3> <span class="mw-headline" id="Objects"> Objects </span></h3>
+<p>An object is any part of game world which changes in time. Player, item or NPC is an object. Main classes starting from the bottom:
+</p>
+<dl><dt> <a rel="nofollow" class="external text" href="https://bitbucket.org/_hellground/hellground-core/src/default/src/game/Object.h"><i>Object</i></a>
+</dt><dd> Most basic class, all other objects are derived from it, but an Object itself does not appear in-game. Basicaly an Object is a set of 32-bit values usually called fields(which can be interpreted as uint, int or float) and some methods used for manipulating those values as well as sending them to client. In <a rel="nofollow" class="external text" href="https://bitbucket.org/_hellground/hellground-core/src/default/src/game/UpdateFields.h"><i>UpdateFields.h</i></a> you can find aliases of fields, each kind of objects has its own set of fields. Only fields that are common to all Objects are its GUID(Global Unique Identifier), Type and Entry (number of object template).
+</dd><dt> WorldObject
+</dt><dd> Also only a parent class. This one is for objects that appear in game world, simply objects that have their position (all objects except items). It stores a little more information - x,y,z position, orientation (angle) and map on which object exists. It also has some functions which handle this additional data - relocating, calculating distance and line of sight.
+</dd><dt> <a rel="nofollow" class="external text" href="https://bitbucket.org/_hellground/hellground-core/src/default/src/game/Unit.h"><i>Unit</i></a>
+</dt><dd> Another only parent class. Here we have WorldObjects that can be selected, this means players, NPCs, pets etc. This class has much much more to handle than WorldObject. An Unit has HP,buffs, debufs, enemies, can cast, move, attack, be attacked or interact with player in other way (can be a player too). This gives us more data to store (check <code>enum EUnitFields</code> in UpdateFields.h) and more functions to handle them. Unit class is where we calculate damage done by attack or spell, handle being friendly or aggresive, cast spells or modify stats.
+</dd><dt> <a rel="nofollow" class="external text" href="https://bitbucket.org/_hellground/hellground-core/src/default/src/game/Creature.h"><i>Creature</i></a>
+</dt><dd> First of classes that do appear in game. Creature is for all units except players, this means NPCs, pets and totems. It has its loot and threat, can be a vendor and respawn. It has functions which handle interaction with players, respawning and looting. Each Creature has its AI.
+</dd><dt> <a rel="nofollow" class="external text" href="https://bitbucket.org/_hellground/hellground-core/src/default/src/game/Player.h"><i>Player</i></a>
+</dt><dd> This is class which represents player's avatar in game. Contrary to other units it is controlled by external commands not AI, it has equipment, skills. This class also handles mailing, quests, PvP, RaF, battlegrounds, instancing, groups... and lots other things.
+</dd><dt> <a rel="nofollow" class="external text" href="https://bitbucket.org/_hellground/hellground-core/src/default/src/game/GameObject.h"><i>GameObject</i></a>
+</dt><dd> Class for 'clickable' WorldObjects. Doors, chests, buttons... (there are 34 types of them in total). Some of them can be looted, respawn or trigger spells. There is a wide variety of them and basicaly what a GameObject does depends on what type it is.
+</dd><dt> <a rel="nofollow" class="external text" href="https://bitbucket.org/_hellground/hellground-core/src/default/src/game/Item.h"><i>Item</i></a>
+</dt><dd> What an item is every player knows. This class handles being soulbound, conjurable or a container. Some items have uses or can start quest. You should remember that every instance of this class is represented in game by one icon (if you have stack of arrows it is one item). All items that are 'of the same kind' are multiple Items, but have the same <a rel="nofollow" class="external text" href="https://bitbucket.org/_hellground/hellground-core/src/default/src/game/ItemPrototype.h"><i>ItemPrototype</i></a>.
+</dd></dl>
+<h2> <span class="mw-headline" id="shared"> shared </span></h2>
+<p>The <a rel="nofollow" class="external text" href="https://bitbucket.org/_hellground/hellground-core/src/default/src/shared"><i>shared</i></a> directory is the place where we hold parts common both to HellgroundCore and HellgroundRealm.
+</p>
+<dl><dt> Auth
+</dt><dd> Cryptographic classes, used in data encryption and user authorization. The interface between core and OpenSSL.
+</dd><dt> Config
+</dt><dd> Configuration file opener and interpreter.
+</dd><dt> Common.h
+</dt><dd> A header with definitions common both to core and realm.
+</dd><dt> Database
+</dt><dd> Classes which handle connection to the database, interface between core and MySQL. Here we also hold DBC files loader.
+</dd><dt> Log
+</dt><dd> Logging tool.
+</dd><dt> Util
+</dt><dd> String format converters, some random number methods.
+</dd><dt> Wheaty Exception Report
+</dt><dd> Crash log generator for Windows.
+</dd></dl>
+<h2> <span class="mw-headline" id="others"> others </span></h2>
+<p>There are many other elements that don't have a place in any of projects' 'main branches' but without them, the server won't work at all.
+</p>
+<h3> <span class="mw-headline" id="genrevision"> genrevision </span></h3>
+<p>Genrevision is a simple tool used to determine actual revision of server's repository. It is capable of extracting data from Mercurial (default), Git or SVN files. When genrevision is executed, it creates revision.h file which stores info about the current code version. It should be always built and run before compiling any other part.
+</p>
+<h3> <span class="mw-headline" id="framework"> framework </span></h3>
+<p>The <a rel="nofollow" class="external text" href="https://bitbucket.org/_hellground/hellground-core/src/default/src/framework"><i>framework</i></a> directory contains a few useful parts for the HellGround machine.
+</p>
+<dl><dt> Platform
+</dt><dd> Files where platform- and compiler-dependent defines are stored.
+</dd><dt> Policies
+</dt><dd> This is the place where our memory allocation functions are defined.
+</dd><dt> Dynamic
+</dt><dd> Headers for the factory pattern, we use factory for creating AI for NPCs.
+</dd><dt> GameSystem
+</dt><dd> This is home of grids. A grid is a basic segment of the game world, a simple sector of Warcraft reality.
+</dd><dt> Utilities
+</dt><dd> Here we have utilities, few classes and methods which simplify parts of the code, like endianness converter or unordered map class.
+</dd></dl>
+<h3> <span class="mw-headline" id="dependencies"> dependencies </span></h3>
+<dl><dt> ACE (Adaptive Communication Enviroment)
+</dt><dd> A toolkit we use to simplify networking and threading. This is the part which handles connections from the clients and helps to prevent data races between multiple threads of the core.
+</dd><dt> TBB (Threading Building Blocks)
+</dt><dd> Another toolkit used in the core. This one gives us memory allocation and cooperates with ACE in handling threads.
+</dd><dt> Recast, Detour, G3D
+</dt><dd> Those are libraries used for handling three-dimensional stuff, VMaps and MMaps are based on them.
+</dd><dt> zlib, bzip2
+</dt><dd> Basically data compression stuff.
+</dd><dt> OpenSSL
+</dt><dd> Cryptography toolkit, used when authorizing users, also connections with clients are partially encrypted.
+</dd><dt> MySQL
+</dt><dd> Connects our core to the SQL database.
+</dd><dt> Mersenne Twister
+</dt><dd> The 623-Dimensionally Equidistributed Uniform Pseudo-Random Number Generator. We need to be a little randomness sometimes.
+</dd><dt> LuaLib
+</dt><dd> Lua language engine based on the Eluna project. Thanks to it, the core can process Lua scripts.
+</dd></dl>
+
+<!-- 
+NewPP limit report
+Preprocessor visited node count: 211/1000000
+Preprocessor generated node count: 618/1000000
+Post‐expand include size: 1943/2097152 bytes
+Template argument size: 575/2097152 bytes
+Highest expansion depth: 2/40
+Expensive parser function count: 0/100
+-->
+
+<!-- Saved in parser cache with key admin_wikia:pcache:idhash:307-0!*!0!!en-gb!*!* and timestamp 20160412104412 -->
+</div>				<!-- /bodycontent -->
+								<!-- printfooter -->
+				<div class="printfooter">
+				Retrieved from ‘<a href="http://wiki.hellground.net/index.php?title=Core_overview&amp;oldid=1207">http://wiki.hellground.net/index.php?title=Core_overview&amp;oldid=1207</a>’				</div>
+				<!-- /printfooter -->
+												<!-- catlinks -->
+				<div id='catlinks' class='catlinks'><div id="mw-normal-catlinks" class="mw-normal-catlinks"><a href="Special_Categories.html" title="Special:Categories">Category</a>: <ul><li><a href="Category_HOWTOs.html" title="Category:HOWTOs">HOWTOs</a></li></ul></div></div>				<!-- /catlinks -->
+												<div class="visualClear"></div>
+				<!-- debughtml -->
+								<!-- /debughtml -->
+			</div>
+			<!-- /bodyContent -->
+		</div>
+		<!-- /content -->
+		<div id="mw-navigation">
+			<h2>Navigation menu</h2>
+			<!-- header -->
+			<div id="mw-head">
+				
+<!-- 0 -->
+<div id="p-personal" role="navigation" class="">
+	<h3>Personal tools</h3>
+	<ul>
+<li id="pt-login"><a href="http://wiki.hellground.net/index.php?title=Special:UserLogin&amp;returnto=Core+overview" title="You are encouraged to log in; however, it is not mandatory [o]" accesskey="o">Log in</a></li>	</ul>
+</div>
+
+<!-- /0 -->
+				<div id="left-navigation">
+					
+<!-- 0 -->
+<div id="p-namespaces" role="navigation" class="vectorTabs">
+	<h3>Namespaces</h3>
+	<ul>
+					<li  id="ca-nstab-main" class="selected"><span><a href="Core_overview.html"  title="View the content page [c]" accesskey="c">Page</a></span></li>
+					<li  id="ca-talk" class="new"><span><a href="http://wiki.hellground.net/index.php?title=Talk:Core_overview&amp;action=edit&amp;redlink=1"  title="Discussion about the content page [t]" accesskey="t">Discussion</a></span></li>
+			</ul>
+</div>
+
+<!-- /0 -->
+
+<!-- 1 -->
+<div id="p-variants" role="navigation" class="vectorMenu emptyPortlet">
+	<h3 id="mw-vector-current-variant">
+		</h3>
+	<h3><span>Variants</span><a href="#"></a></h3>
+	<div class="menu">
+		<ul>
+					</ul>
+	</div>
+</div>
+
+<!-- /1 -->
+				</div>
+				<div id="right-navigation">
+					
+<!-- 0 -->
+<div id="p-views" role="navigation" class="vectorTabs">
+	<h3>Views</h3>
+	<ul>
+					<li id="ca-view" class="selected"><span><a href="Core_overview.html" >Read</a></span></li>
+					<li id="ca-viewsource"><span><a href="http://wiki.hellground.net/index.php?title=Core_overview&amp;action=edit"  title="This page is protected.&#10;You can view its source [e]" accesskey="e">View source</a></span></li>
+					<li id="ca-history" class="collapsible"><span><a href="http://wiki.hellground.net/index.php?title=Core_overview&amp;action=history"  title="Past revisions of this page [h]" accesskey="h">View history</a></span></li>
+			</ul>
+</div>
+
+<!-- /0 -->
+
+<!-- 1 -->
+<div id="p-cactions" role="navigation" class="vectorMenu emptyPortlet">
+	<h3><span>Actions</span><a href="#"></a></h3>
+	<div class="menu">
+		<ul>
+					</ul>
+	</div>
+</div>
+
+<!-- /1 -->
+
+<!-- 2 -->
+
+
+<!-- /2 -->
+				</div>
+			</div>
+			<!-- /header -->
+			<!-- panel -->
+			<div id="mw-panel">
+				<!-- logo -->
+					<div id="p-logo" role="banner"><a style="background-image: url(../skins/common/images/wiki.png);" href="Main_Page.html"  title="Visit the main page"></a></div>
+				<!-- /logo -->
+				
+<!-- navigation -->
+<div class="portal" role="navigation" id='p-navigation'>
+	<h3>Navigation</h3>
+	<div class="body">
+		<ul>
+			<li id="n-mainpage-description"><a href="Main_Page.html" title="Visit the main page [z]" accesskey="z">Main page</a></li>
+			<li id="n-randompage"><a href="Spell_required.html" title="Load a random page [x]" accesskey="x">Random page</a></li>
+		</ul>
+	</div>
+</div>
+
+<!-- /navigation -->
+
+<!-- HellGroundCore -->
+<div class="portal" role="navigation" id='p-HellGroundCore'>
+	<h3>HellGroundCore</h3>
+	<div class="body">
+		<ul>
+			<li id="n-Project-site"><a href="https://hellground.net/" rel="nofollow">Project site</a></li>
+			<li id="n-Project--forum"><a href="http://forum.hellground.net/" rel="nofollow">Project  forum</a></li>
+			<li id="n-Project-repositories"><a href="http://emu.hellground.net/" rel="nofollow">Project repositories</a></li>
+			<li id="n-Project-bug-tracker"><a href="http://forum.hellground.net/" rel="nofollow">Project bug tracker</a></li>
+		</ul>
+	</div>
+</div>
+
+<!-- /HellGroundCore -->
+
+<!-- SEARCH -->
+
+<!-- /SEARCH -->
+
+<!-- TOOLBOX -->
+<div class="portal" role="navigation" id='p-tb'>
+	<h3>Tools</h3>
+	<div class="body">
+		<ul>
+			<li id="t-whatlinkshere"><a href="Special_WhatLinksHere/Core_overview.html" title="A list of all wiki pages that link here [j]" accesskey="j">What links here</a></li>
+			<li id="t-recentchangeslinked"><a href="Special_RecentChangesLinked/Core_overview.html" title="Recent changes in pages linked from this page [k]" accesskey="k">Related changes</a></li>
+			<li id="t-specialpages"><a href="Special_SpecialPages.html" title="A list of all special pages [q]" accesskey="q">Special pages</a></li>
+			<li id="t-print"><a href="http://wiki.hellground.net/index.php?title=Core_overview&amp;printable=yes" rel="alternate" title="Printable version of this page [p]" accesskey="p">Printable version</a></li>
+			<li id="t-permalink"><a href="http://wiki.hellground.net/index.php?title=Core_overview&amp;oldid=1207" title="Permanent link to this revision of the page">Permanent link</a></li>
+			<li id="t-info"><a href="http://wiki.hellground.net/index.php?title=Core_overview&amp;action=info">Page information</a></li>
+		</ul>
+	</div>
+</div>
+
+<!-- /TOOLBOX -->
+
+<!-- LANGUAGES -->
+
+<!-- /LANGUAGES -->
+			</div>
+			<!-- /panel -->
+		</div>
+		<!-- footer -->
+		<div id="footer" role="contentinfo">
+							<ul id="footer-info">
+											<li id="footer-info-lastmod"> This page was last modified on 13 June 2014, at 13:50.</li>
+											<li id="footer-info-viewcount">This page has been accessed 1,505 times.</li>
+									</ul>
+							<ul id="footer-places">
+											<li id="footer-places-privacy"><a href="TBC_HellGroundCore_Privacy_policy.html" title="TBC HellGroundCore:Privacy policy">Privacy policy</a></li>
+											<li id="footer-places-about"><a href="TBC_HellGroundCore_About.html" title="TBC HellGroundCore:About">About HellGroundCore MMORPG framework educational and hobby project</a></li>
+											<li id="footer-places-disclaimer"><a href="TBC_HellGroundCore_General_disclaimer.html" title="TBC HellGroundCore:General disclaimer">Disclaimers</a></li>
+									</ul>
+										<ul id="footer-icons" class="noprint">
+					<li id="footer-poweredbyico">
+						<a href="http://www.mediawiki.org/"><img src="../skins/common/images/poweredby_mediawiki_88x31.png" alt="Powered by MediaWiki" width="88" height="31" /></a>
+					</li>
+				</ul>
+						<div style="clear:both"></div>
+		</div>
+		<!-- /footer -->
+		<script>if(window.mw){
+mw.loader.state({"site":"loading","user":"missing","user.groups":"ready"});
+}</script>
+<script>if(window.mw){
+mw.loader.load(["mediawiki.action.view.postEdit","mediawiki.user","mediawiki.page.ready","mediawiki.searchSuggest","mediawiki.hidpi","skins.vector.js"], null, true);
+}</script>
+<script>if(window.mw){
+mw.loader.state({"site":"ready"});
+}</script>
+<!-- Served in 0.065 secs. -->
+	</body>
+
+<!-- Mirrored from wiki.hellground.net/index.php/Core_overview by HTTrack Website Copier/3.x [XR&CO'2014], Tue, 12 Apr 2016 10:48:27 GMT -->
+</html>

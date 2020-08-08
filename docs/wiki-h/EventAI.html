@@ -1,0 +1,2893 @@
+<!DOCTYPE html>
+<html lang="en-GB" dir="ltr" class="client-nojs">
+
+<!-- Mirrored from wiki.hellground.net/index.php/EventAI by HTTrack Website Copier/3.x [XR&CO'2014], Tue, 12 Apr 2016 10:49:17 GMT -->
+<!-- Added by HTTrack --><meta http-equiv="content-type" content="text/html;charset=UTF-8" /><!-- /Added by HTTrack -->
+<head>
+<title>EventAI - HellGroundCore MMORPG framework educational and hobby project</title>
+<meta charset="UTF-8" />
+<meta name="generator" content="MediaWiki 1.21.4" />
+<link rel="shortcut icon" href="http://wiki.hellground.net/favicon.ico" />
+<link rel="search" type="application/opensearchdescription+xml" href="http://wiki.hellground.net/opensearch_desc.php" title="HellGroundCore MMORPG framework educational and hobby project (en-gb)" />
+<link rel="EditURI" type="application/rsd+xml" href="http://wiki.hellground.net/api.php?action=rsd" />
+<link rel="alternate" type="application/atom+xml" title="HellGroundCore MMORPG framework educational and hobby project Atom feed" href="http://wiki.hellground.net/index.php?title=Special:RecentChanges&amp;feed=atom" />
+<link rel="stylesheet" href="http://wiki.hellground.net/load.php?debug=false&amp;lang=en-gb&amp;modules=mediawiki.legacy.commonPrint%2Cshared%7Cskins.vector&amp;only=styles&amp;skin=vector&amp;*" />
+<meta name="ResourceLoaderDynamicStyles" content="" />
+<style>a:lang(ar),a:lang(ckb),a:lang(fa),a:lang(kk-arab),a:lang(mzn),a:lang(ps),a:lang(ur){text-decoration:none}
+/* cache key: admin_wikia:resourceloader:filter:minify-css:7:584a0492c58c82e3a4daddd5656471fb */</style>
+
+<script src="http://wiki.hellground.net/load.php?debug=false&amp;lang=en-gb&amp;modules=startup&amp;only=scripts&amp;skin=vector&amp;*"></script>
+<script>if(window.mw){
+mw.config.set({"wgCanonicalNamespace":"","wgCanonicalSpecialPageName":false,"wgNamespaceNumber":0,"wgPageName":"EventAI","wgTitle":"EventAI","wgCurRevisionId":957,"wgArticleId":24,"wgIsArticle":true,"wgAction":"view","wgUserName":null,"wgUserGroups":["*"],"wgCategories":["EventAI","HOWTOs"],"wgBreakFrames":false,"wgPageContentLanguage":"en-gb","wgSeparatorTransformTable":["",""],"wgDigitTransformTable":["",""],"wgDefaultDateFormat":"dmy","wgMonthNames":["","January","February","March","April","May","June","July","August","September","October","November","December"],"wgMonthNamesShort":["","Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"],"wgRelevantPageName":"EventAI","wgRestrictionEdit":[],"wgRestrictionMove":[]});
+}</script><script>if(window.mw){
+mw.loader.implement("user.options",function(){mw.user.options.set({"ccmeonemails":0,"cols":80,"date":"default","diffonly":0,"disablemail":0,"disablesuggest":0,"editfont":"default","editondblclick":0,"editsection":1,"editsectiononrightclick":0,"enotifminoredits":0,"enotifrevealaddr":0,"enotifusertalkpages":1,"enotifwatchlistpages":0,"extendwatchlist":0,"externaldiff":0,"externaleditor":0,"fancysig":0,"forceeditsummary":0,"gender":"unknown","hideminor":0,"hidepatrolled":0,"imagesize":2,"justify":0,"math":1,"minordefault":0,"newpageshidepatrolled":0,"nocache":0,"noconvertlink":0,"norollbackdiff":0,"numberheadings":0,"previewonfirst":0,"previewontop":1,"quickbar":5,"rcdays":7,"rclimit":50,"rememberpassword":0,"rows":25,"searchlimit":20,"showhiddencats":0,"showjumplinks":1,"shownumberswatching":1,"showtoc":1,"showtoolbar":1,"skin":"vector","stubthreshold":0,"thumbsize":2,"underline":2,"uselivepreview":0,"usenewrc":0,"watchcreations":0,"watchdefault":0,"watchdeletion":0,"watchlistdays":3,
+"watchlisthideanons":0,"watchlisthidebots":0,"watchlisthideliu":0,"watchlisthideminor":0,"watchlisthideown":0,"watchlisthidepatrolled":0,"watchmoves":0,"wllimit":250,"variant":"en-gb","language":"en-gb","searchNs0":true,"searchNs1":false,"searchNs2":false,"searchNs3":false,"searchNs4":false,"searchNs5":false,"searchNs6":false,"searchNs7":false,"searchNs8":false,"searchNs9":false,"searchNs10":false,"searchNs11":false,"searchNs12":false,"searchNs13":false,"searchNs14":false,"searchNs15":false});;},{},{});mw.loader.implement("user.tokens",function(){mw.user.tokens.set({"editToken":"+\\","patrolToken":false,"watchToken":false});;},{},{});
+/* cache key: admin_wikia:resourceloader:filter:minify-js:7:811a3adb8f714f1f28210df16d324ee9 */
+}</script>
+<script>if(window.mw){
+mw.loader.load(["mediawiki.page.startup","mediawiki.legacy.wikibits","mediawiki.legacy.ajax"]);
+}</script>
+<!--[if lt IE 7]><style type="text/css">body{behavior:url("/skins/vector/csshover.min.htc")}</style><![endif]--></head>
+<body class="mediawiki ltr sitedir-ltr ns-0 ns-subject page-EventAI skin-vector action-view vector-animateLayout">
+		<div id="mw-page-base" class="noprint"></div>
+		<div id="mw-head-base" class="noprint"></div>
+		<!-- content -->
+		<div id="content" class="mw-body" role="main">
+			<a id="top"></a>
+			<div id="mw-js-message" style="display:none;"></div>
+						<!-- firstHeading -->
+			<h1 id="firstHeading" class="firstHeading" lang="en-gb"><span dir="auto">EventAI</span></h1>
+			<!-- /firstHeading -->
+			<!-- bodyContent -->
+			<div id="bodyContent">
+								<!-- tagline -->
+				<div id="siteSub">From HellGroundCore MMORPG framework educational and hobby project</div>
+				<!-- /tagline -->
+								<!-- subtitle -->
+				<div id="contentSub"></div>
+				<!-- /subtitle -->
+																<!-- jumpto -->
+				<div id="jump-to-nav" class="mw-jump">
+					Jump to:					<a href="#mw-navigation">navigation</a>, 					<a href="#p-search">search</a>
+				</div>
+				<!-- /jumpto -->
+								<!-- bodycontent -->
+				<div id="mw-content-text" lang="en-GB" dir="ltr" class="mw-content-ltr"><div style="float: right; margin-left: 1em"><table id="toc" class="toc"><tr><td><div id="toctitle"><h2>Contents</h2></div>
+<ul>
+<li class="toclevel-1 tocsection-1"><a href="#Event_AI_Tables"><span class="tocnumber">1</span> <span class="toctext">Event AI Tables</span></a></li>
+<li class="toclevel-1 tocsection-2"><a href="#Event_AI_Guide"><span class="tocnumber">2</span> <span class="toctext">Event AI Guide</span></a>
+<ul>
+<li class="toclevel-2 tocsection-3"><a href="#Common_Questions"><span class="tocnumber">2.1</span> <span class="toctext">Common Questions</span></a></li>
+<li class="toclevel-2 tocsection-4"><a href="#Event_Explanations"><span class="tocnumber">2.2</span> <span class="toctext">Event Explanations</span></a>
+<ul>
+<li class="toclevel-3 tocsection-5"><a href="#EVENT_T_TIMER_.230"><span class="tocnumber">2.2.1</span> <span class="toctext">EVENT_T_TIMER #0</span></a></li>
+<li class="toclevel-3 tocsection-6"><a href="#EVENT_T_TIMER_OOC_.231"><span class="tocnumber">2.2.2</span> <span class="toctext">EVENT_T_TIMER_OOC #1</span></a></li>
+<li class="toclevel-3 tocsection-7"><a href="#EVENT_T_HP_.232"><span class="tocnumber">2.2.3</span> <span class="toctext">EVENT_T_HP #2</span></a></li>
+<li class="toclevel-3 tocsection-8"><a href="#EVENT_T_MANA_.233"><span class="tocnumber">2.2.4</span> <span class="toctext">EVENT_T_MANA #3</span></a></li>
+<li class="toclevel-3 tocsection-9"><a href="#EVENT_T_AGGRO_.234"><span class="tocnumber">2.2.5</span> <span class="toctext">EVENT_T_AGGRO #4</span></a></li>
+<li class="toclevel-3 tocsection-10"><a href="#EVENT_T_KILL_.235"><span class="tocnumber">2.2.6</span> <span class="toctext">EVENT_T_KILL #5</span></a></li>
+<li class="toclevel-3 tocsection-11"><a href="#EVENT_T_DEATH_.236"><span class="tocnumber">2.2.7</span> <span class="toctext">EVENT_T_DEATH #6</span></a></li>
+<li class="toclevel-3 tocsection-12"><a href="#EVENT_T_EVADE_.237"><span class="tocnumber">2.2.8</span> <span class="toctext">EVENT_T_EVADE #7</span></a></li>
+<li class="toclevel-3 tocsection-13"><a href="#EVENT_T_SPELLHIT_.238"><span class="tocnumber">2.2.9</span> <span class="toctext">EVENT_T_SPELLHIT #8</span></a></li>
+<li class="toclevel-3 tocsection-14"><a href="#EVENT_T_RANGE_.239"><span class="tocnumber">2.2.10</span> <span class="toctext">EVENT_T_RANGE #9</span></a></li>
+<li class="toclevel-3 tocsection-15"><a href="#EVENT_T_OOC_LOS_.2310"><span class="tocnumber">2.2.11</span> <span class="toctext">EVENT_T_OOC_LOS #10</span></a></li>
+<li class="toclevel-3 tocsection-16"><a href="#EVENT_T_SPAWNED_.2311"><span class="tocnumber">2.2.12</span> <span class="toctext">EVENT_T_SPAWNED #11</span></a></li>
+<li class="toclevel-3 tocsection-17"><a href="#EVENT_T_TARGET_HP_.2312"><span class="tocnumber">2.2.13</span> <span class="toctext">EVENT_T_TARGET_HP #12</span></a></li>
+<li class="toclevel-3 tocsection-18"><a href="#EVENT_T_TARGET_CASTING_.2313"><span class="tocnumber">2.2.14</span> <span class="toctext">EVENT_T_TARGET_CASTING #13</span></a></li>
+<li class="toclevel-3 tocsection-19"><a href="#EVENT_T_FRIENDLY_HP_.2314"><span class="tocnumber">2.2.15</span> <span class="toctext">EVENT_T_FRIENDLY_HP #14</span></a></li>
+<li class="toclevel-3 tocsection-20"><a href="#EVENT_T_FRIENDLY_IS_CC_.2315"><span class="tocnumber">2.2.16</span> <span class="toctext">EVENT_T_FRIENDLY_IS_CC #15</span></a></li>
+<li class="toclevel-3 tocsection-21"><a href="#EVENT_T_MISSING_BUFF_.2316"><span class="tocnumber">2.2.17</span> <span class="toctext">EVENT_T_MISSING_BUFF #16</span></a></li>
+<li class="toclevel-3 tocsection-22"><a href="#EVENT_T_SUMMONED_UNIT_.2317"><span class="tocnumber">2.2.18</span> <span class="toctext">EVENT_T_SUMMONED_UNIT #17</span></a></li>
+<li class="toclevel-3 tocsection-23"><a href="#EVENT_T_REACHED_HOME_.2321"><span class="tocnumber">2.2.19</span> <span class="toctext">EVENT_T_REACHED_HOME #21</span></a></li>
+<li class="toclevel-3 tocsection-24"><a href="#EVENT_T_RECEIVE_EMOTE_.2322"><span class="tocnumber">2.2.20</span> <span class="toctext">EVENT_T_RECEIVE_EMOTE #22</span></a></li>
+<li class="toclevel-3 tocsection-25"><a href="#EVENT_T_BUFFED_.2323"><span class="tocnumber">2.2.21</span> <span class="toctext">EVENT_T_BUFFED #23</span></a></li>
+<li class="toclevel-3 tocsection-26"><a href="#EVENT_T_TARGET_BUFFED_.2324"><span class="tocnumber">2.2.22</span> <span class="toctext">EVENT_T_TARGET_BUFFED #24</span></a></li>
+<li class="toclevel-3 tocsection-27"><a href="#EVENT_T_SUMMONED_JUST_DIED_.2325"><span class="tocnumber">2.2.23</span> <span class="toctext">EVENT_T_SUMMONED_JUST_DIED #25</span></a></li>
+<li class="toclevel-3 tocsection-28"><a href="#EVENT_T_SUMMONED_JUST_DESPAWN_.2326"><span class="tocnumber">2.2.24</span> <span class="toctext">EVENT_T_SUMMONED_JUST_DESPAWN #26</span></a></li>
+<li class="toclevel-3 tocsection-29"><a href="#EVENT_T_MISSING_AURA_.2327"><span class="tocnumber">2.2.25</span> <span class="toctext">EVENT_T_MISSING_AURA #27</span></a></li>
+<li class="toclevel-3 tocsection-30"><a href="#EVENT_T_TARGET_MISSING_AURA_.2328"><span class="tocnumber">2.2.26</span> <span class="toctext">EVENT_T_TARGET_MISSING_AURA #28</span></a></li>
+</ul>
+</li>
+<li class="toclevel-2 tocsection-31"><a href="#Action_Explanations"><span class="tocnumber">2.3</span> <span class="toctext">Action Explanations</span></a>
+<ul>
+<li class="toclevel-3 tocsection-32"><a href="#ACTION_T_NONE_.230"><span class="tocnumber">2.3.1</span> <span class="toctext">ACTION_T_NONE #0</span></a></li>
+<li class="toclevel-3 tocsection-33"><a href="#ACTION_T_SAY_.231"><span class="tocnumber">2.3.2</span> <span class="toctext">ACTION_T_SAY #1</span></a></li>
+<li class="toclevel-3 tocsection-34"><a href="#ACTION_T_SET_FACTION_.232"><span class="tocnumber">2.3.3</span> <span class="toctext">ACTION_T_SET_FACTION #2</span></a></li>
+<li class="toclevel-3 tocsection-35"><a href="#ACTION_T_MORPH_TO_ENTRY_OR_MODEL_.233"><span class="tocnumber">2.3.4</span> <span class="toctext">ACTION_T_MORPH_TO_ENTRY_OR_MODEL #3</span></a></li>
+<li class="toclevel-3 tocsection-36"><a href="#ACTION_T_SOUND_.234"><span class="tocnumber">2.3.5</span> <span class="toctext">ACTION_T_SOUND #4</span></a></li>
+<li class="toclevel-3 tocsection-37"><a href="#ACTION_T_EMOTE_.235"><span class="tocnumber">2.3.6</span> <span class="toctext">ACTION_T_EMOTE #5</span></a></li>
+<li class="toclevel-3 tocsection-38"><a href="#ACTION_T_RANDOM_SAY_.236"><span class="tocnumber">2.3.7</span> <span class="toctext">ACTION_T_RANDOM_SAY #6</span></a></li>
+<li class="toclevel-3 tocsection-39"><a href="#ACTION_T_RANDOM_YELL_.237"><span class="tocnumber">2.3.8</span> <span class="toctext">ACTION_T_RANDOM_YELL #7</span></a></li>
+<li class="toclevel-3 tocsection-40"><a href="#ACTION_T_RANDOM_TEXTEMOTE_.238"><span class="tocnumber">2.3.9</span> <span class="toctext">ACTION_T_RANDOM_TEXTEMOTE #8</span></a></li>
+<li class="toclevel-3 tocsection-41"><a href="#ACTION_T_RANDOM_SOUND_.239"><span class="tocnumber">2.3.10</span> <span class="toctext">ACTION_T_RANDOM_SOUND #9</span></a></li>
+<li class="toclevel-3 tocsection-42"><a href="#ACTION_T_RANDOM_EMOTE_.2310"><span class="tocnumber">2.3.11</span> <span class="toctext">ACTION_T_RANDOM_EMOTE #10</span></a></li>
+<li class="toclevel-3 tocsection-43"><a href="#ACTION_T_CAST_.2311"><span class="tocnumber">2.3.12</span> <span class="toctext">ACTION_T_CAST #11</span></a></li>
+<li class="toclevel-3 tocsection-44"><a href="#ACTION_T_SUMMON_.2312"><span class="tocnumber">2.3.13</span> <span class="toctext">ACTION_T_SUMMON #12</span></a></li>
+<li class="toclevel-3 tocsection-45"><a href="#ACTION_T_THREAT_SINGLE_PCT_.2313"><span class="tocnumber">2.3.14</span> <span class="toctext">ACTION_T_THREAT_SINGLE_PCT #13</span></a></li>
+<li class="toclevel-3 tocsection-46"><a href="#ACTION_T_THREAT_ALL_PCT_.2314"><span class="tocnumber">2.3.15</span> <span class="toctext">ACTION_T_THREAT_ALL_PCT #14</span></a></li>
+<li class="toclevel-3 tocsection-47"><a href="#ACTION_T_QUEST_EVENT_.2315"><span class="tocnumber">2.3.16</span> <span class="toctext">ACTION_T_QUEST_EVENT #15</span></a></li>
+<li class="toclevel-3 tocsection-48"><a href="#ACTION_T_CASTCREATUREGO_.2316"><span class="tocnumber">2.3.17</span> <span class="toctext">ACTION_T_CASTCREATUREGO #16</span></a></li>
+<li class="toclevel-3 tocsection-49"><a href="#ACTION_T_SET_UNIT_FIELD_.2317"><span class="tocnumber">2.3.18</span> <span class="toctext">ACTION_T_SET_UNIT_FIELD #17</span></a></li>
+<li class="toclevel-3 tocsection-50"><a href="#ACTION_T_SET_UNIT_FLAG_.2318"><span class="tocnumber">2.3.19</span> <span class="toctext">ACTION_T_SET_UNIT_FLAG #18</span></a></li>
+<li class="toclevel-3 tocsection-51"><a href="#ACTION_T_REMOVE_UNIT_FLAG_.2319"><span class="tocnumber">2.3.20</span> <span class="toctext">ACTION_T_REMOVE_UNIT_FLAG #19</span></a></li>
+<li class="toclevel-3 tocsection-52"><a href="#ACTION_T_AUTO_ATTACK_.2320"><span class="tocnumber">2.3.21</span> <span class="toctext">ACTION_T_AUTO_ATTACK #20</span></a></li>
+<li class="toclevel-3 tocsection-53"><a href="#ACTION_T_COMBAT_MOVEMENT_.2321"><span class="tocnumber">2.3.22</span> <span class="toctext">ACTION_T_COMBAT_MOVEMENT #21</span></a></li>
+<li class="toclevel-3 tocsection-54"><a href="#ACTION_T_SET_PHASE_.2322"><span class="tocnumber">2.3.23</span> <span class="toctext">ACTION_T_SET_PHASE #22</span></a></li>
+<li class="toclevel-3 tocsection-55"><a href="#ACTION_T_INC_PHASE_.2323"><span class="tocnumber">2.3.24</span> <span class="toctext">ACTION_T_INC_PHASE #23</span></a></li>
+<li class="toclevel-3 tocsection-56"><a href="#ACTION_T_EVADE_.2324"><span class="tocnumber">2.3.25</span> <span class="toctext">ACTION_T_EVADE #24</span></a></li>
+<li class="toclevel-3 tocsection-57"><a href="#ACTION_T_FLEE_.2325"><span class="tocnumber">2.3.26</span> <span class="toctext">ACTION_T_FLEE #25</span></a></li>
+<li class="toclevel-3 tocsection-58"><a href="#ACTION_T_QUEST_EVENT_ALL_.2326"><span class="tocnumber">2.3.27</span> <span class="toctext">ACTION_T_QUEST_EVENT_ALL #26</span></a></li>
+<li class="toclevel-3 tocsection-59"><a href="#ACTION_T_CASTCREATUREGO_ALL_.2327"><span class="tocnumber">2.3.28</span> <span class="toctext">ACTION_T_CASTCREATUREGO_ALL #27</span></a></li>
+<li class="toclevel-3 tocsection-60"><a href="#ACTION_T_REMOVEAURASFROMSPELL_.2328"><span class="tocnumber">2.3.29</span> <span class="toctext">ACTION_T_REMOVEAURASFROMSPELL #28</span></a></li>
+<li class="toclevel-3 tocsection-61"><a href="#ACTION_T_RANGED_MOVEMENT_.2329"><span class="tocnumber">2.3.30</span> <span class="toctext">ACTION_T_RANGED_MOVEMENT #29</span></a></li>
+<li class="toclevel-3 tocsection-62"><a href="#ACTION_T_RANDOM_PHASE_.2330"><span class="tocnumber">2.3.31</span> <span class="toctext">ACTION_T_RANDOM_PHASE #30</span></a></li>
+<li class="toclevel-3 tocsection-63"><a href="#ACTION_T_RANDOM_PHASE_RANGE_.2331"><span class="tocnumber">2.3.32</span> <span class="toctext">ACTION_T_RANDOM_PHASE_RANGE #31</span></a></li>
+<li class="toclevel-3 tocsection-64"><a href="#ACTION_T_SUMMON_.2332"><span class="tocnumber">2.3.33</span> <span class="toctext">ACTION_T_SUMMON #32</span></a></li>
+<li class="toclevel-3 tocsection-65"><a href="#ACTION_T_KILLED_MONSTER_.2333"><span class="tocnumber">2.3.34</span> <span class="toctext">ACTION_T_KILLED_MONSTER #33</span></a></li>
+<li class="toclevel-3 tocsection-66"><a href="#ACTION_T_SET_INST_DATA_.2334"><span class="tocnumber">2.3.35</span> <span class="toctext">ACTION_T_SET_INST_DATA #34</span></a></li>
+<li class="toclevel-3 tocsection-67"><a href="#ACTION_T_UPDATE_TEMPLATE_.2336"><span class="tocnumber">2.3.36</span> <span class="toctext">ACTION_T_UPDATE_TEMPLATE #36</span></a></li>
+<li class="toclevel-3 tocsection-68"><a href="#ACTION_T_DIE_.2337"><span class="tocnumber">2.3.37</span> <span class="toctext">ACTION_T_DIE #37</span></a></li>
+<li class="toclevel-3 tocsection-69"><a href="#ACTION_T_ZONE_COMBAT_PULSE_.2338"><span class="tocnumber">2.3.38</span> <span class="toctext">ACTION_T_ZONE_COMBAT_PULSE #38</span></a></li>
+<li class="toclevel-3 tocsection-70"><a href="#ACTION_T_CALL_FOR_HELP_.2339"><span class="tocnumber">2.3.39</span> <span class="toctext">ACTION_T_CALL_FOR_HELP #39</span></a></li>
+<li class="toclevel-3 tocsection-71"><a href="#ACTION_T_SET_SHEATH_.2340"><span class="tocnumber">2.3.40</span> <span class="toctext">ACTION_T_SET_SHEATH #40</span></a></li>
+<li class="toclevel-3 tocsection-72"><a href="#ACTION_T_FORCE_DESPAWN_.2341"><span class="tocnumber">2.3.41</span> <span class="toctext">ACTION_T_FORCE_DESPAWN #41</span></a></li>
+<li class="toclevel-3 tocsection-73"><a href="#ACTION_T_SET_INVINCIBILITY_HP_LEVEL_.2342"><span class="tocnumber">2.3.42</span> <span class="toctext">ACTION_T_SET_INVINCIBILITY_HP_LEVEL #42</span></a></li>
+<li class="toclevel-3 tocsection-74"><a href="#ACTION_T_SET_PHASE_MASK_.2397"><span class="tocnumber">2.3.43</span> <span class="toctext">ACTION_T_SET_PHASE_MASK #97</span></a></li>
+<li class="toclevel-3 tocsection-75"><a href="#ACTION_T_SET_STAND_STATE_.2398"><span class="tocnumber">2.3.44</span> <span class="toctext">ACTION_T_SET_STAND_STATE #98</span></a></li>
+<li class="toclevel-3 tocsection-76"><a href="#ACTION_T_MOVE_RANDOM_POINT_.2399"><span class="tocnumber">2.3.45</span> <span class="toctext">ACTION_T_MOVE_RANDOM_POINT #99</span></a></li>
+<li class="toclevel-3 tocsection-77"><a href="#ACTION_T_SET_VISIBILITY_.23100"><span class="tocnumber">2.3.46</span> <span class="toctext">ACTION_T_SET_VISIBILITY #100</span></a></li>
+<li class="toclevel-3 tocsection-78"><a href="#ACTION_T_SET_ACTIVE_.23101"><span class="tocnumber">2.3.47</span> <span class="toctext">ACTION_T_SET_ACTIVE #101</span></a></li>
+<li class="toclevel-3 tocsection-79"><a href="#ACTION_T_SET_AGGRESSIVE_.23102"><span class="tocnumber">2.3.48</span> <span class="toctext">ACTION_T_SET_AGGRESSIVE #102</span></a></li>
+<li class="toclevel-3 tocsection-80"><a href="#ACTION_T_ATTACK_START_PULSE_.23103"><span class="tocnumber">2.3.49</span> <span class="toctext">ACTION_T_ATTACK_START_PULSE #103</span></a></li>
+<li class="toclevel-3 tocsection-81"><a href="#ACTION_T_SUMMON_GO_.23104"><span class="tocnumber">2.3.50</span> <span class="toctext">ACTION_T_SUMMON_GO #104</span></a></li>
+</ul>
+</li>
+<li class="toclevel-2 tocsection-82"><a href="#Reference_Tables"><span class="tocnumber">2.4</span> <span class="toctext">Reference Tables</span></a>
+<ul>
+<li class="toclevel-3 tocsection-83"><a href="#Events"><span class="tocnumber">2.4.1</span> <span class="toctext">Events</span></a></li>
+<li class="toclevel-3 tocsection-84"><a href="#Actions"><span class="tocnumber">2.4.2</span> <span class="toctext">Actions</span></a></li>
+<li class="toclevel-3 tocsection-85"><a href="#Target_Types_.28T-Type.29"><span class="tocnumber">2.4.3</span> <span class="toctext">Target Types (T-Type)</span></a></li>
+<li class="toclevel-3 tocsection-86"><a href="#Cast_Flags"><span class="tocnumber">2.4.4</span> <span class="toctext">Cast Flags</span></a></li>
+<li class="toclevel-3 tocsection-87"><a href="#Condition_Type_.28Event_type_22.29"><span class="tocnumber">2.4.5</span> <span class="toctext">Condition Type (Event type 22)</span></a></li>
+<li class="toclevel-3 tocsection-88"><a href="#Event_Flags"><span class="tocnumber">2.4.6</span> <span class="toctext">Event Flags</span></a></li>
+<li class="toclevel-3 tocsection-89"><a href="#React_States"><span class="tocnumber">2.4.7</span> <span class="toctext">React States</span></a></li>
+<li class="toclevel-3 tocsection-90"><a href="#Unit_Visibility"><span class="tocnumber">2.4.8</span> <span class="toctext">Unit Visibility</span></a></li>
+<li class="toclevel-3 tocsection-91"><a href="#Unit_Stand_State"><span class="tocnumber">2.4.9</span> <span class="toctext">Unit Stand State</span></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-92"><a href="#Summary_for_the_meek"><span class="tocnumber">3</span> <span class="toctext">Summary for the meek</span></a></li>
+<li class="toclevel-1 tocsection-93"><a href="#Working_with_Phases"><span class="tocnumber">4</span> <span class="toctext">Working with Phases</span></a></li>
+<li class="toclevel-1 tocsection-94"><a href="#Quick_Phase_Reference"><span class="tocnumber">5</span> <span class="toctext">Quick Phase Reference</span></a></li>
+</ul>
+</td></tr></table>
+</div>
+<p><i>This Guide was originally put together by the ScriptDev2 project for MaNGOS.  Although some table names may have changed, most of the EventAI mechanics have had only minor adjustments since that time.  If you are using the guide in your development efforts, and find pieces that have been updated, please pass along your new information so that the guide can be brought into parity with the current codebase.  Thanks!</i>
+</p>
+<h3> <span class="mw-headline" id="Event_AI_Tables"> Event AI Tables  </span></h3>
+<ul><li> <a href="Creature_ai_scripts.html" title="Creature ai scripts">creature_ai_scripts</a> 
+</li><li> <a href="Creature_ai_summons.html" title="Creature ai summons">creature_ai_summons</a> 
+</li><li> <a href="Creature_ai_texts.html" title="Creature ai texts">creature_ai_texts</a> 
+</li><li> <a href="Texts_tables.html" title="Texts tables">custom_texts</a> 
+</li></ul>
+<h2> <span class="mw-headline" id="Event_AI_Guide"> Event AI Guide  </span></h2>
+<p><font color="white">(spacer)</font> 
+</p><p>If you have any questions regarding EventAI, please direct them <a rel="nofollow" class="external text" href="http://www.scriptdev2.com/eventai-core-development-f40.html"><b>Here</b></a>. Of course, it is a good idea to thoroughly study this guide <i>and</i> take a look at your own database tables before asking questions. If you're truly stumped by something, then come and ask a question. 
+</p><p><font color="white">(spacer)</font> 
+</p><p>Now on to the fun stuff... 
+</p><p>Starting with revision 220, ScriptDev2 has implemented a DB-based scripting design that allows the use of a database (MySQL only right now) to specify the actions that a creature script will do. The script is called eventAI and will be so called throughout the rest of this guide. A basic eventAI script works with and requires only two pieces of information: <u>What to do</u> and <u>When to do it</u>. The first piece of information (the What) will be referred to as the action. Currently, a single eventAI script entry can have up to three actions. The second piece of information (the When) will be referred to as the event. Anyone that wants to create entries for the eventAI script needs to answer the two questions above. Throughout the script's lifecycle, it will continually perform the actions given when a defined event happens. Some events will only occur once while others can be timed so that they occur at a specified interval. 
+</p><p>Now that the basic idea of the script has been explained, let's get down to the fun details. For convenience, reference tables will be provided at the end of this article that will contain short descriptions for fast lookup. Here will be included longer and more thorough descriptions. We shall first start out with what events are currently defined by the eventAI script. An event can use up to three different parameters and these parameters control different things depending on the event. If a parameter isn't specifically named for the event, it will not be used for that event. 
+</p><p>One more thing: event AI can support phases. A "phase" is just a way to group certain events + actions together so that the creature will perform certain actions based on what event it is currently on. The way the phase system works in event AI is that for every event added, it needs to be specified under which phases the event SHOULD NOT occur. This is a bit confusing at first, so let's look at it more closely. A creature can have more than one phase, up to a max of 32 different phases (with the first one being phase 0, and last one being phase 31). How the phase selection field works is that it contains a 32bit number. Each bit in the number represents a possible phase, with the bit in the least significant position signifying phase 0 and the most significant bit signifying phase 31. The default value of zero in this field has no bits set and since the field controls when the event should NOT trigger, it would then mean that the event will always be triggered independent of the current phase the creature is in. Therefore, if you want to specify what phases the event should occur in, you need to add up all of the corresponding bits for all the other phases where the event shouldn't trigger in (confusing...yes). 
+</p><p>For example, let's say that a certain creature using event AI will have a max of four phases. We are then dealing with a 4 bit number in this field. Let's further say that that certain creature has an event that will only trigger in its third phase (a timed spell cast for instance). Then the field should contain all of the phases the event SHOULDN'T be triggered in...then out of the four bits, we leave the third bit alone (off) and turn on all of the other bits so we get 1011 which is equal to 11, so we put in 11 as the inverse phase mask for the event entry. As another example, let's say that the same creature previously mentioned has another event that is only triggered in the first and fourth phases. This would mean that we need to ignore the second and third phases, so our bitmask would be 0110 which is equal to 6 so we put in 6 for this event's inverse phase mask field. Please note that both examples were tailored for a creature with four and only four phases. If you decide to add more phases later on, you will have to redefine all of the nonzero bitmasks for all of the mob's events. 
+</p><p>Every event also has a chance field that controls the chance of that event actually occurring. Using a value of 0 in this field will make the event never occur. Values are from 0 to 100. 
+</p><p><br /> 
+</p>
+<h3> <span class="mw-headline" id="Common_Questions"> Common Questions  </span></h3>
+<ul><li> My NPCs aren't executing their scripts in dungeons! 
+<ul><li> Scroll down this page nearly to the bottom until you reach "Event Flags" - You'll see that the event_flags field needs to have a 2 or a 3 added to it, depending on whether it's for a raid or a Heroic instance, respectively. Most people forget this, and it won't work without the extra 2 or 3 added to the value already in that field.
+</li></ul>
+</li></ul>
+<ul><li>Does something have to be hostile for it to interact with me? 
+<ul><li> No. It would be the first thought, as the most common type of event is 0, "In combat," but anything marked "OOC" ("Out of Combat") will work wonderfully for anything with faction 35. (friendly to everyone.) Look into event_type 1 and 10 for your solution.
+</li></ul>
+</li></ul>
+<ul><li> Can EventAI interact with Game Objects? 
+<ul><li> Not really. The closest anyone has come out of casual experience (At least since 8/9/09) is to cast a spell which has been reconfigured via the <a href="Scripts_tables.html" title="Scripts tables">Spell scripts</a> table. That may be possible. Check the spell_scripts table action type 11, 12, and 13. They may be what you are looking for.
+</li></ul>
+</li></ul>
+<p><br />
+</p>
+<h3> <span class="mw-headline" id="Event_Explanations"> Event Explanations  </span></h3>
+<h4> <span class="mw-headline" id="EVENT_T_TIMER_.230"> EVENT_T_TIMER #0 </span></h4>
+<p>COMBAT ONLY! - Expires first between (Param1) and (Param2) and then between every (Param3) and (Param4). 
+</p>
+<ul><li> Parameter 1: InitialMin 
+</li><li> Parameter 2: InitialMax 
+</li><li> Parameter 3: RepeatMin 
+</li><li> Parameter 4: RepeatMax
+</li></ul>
+<h4> <span class="mw-headline" id="EVENT_T_TIMER_OOC_.231"> EVENT_T_TIMER_OOC #1 </span></h4>
+<p>OUT OF COMBAT - Expires first between (Param1) and (Param2) and then between every (Param3) and (Param4). 
+</p>
+<ul><li> Parameter 1: InitialMin 
+</li><li> Parameter 2: InitialMax 
+</li><li> Parameter 3: RepeatMin 
+</li><li> Parameter 4: RepeatMax
+</li></ul>
+<h4> <span class="mw-headline" id="EVENT_T_HP_.232"> EVENT_T_HP #2 </span></h4>
+<p>Expires when HP is between (Param1) and (Param2). Will repeat every (Param3) and (Param4). 
+</p>
+<ul><li> Parameter 1: HPMax% (<b>Note:</b> <i>Max goes before Min here.</i> Don't get confused.) 
+</li><li> Parameter 2: HPMin% 
+</li><li> Parameter 3: RepeatMin 
+</li><li> Parameter 4: RepeatMax
+</li></ul>
+<h4> <span class="mw-headline" id="EVENT_T_MANA_.233"> EVENT_T_MANA #3 </span></h4>
+<p>Expires once Mana% is between (Param1) and (Param2). Will repeat every (Param3) and (Param4). 
+</p>
+<ul><li> Parameter 1: ManaMax% 
+</li><li> Parameter 2: ManaMin% 
+</li><li> Parameter 3: RepeatMin 
+</li><li> Parameter 4: RepeatMax
+</li></ul>
+<h4> <span class="mw-headline" id="EVENT_T_AGGRO_.234"> EVENT_T_AGGRO #4 </span></h4>
+<p>Expires upon initial aggro (does not repeat).
+</p>
+<h4> <span class="mw-headline" id="EVENT_T_KILL_.235"> EVENT_T_KILL #5 </span></h4>
+<p>Expires upon killing a player. Will repeat every (Param1) and (Param2). 
+</p>
+<ul><li> Parameter 1: RepeatMin 
+</li><li> Parameter 2: RepeatMax
+</li></ul>
+<h4> <span class="mw-headline" id="EVENT_T_DEATH_.236"> EVENT_T_DEATH #6 </span></h4>
+<p>Expires upon Death.
+</p>
+<h4> <span class="mw-headline" id="EVENT_T_EVADE_.237"> EVENT_T_EVADE #7 </span></h4>
+<p>Expires upon creature EnterEvadeMode().
+</p>
+<h4> <span class="mw-headline" id="EVENT_T_SPELLHIT_.238"> EVENT_T_SPELLHIT #8 </span></h4>
+<p>Expires upon Spell hit. If (param1) is set will only expire on that spell. If (param2) will only expire on spells of that school. Will repeat every (Param3) and (Param4) . 
+</p>
+<ul><li> Parameter 1: SpellID 
+</li><li> Parameter 2: School 
+</li><li> Parameter 3: RepeatMin 
+</li><li> Parameter 4: RepeatMax
+</li></ul>
+<h4> <span class="mw-headline" id="EVENT_T_RANGE_.239"> EVENT_T_RANGE #9 </span></h4>
+<p>Expires when the highest threat target distance is greater than (Param1) and less than (Param2). Will repeat every (Param3) and (Param4) . 
+</p>
+<ul><li> Parameter 1: MinDist 
+</li><li> Parameter 2: MaxDist 
+</li><li> Parameter 3: RepeatMin 
+</li><li> Parameter 4: RepeatMax
+</li></ul>
+<h4> <span class="mw-headline" id="EVENT_T_OOC_LOS_.2310"> EVENT_T_OOC_LOS #10 </span></h4>
+<p>Expires when a unit moves within distance (MaxAllowedRange) of a creature. If (Param1) is zero it will expire only when unit is hostile, friendly otherwise (Param1 = 1), depends generally on faction. Will repeat every (Param3) and (Param4). Does not expire when the creature is in combat. 
+</p>
+<ul><li> Parameter 1: Hostile-or-Not 
+</li><li> Parameter 2: MaxAllowedRange 
+</li><li> Parameter 3: RepeatMin 
+</li><li> Parameter 4: RepeatMax
+</li></ul>
+<h4> <span class="mw-headline" id="EVENT_T_SPAWNED_.2311"> EVENT_T_SPAWNED #11 </span></h4>
+<p>Expires at initial spawn and at creature respawn (useful for setting ranged movement type)
+</p>
+<h4> <span class="mw-headline" id="EVENT_T_TARGET_HP_.2312"> EVENT_T_TARGET_HP #12 </span></h4>
+<p>Expires when Current Target's HP is between (Param1) and (Param2). Will repeat every (Param3) and (Param4) . 
+</p>
+<ul><li> Parameter 1: HPMax% 
+</li><li> Parameter 2: HPMin% 
+</li><li> Parameter 3: RepeatMin 
+</li><li> Parameter 4: RepeatMax
+</li></ul>
+<h4> <span class="mw-headline" id="EVENT_T_TARGET_CASTING_.2313"> EVENT_T_TARGET_CASTING #13 </span></h4>
+<p>Expires when the player is casting a spell. Will repeat every (Param1) and (Param2) . 
+</p>
+<ul><li> Parameter 1: RepeatMin 
+</li><li> Parameter 2: RepeatMax
+</li></ul>
+<h4> <span class="mw-headline" id="EVENT_T_FRIENDLY_HP_.2314"> EVENT_T_FRIENDLY_HP #14 </span></h4>
+<p>Expires when a friendly unit in radius(param2) has at least (param1) hp missing. Will repeat every (Param3) and (Param4) . 
+</p>
+<ul><li> Parameter 1: HPDeficit 
+</li><li> Parameter 2: Radius 
+</li><li> Parameter 3: RepeatMin 
+</li><li> Parameter 4: RepeatMax
+</li></ul>
+<h4> <span class="mw-headline" id="EVENT_T_FRIENDLY_IS_CC_.2315"> EVENT_T_FRIENDLY_IS_CC #15 </span></h4>
+<p>Expires when a friendly unit is Crowd controlled within the given radius (param2). Will repeat every (Param3) and (Param4) . 
+</p>
+<ul><li> Parameter 1: DispelType 
+</li><li> Parameter 2: Radius 
+</li><li> Parameter 3: RepeatMin 
+</li><li> Parameter 4: RepeatMax
+</li></ul>
+<h4> <span class="mw-headline" id="EVENT_T_MISSING_BUFF_.2316"> EVENT_T_MISSING_BUFF #16 </span></h4>
+<p>Expires when a friendly unit is missing aura's given by spell (param1) within radius (param2). Will repeat every (Param3) and (Param4) . 
+</p>
+<ul><li> Parameter 1: SpellId 
+</li><li> Parameter 2: Radius 
+</li><li> Parameter 3: RepeatMin 
+</li><li> Parameter 4: RepeatMax
+</li></ul>
+<h4> <span class="mw-headline" id="EVENT_T_SUMMONED_UNIT_.2317"> EVENT_T_SUMMONED_UNIT #17 </span></h4>
+<p>Expires after creature with entry(Param1) is spawned or for all spawns if param1 = 0. Will repeat every (Param2) and (Param3) . 
+</p>
+<ul><li> Parameter 1: CreatureId 
+</li><li> Parameter 2: RepeatMin 
+</li><li> Parameter 3: RepeatMax
+</li></ul>
+<ul><li> <b>18 = EVENT_T_TARGET_MANA</b>: 
+</li><li> Parameter 1: ManaMax% 
+</li><li> Parameter 2: ManaMin% 
+</li><li> Parameter 3: RepeatMin 
+</li><li> Parameter 4: RepeatMax
+</li></ul>
+<h4> <span class="mw-headline" id="EVENT_T_REACHED_HOME_.2321"> EVENT_T_REACHED_HOME #21 </span></h4>
+<p>Expires when creature reach it's home(spawn) location after Evade.
+</p>
+<h4> <span class="mw-headline" id="EVENT_T_RECEIVE_EMOTE_.2322"> EVENT_T_RECEIVE_EMOTE #22 </span></h4>
+<p>Expires when creature receive emote with text emote id(enum TextEmotes). Condition can be defined. If set, then most conditions has additional value <font color="blue">(see table enum ConditionType below.)</font> 
+</p>
+<ul><li> Parameter 1: EmoteId 
+</li><li> Parameter 2: Condition 
+</li><li> Parameter 3: CondValue1 
+</li><li> Parameter 4: CondValue2
+</li></ul>
+<h4> <span class="mw-headline" id="EVENT_T_BUFFED_.2323"> EVENT_T_BUFFED #23 </span></h4>
+<p>Expires when creature have spell (Param1) auras applied stack greater or equal provided in Param2 amount. Will repeat every (Param3) and (Param4). 
+</p>
+<ul><li> Parameter 1: SpellId 
+</li><li> Parameter 2: AmmountInStack 
+</li><li> Parameter 3: RepeatMin 
+</li><li> Parameter 4: RepeatMax
+</li></ul>
+<h4> <span class="mw-headline" id="EVENT_T_TARGET_BUFFED_.2324"> EVENT_T_TARGET_BUFFED #24 </span></h4>
+<p>Expires when target unit have spell (Param1) auras applied stack greater or equal provided in (Param2) amount. Will repeat every (Param3) and (Param4). 
+</p>
+<ul><li> Parameter 1: SpellId 
+</li><li> Parameter 2: AmmountInStack 
+</li><li> Parameter 3: RepeatMin 
+</li><li> Parameter 4: RepeatMax
+</li></ul>
+<h4> <span class="mw-headline" id="EVENT_T_SUMMONED_JUST_DIED_.2325"> EVENT_T_SUMMONED_JUST_DIED #25 </span></h4>
+<p>Expires after creature with entry = (Param1) dies. Expires for all spawns if (Param1) = 0. Will repeat every (Param2) and (Param3). 
+</p>
+<ul><li> Parameter 1: CreatureId 
+</li><li> Parameter 2: RepeatMin 
+</li><li> Parameter 3: RepeatMax
+</li></ul>
+<h4> <span class="mw-headline" id="EVENT_T_SUMMONED_JUST_DESPAWN_.2326"> EVENT_T_SUMMONED_JUST_DESPAWN #26 </span></h4>
+<p>Expires before creature with entry = (Param1) is despawned. Expires for all spawns if (Param1) = 0. Will repeat every (Param2) and (Param3). 
+</p>
+<ul><li> Parameter 1: CreatureId 
+</li><li> Parameter 2: RepeatMin 
+</li><li> Parameter 3: RepeatMax
+</li></ul>
+<h4> <span class="mw-headline" id="EVENT_T_MISSING_AURA_.2327"> EVENT_T_MISSING_AURA #27 </span></h4>
+<p>Expires if spell in (Param1) is missing from caster. Will stack up to (Param2) times. Will repeat every (Param3) and (Param4). 
+</p>
+<ul><li> Parameter 1: SpellId 
+</li><li> Parameter 2: Expected times spell will stack 
+</li><li> Parameter 3: RepeatMin
+</li><li> Parameter 4: RepeatMax
+</li></ul>
+<h4> <span class="mw-headline" id="EVENT_T_TARGET_MISSING_AURA_.2328"> EVENT_T_TARGET_MISSING_AURA #28 </span></h4>
+<p>Expires if spell in (Param1) is missing from target. Will stack up to (Param2) times. Will repeat every (Param3) and (Param4). 
+</p>
+<ul><li> Parameter 1: SpellId 
+</li><li> Parameter 2: Expected times spell will stack 
+</li><li> Parameter 3: RepeatMin
+</li><li> Parameter 4: RepeatMax
+</li></ul>
+<p><br /> Now that all of the supported events have been listed and described, we shall now move on to the actions that can be performed. Each event can take up to three actions. The actions will all be performed when the event is triggered and they will be performed in the order that they have been defined. This means that, for a certain event, action 1 will be performed first, followed by action 2, then lastly by action 3. Just like event definitions, each action can use up to three different parameters but not all actions will use all three parameters. If a parameter isn't mentioned for an action, then that action does not need that parameter. 
+</p><p>Before we start to list and explain the different actions that can be taken, we must first look at how the eventAI targeting system works. Due to technical reasons in how targetting is handled, the eventAI script cannot target anything or anyone that is not in its threat list or is not the scripted creature itself. It also can't currently target anyone specific in its threat list except by their position in the threat list. However, even then it can only target specifically the current victim, the second unit in its threat list, and the last unit in its threat list. It can also target units in its threat list at random and has two options for that: anyone in its threat list at random, or anyone in its threat list excluding the unit with the most threat. Aside from all of those external targets, the script can always target itself. More information on the target types can be found in the reference tables at the end of this guide. 
+</p><p>One last note before we start looking at individual actions is about the texts. The eventAI script has support for localized text entries. Therefore, you can define what the mob will say in more than one language all in another table and the script will show the corresponding localized text to the corresponding client (english text to enUS/enGB clients, german text to deDE clients, etc). All of the localized text entries will have a unique text ID assigned to them and it is that text ID that will be used by any actions that require textual input.
+</p>
+<h3> <span class="mw-headline" id="Action_Explanations"> Action Explanations  </span></h3>
+<hr />
+<h4> <span class="mw-headline" id="ACTION_T_NONE_.230"> ACTION_T_NONE #0 </span></h4>
+<p>Does nothing!
+</p>
+<h4> <span class="mw-headline" id="ACTION_T_SAY_.231"> ACTION_T_SAY #1 </span></h4>
+<p>Displays the -TextId as defined. In case -TextId2 and optionally -TextId3, the output will be randomized. Type text are defined in the <a href="Creature_ai_texts.html" title="Creature ai texts">eventai_texts</a> table (say, yell, whisper, etc) along with other options for the text. All values are required to be negative. 
+</p>
+<ul><li> Parameter 1: The entry of the text that the NPC should use from <a href="Creature_ai_texts.html" title="Creature ai texts">eventai_texts</a> table. Optionally an entry from other tables can be used (such as <a href="Texts_tables.html" title="Texts tables">custom_texts</a>).Entry are required to be negative and exist in a * _texts-table. The type text to be displayed are defined in the texts-table itself (Say, Yell, Whisper, Emote Text, Boss Whisper, Boss Emote)Other options are also to be defined in the texts-table, such as a sound to be heard with the text and the language used in output (common, dwarvish, etc).In case this entry has a localized version of the text, the localized text will be displayed in client that support this locale. 
+</li><li> Parameter 2: Optional. TextId can be defined in addition. The same apply to this as explained above, however eventAI will randomize between the two. 
+</li><li> Parameter 3: Optional, if Parameter 2 exist. In this case, eventAI will randomize between three.
+</li></ul>
+<h4> <span class="mw-headline" id="ACTION_T_SET_FACTION_.232"> ACTION_T_SET_FACTION #2 </span></h4>
+<p>Change faction for creature. 
+</p>
+<ul><li> Parameter 1: FactionId of the desired faction. If param1==0, creature will revert to default faction. 
+</li></ul>
+<h4> <span class="mw-headline" id="ACTION_T_MORPH_TO_ENTRY_OR_MODEL_.233"> ACTION_T_MORPH_TO_ENTRY_OR_MODEL #3 </span></h4>
+<p>Set model from creature_template.entry(param1) OR set explicit modelId(param2). If param1 AND param2 both 0, demorph and revert to default model for creature.
+</p>
+<ul><li> Parameter 1: CreatureEntry of the npc. 
+</li><li> Parameter 2: ModelId that needs to be changed to.
+</li></ul>
+<h4> <span class="mw-headline" id="ACTION_T_SOUND_.234"> ACTION_T_SOUND #4 </span></h4>
+<p>When activated, the creature will play the specified sound. 
+</p>
+<ul><li> Parameter 1: The sound ID to be played. Sound IDs are contained in the DBC files.
+</li></ul>
+<h4> <span class="mw-headline" id="ACTION_T_EMOTE_.235"> ACTION_T_EMOTE #5 </span></h4>
+<p>When activated, the creature will perform a visual emote. Unlike a text emote, a visual emote is one where the creature will actually move or perform a gesture. 
+</p>
+<ul><li> Parameter 1: The emote ID that the creature should perform. Emote IDs are also contained in the DBC but they can be found in the HellGroundCore source as well.
+</li></ul>
+<h4> <span class="mw-headline" id="ACTION_T_RANDOM_SAY_.236"> ACTION_T_RANDOM_SAY #6 </span></h4>
+<p>UNUSED
+</p>
+<h4> <span class="mw-headline" id="ACTION_T_RANDOM_YELL_.237"> ACTION_T_RANDOM_YELL #7 </span></h4>
+<p>UNUSED
+</p>
+<h4> <span class="mw-headline" id="ACTION_T_RANDOM_TEXTEMOTE_.238"> ACTION_T_RANDOM_TEXTEMOTE #8 </span></h4>
+<p>UNUSED
+</p>
+<h4> <span class="mw-headline" id="ACTION_T_RANDOM_SOUND_.239"> ACTION_T_RANDOM_SOUND #9 </span></h4>
+<p>Similar to the ACTION_T_SOUND action, when this action is activated, it will choose at random a sound to play. This action needs all three parameters to be filled and it will pick a random entry from the three. NOTE: (1) 
+</p>
+<ul><li> Parameter 1: The sound ID to be played as choice one. 
+</li><li> Parameter 2: The sound ID to be played as choice two. 
+</li><li> Parameter 3: The sound ID to be played as choice three.
+</li></ul>
+<h4> <span class="mw-headline" id="ACTION_T_RANDOM_EMOTE_.2310"> ACTION_T_RANDOM_EMOTE #10 </span></h4>
+<p>Similar to the ACTION_T_EMOTE action, when this action is activated, it will choose at random an emote ID to emote visually. This action needs all three parameters to be filled and it will pick a random entry from the three. NOTE: (1) 
+</p>
+<ul><li> Parameter 1: The emote ID that the creature should perform as choice one. 
+</li><li> Parameter 2: The emote ID that the creature should perform as choice two. 
+</li><li> Parameter 3: The emote ID that the creature should perform as choice three.
+</li></ul>
+<h4> <span class="mw-headline" id="ACTION_T_CAST_.2311"> ACTION_T_CAST #11 </span></h4>
+<p>When activated, the creature will cast a spell specified by a spell ID on a target specified by the target type. 
+</p>
+<ul><li> Parameter 1: The spell ID to use for the cast. The value used in this field needs to be a valid spell ID. 
+</li><li> Parameter 2: The target type defining who the creature should cast on. The value in this field needs to be a valid target type as specified in the reference tables below. 
+</li><li> Parameter 3: This field can only be 0 or 1. If it is 1, then the spell cast will interrupt any spells that are already in the progress of being casted; otherwise if the creature is already casting a spell and this field is 0, then this action will be skipped.
+</li></ul>
+<h4> <span class="mw-headline" id="ACTION_T_SUMMON_.2312"> ACTION_T_SUMMON #12 </span></h4>
+<p>When activated, the creature will summon another creature at the same spot as itself that will attack the specified target. 
+</p>
+<ul><li> Parameter 1: The creature template ID to be summoned. The value here needs to be a valid creature template ID. 
+</li><li> Parameter 2: The target type defining who the summoned creature will attack. The value in this field needs to be a valid target type as specified in the reference tables below. NOTE: Using target type 0 will cause the summoned creature to not attack anyone. 
+</li><li> Parameter 3: The duration until the summoned creature should be unsummoned. The value in this field is in milliseconds or 0. If zero, then the creature will not be unsummoned until it leaves combat.
+</li></ul>
+<h4> <span class="mw-headline" id="ACTION_T_THREAT_SINGLE_PCT_.2313"> ACTION_T_THREAT_SINGLE_PCT #13 </span></h4>
+<p>When activated, this action will modify the threat of a target in the creature's threat list by the specified percent. 
+</p>
+<ul><li> Parameter 1: Threat percent that should be modified. The value in this field can range from -100 to +100. If it is negative, threat will be taken away and if positive, threat will be added. 
+</li><li> Parameter 2: The target type defining on whom the threat change should occur. The value in this field needs to be a valid target type as specified in the reference tables below.
+</li></ul>
+<h4> <span class="mw-headline" id="ACTION_T_THREAT_ALL_PCT_.2314"> ACTION_T_THREAT_ALL_PCT #14 </span></h4>
+<p>When activated, this action will modify the threat for everyone in the creature's threat list by the specified percent. 
+</p>
+<ul><li> Parameter 1: The percent that should be used in modifying everyone's threat in the creature's threat list. The value here can range from -100 to +100. NOTE: Using -100 will cause the creature to reset everyone's threat to 0 so that everyone has the same amount of threat. It does NOT make any changes as to who is in the threat list.
+</li></ul>
+<h4> <span class="mw-headline" id="ACTION_T_QUEST_EVENT_.2315"> ACTION_T_QUEST_EVENT #15 </span></h4>
+<p>When activated, this action will satisfy the external completion requirement for the quest for the specified target defined by the target type. This action can only be used with player targets so it must be ensured that the target type will point to a player. 
+</p>
+<ul><li> Parameter 1: The quest template ID. The value here must be a valid quest template ID. Furthermore, the quest should have SpecialFlags | 2 as it would need to be completed by an external event which is the activation of this action. 
+</li><li> Parameter 2: The target type defining whom the quest should be completed for. The value in this field needs to be a valid target type as specified in the reference tables below.
+</li></ul>
+<h4> <span class="mw-headline" id="ACTION_T_CASTCREATUREGO_.2316"> ACTION_T_CASTCREATUREGO #16 </span></h4>
+<p>When activated, this action will call CastedCreatureOrGO() function for the player. It can be used to give quest credit for casting a spell on the creature. 
+</p>
+<ul><li> Parameter 1: The quest template ID. The value here must be a valid quest template ID. 
+</li><li> Parameter 2: The spell ID to use to simulate the cast. The value used in this field needs to be a valid spell ID. 
+</li><li> Parameter 3: The target type defining whom the quest credit should be given to. The value in this field needs to be a valid target type as specified in the reference tables below.
+</li></ul>
+<h4> <span class="mw-headline" id="ACTION_T_SET_UNIT_FIELD_.2317"> ACTION_T_SET_UNIT_FIELD #17 </span></h4>
+<p>When activated, this action can change the target's unit field values. More information on the field value indexes can be found at <a href="Description_of_the_data_field_in_the_%60characters%60_table.html" title="Description of the data field in the `characters` table">Character data</a>. 
+</p>
+<ul><li> Parameter 1: The index of the field number to be changed. Use <a href="Description_of_the_data_field_in_the_%60characters%60_table.html" title="Description of the data field in the `characters` table">Character data</a> for a list of indexes and what they control. Note that a creature shares the same indexes with a player except for the PLAYER_*  ones. 
+</li><li> Parameter 2: The new value to be put in the field. 
+</li><li> Parameter 3: The target type defining for whom the unit field should be changed. The value in this field needs to be a valid target type as specified in the reference tables below.
+</li></ul>
+<h4> <span class="mw-headline" id="ACTION_T_SET_UNIT_FLAG_.2318"> ACTION_T_SET_UNIT_FLAG #18 </span></h4>
+<p>When activated, this action changes the target's flags by adding (turning on) more flags. For example, this action can make the creature unattackable/unselectable if the right flags are used. 
+</p>
+<ul><li> Parameter 1: The flag(s) to be set. Multiple flags can be set by using bitwise-OR on them (adding them together). 
+</li><li> Parameter 2: The target type defining for whom the flags should be changed. The value in this field needs to be a valid target type as specified in the reference tables below.
+</li></ul>
+<h4> <span class="mw-headline" id="ACTION_T_REMOVE_UNIT_FLAG_.2319"> ACTION_T_REMOVE_UNIT_FLAG #19 </span></h4>
+<p>When activated, this action changes the target's flags by removing (turning off) flags. For example, this action can make the creature normal after it was unattackable/unselectable if the right flags are used. 
+</p>
+<ul><li> Parameter 1: The flag(s) to be removed. Multiple flags can be set by using bitwise-OR on them (adding them together). 
+</li><li> Parameter 2: The target type defining for whom the flags should be changed. The value in this field needs to be a valid target type as specified in the reference tables below.
+</li></ul>
+<h4> <span class="mw-headline" id="ACTION_T_AUTO_ATTACK_.2320"> ACTION_T_AUTO_ATTACK #20 </span></h4>
+<p>This action controls whether or not the creature should stop or start the auto melee attack. 
+</p>
+<ul><li> Parameter 1: If zero, then the creature will stop its melee attacks. If non-zero, then the creature will either continue its melee attacks (the action would then have no effect) or it will start its melee attacks on the target with the top threat if its melee attacks were previously stopped.
+</li></ul>
+<h4> <span class="mw-headline" id="ACTION_T_COMBAT_MOVEMENT_.2321"> ACTION_T_COMBAT_MOVEMENT #21 </span></h4>
+<p>This action controls whether or not the creature will always move towards its target. 
+</p>
+<ul><li> Parameter 1: If zero, then the creature will stop moving towards its victim (if its victim gets out of melee range) and will be stationary. If non-zero, then the creature will either continue to follow its victim (the action would have no effect) or it will start to follow the target with the top threat if its movement was disabled before. 
+</li><li> Parameter 2: If non-zero and creature in combat, then stop melee combat state (if Param1 = 0) or start melee combat state (if Param1&#160;!= 0) will be sent.
+</li></ul>
+<h4> <span class="mw-headline" id="ACTION_T_SET_PHASE_.2322"> ACTION_T_SET_PHASE #22 </span></h4>
+<p>When activated, this action sets the creature's event to the specified value. 
+</p>
+<ul><li> Parameter 1: The new phase to set the creature in. This number must be an integer between 0 and 31 inclusive.
+</li></ul>
+<h4> <span class="mw-headline" id="ACTION_T_INC_PHASE_.2323"> ACTION_T_INC_PHASE #23 </span></h4>
+<p>When activated, this action will increase (or decrease) the current creature's phase. 
+</p>
+<ul><li> Parameter 1: The number of phases to increase or decrease. Use negative values to decrease the current phase. After increasing or decreasing the phase by this action, the current phase must not be lower than 0 or exceed 31.
+</li></ul>
+<h4> <span class="mw-headline" id="ACTION_T_EVADE_.2324"> ACTION_T_EVADE #24 </span></h4>
+<p>When activated, the creature will immediately exit out of combat, clear its threat list, and move back to its spawn point. Basically, this action will reset the whole encounter.
+</p>
+<h4> <span class="mw-headline" id="ACTION_T_FLEE_.2325"> ACTION_T_FLEE #25 </span></h4>
+<p>When activated, the creature will try to flee from combat. Currently this is done by it casting a fear-like spell on itself called "Run Away".
+</p>
+<h4> <span class="mw-headline" id="ACTION_T_QUEST_EVENT_ALL_.2326"> ACTION_T_QUEST_EVENT_ALL #26 </span></h4>
+<p>This action does the same thing as the ACTION_T_QUEST_EVENT does but it does it for all players in the creature's threat list. Note that if a player is not in its threat list for whatever reason, he/she won't get the quest completed. 
+</p>
+<ul><li> Parameter 1: The quest ID to finish for everyone.
+</li></ul>
+<h4> <span class="mw-headline" id="ACTION_T_CASTCREATUREGO_ALL_.2327"> ACTION_T_CASTCREATUREGO_ALL #27 </span></h4>
+<p>This action does the same thing as the ACTION_T_CASTCREATUREGO does but it does it for all players in the creature's threat list. Note that if a player is not in its threat list for whatever reason, he/she won't receive the cast emulation. 
+</p>
+<ul><li> Parameter 1: The quest template ID. 
+</li><li> Parameter 2: The spell ID used to simulate the cast.
+</li></ul>
+<h4> <span class="mw-headline" id="ACTION_T_REMOVEAURASFROMSPELL_.2328"> ACTION_T_REMOVEAURASFROMSPELL #28 </span></h4>
+<p>This action will remove all auras from a specific spell from the target. 
+</p>
+<ul><li> Parameter 1: The target type defining for whom the unit field should be changed. The value in this field needs to be a valid target type as specified in the reference tables below. 
+</li><li> Parameter 2: The spell ID whose auras will be removed.
+</li></ul>
+<h4> <span class="mw-headline" id="ACTION_T_RANGED_MOVEMENT_.2329"> ACTION_T_RANGED_MOVEMENT #29 </span></h4>
+<p>This action changes the movement type generator to ranged type using the specified values for angle and distance. Note that specifying zero angle and distance will make it just melee instead. 
+</p>
+<ul><li> Parameter 1: The distance the mob should keep between it and its target. 
+</li><li> Parameter 2: The angle the mob should use.
+</li></ul>
+<h4> <span class="mw-headline" id="ACTION_T_RANDOM_PHASE_.2330"> ACTION_T_RANDOM_PHASE #30 </span></h4>
+<p>Randomly sets the phase to one from the three parameter choices. NOTE: (1) 
+</p>
+<ul><li> Parameter 1: A possible random phase choice. 
+</li><li> Parameter 2: A possible random phase choice. 
+</li><li> Parameter 3: A possible random phase choice.
+</li></ul>
+<h4> <span class="mw-headline" id="ACTION_T_RANDOM_PHASE_RANGE_.2331"> ACTION_T_RANDOM_PHASE_RANGE #31 </span></h4>
+<p>Randomly sets the phase between a range of phases controlled by the parameters. 
+</p>
+<ul><li> Parameter 1: The minimum of the phase range. 
+</li><li> Parameter 2: The maximum of the phase range. The number here must be greater than the one in parameter 1.
+</li></ul>
+<h4> <span class="mw-headline" id="ACTION_T_SUMMON_.2332"> ACTION_T_SUMMON #32 </span></h4>
+<p>Summons a creature using the data specified in the separate summons table. 
+</p>
+<ul><li> Parameter 1: The creature template ID to be summoned. The value here needs to be a valid creature template ID. 
+</li><li> Parameter 2: The target type defining who the summoned creature will attack. The value in this field needs to be a valid target type as specified in the reference tables below. NOTE: Using target type 0 will cause the summoned creature to not attack anyone. 
+</li><li> Parameter 3: The summon ID from the eventai_summons table controlling the position (and spawntime) where the summoned mob should be spawned at.
+</li></ul>
+<h4> <span class="mw-headline" id="ACTION_T_KILLED_MONSTER_.2333"> ACTION_T_KILLED_MONSTER #33 </span></h4>
+<p>When activated, this action will call KilledMonster() function for the player. It can be used to give creature credit for killing a creature (note that it can be ANY creature including certain quest specific triggers). In general if the quest is set to be accompished on different creatures (e.g. "Credit" templates). 
+</p>
+<ul><li> Parameter 1: The creature template ID. The value here must be a valid creature template ID. 
+</li><li> Parameter 2: The target type defining whom the quest kill count should be given to. The value in this field needs to be a valid target type as specified in the reference tables below.
+</li></ul>
+<h4> <span class="mw-headline" id="ACTION_T_SET_INST_DATA_.2334"> ACTION_T_SET_INST_DATA #34 </span></h4>
+<p>Sets data for the instance. Note that this will only work when the creature is inside an instantiable zone that has a valid script (ScriptedInstance) assigned. 
+</p>
+<ul><li> Parameter 1: The field to change in the instance script. Again, this field needs to be a valid field that has been already defined in the instance's script. 
+</li><li> Parameter 2: The value to put at that field index. The number here must be a valid 32 bit number.
+</li></ul>
+<ul><li> <b>35 = ACTION_T_SET_INST_DATA64</b>: Sets GUID (64 bits) data for the instance based on the target. Note that this will only work when the creature is inside an instantiable zone that has a valid script (ScriptedInstance) assigned. 
+</li><li> Parameter 1: The field to change in the instance script. Again, this field needs to be a valid field that has been already defined in the instance's script. 
+</li><li> Parameter 2: The target type to use to get the GUID that will be stored at the field index. The value in this field needs to be a valid target type as specified in the reference tables below.
+</li></ul>
+<h4> <span class="mw-headline" id="ACTION_T_UPDATE_TEMPLATE_.2336"> ACTION_T_UPDATE_TEMPLATE #36 </span></h4>
+<p>This function temporarily changes creature entry to new entry, display is changed, loot is changed, but AI is not changed. At respawn creature will be reverted to original entry. 
+</p>
+<ul><li> Parameter 1: The creature template ID. The value here must be a valid creature template ID. 
+</li><li> Parameter 2: Use model_id from team&#160;: Alliance(0) or Horde (1).
+</li></ul>
+<h4> <span class="mw-headline" id="ACTION_T_DIE_.2337"> ACTION_T_DIE #37 </span></h4>
+<p>Kills the creature
+</p>
+<h4> <span class="mw-headline" id="ACTION_T_ZONE_COMBAT_PULSE_.2338"> ACTION_T_ZONE_COMBAT_PULSE #38 </span></h4>
+<p>Places all players within the instance into combat with the creature. Only works in combat and only works inside of instances.
+</p>
+<h4> <span class="mw-headline" id="ACTION_T_CALL_FOR_HELP_.2339"> ACTION_T_CALL_FOR_HELP #39 </span></h4>
+<p>Call any friendly creatures (if its not in combat/etc) in radius attack creature target. 
+</p>
+<ul><li> Parameter 1: Radius from creature.
+</li></ul>
+<h4> <span class="mw-headline" id="ACTION_T_SET_SHEATH_.2340"> ACTION_T_SET_SHEATH #40 </span></h4>
+<p>Let set sheath state for creature (0-no weapon show (not used mostly by creatures), 1-melee weapon show, 2-ranged weapon show) 
+</p>
+<ul><li> Parameter 1: Sheath state of the creature.
+</li></ul>
+<h4> <span class="mw-headline" id="ACTION_T_FORCE_DESPAWN_.2341"> ACTION_T_FORCE_DESPAWN #41 </span></h4>
+<p>Despawns the creature.
+</p>
+<h4> <span class="mw-headline" id="ACTION_T_SET_INVINCIBILITY_HP_LEVEL_.2342"> ACTION_T_SET_INVINCIBILITY_HP_LEVEL #42 </span></h4>
+<p>Sets minimum health level that NPC can reach (NPC will not go below this value) 
+</p>
+<ul><li> Parameter 1: Minimum health level. 
+</li><li> Parameter 2: Format of Parameter 1. If (Param2) == 0, (Param1) means exact HP value. Otherwise (Param1) means percent (0 - 100) of creature's max HP.
+</li></ul>
+<h4> <span class="mw-headline" id="ACTION_T_SET_PHASE_MASK_.2397"> ACTION_T_SET_PHASE_MASK #97 </span></h4>
+<p>Makes the npc enter in a phase_mask. The phase_mask can be taken from spells. For example, a spell who have (Aura #261) (4) = phasemask = 4 
+</p>
+<ul><li> Parameter 1: Phase Mask.
+</li></ul>
+<h4> <span class="mw-headline" id="ACTION_T_SET_STAND_STATE_.2398"> ACTION_T_SET_STAND_STATE #98 </span></h4>
+<p>Changes the NPC's Stand State. 
+</p>
+<ul><li> Parameter 1: Stand State.
+</li></ul>
+<h4> <span class="mw-headline" id="ACTION_T_MOVE_RANDOM_POINT_.2399"> ACTION_T_MOVE_RANDOM_POINT #99 </span></h4>
+<p>Moves the NPC to a random point. 
+</p>
+<ul><li> Parameter 1: Radius. Determines the range in which the random point can be.
+</li></ul>
+<h4> <span class="mw-headline" id="ACTION_T_SET_VISIBILITY_.23100"> ACTION_T_SET_VISIBILITY #100 </span></h4>
+<p>Changes the NPC's visibility. 
+</p>
+<ul><li> Parameter 1: Visibility State.
+</li></ul>
+<h4> <span class="mw-headline" id="ACTION_T_SET_ACTIVE_.23101"> ACTION_T_SET_ACTIVE #101 </span></h4>
+<p>Changes the NPC's active state. 
+</p>
+<ul><li> Parameter 1: Active.
+</li></ul>
+<h4> <span class="mw-headline" id="ACTION_T_SET_AGGRESSIVE_.23102"> ACTION_T_SET_AGGRESSIVE #102 </span></h4>
+<p>Changes the NPC's react state. 
+</p>
+<ul><li> Parameter 1: React State. Can be Aggressive, Passive or Defensive.
+</li></ul>
+<h4> <span class="mw-headline" id="ACTION_T_ATTACK_START_PULSE_.23103"> ACTION_T_ATTACK_START_PULSE #103 </span></h4>
+<p>Starts attacking nearest target in given radius 
+</p>
+<ul><li> Parameter 1: Radius.
+</li></ul>
+<h4> <span class="mw-headline" id="ACTION_T_SUMMON_GO_.23104"> ACTION_T_SUMMON_GO #104 </span></h4>
+<p>Summons a GO at the current NPC's position. 
+</p>
+<ul><li> Parameter 1: GO Entry. 
+</li><li> Parameter 2: Despawn Time.
+</li></ul>
+<p><br /> (1) = Use -1 to specify that if this param is picked to do nothing. Random is constant between actions within an event. So if you have a random Yell and a random Sound they will match up (ex: param2 with param2)
+</p>
+<h3> <span class="mw-headline" id="Reference_Tables"> Reference Tables  </span></h3>
+<p>All of the events, actions, and target types are summarized in tabular format for convenience purposes and fast lookup. NU = Not Used; * - optional 
+</p>
+<h4> <span class="mw-headline" id="Events"> Events </span></h4>
+<table class="wikitable">
+
+<tr>
+<th> ID
+</th>
+<th> Name
+</th>
+<th> Param 1
+</th>
+<th> Param 2
+</th>
+<th> Param 3
+</th>
+<th> Param 4
+</th>
+<th> Description
+</th></tr>
+<tr>
+<td> 0
+</td>
+<td> EVENT_T_TIMER
+</td>
+<td> InitialMin
+</td>
+<td> InitialMax
+</td>
+<td> RepeatMin
+</td>
+<td> RepeatMax
+</td>
+<td> COMBAT ONLY - Expires first between (Param1) and (Param2) and then between every (Param3) and (Param4).
+</td></tr>
+<tr>
+<td> 1
+</td>
+<td> EVENT_T_TIMER_OOC
+</td>
+<td> InitialMin
+</td>
+<td> InitialMax
+</td>
+<td> RepeatMin
+</td>
+<td> RepeatMax
+</td>
+<td> OUT OF COMBAT - Expires first between (Param1) and (Param2) and then between every (Param3) and (Param4).
+</td></tr>
+<tr>
+<td> 2
+</td>
+<td> EVENT_T_HP
+</td>
+<td> HPMax%
+</td>
+<td> HPMin%
+</td>
+<td> RepeatMin
+</td>
+<td> RepeatMax
+</td>
+<td> Expires when HP is between (Param1) and (Param2). Will repeat every (Param3) and (Param4).
+</td></tr>
+<tr>
+<td> 3
+</td>
+<td> EVENT_T_MANA
+</td>
+<td> ManaMax%
+</td>
+<td> ManaMin%
+</td>
+<td> RepeatMin
+</td>
+<td> RepeatMax
+</td>
+<td> Expires once Mana% is between (Param1) and (Param2). Will repeat every (Param3) and (Param4).
+</td></tr>
+<tr>
+<td> 4
+</td>
+<td> EVENT_T_AGGRO
+</td>
+<td> n/a
+</td>
+<td> n/a
+</td>
+<td> n/a
+</td>
+<td> n/a
+</td>
+<td> Expires upon initial aggro (does not repeat).
+</td></tr>
+<tr>
+<td> 5
+</td>
+<td> EVENT_T_KILL
+</td>
+<td> RepeatMin
+</td>
+<td> RepeatMax
+</td>
+<td> n/a
+</td>
+<td> n/a
+</td>
+<td> Expires upon killing a player. Will repeat every (Param1) and (Param2).
+</td></tr>
+<tr>
+<td> 6
+</td>
+<td> EVENT_T_DEATH
+</td>
+<td> n/a
+</td>
+<td> n/a
+</td>
+<td> n/a
+</td>
+<td> n/a
+</td>
+<td> Expires upon Death.
+</td></tr>
+<tr>
+<td> 7
+</td>
+<td> EVENT_T_EVADE
+</td>
+<td> n/a
+</td>
+<td> n/a
+</td>
+<td> n/a
+</td>
+<td> n/a
+</td>
+<td> Expires upon creature EnterEvadeMode().
+</td></tr>
+<tr>
+<td> 8
+</td>
+<td> EVENT_T_SPELLHIT
+</td>
+<td> SpellID
+</td>
+<td> School
+</td>
+<td> RepeatMin
+</td>
+<td> RepeatMax
+</td>
+<td> Expires upon Spell hit. If (param1) is set will only expire on that spell. If (param2) will only expire on spells of that school. Will repeat every (Param3) and (Param4) .
+</td></tr>
+<tr>
+<td> 9
+</td>
+<td> EVENT_T_RANGE
+</td>
+<td> MinDist
+</td>
+<td> MaxDist
+</td>
+<td> RepeatMin
+</td>
+<td> RepeatMax
+</td>
+<td> Expires when the highest threat target distance is greater than (Param1) and less than (Param2). Will repeat every (Param3) and (Param4) .
+</td></tr>
+<tr>
+<td> 10
+</td>
+<td> EVENT_T_OOC_LOS
+</td>
+<td> Hostile-or-Not
+</td>
+<td> MaxAllowedRange
+</td>
+<td> RepeatMin
+</td>
+<td> RepeatMax
+</td>
+<td> Expires when a unit moves within distance (MaxAllowedRange) of a creature. If (Param1) is zero it will expire only when unit is hostile, friendly otherwise (Param1 = 1), depends generally on faction. Will repeat every (Param3) and (Param4). Does not expire when the creature is in combat.
+</td></tr>
+<tr>
+<td> 11
+</td>
+<td> EVENT_T_SPAWNED
+</td>
+<td> n/a
+</td>
+<td> n/a
+</td>
+<td> n/a
+</td>
+<td> n/a
+</td>
+<td> Expires at initial spawn and at creature respawn (useful for setting ranged movement type)
+</td></tr>
+<tr>
+<td> 12
+</td>
+<td> EVENT_T_TARGET_HP
+</td>
+<td> HPMax%
+</td>
+<td> HPMin%
+</td>
+<td> RepeatMin
+</td>
+<td> RepeatMax
+</td>
+<td> Expires when Current Target's HP is between (Param1) and (Param2). Will repeat every (Param3) and (Param4) .
+</td></tr>
+<tr>
+<td> 13
+</td>
+<td> EVENT_T_TARGET_CASTING
+</td>
+<td> RepeatMin
+</td>
+<td> RepeatMax
+</td>
+<td> n/a
+</td>
+<td> n/a
+</td>
+<td> Expires when the player is casting a spell. Will repeat every (Param1) and (Param2) .
+</td></tr>
+<tr>
+<td> 14
+</td>
+<td> EVENT_T_FRIENDLY_HP
+</td>
+<td> HPDeficit
+</td>
+<td> Radius
+</td>
+<td> RepeatMin
+</td>
+<td> RepeatMax
+</td>
+<td> Expires when a friendly unit in radius(param2) has at least (param1) hp missing. Will repeat every (Param3) and (Param4) .
+</td></tr>
+<tr>
+<td> 15
+</td>
+<td> EVENT_T_FRIENDLY_IS_CC
+</td>
+<td> DispelType
+</td>
+<td> Radius
+</td>
+<td> RepeatMin
+</td>
+<td> RepeatMax
+</td>
+<td> Expires when a friendly unit is Crowd controlled within the given radius (param2). Will repeat every (Param3) and (Param4) .
+</td></tr>
+<tr>
+<td> 16
+</td>
+<td> EVENT_T_MISSING_BUFF
+</td>
+<td> SpellId
+</td>
+<td> Radius
+</td>
+<td> RepeatMin
+</td>
+<td> RepeatMax
+</td>
+<td> Expires when a friendly unit is missing aura's given by spell (param1) within radius (param2). Will repeat every (Param3) and (Param4) .
+</td></tr>
+<tr>
+<td> 17
+</td>
+<td> EVENT_T_SUMMONED_UNIT
+</td>
+<td> CreatureId
+</td>
+<td> RepeatMin
+</td>
+<td> RepeatMax
+</td>
+<td> n/a
+</td>
+<td> Expires after creature with entry(Param1) is spawned or for all spawns if param1 = 0. Will repeat every (Param2) and (Param3) .
+</td></tr>
+<tr>
+<td> 18
+</td>
+<td> EVENT_T_TARGET_MANA
+</td>
+<td> ManaMax%
+</td>
+<td> ManaMin%
+</td>
+<td> RepeatMin
+</td>
+<td> RepeatMax
+</td>
+<td>
+</td></tr>
+<tr>
+<td> 21
+</td>
+<td> EVENT_T_REACHED_HOME
+</td>
+<td> n/a
+</td>
+<td> n/a
+</td>
+<td> n/a
+</td>
+<td> n/a
+</td>
+<td> Expires when creature reach it's home(spawn) location after Evade.
+</td></tr>
+<tr>
+<td> 22
+</td>
+<td> EVENT_T_RECEIVE_EMOTE
+</td>
+<td> EmoteId
+</td>
+<td> Condition
+</td>
+<td> CondValue1
+</td>
+<td> CondValue2
+</td>
+<td> Expires when creature receive emote with text emote id(enum TextEmotes). Condition can be defined. If set, then most conditions has additional value (see enum ConditionType)
+</td></tr>
+<tr>
+<td> 23
+</td>
+<td> EVENT_T_BUFFED
+</td>
+<td> SpellId
+</td>
+<td> AmmountInStack
+</td>
+<td> RepeatMin
+</td>
+<td> RepeatMax
+</td>
+<td> Expires when creature have spell (Param1) auras applied stack greater or equal provided in Param2 amount. Will repeat every (Param3) and (Param4).
+</td></tr>
+<tr>
+<td> 24
+</td>
+<td> EVENT_T_TARGET_BUFFED
+</td>
+<td> SpellId
+</td>
+<td> AmmountInStack
+</td>
+<td> RepeatMin
+</td>
+<td> RepeatMax
+</td>
+<td> Expires when target unit have spell (Param1) auras applied stack greater or equal provided in Param2 amount. Will repeat every (Param3) and (Param4).
+</td></tr>
+<tr>
+<td> 25
+</td>
+<td> EVENT_T_SUMMONED_JUST_DIED
+</td>
+<td> CreatureId
+</td>
+<td> RepeatMin
+</td>
+<td> RepeatMax
+</td>
+<td> n/a
+</td>
+<td> Expires after creature with entry = (Param1) dies. Expires for all spawns if (Param1) = 0. Will repeat every (Param2) and (Param3).
+</td></tr>
+<tr>
+<td> 26
+</td>
+<td> EVENT_T_SUMMONED_JUST_DESPAWN
+</td>
+<td> CreatureId
+</td>
+<td> RepeatMin
+</td>
+<td> RepeatMax
+</td>
+<td> n/a
+</td>
+<td> Expires after creature with entry = (Param1) is despawned. Expires for all spawns if (Param1) = 0. Will repeat every (Param2) and (Param3).
+</td></tr></table>
+<h4> <span class="mw-headline" id="Actions"> Actions </span></h4>
+<table class="wikitable">
+
+<tr>
+<th> ID
+</th>
+<th> Name
+</th>
+<th> Param 1
+</th>
+<th> Param 2
+</th>
+<th> Param 3
+</th>
+<th> Description
+</th></tr>
+<tr>
+<td> 1
+</td>
+<td> ACTION_T_SAY
+</td>
+<td> -TextId1,
+</td>
+<td> -TextId2,
+</td>
+<td> -TextId3
+</td>
+<td> Displays the -TextId as defined. In case -TextId2 and optionally -TextId3, the output will be randomized. Type text are defined in the text table itself(say, yell, whisper, etc) along with other options for the text. All values are required to be negative.
+</td></tr>
+<tr>
+<td> 2
+</td>
+<td> ACTION_T_SET_FACTION
+</td>
+<td> FactionId
+</td>
+<td> UNUSED
+</td>
+<td> UNUSED
+</td>
+<td> Change faction for creature. If param1==0, creature will revert to default faction.
+</td></tr>
+<tr>
+<td> 3
+</td>
+<td> ACTION_T_MORPH_TO_ENTRY_OR_MODEL
+</td>
+<td> CreatureEntry
+</td>
+<td> ModelId
+</td>
+<td> UNUSED
+</td>
+<td> Set model from creature_template.entry(param1) OR set explicit modelId(param2). If param1 AND param2 both 0, demorph and revert to default model for creature.
+</td></tr>
+<tr>
+<td> 4
+</td>
+<td> ACTION_T_SOUND
+</td>
+<td> Sound ID
+</td>
+<td> NU
+</td>
+<td> NU
+</td>
+<td> Creature plays sound
+</td></tr>
+<tr>
+<td> 5
+</td>
+<td> ACTION_T_EMOTE
+</td>
+<td> Emote ID
+</td>
+<td> NU
+</td>
+<td> NU
+</td>
+<td> Creature does visual emote
+</td></tr>
+<tr>
+<td> 6
+</td>
+<td> ACTION_T_RANDOM_SAY
+</td>
+<td> UNUSED
+</td>
+<td> UNUSED
+</td>
+<td> UNUSED
+</td>
+<td> UNUSED
+</td></tr>
+<tr>
+<td> 7
+</td>
+<td> ACTION_T_RANDOM_YELL
+</td>
+<td> UNUSED
+</td>
+<td> UNUSED
+</td>
+<td> UNUSED
+</td>
+<td> UNUSED
+</td></tr>
+<tr>
+<td> 8
+</td>
+<td> ACTION_T_RANDOM_TEXTEMOTE
+</td>
+<td> UNUSED
+</td>
+<td> UNUSED
+</td>
+<td> UNUSED
+</td>
+<td> UNUSED
+</td></tr>
+<tr>
+<td> 9
+</td>
+<td> ACTION_T_RANDOM_SOUND
+</td>
+<td> Sound ID 1
+</td>
+<td> Sound ID 2
+</td>
+<td> Sound ID 3
+</td>
+<td> Picks a sound ID at random and plays it; -1 = action skipped if chosen
+</td></tr>
+<tr>
+<td> 10
+</td>
+<td> ACTION_T_RANDOM_EMOTE
+</td>
+<td> Emote ID 1
+</td>
+<td> Emote ID 2
+</td>
+<td> Emote ID 3
+</td>
+<td> Picks an emote ID at random and does visual emote; -1 = action skipped if chosen
+</td></tr>
+<tr>
+<td> 11
+</td>
+<td> ACTION_T_CAST
+</td>
+<td> Spell ID
+</td>
+<td> T-Type
+</td>
+<td> Cast Flag
+</td>
+<td> Casts spell on a target with specified cast flags (see table below).
+</td></tr>
+<tr>
+<td> 12
+</td>
+<td> ACTION_T_SUMMON
+</td>
+<td> Creature ID
+</td>
+<td> T-Type
+</td>
+<td> Duration*
+</td>
+<td> Summons a creature at itself for a given duration (infinite if zero) that will attack a target.
+</td></tr>
+<tr>
+<td> 13
+</td>
+<td> ACTION_T_THREAT_SINGLE_PCT
+</td>
+<td> Threat&#160;%
+</td>
+<td> T-Type
+</td>
+<td> NU
+</td>
+<td> Modifies the target's threat by a percent
+</td></tr>
+<tr>
+<td> 14
+</td>
+<td> ACTION_T_THREAT_ALL_PCT
+</td>
+<td> Threat&#160;%
+</td>
+<td> NU
+</td>
+<td> NU
+</td>
+<td> Modifies everyone's threat by a percent
+</td></tr>
+<tr>
+<td> 15
+</td>
+<td> ACTION_T_QUEST_EVENT
+</td>
+<td> Quest ID
+</td>
+<td> T-Type
+</td>
+<td> NU
+</td>
+<td> Satisfies external script objective for a quest for the target (must be a player)
+</td></tr>
+<tr>
+<td> 16
+</td>
+<td> ACTION_T_CASTCREATUREGO
+</td>
+<td> Quest ID
+</td>
+<td> Spell ID
+</td>
+<td> T-Type
+</td>
+<td> Emulates spell cast on the creature for the target (must be a player)
+</td></tr>
+<tr>
+<td> 17
+</td>
+<td> ACTION_T_SET_UNIT_FIELD
+</td>
+<td> Index
+</td>
+<td> Value
+</td>
+<td> T-Type
+</td>
+<td> Sets unit field at the index to the value given for the target
+</td></tr>
+<tr>
+<td> 18
+</td>
+<td> ACTION_T_SET_UNIT_FLAG
+</td>
+<td> Flag(s)
+</td>
+<td> T-Type
+</td>
+<td> NU
+</td>
+<td> Sets flag(s) on the target
+</td></tr>
+<tr>
+<td> 19
+</td>
+<td> ACTION_T_REMOVE_UNIT_FLAG
+</td>
+<td> Flag(s)
+</td>
+<td> T-Type
+</td>
+<td> NU
+</td>
+<td> Removes flag(s) from the target
+</td></tr>
+<tr>
+<td> 20
+</td>
+<td> ACTION_T_AUTO_ATTACK
+</td>
+<td> Boolean
+</td>
+<td> NU
+</td>
+<td> NU
+</td>
+<td> If 0, stops auto melee; else continues/starts it
+</td></tr>
+<tr>
+<td> 21
+</td>
+<td> ACTION_T_COMBAT_MOVEMENT
+</td>
+<td> Boolean
+</td>
+<td> Boolean
+</td>
+<td> NU
+</td>
+<td> If Param 1 == 0, stops/prevents combat movement; else starts/enables it. If Param 2&#160;!= 0 and creature in combat, stop melee combat state (if Param1 == 0) or start melee combat state (if Param1&#160;!= 0) will be sent.
+</td></tr>
+<tr>
+<td> 22
+</td>
+<td> ACTION_T_SET_PHASE
+</td>
+<td> Phase #
+</td>
+<td> NU
+</td>
+<td> NU
+</td>
+<td> Sets current phase to number given
+</td></tr>
+<tr>
+<td> 23
+</td>
+<td> ACTION_T_INC_PHASE
+</td>
+<td> Number
+</td>
+<td> NU
+</td>
+<td> NU
+</td>
+<td> Increments (or decrements) the phase by given number.
+</td></tr>
+<tr>
+<td> 24
+</td>
+<td> ACTION_T_EVADE
+</td>
+<td> NU
+</td>
+<td> NU
+</td>
+<td> NU
+</td>
+<td> Force creature reset. Exit combat + lose threat
+</td></tr>
+<tr>
+<td> 25
+</td>
+<td> ACTION_T_FLEE
+</td>
+<td> NU
+</td>
+<td> NU
+</td>
+<td> NU
+</td>
+<td> Force creature to flee from combat
+</td></tr>
+<tr>
+<td> 26
+</td>
+<td> ACTION_T_QUEST_EVENT_ALL
+</td>
+<td> Quest ID
+</td>
+<td> NU
+</td>
+<td> NU
+</td>
+<td> Satisfies external objective for a quest for all players in threat list
+</td></tr>
+<tr>
+<td> 27
+</td>
+<td> ACTION_T_CASTCREATUREGO_ALL
+</td>
+<td> Quest ID
+</td>
+<td> Spell ID
+</td>
+<td> NU
+</td>
+<td> Emulates spell cast on creature for all players in threat list
+</td></tr>
+<tr>
+<td> 28
+</td>
+<td> ACTION_T_REMOVEAURASFROMSPELL
+</td>
+<td> T-Type
+</td>
+<td> Spell ID
+</td>
+<td> NU
+</td>
+<td> Removes all auras from a spell ID from the target.
+</td></tr>
+<tr>
+<td> 29
+</td>
+<td> ACTION_T_RANGED_MOVEMENT
+</td>
+<td> Distance
+</td>
+<td> Angle
+</td>
+<td> NU
+</td>
+<td> Uses ranged movement generator keeping the creature at a distance.
+</td></tr>
+<tr>
+<td> 30
+</td>
+<td> ACTION_T_RANDOM_PHASE
+</td>
+<td> Phase 1
+</td>
+<td> Phase 2
+</td>
+<td> Phase 3
+</td>
+<td> Randomly chooses a phase from the list of three phases.
+</td></tr>
+<tr>
+<td> 31
+</td>
+<td> ACTION_T_RANDOM_PHASE_RANGE
+</td>
+<td> Min Phase
+</td>
+<td> Max Phase
+</td>
+<td> NU
+</td>
+<td> Chooses a random phase in the range specified.
+</td></tr>
+<tr>
+<td> 32
+</td>
+<td> ACTION_T_SUMMON
+</td>
+<td> Creature ID
+</td>
+<td> T-Type
+</td>
+<td> Summon ID
+</td>
+<td> Summons a creature at the coords specified for the given summon id that will attack a target.
+</td></tr>
+<tr>
+<td> 33
+</td>
+<td> ACTION_T_KILLED_MONSTER
+</td>
+<td> Creature ID
+</td>
+<td> T-Type
+</td>
+<td> NU
+</td>
+<td> Simulates a kill for a mob of ID given for the player from the target type.
+</td></tr>
+<tr>
+<td> 34
+</td>
+<td> ACTION_T_SET_INST_DATA
+</td>
+<td> Field
+</td>
+<td> Value
+</td>
+<td> NU
+</td>
+<td> Sets new value for the field given in the instance script.
+</td></tr>
+<tr>
+<td> 35
+</td>
+<td> ACTION_T_SET_INST_DATA64
+</td>
+<td> Field
+</td>
+<td> T-Type
+</td>
+<td> NU
+</td>
+<td> Stores target's GUID at the field given in the instance script.
+</td></tr>
+<tr>
+<td> 36
+</td>
+<td> ACTION_T_UPDATE_TEMPLATE
+</td>
+<td> Entry
+</td>
+<td> Fraction
+</td>
+<td> NU
+</td>
+<td> Temporarily changes creature entry to new entry.
+</td></tr>
+<tr>
+<td> 37
+</td>
+<td> ACTION_T_DIE
+</td>
+<td> NU
+</td>
+<td> NU
+</td>
+<td> NU
+</td>
+<td> Kills the creature.
+</td></tr>
+<tr>
+<td> 38
+</td>
+<td> ACTION_T_ZONE_COMBAT_PULSE
+</td>
+<td> NU
+</td>
+<td> NU
+</td>
+<td> NU
+</td>
+<td> Places all players within the instance into combat with the creature. Only works in combat and only works inside of instances.
+</td></tr>
+<tr>
+<td> 39
+</td>
+<td> ACTION_T_CALL_FOR_HELP
+</td>
+<td> Radius
+</td>
+<td> NU
+</td>
+<td> NU
+</td>
+<td> Call any friendly creatures (if its not in combat/etc) in radius attack creature target.
+</td></tr>
+<tr>
+<td> 40
+</td>
+<td> ACTION_T_SET_SHEATH
+</td>
+<td> Sheath
+</td>
+<td> NU
+</td>
+<td> NU
+</td>
+<td> Let set sheath state for creature (0-no weapon show (not used mostly by creatures), 1-melee weapon show, 2-ranged weapon show)
+</td></tr>
+<tr>
+<td> 41
+</td>
+<td> ACTION_T_FORCE_DESPAWN
+</td>
+<td> NU
+</td>
+<td> NU
+</td>
+<td> NU
+</td>
+<td> Despawns the creature
+</td></tr>
+<tr>
+<td> 42
+</td>
+<td> ACTION_T_SET_INVINCIBILITY_HP_LEVEL
+</td>
+<td> Min Health
+</td>
+<td> Boolean
+</td>
+<td> NU
+</td>
+<td> Set minimum health level for creature before it becomes invincible. If (Param2) == 0, Min Health is flat value, otherwise it is&#160;% of max HP.
+</td></tr>
+<tr>
+<td> 97
+</td>
+<td> ACTION_T_SET_PHASE_MASK
+</td>
+<td> Phase Mask
+</td>
+<td> NU
+</td>
+<td> NU
+</td>
+<td> Makes the npc enter in a phase_mask. The phase_mask can be taken from spells. For example, a spell who have (Aura #261) (4) = phasemask = 4
+</td></tr>
+<tr>
+<td> 98
+</td>
+<td> ACTION_T_SET_STAND_STATE
+</td>
+<td> Stand State
+</td>
+<td> NU
+</td>
+<td> NU
+</td>
+<td> Changes the npc's Stand State.
+</td></tr>
+<tr>
+<td> 99
+</td>
+<td> ACTION_T_MOVE_RANDOM_POINT
+</td>
+<td> Radius
+</td>
+<td> NU
+</td>
+<td> NU
+</td>
+<td> Moves the npc to a random point. Radius determines the range in that can be the random point.
+</td></tr>
+<tr>
+<td> 100
+</td>
+<td> ACTION_T_SET_VISIBILITY
+</td>
+<td> Visibility State
+</td>
+<td> NU
+</td>
+<td> NU
+</td>
+<td> Changes the npc's visibility.
+</td></tr>
+<tr>
+<td> 101
+</td>
+<td> ACTION_T_SET_ACTIVE
+</td>
+<td> Active
+</td>
+<td> NU
+</td>
+<td> NU
+</td>
+<td> Changes the npc's active state.
+</td></tr>
+<tr>
+<td> 102
+</td>
+<td> ACTION_T_SET_AGGRESSIVE
+</td>
+<td> React State
+</td>
+<td> NU
+</td>
+<td> NU
+</td>
+<td> Changes the npc's react state. Can be Aggressive, Passive or Defensive.
+</td></tr>
+<tr>
+<td> 103
+</td>
+<td> ACTION_T_ATTACK_START_PULSE
+</td>
+<td> Radius
+</td>
+<td> NU
+</td>
+<td> NU
+</td>
+<td> Starts attacking nearest target in given radius.
+</td></tr>
+<tr>
+<td> 104
+</td>
+<td> ACTION_T_SUMMON_GO
+</td>
+<td> GO Entry
+</td>
+<td> Despawn Time
+</td>
+<td> NU
+</td>
+<td> Summons a GO at the current npc's position.
+</td></tr></table>
+<h4> <span class="mw-headline" id="Target_Types_.28T-Type.29"> Target Types (T-Type) </span></h4>
+<table class="wikitable">
+
+<tr>
+<th> ID
+</th>
+<th> Name
+</th>
+<th> Description
+</th></tr>
+<tr>
+<td> 0
+</td>
+<td> TARGET_T_SELF
+</td>
+<td> Targets itself
+</td></tr>
+<tr>
+<td> 1
+</td>
+<td> TARGET_T_HOSTILE
+</td>
+<td> Targets the current victim (usually the one with the most threat)
+</td></tr>
+<tr>
+<td> 2
+</td>
+<td> TARGET_T_HOSTILE_SECOND_AGGRO
+</td>
+<td> Targets the unit with the second greatest threat in the threat list
+</td></tr>
+<tr>
+<td> 3
+</td>
+<td> TARGET_T_HOSTILE_LAST_AGGRO
+</td>
+<td> Targets the unit with the least threat in the threat list
+</td></tr>
+<tr>
+<td> 4
+</td>
+<td> TARGET_T_HOSTILE_RANDOM
+</td>
+<td> Targets a random unit from the threat list
+</td></tr>
+<tr>
+<td> 5
+</td>
+<td> TARGET_T_HOSTILE_RANDOM_NOT_TOP
+</td>
+<td> Targets a random unit from the threat list excluding the one with the most threat
+</td></tr>
+<tr>
+<td> 6
+</td>
+<td> TARGET_T_ACTION_INVOKER
+</td>
+<td> Targets the unit that caused the event; for certain events only.
+</td></tr></table>
+<h4> <span class="mw-headline" id="Cast_Flags"> Cast Flags </span></h4>
+<table class="wikitable">
+
+<tr>
+<th> Bit
+</th>
+<th> Value<i><b><font color="red">*</font></b></i>
+</th>
+<th> Name
+</th>
+<th> Description
+</th></tr>
+<tr>
+<td> 0
+</td>
+<td> 1
+</td>
+<td> CAST_INTURRUPT_PREVIOUS
+</td>
+<td> Interrupts any previous spell casting.
+</td></tr>
+<tr>
+<td> 1
+</td>
+<td> 2
+</td>
+<td> CAST_TRIGGERED
+</td>
+<td> Forces the cast to be instant and ignores any mana/reagents requirements.
+</td></tr>
+<tr>
+<td> 2
+</td>
+<td> 4
+</td>
+<td> CAST_FORCE_CAST
+</td>
+<td> Forces spell to cast even if the target is possibly out of range or the creature is possibly out of mana
+</td></tr>
+<tr>
+<td> 3
+</td>
+<td> 8
+</td>
+<td> CAST_NO_MELEE_IF_OOM
+</td>
+<td> Prevents creature from entering melee if out of mana or out of range
+</td></tr>
+<tr>
+<td> 4
+</td>
+<td> 16
+</td>
+<td> CAST_FORCE_TARGET_SELF
+</td>
+<td> Forces the target to cast this spell on itself
+</td></tr>
+<tr>
+<td> 5
+</td>
+<td> 32
+</td>
+<td> CAST_AURA_NOT_PRESENT
+</td>
+<td> Only casts the spell on the target if the target does not have the aura from that spell on itself already.
+</td></tr></table>
+<h4> <span class="mw-headline" id="Condition_Type_.28Event_type_22.29"> Condition Type (Event type 22) </span></h4>
+<table class="wikitable">
+
+<tr>
+<th colspan="2"> Condition
+</th>
+<th> Value 1
+</th>
+<th> Value 2<font color="red">*</font>
+</th>
+<th> Description
+</th></tr>
+<tr>
+<td> 0
+</td>
+<td> None
+</td>
+<td> 0
+</td>
+<td> 0
+</td>
+<td> Nothing.
+</td></tr>
+<tr>
+<td> 1
+</td>
+<td> Aura
+</td>
+<td> SpellID
+</td>
+<td> "effindex"
+</td>
+<td> If the SpellID's aura is on you.
+</td></tr>
+<tr>
+<td> 2
+</td>
+<td> Item
+</td>
+<td> ItemID
+</td>
+<td> Amount
+</td>
+<td> If you have the item in your inventory.
+</td></tr>
+<tr>
+<td> 3
+</td>
+<td> Item Equipped
+</td>
+<td> ItemId
+</td>
+<td> Amount
+</td>
+<td> If you have the item equipped on your character.
+</td></tr>
+<tr>
+<td> 4
+</td>
+<td> Zone ID
+</td>
+<td> ZoneID
+</td>
+<td> 0
+</td>
+<td> Taken from <a href="AreaTable.html" title="AreaTable.dbc">AreaTable.dbc</a>.
+</td></tr>
+<tr>
+<td> 5
+</td>
+<td> Reputation
+</td>
+<td> FactionID
+</td>
+<td> Minimum Rank
+</td>
+<td> Taken from <a href="FactionTemplate.html" title="FactionTemplate.dbc">FactionTemplate.dbc</a>. Exalted is 42000.
+</td></tr>
+<tr>
+<td> 6
+</td>
+<td> Team
+</td>
+<td> Team#
+</td>
+<td> 0
+</td>
+<td> In "Team#" use <font color="blue">469 if alliance</font>, <font color="red">67 if Horde</font>.
+</td></tr>
+<tr>
+<td> 7
+</td>
+<td> Skill
+</td>
+<td> SkillID
+</td>
+<td> Min Amount
+</td>
+<td> Values taken from <a href="SkillLine.html" title="SkillLine.dbc">SkillLine.dbc</a>.
+</td></tr>
+<tr>
+<td> 8
+</td>
+<td> Quest Rewarded
+</td>
+<td> QuestID
+</td>
+<td> 0
+</td>
+<td> If you have already completed that QuestID.
+</td></tr>
+<tr>
+<td> 9
+</td>
+<td> Quest Taken
+</td>
+<td> QuestID
+</td>
+<td> 0
+</td>
+<td> If you are currently on that QuestID.
+</td></tr>
+<tr>
+<td> 12
+</td>
+<td> Active Event
+</td>
+<td> EventID
+</td>
+<td> 0
+</td>
+<td> This is <b>not</b> from your database. This value is from the DBC file enum HolidayIds.
+</td></tr></table>
+<p><font color="red">*</font> - If the value is listed as 0, then leave it as 0. 
+</p>
+<h4> <span class="mw-headline" id="Event_Flags"> Event Flags </span></h4>
+<table class="wikitable">
+
+<tr>
+<th> Bit
+</th>
+<th> Value<i><b><font color="red">*</font></b></i>
+</th>
+<th> Name
+</th>
+<th> Description
+</th></tr>
+<tr>
+<td> 0
+</td>
+<td> 1
+</td>
+<td> EFLAG_REPEATABLE
+</td>
+<td> Event repeats (Does not repeat if this flag is not set)
+</td></tr>
+<tr>
+<td> 1
+</td>
+<td> 2
+</td>
+<td> EFLAG_DIFFICULTY_0
+</td>
+<td> Event only occurs in instance difficulty 0 (will not occur if not set)
+</td></tr>
+<tr>
+<td> 2
+</td>
+<td> 4
+</td>
+<td> EFLAG_DIFFICULTY_1
+</td>
+<td> Event only occurs in instance difficulty 1 (will not occur if not set)
+</td></tr>
+<tr>
+<td> 3
+</td>
+<td> 8
+</td>
+<td> EFLAG_DIFFICULTY_2
+</td>
+<td> Event only occurs in instance difficulty 2 (will not occur if not set)
+</td></tr>
+<tr>
+<td> 4
+</td>
+<td> 16
+</td>
+<td> EFLAG_DIFFICULTY_3
+</td>
+<td> Event only occurs in instance difficulty 3 (will not occur if not set)
+</td></tr>
+<tr>
+<td> 7
+</td>
+<td> 128
+</td>
+<td> EFLAG_DEBUG_ONLY
+</td>
+<td> Event only occurs in debug build
+</td></tr></table>
+<p><i><b><font color="red">*</font></b></i> = Represents what the value in the field would be with no other additive flags. For help on <i>Binary Addition,</i> read the "Working With Phases" portion of the guide below. 
+</p>
+<h4> <span class="mw-headline" id="React_States"> React States </span></h4>
+<table class="wikitable">
+
+<tr>
+<th> ID
+</th>
+<th> Name
+</th></tr>
+<tr>
+<td> 0
+</td>
+<td> REACT_PASSIVE
+</td></tr>
+<tr>
+<td> 1
+</td>
+<td> REACT_DEFENSIVE
+</td></tr>
+<tr>
+<td> 2
+</td>
+<td> REACT_AGGRESSIVE
+</td></tr></table>
+<h4> <span class="mw-headline" id="Unit_Visibility"> Unit Visibility </span></h4>
+<table class="wikitable">
+
+<tr>
+<th> ID
+</th>
+<th> Name
+</th></tr>
+<tr>
+<td> 0
+</td>
+<td> VISIBILITY_OFF -- absolute, not detectable, GM-like, can see all other.
+</td></tr>
+<tr>
+<td> 1
+</td>
+<td> VISIBILITY_ON
+</td></tr>
+<tr>
+<td> 2
+</td>
+<td> VISIBILITY_GROUP_STEALTH -- detect chance, seen and can see group members.
+</td></tr>
+<tr>
+<td> 5
+</td>
+<td> VISIBILITY_RESPAWN -- special totally not detectable visibility for force delete object at respawn command.
+</td></tr></table>
+<h4> <span class="mw-headline" id="Unit_Stand_State"> Unit Stand State </span></h4>
+<table class="wikitable">
+
+<tr>
+<th> ID
+</th>
+<th> Name
+</th></tr>
+<tr>
+<td> 0
+</td>
+<td> UNIT_STAND_STATE_STAND
+</td></tr>
+<tr>
+<td> 1
+</td>
+<td> UNIT_STAND_STATE_SIT
+</td></tr>
+<tr>
+<td> 2
+</td>
+<td> UNIT_STAND_STATE_SIT_CHAIR
+</td></tr>
+<tr>
+<td> 3
+</td>
+<td> UNIT_STAND_STATE_SLEEP
+</td></tr>
+<tr>
+<td> 4
+</td>
+<td> UNIT_STAND_STATE_SIT_LOW_CHAIR
+</td></tr>
+<tr>
+<td> 5
+</td>
+<td> UNIT_STAND_STATE_SIT_MEDIUM_CHAIR
+</td></tr>
+<tr>
+<td> 6
+</td>
+<td> UNIT_STAND_STATE_SIT_HIGH_CHAIR
+</td></tr>
+<tr>
+<td> 7
+</td>
+<td> UNIT_STAND_STATE_DEAD
+</td></tr>
+<tr>
+<td> 8
+</td>
+<td> UNIT_STAND_STATE_KNEEL
+</td></tr></table>
+<p><font color="white">(Spacer)</font>
+</p>
+<h2> <span class="mw-headline" id="Summary_for_the_meek"> Summary for the meek  </span></h2>
+<p>If you still don't understand what EventAI is, it's understandable. It's a very powerful table and can look confusing at first glance. I will elaborate on some of the concepts here. 
+</p><p>The <i><b>event_type</b></i> field determines what you need to put into the <i>event_param1</i> - <i>event_param4</i> fields. If your event_type is 0, (In-combat.) your parameters will need to be lengths of time <i>(in milliseconds)</i> in which the action will take place. If your event_type is <i>6</i>, (on death) we won't need any parameters, as the condition has no possible parameters to work with. Death is death. We can't define <i>what kind of death</i> it should be, so there are no parameters necessary. 
+</p><p><br /> 
+</p>
+<h2> <span class="mw-headline" id="Working_with_Phases"> Working with Phases  </span></h2>
+<p>Working with phases requires a certain amount of math. You will have to know a few things before we begin. 
+</p>
+<ol><li>You should have an idea of how many phases the NPC will have. 
+</li><li>You will have to know Binary Addition. Don't worry, I'll show you how to do it.
+</li></ol>
+<p>- <b>Binary Addition</b> - 
+</p><p><tt></tt> 
+</p>
+<ul><li><tt>0110 = 6 (base 10)</tt> 
+</li><li><tt>0111 = 7 (base 10)</tt> 
+</li><li><tt>____ = __</tt> 
+</li><li><tt>1101 = 13 (base 10)</tt>
+</li></ul>
+<p><tt><br /></tt> 
+</p>
+<ul><li><tt>06 05 04 03 02 01 00 &lt;-- <b>The place values. (PhaseID)</b></tt> 
+</li><li><tt>32 16 08 04 02 01 00 &lt;-- <b>Note how it doubles in size.</b> <i><b><font color="red">This</font></b></i> is what you add (phase_mask).</tt>
+</li></ul>
+<p><tt><font color="white">_</font></tt> 
+</p>
+<ul><li><tt><font color="white">_</font>1 <font color="white">__</font> 1 <font color="white">__</font> 1</tt> 
+</li><li><tt>04 + 02 + 01 = 07.</tt>
+</li></ul>
+<p><tt><font color="white">_</font></tt> 
+</p>
+<ul><li><tt><font color="white">_</font>1 <font color="white">__</font> 0 <font color="white">__</font> 1 <font color="white">__</font> 1 <font color="white">__</font> 0 &lt;-- Note how place 1, 2, and 4 are <i><b>1</b></i>, but place 3 is not.</tt> 
+</li><li><tt>08 + 04 + 02 + 01 = 11.</tt>
+</li></ul>
+<p><tt>So you add 1, 2, and 8 together to get 11. You do not add the 4, because its bit was a 0. </tt> 
+</p><p><font color="white">__</font> <font color="white">__</font> <font color="white">__</font> 
+</p><p><i><font size="6">Now back to Phases</font></i>. 
+</p><p>The overall concept (not method, just yet!) of a phase, is a "section" of activities that the NPC will act on. Hypothetically speaking, if a boss uses Attack "X" only when above 50% health, and only uses attack "Y" only when below 50% health, the boss will be using two different phases. 
+</p><p><i><b><font size="5">The concept:</font></b></i> The "event_inverse_phase_mask" field is the field controlling phase information. Read the following sentence very carefully and memorize it. <i>The number in this field represents the phases that this action</i> <i><b>will not</b></i> <i>be initiated in,</i> including up to and less than the NPC's total number of phases. Keep this in the back of your head. The reason for this is because this number also casually tells the script how many phases the NPC has. It's surprisingly ingenious. 
+</p><p><br /> This is where the Binary Addition comes into play. Suppose your NPC has three phases. It will start off in phase 1. (<font color="red"><i><b>*</b></i></font>) It will remain in phase 1 unless specifically told to by Action Types 22, 23, 30, and 31, which control phases mid-game once the script is already running. 
+</p><p><font color="red"><i><b>*</b></i></font> (<i>I should mention right here that anything with an event_inverse_phase_mask of</i> <i><b>0</b></i> <i>will happen in</i> <b>all</b> <i>phases.</i>) 
+</p><p>Suppose we wanted to have an attack that is only used in the NPC's first phase. You know that the NPC will have three phases. You would set up the attack as usual, but in the event_inverse_phase_mask field, you would put a <b>6</b>. Why the six? Let's take a look. 
+</p><p>We have three phases. We will represent these like this: <tt></tt> 
+</p>
+<ul><li><tt><font color="white">_</font>3<font color="white">__</font>2<font color="white">__</font>1<font color="white">__</font>&lt;-- <i>Represents the Phase Number and the bit.</i></tt> 
+</li><li><tt>04 02 01</tt>
+</li></ul>
+<p>Phase 1's bit is 1. Phase 2's bit is 2. Phase 3's bit is 4. <font color="gray">(If we had a phase 4, it would be 8, and phase 5 would be 16, etc.)</font> To get <i>6</i>, we have added the 2 and the 4 from the 2nd and 3rd phases. As was mentioned above, the number that goes into that field represents the bitmask of the phases that the action will <i>not</i> take place in. 
+</p>
+<h2> <span class="mw-headline" id="Quick_Phase_Reference"> Quick Phase Reference  </span></h2>
+<p>This list is for an easy reference of what phase equates to what number, if you're not very phase-savvy. The <b>"Value"</b> column is what goes into the "event_inverse_phase_mask" field. The <b>"Phase"</b> column indicates the phase number that the hypothetical mob or boss is in that the event <i><b>WILL</b></i> happen in. This field relies on the next field, the <b>"Max Phases"</b> field. That is the amount of total phases the mob has. (I.e. my boss has 2 phases, or my boss has 4 phases.) Then there is a <b>description</b> field for any numerical work involved. It is the least important field, and can safely be ignored. 
+</p><p>Remember, anything with "0" as a phase will occur in all phases. It is 0 by default. 
+</p><p>Again, this is based on the following number patterns: 
+</p><p>00 + 01 + 02 + 03 + 04 + 05 + 06 + 07 + 008 - Represents Phases. 
+</p><p>00 + 01 + 02 + 04 + 08 + 16 + 32 + 64 + 128 - The numerical representations of those phases. 
+</p><p>And, once again, how this works, is: 
+</p>
+<ol><li>You look at the total number of phases. Suppose it's 3. 
+</li><li>You cover up all the numbers to the right of phase 3, which corresponds to the 04 right below it. 
+</li><li>Then you decide which phase you want the event to occur in. 
+</li><li>Then you look at <i>all other phases,</i> and add up the number beneath them. 
+</li><li>The number you come up with goes in the "Value" field below in that chart, and what will go into the event_inverse_phase_mask field. Remember, the <i>Phase</i> column represents the phases that the event WILL occur in, for the purposes of this chart, whereas the value of the event_inverse_phase_mask represents the the combined bitwise values of the phases it will <i>not</i> occur in. Be careful not to confuse them. To get the value of that field, again, the number in the "value" column is what you're looking for.
+</li></ol>
+<p><br /> 
+</p>
+<table class="wikitable">
+
+<tr>
+<th> Value
+</th>
+<th> Phase
+</th>
+<th> Max Phases
+</th>
+<th> Description
+</th></tr>
+<tr>
+<td> 2
+</td>
+<td> 1
+</td>
+<td> 2
+</td>
+<td> 2
+</td></tr>
+<tr>
+<td> 1
+</td>
+<td> 2
+</td>
+<td> 2
+</td>
+<td> 1
+</td></tr>
+<tr>
+<td> <b>Value</b>
+</td>
+<td> <b>Phase</b>
+</td>
+<td> <b>Max Phases</b>
+</td>
+<td> <b>Description</b>
+</td></tr>
+<tr>
+<td> 6
+</td>
+<td> 1
+</td>
+<td> 3
+</td>
+<td> 2+4
+</td></tr>
+<tr>
+<td> 5
+</td>
+<td> 2
+</td>
+<td> 3
+</td>
+<td> 1+4
+</td></tr>
+<tr>
+<td> 3
+</td>
+<td> 3
+</td>
+<td> 3
+</td>
+<td> 1+2
+</td></tr>
+<tr>
+<td> 4
+</td>
+<td> 1+2
+</td>
+<td> 3
+</td>
+<td> 4
+</td></tr>
+<tr>
+<td> 1
+</td>
+<td> 2+3
+</td>
+<td> 3
+</td>
+<td> 1
+</td></tr>
+<tr>
+<td> 2
+</td>
+<td> 1+3
+</td>
+<td> 3
+</td>
+<td> 2
+</td></tr>
+<tr>
+<td> <b>Value</b>
+</td>
+<td> <b>Phase</b>
+</td>
+<td> <b>Max Phases</b>
+</td>
+<td> <b>Description</b>
+</td></tr>
+<tr>
+<td> 14
+</td>
+<td> 1
+</td>
+<td> 4
+</td>
+<td> 2+4+8
+</td></tr>
+<tr>
+<td> 13
+</td>
+<td> 2
+</td>
+<td> 4
+</td>
+<td> 1+4+8
+</td></tr>
+<tr>
+<td> 11
+</td>
+<td> 3
+</td>
+<td> 4
+</td>
+<td> 1+2+8
+</td></tr>
+<tr>
+<td> 7
+</td>
+<td> 4
+</td>
+<td> 4
+</td>
+<td> 1+2+4
+</td></tr>
+<tr>
+<td> 12
+</td>
+<td> 1+2
+</td>
+<td> 4
+</td>
+<td> 4+8
+</td></tr>
+<tr>
+<td> 10
+</td>
+<td> 1+3
+</td>
+<td> 4
+</td>
+<td> 2+8
+</td></tr>
+<tr>
+<td> 6
+</td>
+<td> 1+4
+</td>
+<td> 4
+</td>
+<td> 2+4
+</td></tr>
+<tr>
+<td> 9
+</td>
+<td> 2+3
+</td>
+<td> 4
+</td>
+<td> 1+8
+</td></tr>
+<tr>
+<td> 5
+</td>
+<td> 2+4
+</td>
+<td> 4
+</td>
+<td> 1+4
+</td></tr>
+<tr>
+<td> 3
+</td>
+<td> 3+4
+</td>
+<td> 4
+</td>
+<td> 1+2
+</td></tr>
+<tr>
+<td> 8
+</td>
+<td> 1+2+3
+</td>
+<td> 4
+</td>
+<td> 8
+</td></tr>
+<tr>
+<td> 1
+</td>
+<td> 2+3+4
+</td>
+<td> 4
+</td>
+<td> 1
+</td></tr>
+<tr>
+<td> 4
+</td>
+<td> 1+2+4
+</td>
+<td> 4
+</td>
+<td> 4
+</td></tr>
+<tr>
+<td> 2
+</td>
+<td> 1+3+4
+</td>
+<td> 4
+</td>
+<td> 2
+</td></tr>
+<tr>
+<td> <b>Value</b>
+</td>
+<td> <b>Phase</b>
+</td>
+<td> <b>Max Phases</b>
+</td>
+<td> <b>Description</b>
+</td></tr>
+<tr>
+<td> 30
+</td>
+<td> 1
+</td>
+<td> 5
+</td>
+<td> 2+4+8+16
+</td></tr>
+<tr>
+<td> 29
+</td>
+<td> 2
+</td>
+<td> 5
+</td>
+<td> 1+4+8+16
+</td></tr>
+<tr>
+<td> 27
+</td>
+<td> 3
+</td>
+<td> 5
+</td>
+<td> 1+2+8+16
+</td></tr>
+<tr>
+<td> 23
+</td>
+<td> 4
+</td>
+<td> 5
+</td>
+<td> 1+2+4+16
+</td></tr>
+<tr>
+<td> 15
+</td>
+<td> 5
+</td>
+<td> 5
+</td>
+<td> 1+2+4+8
+</td></tr>
+<tr>
+<td> 28
+</td>
+<td> 1+2
+</td>
+<td> 5
+</td>
+<td> 4+8+16
+</td></tr>
+<tr>
+<td> 26
+</td>
+<td> 1+3
+</td>
+<td> 5
+</td>
+<td> 2+8+16
+</td></tr>
+<tr>
+<td> 22
+</td>
+<td> 1+4
+</td>
+<td> 5
+</td>
+<td> 2+4+16
+</td></tr>
+<tr>
+<td> 20
+</td>
+<td> 1+5
+</td>
+<td> 5
+</td>
+<td> 2+4+8
+</td></tr>
+<tr>
+<td> 25
+</td>
+<td> 2+3
+</td>
+<td> 5
+</td>
+<td> 1+8+16
+</td></tr>
+<tr>
+<td> 21
+</td>
+<td> 2+4
+</td>
+<td> 5
+</td>
+<td> 1+4+16
+</td></tr>
+<tr>
+<td> 13
+</td>
+<td> 2+5
+</td>
+<td> 5
+</td>
+<td> 1+4+8
+</td></tr>
+<tr>
+<td> 19
+</td>
+<td> 3+4
+</td>
+<td> 5
+</td>
+<td> 1+2+16
+</td></tr>
+<tr>
+<td> 11
+</td>
+<td> 3+5
+</td>
+<td> 5
+</td>
+<td> 1+2+8
+</td></tr>
+<tr>
+<td> 7
+</td>
+<td> 4+5
+</td>
+<td> 5
+</td>
+<td> 1+2+4
+</td></tr>
+<tr>
+<td> 24
+</td>
+<td> 1+2+3
+</td>
+<td> 5
+</td>
+<td> 8+16
+</td></tr>
+<tr>
+<td> 17
+</td>
+<td> 2+3+4
+</td>
+<td> 5
+</td>
+<td> 1+16
+</td></tr>
+<tr>
+<td> 3
+</td>
+<td> 3+4+5
+</td>
+<td> 5
+</td>
+<td> 1+2
+</td></tr>
+<tr>
+<td> 6
+</td>
+<td> 1+4+5
+</td>
+<td> 5
+</td>
+<td> 2+4
+</td></tr>
+<tr>
+<td> 12
+</td>
+<td> 1+2+5
+</td>
+<td> 5
+</td>
+<td> 4+8
+</td></tr>
+<tr>
+<td> 10
+</td>
+<td> 1+3+5
+</td>
+<td> 5
+</td>
+<td> 2+8
+</td></tr>
+<tr>
+<td> 9
+</td>
+<td> 2+3+5
+</td>
+<td> 5
+</td>
+<td> 1+8
+</td></tr>
+<tr>
+<td> 16
+</td>
+<td> 1+2+3+4
+</td>
+<td> 5
+</td>
+<td> 16
+</td></tr>
+<tr>
+<td> 1
+</td>
+<td> 2+3+4+5
+</td>
+<td> 5
+</td>
+<td> 1
+</td></tr>
+<tr>
+<td> 2
+</td>
+<td> 1+3+4+5
+</td>
+<td> 5
+</td>
+<td> 2
+</td></tr>
+<tr>
+<td> 4
+</td>
+<td> 1+2+4+5
+</td>
+<td> 5
+</td>
+<td> 4
+</td></tr>
+<tr>
+<td> 8
+</td>
+<td> 1+2+3+5
+</td>
+<td> 5
+</td>
+<td> 8
+</td></tr></table>
+<p>The reference chart will only go down to 5 or so phases for now. There is no small limit on the amount of phases except for your patience, and possibly 255. (Unverified) If anyone wants to fill in the rest of the chart, many thanks will be due to the brave and bored soul who does it. 
+</p><p><br /> <font color="red"><b>Reminder:</b></font> Once again, if your creatures don't perform your actions within Dungeons, you need to add "1" to the current value of the "Event_flags" column.
+</p>
+<!-- 
+NewPP limit report
+Preprocessor visited node count: 414/1000000
+Preprocessor generated node count: 464/1000000
+Post‐expand include size: 57/2097152 bytes
+Template argument size: 0/2097152 bytes
+Highest expansion depth: 2/40
+Expensive parser function count: 0/100
+-->
+
+<!-- Saved in parser cache with key admin_wikia:pcache:idhash:24-0!*!0!!en-gb!*!* and timestamp 20160412104758 -->
+</div>				<!-- /bodycontent -->
+								<!-- printfooter -->
+				<div class="printfooter">
+				Retrieved from ‘<a href="http://wiki.hellground.net/index.php?title=EventAI&amp;oldid=957">http://wiki.hellground.net/index.php?title=EventAI&amp;oldid=957</a>’				</div>
+				<!-- /printfooter -->
+												<!-- catlinks -->
+				<div id='catlinks' class='catlinks'><div id="mw-normal-catlinks" class="mw-normal-catlinks"><a href="Special_Categories.html" title="Special:Categories">Categories</a>: <ul><li><a href="Category_EventAI.html" title="Category:EventAI">EventAI</a></li><li><a href="Category_HOWTOs.html" title="Category:HOWTOs">HOWTOs</a></li></ul></div></div>				<!-- /catlinks -->
+												<div class="visualClear"></div>
+				<!-- debughtml -->
+								<!-- /debughtml -->
+			</div>
+			<!-- /bodyContent -->
+		</div>
+		<!-- /content -->
+		<div id="mw-navigation">
+			<h2>Navigation menu</h2>
+			<!-- header -->
+			<div id="mw-head">
+				
+<!-- 0 -->
+<div id="p-personal" role="navigation" class="">
+	<h3>Personal tools</h3>
+	<ul>
+<li id="pt-login"><a href="http://wiki.hellground.net/index.php?title=Special:UserLogin&amp;returnto=EventAI" title="You are encouraged to log in; however, it is not mandatory [o]" accesskey="o">Log in</a></li>	</ul>
+</div>
+
+<!-- /0 -->
+				<div id="left-navigation">
+					
+<!-- 0 -->
+<div id="p-namespaces" role="navigation" class="vectorTabs">
+	<h3>Namespaces</h3>
+	<ul>
+					<li  id="ca-nstab-main" class="selected"><span><a href="EventAI.html"  title="View the content page [c]" accesskey="c">Page</a></span></li>
+					<li  id="ca-talk" class="new"><span><a href="http://wiki.hellground.net/index.php?title=Talk:EventAI&amp;action=edit&amp;redlink=1"  title="Discussion about the content page [t]" accesskey="t">Discussion</a></span></li>
+			</ul>
+</div>
+
+<!-- /0 -->
+
+<!-- 1 -->
+<div id="p-variants" role="navigation" class="vectorMenu emptyPortlet">
+	<h3 id="mw-vector-current-variant">
+		</h3>
+	<h3><span>Variants</span><a href="#"></a></h3>
+	<div class="menu">
+		<ul>
+					</ul>
+	</div>
+</div>
+
+<!-- /1 -->
+				</div>
+				<div id="right-navigation">
+					
+<!-- 0 -->
+<div id="p-views" role="navigation" class="vectorTabs">
+	<h3>Views</h3>
+	<ul>
+					<li id="ca-view" class="selected"><span><a href="EventAI.html" >Read</a></span></li>
+					<li id="ca-viewsource"><span><a href="http://wiki.hellground.net/index.php?title=EventAI&amp;action=edit"  title="This page is protected.&#10;You can view its source [e]" accesskey="e">View source</a></span></li>
+					<li id="ca-history" class="collapsible"><span><a href="http://wiki.hellground.net/index.php?title=EventAI&amp;action=history"  title="Past revisions of this page [h]" accesskey="h">View history</a></span></li>
+			</ul>
+</div>
+
+<!-- /0 -->
+
+<!-- 1 -->
+<div id="p-cactions" role="navigation" class="vectorMenu emptyPortlet">
+	<h3><span>Actions</span><a href="#"></a></h3>
+	<div class="menu">
+		<ul>
+					</ul>
+	</div>
+</div>
+
+<!-- /1 -->
+
+<!-- 2 -->
+
+
+<!-- /2 -->
+				</div>
+			</div>
+			<!-- /header -->
+			<!-- panel -->
+			<div id="mw-panel">
+				<!-- logo -->
+					<div id="p-logo" role="banner"><a style="background-image: url(../skins/common/images/wiki.png);" href="Main_Page.html"  title="Visit the main page"></a></div>
+				<!-- /logo -->
+				
+<!-- navigation -->
+<div class="portal" role="navigation" id='p-navigation'>
+	<h3>Navigation</h3>
+	<div class="body">
+		<ul>
+			<li id="n-mainpage-description"><a href="Main_Page.html" title="Visit the main page [z]" accesskey="z">Main page</a></li>
+			<li id="n-randompage"><a href="Spell_required.html" title="Load a random page [x]" accesskey="x">Random page</a></li>
+		</ul>
+	</div>
+</div>
+
+<!-- /navigation -->
+
+<!-- HellGroundCore -->
+<div class="portal" role="navigation" id='p-HellGroundCore'>
+	<h3>HellGroundCore</h3>
+	<div class="body">
+		<ul>
+			<li id="n-Project-site"><a href="https://hellground.net/" rel="nofollow">Project site</a></li>
+			<li id="n-Project--forum"><a href="http://forum.hellground.net/" rel="nofollow">Project  forum</a></li>
+			<li id="n-Project-repositories"><a href="http://emu.hellground.net/" rel="nofollow">Project repositories</a></li>
+			<li id="n-Project-bug-tracker"><a href="http://forum.hellground.net/" rel="nofollow">Project bug tracker</a></li>
+		</ul>
+	</div>
+</div>
+
+<!-- /HellGroundCore -->
+
+<!-- SEARCH -->
+
+<!-- /SEARCH -->
+
+<!-- TOOLBOX -->
+<div class="portal" role="navigation" id='p-tb'>
+	<h3>Tools</h3>
+	<div class="body">
+		<ul>
+			<li id="t-whatlinkshere"><a href="Special_WhatLinksHere/EventAI.html" title="A list of all wiki pages that link here [j]" accesskey="j">What links here</a></li>
+			<li id="t-recentchangeslinked"><a href="Special_RecentChangesLinked/EventAI.html" title="Recent changes in pages linked from this page [k]" accesskey="k">Related changes</a></li>
+			<li id="t-specialpages"><a href="Special_SpecialPages.html" title="A list of all special pages [q]" accesskey="q">Special pages</a></li>
+			<li id="t-print"><a href="http://wiki.hellground.net/index.php?title=EventAI&amp;printable=yes" rel="alternate" title="Printable version of this page [p]" accesskey="p">Printable version</a></li>
+			<li id="t-permalink"><a href="http://wiki.hellground.net/index.php?title=EventAI&amp;oldid=957" title="Permanent link to this revision of the page">Permanent link</a></li>
+			<li id="t-info"><a href="http://wiki.hellground.net/index.php?title=EventAI&amp;action=info">Page information</a></li>
+		</ul>
+	</div>
+</div>
+
+<!-- /TOOLBOX -->
+
+<!-- LANGUAGES -->
+
+<!-- /LANGUAGES -->
+			</div>
+			<!-- /panel -->
+		</div>
+		<!-- footer -->
+		<div id="footer" role="contentinfo">
+							<ul id="footer-info">
+											<li id="footer-info-lastmod"> This page was last modified on 9 March 2014, at 18:40.</li>
+											<li id="footer-info-viewcount">This page has been accessed 1,144 times.</li>
+									</ul>
+							<ul id="footer-places">
+											<li id="footer-places-privacy"><a href="TBC_HellGroundCore_Privacy_policy.html" title="TBC HellGroundCore:Privacy policy">Privacy policy</a></li>
+											<li id="footer-places-about"><a href="TBC_HellGroundCore_About.html" title="TBC HellGroundCore:About">About HellGroundCore MMORPG framework educational and hobby project</a></li>
+											<li id="footer-places-disclaimer"><a href="TBC_HellGroundCore_General_disclaimer.html" title="TBC HellGroundCore:General disclaimer">Disclaimers</a></li>
+									</ul>
+										<ul id="footer-icons" class="noprint">
+					<li id="footer-poweredbyico">
+						<a href="http://www.mediawiki.org/"><img src="../skins/common/images/poweredby_mediawiki_88x31.png" alt="Powered by MediaWiki" width="88" height="31" /></a>
+					</li>
+				</ul>
+						<div style="clear:both"></div>
+		</div>
+		<!-- /footer -->
+		<script>if(window.mw){
+mw.loader.state({"site":"loading","user":"missing","user.groups":"ready"});
+}</script>
+<script>if(window.mw){
+mw.loader.load(["mediawiki.action.view.postEdit","mediawiki.user","mediawiki.page.ready","mediawiki.searchSuggest","mediawiki.hidpi","skins.vector.js"], null, true);
+}</script>
+<script>if(window.mw){
+mw.loader.state({"site":"ready"});
+}</script>
+<!-- Served in 0.205 secs. -->
+	</body>
+
+<!-- Mirrored from wiki.hellground.net/index.php/EventAI by HTTrack Website Copier/3.x [XR&CO'2014], Tue, 12 Apr 2016 10:49:19 GMT -->
+</html>
