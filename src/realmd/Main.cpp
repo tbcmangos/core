@@ -274,7 +274,7 @@ extern int main(int argc, char **argv)
 
     if (acceptor.open(bind_addr, ACE_Reactor::instance(), ACE_NONBLOCK) == -1)
     {
-        sLog.outLog(LOG_DEFAULT, "ERROR: HellgroundRealm can not bind to %s:%d", bind_ip.c_str(), rmport);
+        sLog.outLog(LOG_DEFAULT, "ERROR: realmd can not bind to %s:%d", bind_ip.c_str(), rmport);
         return 1;
     }
 
@@ -315,9 +315,9 @@ extern int main(int argc, char **argv)
         if(Prio)
         {
             if(SetPriorityClass(hProcess,HIGH_PRIORITY_CLASS))
-                sLog.outString("HellgroundRealm process priority class set to HIGH");
+                sLog.outString("realmd process priority class set to HIGH");
             else
-                sLog.outLog(LOG_DEFAULT, "ERROR: Can't set HellgroundRealm process priority class.");
+                sLog.outLog(LOG_DEFAULT, "ERROR: Can't set realmd process priority class.");
         }
     }
     #endif
