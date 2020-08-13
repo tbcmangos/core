@@ -122,7 +122,7 @@ target_link_libraries(game
   shared
   Detour
   lualib
-  scripts
+  #scripts
 )
 
 #add_dependencies(game revision.h)
