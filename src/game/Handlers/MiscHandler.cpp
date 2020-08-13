@@ -85,14 +85,14 @@ void WorldSession::HandleGossipSelectOptionOpcode(WorldPacket & recv_data)
 
     sLog.outDebug("WORLD: CMSG_GOSSIP_SELECT_OPTION");
 
-    uint32 option;
-    uint32 unk;
+    uint32 gossipListId;
+    uint32 menuId;
     uint64 guid;
     std::string code = "";
 
-    recv_data >> guid >> unk >> option;
+    recv_data >> guid >> menuId >> gossipListId;
 
-    if (_player->PlayerTalkClass->GossipOptionCoded(option))
+    if (_player->PlayerTalkClass->GossipOptionCoded(gossipListId))
     {
         // recheck
         CHECK_PACKET_SIZE(recv_data,8+4+1);
@@ -103,9 +103,10 @@ void WorldSession::HandleGossipSelectOptionOpcode(WorldPacket & recv_data)
 
     Creature *unit = NULL;
     GameObject *go = NULL;
+	Item *item = NULL;
 
-    uint32 sender = _player->PlayerTalkClass->GossipOptionSender(option);
-    uint32 action = _player->PlayerTalkClass->GossipOptionAction(option);
+    uint32 sender = _player->PlayerTalkClass->GossipOptionSender(gossipListId);
+    uint32 action = _player->PlayerTalkClass->GossipOptionAction(gossipListId);
 
     if (IS_CREATURE_GUID(guid))
     {
@@ -125,6 +126,15 @@ void WorldSession::HandleGossipSelectOptionOpcode(WorldPacket & recv_data)
             return;
         }
     }
+	else if (IS_ITEM_GUID(guid))
+	{
+		item = _player->GetItemByGuid(guid);
+		if (!item || _player->IsBankPos(item->GetPos()))
+		{
+			DEBUG_LOG("WORLD: HandleGossipSelectOptionOpcode - Item (GUID: %u) not found.", uint32(GUID_LOPART(guid)));
+			return;
+		}
+	}
     else
     {
         sLog.outDebug("WORLD: HandleGossipSelectOptionOpcode - unsupported GUID type for highguid %u. lowpart %u.", uint32(GUID_HIPART(guid)), uint32(GUID_LOPART(guid)));
@@ -135,15 +145,47 @@ void WorldSession::HandleGossipSelectOptionOpcode(WorldPacket & recv_data)
     if (GetPlayer()->hasUnitState(UNIT_STAT_DIED))
         GetPlayer()->RemoveSpellsCausingAura(SPELL_AURA_FEIGN_DEATH);
 
-    if (unit)
+    if (GetPlayer()->HasAuraType(SPELL_AURA_MOD_STEALTH))
+        GetPlayer()->RemoveSpellsCausingAura(SPELL_AURA_MOD_STEALTH);
+    if (!code.empty())
     {
-        if (!sScriptMgr.OnGossipSelectCode(_player, unit, sender, action, code.empty() ? NULL : code.c_str()))
-            unit->OnGossipSelect(_player, option);
+        if (unit)
+        {
+            //unit->AI()->sGossipSelectCode(_player, menuId, gossipListId, code.c_str());
+            if (!sScriptMgr.OnGossipSelectCode(_player, unit, sender, action, code.empty() ? NULL : code.c_str()))
+                unit->OnGossipSelect(_player, gossipListId);
+        }
+        else if (go)
+        {
+            //go->AI()->GossipSelectCode(_player, menuId, gossipListId, code.c_str());
+            sScriptMgr.OnGossipSelectCode(_player, go, sender, action, code.empty() ? NULL : code.c_str());
+        }
+        else if (item)
+        {
+            sScriptMgr.OnGossipSelectCode(_player, item, sender, action, code.empty() ? NULL : code.c_str());
+        }
     }
     else
-        sScriptMgr.OnGossipSelectCode(_player, go, sender, action, code.empty() ? NULL : code.c_str());
-
-    sHookMgr->HandleGossipSelectOption(GetPlayer(), action, GetPlayer()->PlayerTalkClass->GossipOptionSender(option), GetPlayer()->PlayerTalkClass->GossipOptionAction(option), code);
+    {
+        if (unit)
+        {
+            //unit->AI()->sGossipSelectCode(_player, menuId, gossipListId, code.c_str());
+            if (!sScriptMgr.OnGossipSelect(_player, unit, sender, action))
+                unit->OnGossipSelect(_player, gossipListId);
+        }
+        else if (go)
+        {
+            //go->AI()->GossipSelectCode(_player, menuId, gossipListId, code.c_str());
+            sScriptMgr.OnGossipSelect(_player, go, sender, action);
+        }
+        else if (item)
+        {
+            sScriptMgr.OnGossipSelect(_player, item, sender, action);
+        }
+    }
+    
+	
+    sHookMgr->HandleGossipSelectOption(GetPlayer(), action, GetPlayer()->PlayerTalkClass->GossipOptionSender(gossipListId), GetPlayer()->PlayerTalkClass->GossipOptionAction(gossipListId), code);
 }
 
 void WorldSession::HandleWhoOpcode(WorldPacket & recv_data)
