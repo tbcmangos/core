@@ -79,6 +79,7 @@ Either edit CMakeLists to your liking or provide MySQL or put your MySQL librari
 ######################
 #   Disclaimer2020   #
 ######################
+
 This core is a server emulator for World of Warcraft: The Burning Crusade. The server serves full world content including authentication & scripts support. Compatible with World of Warcraft client 2.4.3(8606).
 As you can see it is based on hellgroundcore which had stopped for 4 years. if you dont familar with the background below is the timeframe of each emulator.
 
@@ -87,7 +88,7 @@ As you can see it is based on hellgroundcore which had stopped for 4 years. if y
 * trinity                 2008----------------------------- now(2020)    , https://github.com/trinitycore
 * HellGroundCore          2008-----------------2016                      , https://github.com/hellground-tbc
 * Looking4Group                                2016--2017                , https://github.com/Looking4Group/L4G_Core
-
+* vMaNGOS        2005->mangos->nostalgia->Elysium->vmangos- now(2020)    , https://github.com/vmangos
 * thiscore                2008--HellGroundCore-2016 ....... now(2020)    , https://github.com/tbcmangos/core  
 
 the original hellground pserver was a very good server and was stopped around 2016, Looking4Group pretty much using the same HellgroundCore and adding/fixing a few stuff. 
