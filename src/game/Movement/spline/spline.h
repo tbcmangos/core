@@ -23,6 +23,7 @@
 #include "typedefs.h"
 #include <G3D/Vector3.h>
 #include "Log.h"
+#include "Errors.h"
 
 namespace Movement {
 

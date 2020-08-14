@@ -20,6 +20,8 @@
 #ifndef HELLGROUND_SPLINEIMPL_H
 #define HELLGROUND_SPLINEIMPL_H
 
+#include "Errors.h"
+
 namespace Movement
 {
 template<typename length_type> void Spline<length_type>::evaluate_percent( float t, Vector3 & c ) const

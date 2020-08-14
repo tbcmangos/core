@@ -22,6 +22,7 @@
 
 #include "Auth/AuthCrypt.h"
 
+#include "DBCStores.h"
 #include "World.h"
 #include "AccountMgr.h"
 #include "SharedDefines.h"

@@ -24,6 +24,7 @@
 #include "Common.h"
 #include "Database/DBCStore.h"
 #include "DBCStructure.h"
+#include "Errors.h"
 
 #include <list>
 

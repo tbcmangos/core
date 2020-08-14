@@ -20,6 +20,7 @@
 #include "ModelInstance.h"
 #include "VMapManager2.h"
 #include "VMapDefinitions.h"
+#include "Errors.h"
 
 #include <string>
 #include <sstream>

@@ -35,6 +35,7 @@
 #include "StateMgr.h"
 #include "MotionMaster.h"
 #include "DBCStructure.h"
+#include "Util.h"
 #include <list>
 
 #include "WorldPacket.h"
