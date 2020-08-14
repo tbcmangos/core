@@ -1356,7 +1356,7 @@ struct npc_orb_attracterAI : public Scripted_NoMovementAI
 {
     npc_orb_attracterAI(Creature* creature) : Scripted_NoMovementAI(creature) {}
 
-    TimeTrackerSmall attractTimer;
+    ShortTimeTracker attractTimer;
 
     void Reset()
     {

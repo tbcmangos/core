@@ -39,7 +39,7 @@
 
 class ScriptedInstance;
 
-typedef TimeTrackerSmall Timer;
+typedef ShortTimeTracker Timer;
 
 class SummonList : std::list<uint64>
 {

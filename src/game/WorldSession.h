@@ -261,7 +261,7 @@ class  WorldSession
 
         // External Mail
         void SendExternalMails();
-        TimeTrackerSmall _mailSendTimer;
+        ShortTimeTracker _mailSendTimer;
 
         //auction
         void SendAuctionHello(Unit *unit);
@@ -786,7 +786,7 @@ class  WorldSession
         int m_sessionDbLocaleIndex;
         uint32 m_latency;
 
-        TimeTrackerSmall _kickTimer;
+        ShortTimeTracker _kickTimer;
 
         bool m_customRates;
 

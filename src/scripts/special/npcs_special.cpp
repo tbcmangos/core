@@ -2746,7 +2746,7 @@ struct npc_resurrectAI : public Scripted_NoMovementAI
 {
     npc_resurrectAI(Creature* c) : Scripted_NoMovementAI(c) {}
 
-    TimeTrackerSmall timer;
+    ShortTimeTracker timer;
 
     void Reset() override
     {
@@ -2878,7 +2878,7 @@ struct npc_explosive_sheepAI : public ScriptedAI
 {
     npc_explosive_sheepAI(Creature* c) : ScriptedAI(c) {}
 
-    TimeTrackerSmall explosionTimer;
+    ShortTimeTracker explosionTimer;
 
     void JustRespawned() override
     {

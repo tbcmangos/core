@@ -65,7 +65,7 @@ class PetAI : public CreatureAI
         TimeTracker i_tracker;
         std::set<uint64> m_AllySet;
         
-        TimeTrackerSmall updateAlliesTimer;
+        ShortTimeTracker updateAlliesTimer;
         uint32 m_forceTimer;
 
         typedef std::pair<Unit*, Spell*> TargetSpellPair;

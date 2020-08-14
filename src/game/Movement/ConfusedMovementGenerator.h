@@ -47,7 +47,7 @@ class  ConfusedMovementGenerator : public MovementGeneratorMedium< UNIT, Confuse
     private:
         void _generateMovement(UNIT &unit);
 
-        TimeTrackerSmall _nextMoveTime;
+        ShortTimeTracker _nextMoveTime;
 
         Position _randomPosition[MAX_RANDOM_POINTS+1];
 };

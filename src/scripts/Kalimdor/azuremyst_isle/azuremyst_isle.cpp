@@ -880,7 +880,7 @@ struct npc_trackerAI : public ScriptedAI
 {
     npc_trackerAI(Creature* creature) : ScriptedAI(creature) {}
 
-    TimeTrackerSmall CheckTimer;
+    ShortTimeTracker CheckTimer;
 
     void Reset()
     {

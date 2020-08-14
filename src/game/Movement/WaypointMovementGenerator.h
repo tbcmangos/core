@@ -89,7 +89,7 @@ class WaypointMovementGenerator<Creature> : public MovementGeneratorMedium< Crea
         bool atNode(Creature&);
         bool tryToMove(Creature&);
 
-        TimeTrackerSmall _nextMoveTime;
+        ShortTimeTracker _nextMoveTime;
         bool _pathFinding;
         bool _isArrivalDone;
         uint32 _pathId;

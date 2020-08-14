@@ -62,7 +62,7 @@ struct boss_vexallusAI : public ScriptedAI
     uint32 SpawnAddInterval;
     uint32 AlreadySpawnedAmount;
 
-    TimeTrackerSmall evadeTimer;
+    ShortTimeTracker evadeTimer;
 
     SummonList summons;
 

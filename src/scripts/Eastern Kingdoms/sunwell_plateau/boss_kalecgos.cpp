@@ -146,7 +146,7 @@ struct boss_kalecgosAI : public ScriptedAI
     bool isEnraged;
     bool isBanished;
 
-    TimeTrackerSmall stateCheckTimer;
+    ShortTimeTracker stateCheckTimer;
 
     void Reset()
     {

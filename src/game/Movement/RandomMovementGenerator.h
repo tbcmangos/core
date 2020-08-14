@@ -43,7 +43,7 @@ class RandomMovementGenerator : public MovementGeneratorMedium< T, RandomMovemen
         bool GetResetPosition(T&, float& x, float& y, float& z);
 
     private:
-        TimeTrackerSmall i_nextMoveTime;
+        ShortTimeTracker i_nextMoveTime;
         uint32 i_nextMove;
 
         float wander_distance;

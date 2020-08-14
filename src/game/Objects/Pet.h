@@ -266,6 +266,6 @@ class Pet : public Creature
             ASSERT(false);
         }
 
-        TimeTrackerSmall focusTimer;
+        ShortTimeTracker focusTimer;
 };
 #endif

@@ -107,7 +107,7 @@ struct DynTreeImpl : public ParentTree/*, public Intersectable*/
         }
     }
 
-    TimeTrackerSmall rebalance_timer;
+    ShortTimeTracker rebalance_timer;
     int unbalanced_times;
 };
 

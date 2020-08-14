@@ -1718,7 +1718,7 @@ class  Unit : public WorldObject
         std::unordered_map<uint32, uint32> m_PRDMap;
 
         void UpdateSplineMovement(uint32 t_diff);
-        TimeTrackerSmall m_movesplineTimer;
+        ShortTimeTracker m_movesplineTimer;
 };
 
 typedef std::set<Unit*> UnitSet;
