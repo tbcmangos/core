@@ -37,6 +37,9 @@ option(USE_ANTICHEAT "Use anticheat" 0)
 option(SCRIPTS "Compile scripts" 1)
 option(USE_EXTRACTORS "Compile extractors" 0)
 option(USE_LIBCURL "Compile with libcurl for email support" 0)
+option(USING_CM_MAP "Use cmangos map" 0)
+option(USING_VM_MAP "Use vmangos map" 0)
+option(USING_ANTICHEAT2 "Use anticheat2" 1)
 option(NOT_USE_ELUNA_HOOKS "Do not use Elunas HookMgr" 0)
 option(MAP_UPDATE_DIFF_INFO "Used for gathering info about execution time for specific parts of Map::Update" 0)
 
@@ -442,6 +445,22 @@ add_subdirectory(dep)
 
 if (USE_EXTRACTORS)
     add_subdirectory(contrib)
+endif()
+
+if( SCRIPTS )
+  add_definitions(-DSCRIPTS)
+endif()
+
+if( USING_CM_MAP )
+  add_definitions(-DUSING_CM_MAP)
+endif()
+
+if( USING_VM_MAP )
+  add_definitions(-DUSING_VM_MAP)
+endif()
+
+if( USING_ANTICHEAT2 )
+  add_definitions(-DUSING_ANTICHEAT2)
 endif()
 
 # Add definitions for all build types
