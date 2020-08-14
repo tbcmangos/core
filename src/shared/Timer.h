@@ -1,7 +1,7 @@
 /*
- * Copyright (C) 2005-2008 MaNGOS <http://getmangos.com/>
- * Copyright (C) 2008 TrinityCore <http://www.trinitycore.org/>
- * Copyright (C) 2008-2014 Hellground <http://hellground.net/>
+ * Copyright (C) 2005-2008 MaNGOS <http://www.mangosproject.org/>
+ *
+ * Copyright (C) 2008 Trinity <http://www.trinitycore.org/>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,8 +18,8 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
  */
 
-#ifndef HELLGROUND_TIMER_H
-#define HELLGROUND_TIMER_H
+#ifndef LOOKING4GROUP_TIMER_H
+#define LOOKING4GROUP_TIMER_H
 
 #include "Common.h"
 #include "Log.h"
@@ -195,7 +195,7 @@ class WorldUpdateCounter
         }
 
         void Reset() { m_tmStart = WorldTimer::tickTime(); }
-
+		void ResetTo(uint32 lastUpdate) { m_tmStart = lastUpdate; }
     private:
         uint32 m_tmStart;
 };
@@ -225,7 +225,7 @@ class DiffRecorder
                 vsnprintf(str, 256, fmt, ap);
                 va_end(ap);
 
-                sLog.outLog(LOG_DIFF, "[%s]: %s [diff: %u].", ownerName.c_str(), str, diffTime);
+                sLog.outInfo("[%s]: %s [diff: %u].", ownerName.c_str(), str, diffTime);
             }
 
             return diffTime;
