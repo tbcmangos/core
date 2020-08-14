@@ -1,6 +1,5 @@
 /*
  * Copyright (C) 2005-2011 MaNGOS <http://getmangos.com/>
- * Copyright (C) 2008-2014 Hellground <http://hellground.net/>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -9,12 +8,12 @@
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
 #include "Common.h"
@@ -24,7 +23,7 @@
 #include "ProgressBar.h"
 #include "Database/DatabaseEnv.h"
 #include "Util.h"
-#include "WardenDataStorage.h"
+#include "WardenMgr.h"
 #include "WardenWin.h"
 #include "World.h"
 
@@ -72,7 +71,7 @@ void WardenDataStorage::LoadWardenDataResult(bool reload)
     if (reload)
         Cleanup();
 
-    QueryResult* result = GameDataDatabase.Query("SELECT `check`, `data`, `result`, `address`, `length`, `str` FROM warden_data_result");
+    QueryResult* result = WorldDatabase.Query("SELECT `check`, `data`, `result`, `address`, `length`, `str` FROM warden_data_result");
 
     uint32 count = 0;
 

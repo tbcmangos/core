@@ -1,6 +1,5 @@
 /*
  * Copyright (C) 2005-2011 MaNGOS <http://getmangos.com/>
- * Copyright (C) 2008-2014 Hellground <http://hellground.net/>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -9,15 +8,15 @@
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#include "Auth/WardenKeyGeneration.h"
+#include "WardenKeyGen.h"
 #include "Common.h"
 #include "WorldPacket.h"
 #include "WorldSession.h"
@@ -59,11 +58,11 @@ void WardenMac::Init(WorldSession *pClient, BigNumber *K)
 
     iCrypto.Init(InputKey);
     oCrypto.Init(OutputKey);
-//    sLog.outLog(LOG_WARDEN, "Server side warden for client %u initializing...", pClient->GetAccountId());
+//    sLog.outWarden("Server side warden for client %u initializing...", pClient->GetAccountId());
 //    PrintHexArray("  C->S Key: ", InputKey, 16, true);
 //    PrintHexArray("  S->C Key: ", OutputKey, 16, true);
 //    PrintHexArray("  Seed: ", Seed, 16, true);
-//    sLog.outLog(LOG_WARDEN, "Loading Module...");
+//    sLog.outWarden("Loading Module...");
 
     Module = GetModuleForClient(Client);
 
@@ -95,12 +94,12 @@ ClientWardenModule *WardenMac::GetModuleForClient(WorldSession *session)
 
 void WardenMac::InitializeModule()
 {
-//    sLog.outLog(LOG_WARDEN, "Initialize module");
+//    sLog.outWarden("Initialize module");
 }
 
 void WardenMac::RequestHash()
 {
-//    sLog.outLog(LOG_WARDEN, "Request hash");
+//    sLog.outWarden("Request hash");
 
     // Create packet structure
     WardenHashRequest Request;
@@ -157,13 +156,13 @@ void WardenMac::HandleHashResult(ByteBuffer &buff)
     // verify key not equal kick player
     if (memcmp(buff.contents() + 1, sha1.GetDigest(), 20) != 0)
     {
-        sLog.outLog(LOG_WARDEN, "MAC Request hash reply: failed account %u", Client->GetAccountId());
+        sLog.outWarden("MAC Request hash reply: failed account %u", Client->GetAccountId());
         if (sWorld.getConfig(CONFIG_WARDEN_KICK))
             Client->KickPlayer();
         return;
     }
 
-//    sLog.outLog(LOG_WARDEN, "Request hash reply: succeed");
+//    sLog.outWarden("Request hash reply: succeed");
 
     // client 7F96EEFDA5B63D20A4DF8E00CBF48304
     //const uint8 client_key[16] = { 0x7F, 0x96, 0xEE, 0xFD, 0xA5, 0xB6, 0x3D, 0x20, 0xA4, 0xDF, 0x8E, 0x00, 0xCB, 0xF4, 0x83, 0x04 };
@@ -181,7 +180,7 @@ void WardenMac::HandleHashResult(ByteBuffer &buff)
 
 void WardenMac::RequestData()
 {
-//    sLog.outLog(LOG_WARDEN, "Request data");
+//    sLog.outWarden("Request data");
 
     ByteBuffer buff;
     buff << uint8(WARDEN_SMSG_CHEAT_CHECKS_REQUEST);
@@ -205,7 +204,7 @@ void WardenMac::RequestData()
 
 void WardenMac::HandleData(ByteBuffer &buff)
 {
-//    sLog.outLog(LOG_WARDEN, "Handle data");
+//    sLog.outWarden("Handle data");
 
     m_WardenDataSent = false;
     m_WardenKickTimer = 0;
@@ -238,7 +237,7 @@ void WardenMac::HandleData(ByteBuffer &buff)
 
     if (memcmp(sha1Hash, sha1.GetDigest(), 20))
     {
-        sLog.outLog(LOG_WARDEN, "MAC Handle data failed: SHA1 hash is wrong! account %u", Client->GetAccountId());
+        sLog.outWarden("MAC Handle data failed: SHA1 hash is wrong! account %u", Client->GetAccountId());
         found = true;
     }
 
@@ -253,7 +252,7 @@ void WardenMac::HandleData(ByteBuffer &buff)
 
     if (memcmp(ourMD5Hash, theirsMD5Hash, 16))
     {
-        sLog.outLog(LOG_WARDEN, "MAC Handle data failed: MD5 hash is wrong! account %u", Client->GetAccountId());
+        sLog.outWarden("MAC Handle data failed: MD5 hash is wrong! account %u", Client->GetAccountId());
         found = true;
     }
 

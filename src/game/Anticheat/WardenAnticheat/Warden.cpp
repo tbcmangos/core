@@ -1,6 +1,5 @@
 /*
  * Copyright (C) 2005-2011 MaNGOS <http://getmangos.com/>
- * Copyright (C) 2008-2014 Hellground <http://hellground.net/>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -9,12 +8,12 @@
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
 #include "Common.h"
@@ -28,7 +27,7 @@
 #include "World.h"
 #include "Player.h"
 #include "Util.h"
-#include "WardenBase.h"
+#include "Warden.h"
 #include "WardenWin.h"
 
 WardenBase::WardenBase() : iCrypto(16), oCrypto(16), m_WardenCheckTimer(10000/*10 sec*/), m_WardenKickTimer(0), m_WardenDataSent(false),
@@ -85,7 +84,7 @@ void WardenBase::HandleData(ByteBuffer &buff)
 
 void WardenBase::SendModuleToClient()
 {
-//    sLog.outLog(LOG_WARDEN, "Send module to client");
+//    sLog.outWarden("Send module to client");
 
     // Create packet structure
     WardenModuleTransfer pkt;
@@ -111,7 +110,7 @@ void WardenBase::SendModuleToClient()
 
 void WardenBase::RequestModule()
 {
-//    sLog.outLog(LOG_WARDEN, "Request module");
+//    sLog.outWarden("Request module");
 
     // Create packet structure
     WardenModuleUse Request;
@@ -184,32 +183,51 @@ bool WardenBase::IsValidCheckSum(uint32 checksum, const uint8 *Data, const uint1
 
     if (checksum != newchecksum)
     {
-        sLog.outLog(LOG_WARDEN, "CHECKSUM IS NOT VALID account %u checksum: %u | newchecksum: %u", acc, checksum, newchecksum);
+        
+        sLog.outWarden("CHECKSUM IS NOT VALID account %u checksum: %u | newchecksum: %u", acc, checksum, newchecksum);
         return false;
     }
     else
     {
-//        sLog.outLog(LOG_WARDEN, "CHECKSUM IS VALID");
+//        sLog.outWarden("CHECKSUM IS VALID");
         return true;
     }
 }
 
+struct keyData {
+    union
+    {
+        struct
+        {
+            uint8 bytes[20];
+        } bytes;
+
+        struct
+        {
+            uint32 ints[5];
+        } ints;
+    };
+};
+
 uint32 WardenBase::BuildChecksum(const uint8* data, uint32 dataLen)
 {
-    uint8 hash[20];
-    SHA1(data, dataLen, hash);
+    keyData hash;
+    SHA1(data, dataLen, hash.bytes.bytes);
     uint32 checkSum = 0;
     for (uint8 i = 0; i < 5; ++i)
-        checkSum = checkSum ^ *(uint32*)(&hash[0] + i * 4);
+        checkSum = checkSum ^ hash.ints.ints[i];
     return checkSum;
 }
 
 void WorldSession::HandleWardenDataOpcode(WorldPacket & recv_data)
 {
+    if (!m_Warden || recv_data.empty())
+        return;
+
     m_Warden->DecryptData(const_cast<uint8*>(recv_data.contents()), recv_data.size());
     uint8 Opcode;
     recv_data >> Opcode;
-//    sLog.outLog(LOG_WARDEN, "Got packet, opcode %02X, size %u", Opcode, recv_data.size());
+//    sLog.outWarden("Got packet, opcode %02X, size %u", Opcode, recv_data.size());
     recv_data.hexlike();
 
     switch(Opcode)
@@ -224,17 +242,17 @@ void WorldSession::HandleWardenDataOpcode(WorldPacket & recv_data)
             m_Warden->HandleData(recv_data);
             break;
         case WARDEN_CMSG_MEM_CHECKS_RESULT:
-            sLog.outLog(LOG_WARDEN, "NYI WARDEN_CMSG_MEM_CHECKS_RESULT received! account %u", GetAccountId());
+            sLog.outWarden("NYI WARDEN_CMSG_MEM_CHECKS_RESULT received! account %u", GetAccountId());
             break;
         case WARDEN_CMSG_HASH_RESULT:
             m_Warden->HandleHashResult(recv_data);
             m_Warden->InitializeModule();
             break;
         case WARDEN_CMSG_MODULE_FAILED:
-            sLog.outLog(LOG_WARDEN, "NYI WARDEN_CMSG_MODULE_FAILED received! account %u", GetAccountId());
+            sLog.outWarden("NYI WARDEN_CMSG_MODULE_FAILED received! account %u", GetAccountId());
             break;
         default:
-            sLog.outLog(LOG_WARDEN, "Got unknown warden opcode %02X of size %u. account %u", Opcode, recv_data.size() - 1, GetAccountId());
+            sLog.outWarden("Got unknown warden opcode %02X of size %u. account %u", Opcode, recv_data.size() - 1, GetAccountId());
             break;
     }
 }
