@@ -60,7 +60,13 @@ char serviceDescription[] = "Massive Network Game Object Server";
  *  6 - linux daemon
  */
 
-RunModes runMode = MODE_NORMAL;
+ /*
+  * -1 - not in service mode
+  *  0 - stopped
+  *  1 - running
+  *  2 - paused
+  */
+int m_ServiceStatus = -1;
 
 bool StartDB();
 void UnhookSignals();
@@ -93,7 +99,7 @@ void usage(const char *prog)
 extern int main(int argc, char **argv)
 {
     ///- Command line parsing
-    char const* cfg_file = _HELLGROUND_REALM_CONFIG;
+    char const* cfg_file = _REALMD_CONFIG;
 
     char const *options = ":c:s:";
 
@@ -324,7 +330,6 @@ extern int main(int argc, char **argv)
 
     //server has started up successfully => enable async DB requests
     LoginDatabase.AllowAsyncTransactions();
-    LoginDatabase.EnableLogging();
 
     // maximum counter for next ping
     uint32 numLoops = (sConfig.GetIntDefault("MaxPingTime", 30) * (MINUTE * 1000000 / 100000));
@@ -350,10 +355,10 @@ extern int main(int argc, char **argv)
             LoginDatabase.Ping();
         }
 #ifdef WIN32
-        if (runMode == MODE_SERVICE_STOPPED)
+        if (m_ServiceStatus == 0)
             stopEvent = true;
 
-        while (runMode == MODE_SERVICE_PAUSED)
+        while (m_ServiceStatus == 2)
             Sleep(1000);
 #endif
     }
