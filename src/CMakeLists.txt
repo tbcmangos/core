@@ -27,5 +27,7 @@ add_subdirectory(framework)
 add_subdirectory(realmd)
 add_subdirectory(game)
 add_subdirectory(mangosd)
-add_subdirectory(scripts)
 
+if(SCRIPTS)
+  add_subdirectory(scripts)
+endif()
