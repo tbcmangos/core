@@ -485,7 +485,7 @@ class  BattleGround
 
         void DoorOpen(uint32 type);
         void DoorClose(uint32 type);
-        const char *GetHellgroundString(int32 entry);
+        const char *GetMangosString(int32 entry);
 
         virtual bool HandlePlayerUnderMap(Player * plr, float z);
         void AddOrSetPlayerToCorrectBgGroup(Player *plr, uint64 guid, uint32 team);

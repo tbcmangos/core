@@ -5838,7 +5838,7 @@ bool ObjectMgr::LoadHellgroundStrings(DatabaseType& db, char const* table, int32
     return true;
 }
 
-const char *ObjectMgr::GetHellgroundString(int32 entry, int locale_idx) const
+const char *ObjectMgr::GetMangosString(int32 entry, int locale_idx) const
 {
     // locale_idx==-1 -> default, locale_idx >= 0 in to idx+1
     // Content[0] always exist if exist HellgroundStringLocale

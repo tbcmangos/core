@@ -1367,7 +1367,7 @@ namespace MaNGOS
                 : i_object(obj), i_msgtype(msgtype), i_textId(textId), i_language(language), i_targetGUID(targetGUID), i_withoutPrename(withoutPrename) {}
             void operator()(WorldPacket& data, int32 loc_idx)
             {
-                char const* text = sObjectMgr.GetHellgroundString(i_textId, loc_idx);
+                char const* text = sObjectMgr.GetMangosString(i_textId, loc_idx);
                 // TODO: i_object.GetName() also must be localized?
                 i_object.BuildMonsterChat(&data, i_msgtype, text, i_language, i_object.GetNameForLocaleIdx(loc_idx), i_targetGUID, i_withoutPrename);
             }
@@ -1444,7 +1444,7 @@ void WorldObject::MonsterWhisper(int32 textId, uint64 receiver, bool IsBossWhisp
         return;
 
     uint32 loc_idx = player->GetSession()->GetSessionDbLocaleIndex();
-    char const* text = sObjectMgr.GetHellgroundString(textId, loc_idx);
+    char const* text = sObjectMgr.GetMangosString(textId, loc_idx);
 
     WorldPacket data(SMSG_MESSAGECHAT, 200);
     BuildMonsterChat(&data,IsBossWhisper ? CHAT_MSG_RAID_BOSS_WHISPER : CHAT_MSG_MONSTER_WHISPER, text, LANG_UNIVERSAL, GetNameForLocaleIdx(loc_idx), receiver);
@@ -1458,9 +1458,9 @@ void WorldObject::BuildMonsterChat(WorldPacket *data, uint8 msgtype, int32 iText
     if(GetTypeId() == TYPEID_PLAYER)
     {
         uint32 loc_idx = ((Player*)this)->GetSession()->GetSessionDbLocaleIndex();
-        text = sObjectMgr.GetHellgroundString(iTextEntry,loc_idx);
+        text = sObjectMgr.GetMangosString(iTextEntry,loc_idx);
     } else
-        text = sObjectMgr.GetHellgroundStringForDBCLocale(iTextEntry);
+        text = sObjectMgr.GetMangosStringForDBCLocale(iTextEntry);
     BuildMonsterChat(data, msgtype, text, language, name, targetGuid, withoutPrename);
     if(GetTypeId() == TYPEID_PLAYER)
         data->put(5, (uint64)0);  // BAD HACK

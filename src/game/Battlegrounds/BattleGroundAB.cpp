@@ -96,19 +96,19 @@ void BattleGroundAB::Update(uint32 diff)
         else if (GetStartDelayTime() <= START_DELAY1 && !(m_Events & 0x04))
         {
             m_Events |= 0x04;
-            SendMessageToAll(GetHellgroundString(LANG_BG_AB_ONEMINTOSTART));
+            SendMessageToAll(GetMangosString(LANG_BG_AB_ONEMINTOSTART));
         }
         // After 1,5 minute, warning is signalled
         else if (GetStartDelayTime() <= START_DELAY2 && !(m_Events & 0x08))
         {
             m_Events |= 0x08;
-            SendMessageToAll(GetHellgroundString(LANG_BG_AB_HALFMINTOSTART));
+            SendMessageToAll(GetMangosString(LANG_BG_AB_HALFMINTOSTART));
         }
         // After 2 minutes, gates OPEN ! x)
         else if (GetStartDelayTime() < 0 && !(m_Events & 0x10))
         {
             m_Events |= 0x10;
-            SendMessageToAll(GetHellgroundString(LANG_BG_AB_STARTED));
+            SendMessageToAll(GetMangosString(LANG_BG_AB_STARTED));
 
             // spawn neutral banners
             for (int banner = BG_AB_OBJECT_BANNER_NEUTRAL, i = 0; i < 5; banner += 8, ++i)
@@ -172,7 +172,7 @@ void BattleGroundAB::Update(uint32 diff)
                     // Message to chatlog
                     char buf[256];
                     uint8 type = (teamIndex == 0) ? CHAT_MSG_BG_SYSTEM_ALLIANCE : CHAT_MSG_BG_SYSTEM_HORDE;
-                    sprintf(buf, GetHellgroundString(LANG_BG_AB_NODE_TAKEN), (teamIndex == 0) ? GetHellgroundString(LANG_BG_AB_ALLY) : GetHellgroundString(LANG_BG_AB_HORDE), _GetNodeName(node));
+                    sprintf(buf, GetMangosString(LANG_BG_AB_NODE_TAKEN), (teamIndex == 0) ? GetMangosString(LANG_BG_AB_ALLY) : GetMangosString(LANG_BG_AB_HORDE), _GetNodeName(node));
                     WorldPacket data;
                     ChatHandler::FillMessageData(&data, NULL, type, LANG_UNIVERSAL, NULL, 0, buf, NULL);
                     SendPacketToAll(&data);
@@ -212,9 +212,9 @@ void BattleGroundAB::Update(uint32 diff)
                 if (!m_IsInformedNearVictory && m_TeamScores[team] > 1800)
                 {
                     if (team == BG_TEAM_ALLIANCE)
-                        SendMessageToAll(GetHellgroundString(LANG_BG_AB_A_NEAR_VICTORY));
+                        SendMessageToAll(GetMangosString(LANG_BG_AB_A_NEAR_VICTORY));
                     else
-                        SendMessageToAll(GetHellgroundString(LANG_BG_AB_H_NEAR_VICTORY));
+                        SendMessageToAll(GetMangosString(LANG_BG_AB_H_NEAR_VICTORY));
                     PlaySoundToAll(SOUND_NEAR_VICTORY);
                     m_IsInformedNearVictory = true;
                 }
@@ -325,15 +325,15 @@ const char* BattleGroundAB::_GetNodeName(uint8 node)
     switch (node)
     {
         case BG_AB_NODE_STABLES:
-            return GetHellgroundString(LANG_BG_AB_NODE_STABLES);
+            return GetMangosString(LANG_BG_AB_NODE_STABLES);
         case BG_AB_NODE_BLACKSMITH:
-            return GetHellgroundString(LANG_BG_AB_NODE_BLACKSMITH);
+            return GetMangosString(LANG_BG_AB_NODE_BLACKSMITH);
         case BG_AB_NODE_FARM:
-            return GetHellgroundString(LANG_BG_AB_NODE_FARM);
+            return GetMangosString(LANG_BG_AB_NODE_FARM);
         case BG_AB_NODE_LUMBER_MILL:
-            return GetHellgroundString(LANG_BG_AB_NODE_LUMBER_MILL);
+            return GetMangosString(LANG_BG_AB_NODE_LUMBER_MILL);
         case BG_AB_NODE_GOLD_MINE:
-            return GetHellgroundString(LANG_BG_AB_NODE_GOLD_MINE);
+            return GetMangosString(LANG_BG_AB_NODE_GOLD_MINE);
         default:
             ASSERT(0);
     }
@@ -490,7 +490,7 @@ void BattleGroundAB::EventPlayerClickedOnFlag(Player *source, GameObject* /*targ
         _CreateBanner(node, BG_AB_NODE_TYPE_CONTESTED, teamIndex, true);
         _SendNodeUpdate(node);
         m_NodeTimers[node] = BG_AB_FLAG_CAPTURING_TIME;
-        sprintf(buf, GetHellgroundString(LANG_BG_AB_NODE_CLAIMED), _GetNodeName(node), (teamIndex == 0) ? GetHellgroundString(LANG_BG_AB_ALLY) : GetHellgroundString(LANG_BG_AB_HORDE));
+        sprintf(buf, GetMangosString(LANG_BG_AB_NODE_CLAIMED), _GetNodeName(node), (teamIndex == 0) ? GetMangosString(LANG_BG_AB_ALLY) : GetMangosString(LANG_BG_AB_HORDE));
         sound = SOUND_NODE_CLAIMED;
         SendObjectiveComplete(BG_AB_CREDITMARKER[node], teamIndex,BG_AB_NodePositions[node][1],BG_AB_NodePositions[node][2]);
     }
@@ -509,7 +509,7 @@ void BattleGroundAB::EventPlayerClickedOnFlag(Player *source, GameObject* /*targ
             _CreateBanner(node, BG_AB_NODE_TYPE_CONTESTED, teamIndex, true);
             _SendNodeUpdate(node);
             m_NodeTimers[node] = BG_AB_FLAG_CAPTURING_TIME;
-            sprintf(buf, GetHellgroundString(LANG_BG_AB_NODE_ASSAULTED), _GetNodeName(node));
+            sprintf(buf, GetMangosString(LANG_BG_AB_NODE_ASSAULTED), _GetNodeName(node));
             SendObjectiveComplete(BG_AB_CREDITMARKER[node], teamIndex,BG_AB_NodePositions[node][1],BG_AB_NodePositions[node][2]);
         }
         // If contested, change back to occupied
@@ -525,7 +525,7 @@ void BattleGroundAB::EventPlayerClickedOnFlag(Player *source, GameObject* /*targ
             _SendNodeUpdate(node);
             m_NodeTimers[node] = 0;
             _NodeOccupied(node,(teamIndex == 0) ? ALLIANCE:HORDE);
-            sprintf(buf, GetHellgroundString(LANG_BG_AB_NODE_DEFENDED), _GetNodeName(node));
+            sprintf(buf, GetMangosString(LANG_BG_AB_NODE_DEFENDED), _GetNodeName(node));
         }
         sound = (teamIndex == 0) ? SOUND_NODE_ASSAULTED_ALLIANCE : SOUND_NODE_ASSAULTED_HORDE;
     }
@@ -542,7 +542,7 @@ void BattleGroundAB::EventPlayerClickedOnFlag(Player *source, GameObject* /*targ
         _SendNodeUpdate(node);
         _NodeDeOccupied(node);
         m_NodeTimers[node] = BG_AB_FLAG_CAPTURING_TIME;
-        sprintf(buf, GetHellgroundString(LANG_BG_AB_NODE_ASSAULTED), _GetNodeName(node));
+        sprintf(buf, GetMangosString(LANG_BG_AB_NODE_ASSAULTED), _GetNodeName(node));
         sound = (teamIndex == 0) ? SOUND_NODE_ASSAULTED_ALLIANCE : SOUND_NODE_ASSAULTED_HORDE;
         SendObjectiveComplete(BG_AB_CREDITMARKER[node], teamIndex,BG_AB_NodePositions[node][1],BG_AB_NodePositions[node][2]);
     }
@@ -552,7 +552,7 @@ void BattleGroundAB::EventPlayerClickedOnFlag(Player *source, GameObject* /*targ
     // If node is occupied again, send "X has taken the Y" msg.
     if (m_Nodes[node] >= BG_AB_NODE_TYPE_OCCUPIED)
     {
-        sprintf(buf, GetHellgroundString(LANG_BG_AB_NODE_TAKEN), (teamIndex == 0) ? GetHellgroundString(LANG_BG_AB_ALLY) : GetHellgroundString(LANG_BG_AB_HORDE), _GetNodeName(node));
+        sprintf(buf, GetMangosString(LANG_BG_AB_NODE_TAKEN), (teamIndex == 0) ? GetMangosString(LANG_BG_AB_ALLY) : GetMangosString(LANG_BG_AB_HORDE), _GetNodeName(node));
         ChatHandler::FillMessageData(&data, NULL, type, LANG_UNIVERSAL, NULL, 0, buf, NULL);
         SendPacketToAll(&data);
     }

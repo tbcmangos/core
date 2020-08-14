@@ -64,7 +64,7 @@ class ChatHandler
         static char* LineFromMessage(char*& pos) { char* start = strtok(pos,"\n"); pos = NULL; return start; }
         static std::string GetNameLink(const std::string & name);
 
-        virtual const char *GetHellgroundString(int32 entry) const;
+        virtual const char *GetMangosString(int32 entry) const;
 
         virtual void SendSysMessage( const char *str);
         void SendSysMessage(         int32     entry);
@@ -628,7 +628,7 @@ class CliHandler : public ChatHandler
         explicit CliHandler(Print* zprint) : m_print(zprint) {}
 
         // overwrite functions
-        const char *GetHellgroundString(int32 entry) const;
+        const char *GetMangosString(int32 entry) const;
         bool isAvailable(ChatCommand const& cmd, bool) const;
         void SendSysMessage(const char *str);
         char const* GetName() const;

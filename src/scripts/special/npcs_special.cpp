@@ -3131,7 +3131,7 @@ bool GossipSelect_npc_dummy_park(Player *player, Creature *creature, uint32 send
                     mCreature->SetHomePosition(dummyparknpclocs[i][0], dummyparknpclocs[i][1], dummyparknpclocs[i][2], mCreature->GetOrientation());
                     map->CreatureRelocation(mCreature,dummyparknpclocs[i][0], dummyparknpclocs[i][1], dummyparknpclocs[i][2], mCreature->GetOrientation());
                 }
-                GameDataDatabase.PExecuteLog("UPDATE creature SET position_x = '%f', position_y = '%f', position_z = '%f' WHERE guid = '%u'",
+                WorldDatabase.PExecuteLog("UPDATE creature SET position_x = '%f', position_y = '%f', position_z = '%f' WHERE guid = '%u'",
                     dummyparknpclocs[i][0], dummyparknpclocs[i][1], dummyparknpclocs[i][2], dummyparknpcs[i][0]);
             }
         }
@@ -3165,7 +3165,7 @@ bool GossipSelect_npc_dummy_park(Player *player, Creature *creature, uint32 send
                     mCreature->SetHomePosition(dummyparknpclocs[i][0], dummyparknpclocs[i][1], dummyparknpclocs[i][2], mCreature->GetOrientation());
                     map->CreatureRelocation(mCreature,dummyparkstorage[0], dummyparkstorage[1], dummyparkstorage[2], mCreature->GetOrientation());
                 }
-                GameDataDatabase.PExecuteLog("UPDATE creature SET position_x = '%f', position_y = '%f', position_z = '%f' WHERE guid = '%u'",
+                WorldDatabase.PExecuteLog("UPDATE creature SET position_x = '%f', position_y = '%f', position_z = '%f' WHERE guid = '%u'",
                     dummyparkstorage[0], dummyparkstorage[1], dummyparkstorage[2], dummyparknpcs[i][0]);
             }
         }

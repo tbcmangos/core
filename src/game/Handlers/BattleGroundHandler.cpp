@@ -894,7 +894,7 @@ void WorldSession::SendBattleGroundOrArenaJoinError(uint8 err)
             return;
             break;
     }
-    ChatHandler::FillMessageData(&data, NULL, CHAT_MSG_BG_SYSTEM_NEUTRAL, LANG_UNIVERSAL, NULL, 0, GetHellgroundString(msg), NULL);
+    ChatHandler::FillMessageData(&data, NULL, CHAT_MSG_BG_SYSTEM_NEUTRAL, LANG_UNIVERSAL, NULL, 0, GetMangosString(msg), NULL);
     SendPacket(&data);
     return;
 }

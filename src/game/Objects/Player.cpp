@@ -15508,7 +15508,7 @@ void Player::_LoadInventory(QueryResult* result, uint32 timediff)
         // send by mail problematic items
         while (!problematicItems.empty())
         {
-            std::string subject = GetSession()->GetHellgroundString(LANG_NOT_EQUIPPED_ITEM);
+            std::string subject = GetSession()->GetMangosString(LANG_NOT_EQUIPPED_ITEM);
 
             // fill mail
             MailDraft draft(subject);
@@ -16117,7 +16117,7 @@ bool Player::Satisfy(AccessRequirement const *ar, uint32 target_map, bool report
             if (report)
             {
                 if (missingItem)
-                    GetSession()->SendAreaTriggerMessage(GetSession()->GetHellgroundString(LANG_LEVEL_MINREQUIRED_AND_ITEM), ar->levelMin, ObjectMgr::GetItemPrototype(missingItem)->Name1);
+                    GetSession()->SendAreaTriggerMessage(GetSession()->GetMangosString(LANG_LEVEL_MINREQUIRED_AND_ITEM), ar->levelMin, ObjectMgr::GetItemPrototype(missingItem)->Name1);
                 else if (missingKey)
                     SendTransferAborted(target_map, TRANSFER_ABORT_DIFFICULTY2);
                 else if (missingHeroicQuest)
@@ -16125,7 +16125,7 @@ bool Player::Satisfy(AccessRequirement const *ar, uint32 target_map, bool report
                 else if (missingQuest)
                     GetSession()->SendAreaTriggerMessage(ar->questFailedText.c_str());
                 else if (LevelMin)
-                    GetSession()->SendAreaTriggerMessage(GetSession()->GetHellgroundString(LANG_LEVEL_MINREQUIRED), LevelMin);
+                    GetSession()->SendAreaTriggerMessage(GetSession()->GetMangosString(LANG_LEVEL_MINREQUIRED), LevelMin);
                 else if (missingAura)
                     GetSession()->SendAreaTriggerMessage(ar->missingAuraText.c_str());
             }
@@ -17495,7 +17495,7 @@ void Player::Whisper(const std::string& text, uint32 language,uint64 receiver)
     if (!isAcceptWhispers() && !isGameMaster() && !rPlayer->isGameMaster())
     {
         SetAcceptWhispers(true);
-        ChatHandler(this).PSendSysMessage(LANG_COMMAND_WHISPERACCEPTING,ChatHandler(this).GetHellgroundString(LANG_ON));
+        ChatHandler(this).PSendSysMessage(LANG_COMMAND_WHISPERACCEPTING,ChatHandler(this).GetMangosString(LANG_ON));
     }
 
     // announce to player that player he is whispering to is afk

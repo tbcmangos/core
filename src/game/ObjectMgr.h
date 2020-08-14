@@ -661,8 +661,8 @@ class ObjectMgr
             if (itr==mHellgroundStringLocaleMap.end()) return NULL;
             return &itr->second;
         }
-        const char *GetHellgroundString(int32 entry, int locale_idx) const;
-        const char *GetHellgroundStringForDBCLocale(int32 entry) const { return GetHellgroundString(entry,DBCLocaleIndex); }
+        const char *GetMangosString(int32 entry, int locale_idx) const;
+        const char *GetMangosStringForDBCLocale(int32 entry) const { return GetMangosString(entry,DBCLocaleIndex); }
         int32 GetDBCLocaleIndex() const { return DBCLocaleIndex; }
         void SetDBCLocaleIndex(uint32 lang) { DBCLocaleIndex = GetIndexForLocale(LocaleConstant(lang)); }
 

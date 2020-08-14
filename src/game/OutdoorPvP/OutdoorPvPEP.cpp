@@ -191,13 +191,13 @@ void OPvPCapturePointEP::ChangeState()
         field = EP_MAP_A[m_TowerType];
         if (((OutdoorPvPEP*)m_PvP)->m_AllianceTowersControlled)
             ((OutdoorPvPEP*)m_PvP)->m_AllianceTowersControlled--;
-        sWorld.SendZoneText(OutdoorPvPEPBuffZones[0],sObjectMgr.GetHellgroundStringForDBCLocale(EP_LANG_LOOSE_A[m_TowerType]));
+        sWorld.SendZoneText(OutdoorPvPEPBuffZones[0],sObjectMgr.GetMangosStringForDBCLocale(EP_LANG_LOOSE_A[m_TowerType]));
         break;
     case OBJECTIVESTATE_HORDE:
         field = EP_MAP_H[m_TowerType];
         if (((OutdoorPvPEP*)m_PvP)->m_HordeTowersControlled)
             ((OutdoorPvPEP*)m_PvP)->m_HordeTowersControlled--;
-        sWorld.SendZoneText(OutdoorPvPEPBuffZones[0],sObjectMgr.GetHellgroundStringForDBCLocale(EP_LANG_LOOSE_H[m_TowerType]));
+        sWorld.SendZoneText(OutdoorPvPEPBuffZones[0],sObjectMgr.GetMangosStringForDBCLocale(EP_LANG_LOOSE_H[m_TowerType]));
         break;
     case OBJECTIVESTATE_NEUTRAL_ALLIANCE_CHALLENGE:
     case OBJECTIVESTATE_ALLIANCE_HORDE_CHALLENGE:
@@ -227,14 +227,14 @@ void OPvPCapturePointEP::ChangeState()
         artkit = 2;
         if (((OutdoorPvPEP*)m_PvP)->m_AllianceTowersControlled<4)
             ((OutdoorPvPEP*)m_PvP)->m_AllianceTowersControlled++;
-        sWorld.SendZoneText(OutdoorPvPEPBuffZones[0],sObjectMgr.GetHellgroundStringForDBCLocale(EP_LANG_CAPTURE_A[m_TowerType]));
+        sWorld.SendZoneText(OutdoorPvPEPBuffZones[0],sObjectMgr.GetMangosStringForDBCLocale(EP_LANG_CAPTURE_A[m_TowerType]));
         break;
     case OBJECTIVESTATE_HORDE:
         field = EP_MAP_H[m_TowerType];
         artkit = 1;
         if (((OutdoorPvPEP*)m_PvP)->m_HordeTowersControlled<4)
             ((OutdoorPvPEP*)m_PvP)->m_HordeTowersControlled++;
-        sWorld.SendZoneText(OutdoorPvPEPBuffZones[0],sObjectMgr.GetHellgroundStringForDBCLocale(EP_LANG_CAPTURE_H[m_TowerType]));
+        sWorld.SendZoneText(OutdoorPvPEPBuffZones[0],sObjectMgr.GetMangosStringForDBCLocale(EP_LANG_CAPTURE_H[m_TowerType]));
         break;
     case OBJECTIVESTATE_NEUTRAL_ALLIANCE_CHALLENGE:
     case OBJECTIVESTATE_ALLIANCE_HORDE_CHALLENGE:
@@ -475,7 +475,7 @@ void OPvPCapturePointEP::SummonFlightMaster(uint32 team)
             {
                 gso.Action = GOSSIP_OPTION_OUTDOORPVP;
                 gso.GossipId = 0;
-                gso.OptionText.assign(sObjectMgr.GetHellgroundStringForDBCLocale(EP_LANG_FLIGHT_GOSSIPS[i]));
+                gso.OptionText.assign(sObjectMgr.GetMangosStringForDBCLocale(EP_LANG_FLIGHT_GOSSIPS[i]));
                 gso.Id = 50;
                 gso.Icon = 0;
                 gso.NpcFlag = 0;

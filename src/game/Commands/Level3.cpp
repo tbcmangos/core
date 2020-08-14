@@ -1145,13 +1145,13 @@ bool ChatHandler::HandleCooldownCommand(const char* args)
 
         if (!sSpellStore.LookupEntry(spell_id))
         {
-            PSendSysMessage(LANG_UNKNOWN_SPELL, target==m_session->GetPlayer() ? GetHellgroundString(LANG_YOU) : target->GetName());
+            PSendSysMessage(LANG_UNKNOWN_SPELL, target==m_session->GetPlayer() ? GetMangosString(LANG_YOU) : target->GetName());
             SetSentErrorMessage(true);
             return false;
         }
 
         target->RemoveSpellCooldown(spell_id,true);
-        PSendSysMessage(LANG_REMOVE_COOLDOWN, spell_id, target==m_session->GetPlayer() ? GetHellgroundString(LANG_YOU) : target->GetName());
+        PSendSysMessage(LANG_REMOVE_COOLDOWN, spell_id, target==m_session->GetPlayer() ? GetMangosString(LANG_YOU) : target->GetName());
     }
     return true;
 }
@@ -2067,7 +2067,7 @@ bool ChatHandler::HandleAddItemCommand(const char* args)
     if (!plTarget)
         plTarget = pl;
 
-    sLog.outDetail(GetHellgroundString(LANG_ADDITEM), itemId, count);
+    sLog.outDetail(GetMangosString(LANG_ADDITEM), itemId, count);
 
     ItemPrototype const *pProto = ObjectMgr::GetItemPrototype(itemId);
     if (!pProto)
@@ -2146,7 +2146,7 @@ bool ChatHandler::HandleAddItemSetCommand(const char* args)
     if (!plTarget)
         plTarget = pl;
 
-    sLog.outDetail(GetHellgroundString(LANG_ADDITEMSET), itemsetId);
+    sLog.outDetail(GetMangosString(LANG_ADDITEMSET), itemsetId);
 
     bool found = false;
     for (uint32 id = 0; id < sItemStorage.MaxEntry; id++)
@@ -2628,7 +2628,7 @@ void ChatHandler::ShowItemListHelper(uint32 itemId, int loc_idx)//, Player* targ
     if (target)
     {
         if (target->CanUseItem(itemProto))
-            usableStr = GetHellgroundString(LANG_COMMAND_ITEM_USABLE);
+            usableStr = GetMangosString(LANG_COMMAND_ITEM_USABLE);
     }*/
 
     if (m_session)
@@ -2788,7 +2788,7 @@ bool ChatHandler::HandleLookupSkillCommand(const char* args)
             {
                 char const* knownStr = "";
                 if (target && target->HasSkill(id))
-                    knownStr = GetHellgroundString(LANG_KNOWN);
+                    knownStr = GetMangosString(LANG_KNOWN);
 
                 // send skill in "id - [namedlink locale]" format
                 if (m_session)
@@ -2876,7 +2876,7 @@ bool ChatHandler::HandleLookupSpellCommand(const char* args)
 
                 // include rank in link name
                 if (rank)
-                    ss << GetHellgroundString(LANG_SPELL_RANK) << rank;
+                    ss << GetMangosString(LANG_SPELL_RANK) << rank;
 
                 if (m_session)
                     ss << " " << localeNames[loc] << "]|h|r";
@@ -2884,15 +2884,15 @@ bool ChatHandler::HandleLookupSpellCommand(const char* args)
                     ss << " " << localeNames[loc];
 
                 if (talent)
-                    ss << GetHellgroundString(LANG_TALENT);
+                    ss << GetMangosString(LANG_TALENT);
                 if (passive)
-                    ss << GetHellgroundString(LANG_PASSIVE);
+                    ss << GetMangosString(LANG_PASSIVE);
                 if (learn)
-                    ss << GetHellgroundString(LANG_LEARN);
+                    ss << GetMangosString(LANG_LEARN);
                 if (known)
-                    ss << GetHellgroundString(LANG_KNOWN);
+                    ss << GetMangosString(LANG_KNOWN);
                 if (active)
-                    ss << GetHellgroundString(LANG_ACTIVE);
+                    ss << GetMangosString(LANG_ACTIVE);
 
                 SendSysMessage(ss.str().c_str());
 
@@ -2950,12 +2950,12 @@ bool ChatHandler::HandleLookupQuestCommand(const char* args)
                             if (status == QUEST_STATUS_COMPLETE)
                             {
                                 if (target->GetQuestRewardStatus(qinfo->GetQuestId()))
-                                    statusStr = GetHellgroundString(LANG_COMMAND_QUEST_REWARDED);
+                                    statusStr = GetMangosString(LANG_COMMAND_QUEST_REWARDED);
                                 else
-                                    statusStr = GetHellgroundString(LANG_COMMAND_QUEST_COMPLETE);
+                                    statusStr = GetMangosString(LANG_COMMAND_QUEST_COMPLETE);
                             }
                             else if (status == QUEST_STATUS_INCOMPLETE)
-                                statusStr = GetHellgroundString(LANG_COMMAND_QUEST_ACTIVE);
+                                statusStr = GetMangosString(LANG_COMMAND_QUEST_ACTIVE);
                         }
 
                         if (m_session)
@@ -2984,12 +2984,12 @@ bool ChatHandler::HandleLookupQuestCommand(const char* args)
                 if (status == QUEST_STATUS_COMPLETE)
                 {
                     if (target->GetQuestRewardStatus(qinfo->GetQuestId()))
-                        statusStr = GetHellgroundString(LANG_COMMAND_QUEST_REWARDED);
+                        statusStr = GetMangosString(LANG_COMMAND_QUEST_REWARDED);
                     else
-                        statusStr = GetHellgroundString(LANG_COMMAND_QUEST_COMPLETE);
+                        statusStr = GetMangosString(LANG_COMMAND_QUEST_COMPLETE);
                 }
                 else if (status == QUEST_STATUS_INCOMPLETE)
-                    statusStr = GetHellgroundString(LANG_COMMAND_QUEST_ACTIVE);
+                    statusStr = GetMangosString(LANG_COMMAND_QUEST_ACTIVE);
             }
 
             if (m_session)
@@ -3735,14 +3735,14 @@ bool ChatHandler::HandleNearGraveCommand(const char* args)
 
         g_team = data->team;
 
-        std::string team_name = GetHellgroundString(LANG_COMMAND_GRAVEYARD_NOTEAM);
+        std::string team_name = GetMangosString(LANG_COMMAND_GRAVEYARD_NOTEAM);
 
         if (g_team == 0)
-            team_name = GetHellgroundString(LANG_COMMAND_GRAVEYARD_ANY);
+            team_name = GetMangosString(LANG_COMMAND_GRAVEYARD_ANY);
         else if (g_team == HORDE)
-            team_name = GetHellgroundString(LANG_COMMAND_GRAVEYARD_HORDE);
+            team_name = GetMangosString(LANG_COMMAND_GRAVEYARD_HORDE);
         else if (g_team == ALLIANCE)
-            team_name = GetHellgroundString(LANG_COMMAND_GRAVEYARD_ALLIANCE);
+            team_name = GetMangosString(LANG_COMMAND_GRAVEYARD_ALLIANCE);
 
         PSendSysMessage(LANG_COMMAND_GRAVEYARDNEAREST, g_id,team_name.c_str(),player->GetCachedZone());
     }
@@ -3751,11 +3751,11 @@ bool ChatHandler::HandleNearGraveCommand(const char* args)
         std::string team_name;
 
         if (g_team == 0)
-            team_name = GetHellgroundString(LANG_COMMAND_GRAVEYARD_ANY);
+            team_name = GetMangosString(LANG_COMMAND_GRAVEYARD_ANY);
         else if (g_team == HORDE)
-            team_name = GetHellgroundString(LANG_COMMAND_GRAVEYARD_HORDE);
+            team_name = GetMangosString(LANG_COMMAND_GRAVEYARD_HORDE);
         else if (g_team == ALLIANCE)
-            team_name = GetHellgroundString(LANG_COMMAND_GRAVEYARD_ALLIANCE);
+            team_name = GetMangosString(LANG_COMMAND_GRAVEYARD_ALLIANCE);
 
         if (g_team == ~uint32(0))
             PSendSysMessage(LANG_COMMAND_ZONENOGRAVEYARDS, player->GetCachedZone());
@@ -4240,14 +4240,14 @@ bool ChatHandler::HandleDebugSetValue(const char* args)
     if (isint32)
     {
         iValue = (uint32)atoi(py);
-        sLog.outDebug(GetHellgroundString(LANG_SET_UINT), GUID_LOPART(guid), Opcode, iValue);
+        sLog.outDebug(GetMangosString(LANG_SET_UINT), GUID_LOPART(guid), Opcode, iValue);
         target->SetUInt32Value(Opcode , iValue);
         PSendSysMessage(LANG_SET_UINT_FIELD, GUID_LOPART(guid), Opcode,iValue);
     }
     else
     {
         fValue = (float)atof(py);
-        sLog.outDebug(GetHellgroundString(LANG_SET_FLOAT), GUID_LOPART(guid), Opcode, fValue);
+        sLog.outDebug(GetMangosString(LANG_SET_FLOAT), GUID_LOPART(guid), Opcode, fValue);
         target->SetFloatValue(Opcode , fValue);
         PSendSysMessage(LANG_SET_FLOAT_FIELD, GUID_LOPART(guid), Opcode,fValue);
     }
@@ -4291,13 +4291,13 @@ bool ChatHandler::HandleDebugGetValue(const char* args)
     if (isint32)
     {
         iValue = target->GetUInt32Value(Opcode);
-        sLog.outDebug(GetHellgroundString(LANG_GET_UINT), GUID_LOPART(guid), Opcode, iValue);
+        sLog.outDebug(GetMangosString(LANG_GET_UINT), GUID_LOPART(guid), Opcode, iValue);
         PSendSysMessage(LANG_GET_UINT_FIELD, GUID_LOPART(guid), Opcode,    iValue);
     }
     else
     {
         fValue = target->GetFloatValue(Opcode);
-        sLog.outDebug(GetHellgroundString(LANG_GET_FLOAT), GUID_LOPART(guid), Opcode, fValue);
+        sLog.outDebug(GetMangosString(LANG_GET_FLOAT), GUID_LOPART(guid), Opcode, fValue);
         PSendSysMessage(LANG_GET_FLOAT_FIELD, GUID_LOPART(guid), Opcode, fValue);
     }
 
@@ -4320,7 +4320,7 @@ bool ChatHandler::HandleSet32Bit(const char* args)
     if (Value > 32)                                         //uint32 = 32 bits
         return false;
 
-    sLog.outDebug(GetHellgroundString(LANG_SET_32BIT), Opcode, Value);
+    sLog.outDebug(GetMangosString(LANG_SET_32BIT), Opcode, Value);
 
     m_session->GetPlayer()->SetUInt32Value(Opcode , 2^Value);
 
@@ -4348,7 +4348,7 @@ bool ChatHandler::HandleDebugMod32Value(const char* args)
         return false;
     }
 
-    sLog.outDebug(GetHellgroundString(LANG_CHANGE_32BIT), Opcode, Value);
+    sLog.outDebug(GetMangosString(LANG_CHANGE_32BIT), Opcode, Value);
 
     int CurrentValue = (int)m_session->GetPlayer()->GetUInt32Value(Opcode);
 
@@ -4428,8 +4428,8 @@ bool ChatHandler::HandleListAurasCommand (const char * /*args*/)
         return false;
     }
 
-    char const* talentStr = GetHellgroundString(LANG_TALENT);
-    char const* passiveStr = GetHellgroundString(LANG_PASSIVE);
+    char const* talentStr = GetMangosString(LANG_TALENT);
+    char const* passiveStr = GetMangosString(LANG_PASSIVE);
 
     Unit::AuraMap const& uAuras = unit->GetAuras();
     PSendSysMessage(LANG_COMMAND_TARGET_LISTAURAS, uAuras.size());
@@ -5396,10 +5396,10 @@ bool ChatHandler::HandleBanInfoHelper(uint32 accountid, char const* accountname)
         if ((permanent || unbandate >= time(NULL)) && fields[5].GetBool())
             active = true;
 
-        std::string bantime = permanent ? GetHellgroundString(LANG_BANINFO_INFINITE) : secsToTimeString(banLength, true);
+        std::string bantime = permanent ? GetMangosString(LANG_BANINFO_INFINITE) : secsToTimeString(banLength, true);
 
         PSendSysMessage(LANG_BANINFO_HISTORYENTRY,
-            fields[0].GetString(), bantime.c_str(), active ? GetHellgroundString(LANG_BANINFO_YES):GetHellgroundString(LANG_BANINFO_NO), fields[3].GetString(), fields[4].GetString());
+            fields[0].GetString(), bantime.c_str(), active ? GetMangosString(LANG_BANINFO_YES):GetMangosString(LANG_BANINFO_NO), fields[3].GetString(), fields[4].GetString());
     }
     while (result->NextRow());
 
@@ -5431,8 +5431,8 @@ bool ChatHandler::HandleBanInfoIPCommand(const char* args)
     Field *fields = result->Fetch();
     bool permanent = !fields[6].GetUInt64();
     PSendSysMessage(LANG_BANINFO_IPENTRY,
-        fields[0].GetString(), fields[1].GetString(), permanent ? GetHellgroundString(LANG_BANINFO_NEVER):fields[2].GetString(),
-        permanent ? GetHellgroundString(LANG_BANINFO_INFINITE):secsToTimeString(fields[3].GetUInt64(), true).c_str(), fields[4].GetString(), fields[5].GetString());
+        fields[0].GetString(), fields[1].GetString(), permanent ? GetMangosString(LANG_BANINFO_NEVER):fields[2].GetString(),
+        permanent ? GetMangosString(LANG_BANINFO_INFINITE):secsToTimeString(fields[3].GetUInt64(), true).c_str(), fields[4].GetString(), fields[5].GetString());
     return true;
 }
 

@@ -186,7 +186,7 @@ void WorldSession::HandleMessagechatOpcode(WorldPacket & recv_data)
         if (lang != LANG_ADDON)
         {
             std::string timeStr = secsToTimeString(m_muteTime - time(NULL));
-            SendNotification(GetHellgroundString(LANG_WAIT_BEFORE_SPEAKING),timeStr.c_str());
+            SendNotification(GetMangosString(LANG_WAIT_BEFORE_SPEAKING),timeStr.c_str());
             ChatHandler(_player).PSendSysMessage(LANG_YOUR_CHAT_IS_DISABLED, timeStr.c_str(), m_muteReason.c_str());
         }
 
@@ -519,7 +519,7 @@ void WorldSession::HandleMessagechatOpcode(WorldPacket & recv_data)
                 if (!_player->isAFK())
                 {
                     if (msg.empty())
-                        msg  = GetHellgroundString(LANG_PLAYER_AFK_DEFAULT);
+                        msg  = GetMangosString(LANG_PLAYER_AFK_DEFAULT);
                     _player->afkMsg = msg;
                 }
                 _player->ToggleAFK();
@@ -535,7 +535,7 @@ void WorldSession::HandleMessagechatOpcode(WorldPacket & recv_data)
                 if (!_player->isDND())
                 {
                     if (msg.empty())
-                        msg  = GetHellgroundString(LANG_PLAYER_DND_DEFAULT);
+                        msg  = GetMangosString(LANG_PLAYER_DND_DEFAULT);
                     _player->dndMsg = msg;
                 }
                 _player->ToggleDND();
@@ -606,7 +606,7 @@ void WorldSession::HandleTextEmoteOpcode(WorldPacket & recv_data)
     if (!player->CanSpeak())
     {
         std::string timeStr = secsToTimeString(m_muteTime - time(NULL));
-        SendNotification(GetHellgroundString(LANG_WAIT_BEFORE_SPEAKING),timeStr.c_str());
+        SendNotification(GetMangosString(LANG_WAIT_BEFORE_SPEAKING),timeStr.c_str());
         ChatHandler(player).PSendSysMessage(LANG_YOUR_CHAT_IS_DISABLED, timeStr.c_str(), m_muteReason.c_str());
         return;
     }

@@ -92,7 +92,7 @@ void WorldSession::SendNameQueryOpcodeFromDBCallBack(QueryResult* result, uint32
     std::string name = fields[1].GetCppString();
     uint32 field     = 0;
     if (name == "")
-        name         = session->GetHellgroundString(LANG_NON_EXIST_CHARACTER);
+        name         = session->GetMangosString(LANG_NON_EXIST_CHARACTER);
     else
         field        = fields[2].GetUInt32();
 

@@ -112,7 +112,7 @@ void WorldSession::HandleTrainerListOpcode(WorldPacket & recv_data)
 
 void WorldSession::SendTrainerList(uint64 guid)
 {
-    std::string str = GetHellgroundString(LANG_NPC_TAINER_HELLO);
+    std::string str = GetMangosString(LANG_NPC_TAINER_HELLO);
     SendTrainerList(guid, str);
 }
 

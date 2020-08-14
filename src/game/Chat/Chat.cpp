@@ -816,9 +816,9 @@ ChatCommand * ChatHandler::getCommandTable()
     return commandTable;
 }
 
-const char *ChatHandler::GetHellgroundString(int32 entry) const
+const char *ChatHandler::GetMangosString(int32 entry) const
 {
-    return m_session->GetHellgroundString(entry);
+    return m_session->GetMangosString(entry);
 }
 
 bool ChatHandler::isAvailable(ChatCommand const& cmd, bool self) const
@@ -889,7 +889,7 @@ void ChatHandler::SendGlobalSysMessage(const char *str)
 
 void ChatHandler::SendGlobalGMSysMessage(int32 entry, ...)
 {
-    const char *format = GetHellgroundString(entry);
+    const char *format = GetMangosString(entry);
     va_list ap;
     char str [1024];
     va_start(ap, entry);
@@ -917,12 +917,12 @@ void ChatHandler::SendGlobalGMSysMessage(const char *str)
 
 void ChatHandler::SendSysMessage(int32 entry)
 {
-    SendSysMessage(GetHellgroundString(entry));
+    SendSysMessage(GetMangosString(entry));
 }
 
 void ChatHandler::PSendSysMessage(int32 entry, ...)
 {
-    const char *format = GetHellgroundString(entry);
+    const char *format = GetMangosString(entry);
     va_list ap;
     char str [1024];
     va_start(ap, entry);
@@ -1498,9 +1498,9 @@ bool ChatHandler::needReportToTarget(Player* chr) const
     return pl != chr && pl->IsVisibleGloballyfor (chr);
 }
 
-const char *CliHandler::GetHellgroundString(int32 entry) const
+const char *CliHandler::GetMangosString(int32 entry) const
 {
-    return sObjectMgr.GetHellgroundStringForDBCLocale(entry);
+    return sObjectMgr.GetMangosStringForDBCLocale(entry);
 }
 
 bool CliHandler::isAvailable(ChatCommand const& cmd, bool) const
@@ -1517,7 +1517,7 @@ void CliHandler::SendSysMessage(const char *str)
 
 const char *CliHandler::GetName() const
 {
-    return GetHellgroundString(LANG_CONSOLE_COMMAND);
+    return GetMangosString(LANG_CONSOLE_COMMAND);
 }
 
 bool CliHandler::needReportToTarget(Player* /*chr*/) const

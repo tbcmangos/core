@@ -580,7 +580,7 @@ void WorldSession::HandleTakeItem(WorldPacket & recv_data)
                 sender_accId = sObjectMgr.GetPlayerAccountIdByGUID(sender_guid);
 
                 if(!sObjectMgr.GetPlayerNameByGUID(sender_guid, sender_name))
-                    sender_name = sObjectMgr.GetHellgroundStringForDBCLocale(LANG_UNKNOWN);
+                    sender_name = sObjectMgr.GetMangosStringForDBCLocale(LANG_UNKNOWN);
             }
 
             if (HasPermissions(SEC_GAMEMASTER))

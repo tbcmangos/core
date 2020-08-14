@@ -1955,7 +1955,7 @@ void World::SendGuildAnnounce(uint32 team, ...)
 
             data_list = &data_cache[cache_idx];
 
-            char const* text = sObjectMgr.GetHellgroundString(LANG_GUILD_ANNOUNCE,loc_idx);
+            char const* text = sObjectMgr.GetMangosString(LANG_GUILD_ANNOUNCE,loc_idx);
 
             char buf[1000];
 
@@ -2026,7 +2026,7 @@ void World::SendWorldText(int32 string_id, uint32 preventFlags, ...)
 
             data_list = &data_cache[cache_idx];
 
-            char const* text = sObjectMgr.GetHellgroundString(string_id,loc_idx);
+            char const* text = sObjectMgr.GetMangosString(string_id,loc_idx);
 
             char buf[1000];
 
@@ -2087,7 +2087,7 @@ void World::SendWorldTextForLevels(uint32 minLevel, uint32 maxLevel, uint32 prev
 
             data_list = &data_cache[cache_idx];
 
-            char const* text = sObjectMgr.GetHellgroundString(string_id,loc_idx);
+            char const* text = sObjectMgr.GetMangosString(string_id,loc_idx);
 
             char buf[1000];
 
@@ -2140,7 +2140,7 @@ void World::SendGMText(int32 string_id, ...)
 
             data_list = &data_cache[cache_idx];
 
-            char const* text = sObjectMgr.GetHellgroundString(string_id,loc_idx);
+            char const* text = sObjectMgr.GetMangosString(string_id,loc_idx);
 
             char buf[1000];
 

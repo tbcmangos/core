@@ -98,12 +98,12 @@ void AuctionHouseMgr::SendAuctionWonMail(AuctionEntry *auction)
         bidderAccId = sObjectMgr.GetPlayerAccountIdByGUID(bidderGuid);
         bidderPermissions = bidderAccId ? AccountMgr::GetPermissions(bidderAccId) : SEC_PLAYER;
         if (!sObjectMgr.GetPlayerNameByGUID(bidderGuid, bidderName))
-            bidderName = sObjectMgr.GetHellgroundStringForDBCLocale(LANG_UNKNOWN);
+            bidderName = sObjectMgr.GetMangosStringForDBCLocale(LANG_UNKNOWN);
     }
 
     std::string ownerName;
     if (!sObjectMgr.GetPlayerNameByGUID(ownerGuid, ownerName))
-        ownerName = sObjectMgr.GetHellgroundStringForDBCLocale(LANG_UNKNOWN);
+        ownerName = sObjectMgr.GetMangosStringForDBCLocale(LANG_UNKNOWN);
 
     uint32 ownerAccId = sObjectMgr.GetPlayerAccountIdByGUID(ownerGuid);
 
@@ -384,7 +384,7 @@ void AuctionHouseMgr::LoadAuctions()
             {
                 std::string plName;
                 if (!sObjectMgr.GetPlayerNameByGUID(ObjectGuid(HIGHGUID_PLAYER, auction->owner), plName))
-                    plName = sObjectMgr.GetHellgroundStringForDBCLocale(LANG_UNKNOWN);
+                    plName = sObjectMgr.GetMangosStringForDBCLocale(LANG_UNKNOWN);
 
                 Utf8toWStr(plName, plWName);
             }

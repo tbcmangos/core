@@ -723,7 +723,7 @@ void WorldSession::SendNotification(const char *format,...)
 
 void WorldSession::SendNotification(int32 string_id,...)
 {
-    char const* format = GetHellgroundString(string_id);
+    char const* format = GetMangosString(string_id);
     if (format)
     {
         va_list ap;
@@ -739,9 +739,9 @@ void WorldSession::SendNotification(int32 string_id,...)
     }
 }
 
-const char * WorldSession::GetHellgroundString(int32 entry) const
+const char * WorldSession::GetMangosString(int32 entry) const
 {
-    return sObjectMgr.GetHellgroundString(entry,GetSessionDbLocaleIndex());
+    return sObjectMgr.GetMangosString(entry,GetSessionDbLocaleIndex());
 }
 
 void WorldSession::Handle_NULL(WorldPacket& recvPacket)
