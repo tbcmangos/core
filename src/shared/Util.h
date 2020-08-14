@@ -1,7 +1,7 @@
 /*
- * Copyright (C) 2005-2008 MaNGOS <http://getmangos.com/>
- * Copyright (C) 2008 TrinityCore <http://www.trinitycore.org/>
- * Copyright (C) 2008-2014 Hellground <http://hellground.net/>
+ * Copyright (C) 2005-2008 MaNGOS <http://www.mangosproject.org/>
+ *
+ * Copyright (C) 2008 Trinity <http://www.trinitycore.org/>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,8 +18,8 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
  */
 
-#ifndef HELLGROUND_UTIL_H
-#define HELLGROUND_UTIL_H
+#ifndef _UTIL_H
+#define _UTIL_H
 
 #include "Common.h"
 
@@ -101,20 +101,13 @@ inline void ApplyPercentModFloatVar(float& var, float val, bool apply)
     var *= apply ? (100.0f+val)/100.0f : 100.0f / (100.0f+val);
 }
 
-bool Utf8toWStr(const std::string& utf8str, std::wstring& wstr);
+bool Utf8toWStr(std::string const& utf8str, std::wstring& wstr, size_t max_len = 0);
 // in wsize==max size of buffer, out wsize==real string size
-bool Utf8toWStr(char const* utf8str, size_t csize, wchar_t* wstr, size_t& wsize);
-inline bool Utf8toWStr(const std::string& utf8str, wchar_t* wstr, size_t& wsize)
-{
-    return Utf8toWStr(utf8str.c_str(), utf8str.size(), wstr, wsize);
-}
 
-bool WStrToUtf8(std::wstring wstr, std::string& utf8str);
-// size==real string size
-bool WStrToUtf8(wchar_t* wstr, size_t size, std::string& utf8str);
+bool WStrToUtf8(std::wstring& wstr, std::string& utf8str);
 
 size_t utf8length(std::string& utf8str);                    // set string to "" if invalid utf8 sequence
-void utf8truncate(std::string& utf8str,size_t len);
+void utf8truncate(std::string& utf8str, size_t len);
 
 inline bool isBasicLatinCharacter(wchar_t wchar)
 {
@@ -291,34 +284,15 @@ bool utf8ToConsole(const std::string& utf8str, std::string& conStr);
 bool consoleToUtf8(const std::string& conStr,std::string& utf8str);
 bool Utf8FitTo(const std::string& str, std::wstring search);
 
-#if PLATFORM == PLATFORM_WINDOWS
-#define UTF8PRINTF(OUT,FRM,RESERR)                      \
-{                                                       \
-    char temp_buf[6000];                                \
-    va_list ap;                                         \
-    va_start(ap, FRM);                                  \
-    size_t temp_len = vsnprintf(temp_buf,6000,FRM,ap);  \
-    va_end(ap);                                         \
-                                                        \
-    wchar_t wtemp_buf[6000];                            \
-    size_t wtemp_len = 6000-1;                          \
-    if(!Utf8toWStr(temp_buf,temp_len,wtemp_buf,wtemp_len)) \
-        return RESERR;                                  \
-    CharToOemBuffW(&wtemp_buf[0],&temp_buf[0],wtemp_len+1);\
-    fprintf(OUT,temp_buf);                              \
-}
-#else
-#define UTF8PRINTF(OUT,FRM,RESERR)                      \
-{                                                       \
-    va_list ap;                                         \
-    va_start(ap, FRM);                                  \
-    vfprintf(OUT, FRM, ap );                            \
-    va_end(ap);                                         \
-}
-#endif
+void utf8printf(FILE *out, const char *str, ...);
+void vutf8printf(FILE *out, const char *str, va_list* ap);
 
 bool IsIPAddress(char const* ipaddress);
 uint32 CreatePIDFile(const std::string& filename);
+
+void hexEncodeByteArray(uint8* bytes, uint32 arrayLen, std::string& result);
+std::string ByteArrayToHexStr(uint8 const* bytes, uint32 length, bool reverse = false);
+void HexStrToByteArray(std::string const& str, uint8* out, bool reverse = false);
 
 #endif
 
