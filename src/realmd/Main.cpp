@@ -181,7 +181,7 @@ extern int main(int argc, char **argv)
     switch (serviceDaemonMode)
     {
         case 'r':
-            startDaemon("Realm");
+            startDaemon();
             break;
         case 's':
             stopDaemon();

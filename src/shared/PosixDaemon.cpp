@@ -26,6 +26,7 @@ pid_t parent_pid = 0, sid = 0;
 
 void daemonSignal(int s)
 {
+
     if (getpid() != parent_pid)
     {
         return;
@@ -36,15 +37,15 @@ void daemonSignal(int s)
         exit(EXIT_SUCCESS);
     }
 
-    if (sid) {
+    if (sid)
+    {
         kill(sid, s);
     }
 
     exit(EXIT_FAILURE);
 }
 
-
-void startDaemon(const char * name, uint32_t timeout)
+void startDaemon(uint32_t timeout)
 {
     parent_pid = getpid();
     pid_t pid;
@@ -56,11 +57,13 @@ void startDaemon(const char * name, uint32_t timeout)
 
     sid = pid = fork();
 
-    if (pid < 0 || !name) {
-      exit(EXIT_FAILURE);
+    if (pid < 0)
+    {
+        exit(EXIT_FAILURE);
     }
 
-    if (pid > 0) {
+    if (pid > 0)
+    {
         alarm(timeout);
         pause();
         exit(EXIT_FAILURE);
@@ -70,25 +73,28 @@ void startDaemon(const char * name, uint32_t timeout)
 
     sid = setsid();
 
-    if (sid < 0) {
-      exit(EXIT_FAILURE);
+    if (sid < 0)
+    {
+        exit(EXIT_FAILURE);
     }
 
-    if ((chdir("/")) < 0) {
-      exit(EXIT_FAILURE);
+    if ((chdir("/")) < 0)
+    {
+        exit(EXIT_FAILURE);
     }
 
-    printf("%s Daemon starting...", name);
-
-    freopen("/dev/null", "rt", stdin);
-    freopen("/dev/null", "wt", stdout);
-    freopen("/dev/null", "wt", stderr);
+    if (!freopen("/dev/null", "rt", stdin))
+        exit(EXIT_FAILURE);
+    if (!freopen("/dev/null", "wt", stdout))
+        exit(EXIT_FAILURE);
+    if (!freopen("/dev/null", "wt", stderr))
+        exit(EXIT_FAILURE);
 }
 
 void stopDaemon()
 {
     std::string pidfile = sConfig.GetStringDefault("PidFile", "");
-    if(!pidfile.empty())
+    if (!pidfile.empty())
     {
         std::fstream pf(pidfile.c_str(), std::ios::in);
         uint32_t pid = 0;
