@@ -74,7 +74,7 @@ class MySQLConnection : public SqlConnection
 
         bool Initialize(const char *infoString);
 
-        QueryResultAutoPtr Query(const char *sql);
+        QueryResult* Query(const char *sql);
         QueryNamedResult* QueryNamed(const char *sql);
         bool Execute(const char *sql);
 

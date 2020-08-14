@@ -688,7 +688,7 @@ int WorldSocket::HandleAuthSession(WorldPacket& recvPacket)
     AccountsDatabase.escape_string(safe_account);
     // No SQL injection, username escaped.
 
-    QueryResultAutoPtr result =
+    QueryResult* result =
           AccountsDatabase.PQuery("SELECT "
                                 "account.account_id, "          //0
                                 "permission_mask, "             //1
@@ -769,7 +769,7 @@ int WorldSocket::HandleAuthSession(WorldPacket& recvPacket)
     uint16 opcDis = fields[10].GetUInt16();
 
     // Re-check account ban(same check as in realmd)
-    QueryResultAutoPtr banresult =
+    QueryResult* banresult =
           AccountsDatabase.PQuery("SELECT "
                                 "punishment_date, "
                                 "expiration_date "
@@ -846,7 +846,7 @@ int WorldSocket::HandleAuthSession(WorldPacket& recvPacket)
     SqlStatement stmt = AccountsDatabase.CreateStatement(updAccount, "UPDATE account SET last_ip = ? WHERE account_id = ?");
     stmt.PExecute(address.c_str(), id);
 
-    QueryResultAutoPtr muteresult =
+    QueryResult* muteresult =
           AccountsDatabase.PQuery("SELECT "
                                 "expiration_date, "
                                 "reason "
@@ -1093,7 +1093,7 @@ uint32 WorldSocket::IPToLocation(const std::string& IP)
     TempAddress >> addrBlock; TempAddress.get(); addressAsNumber += addrBlock; addressAsNumber *= 256;
     TempAddress >> addrBlock; addressAsNumber += addrBlock;
 
-    QueryResultAutoPtr result = GameDataDatabase.PQuery(
+    QueryResult* result = GameDataDatabase.PQuery(
         "SELECT locId FROM blocks "
         "WHERE endIpNum >= %u order by endIpNum limit 1;",addressAsNumber,addressAsNumber);
     

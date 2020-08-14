@@ -1,6 +1,8 @@
 /*
  * Copyright (C) 2005-2011 MaNGOS <http://getmangos.com/>
- * Copyright (C) 2008-2014 Hellground <http://hellground.net/>
+ * Copyright (C) 2009-2011 MaNGOSZero <https://github.com/mangos/zero>
+ * Copyright (C) 2011-2016 Nostalrius <https://nostalrius.org>
+ * Copyright (C) 2016-2017 Elysium Project <https://github.com/elysium-project>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -9,16 +11,16 @@
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#ifndef HELLGROUND_CALLBACK_H
-#define HELLGROUND_CALLBACK_H
+#ifndef MANGOS_CALLBACK_H
+#define MANGOS_CALLBACK_H
 
 //defines to simplify multi param templates code and readablity
 #define TYPENAMES_1 typename T1
@@ -45,7 +47,6 @@
 
 //empty struct to use in templates instead of void type
 struct null { null() {} };
-
 /// ------------ BASE CLASSES ------------
 
 namespace MaNGOS
@@ -405,7 +406,7 @@ namespace MaNGOS
 }
 
 /// ---------- QUERY CALLBACKS -----------
-#include "QueryResult.h"
+
 class QueryResult;
 
 namespace MaNGOS
@@ -413,11 +414,13 @@ namespace MaNGOS
     class IQueryCallback
     {
         public:
-
+            IQueryCallback() : threadSafe(true) {}
             virtual void Execute() = 0;
             virtual ~IQueryCallback() {}
-            virtual void SetResult(QueryResultAutoPtr result) = 0;
-            virtual QueryResultAutoPtr GetResult() = 0;
+            virtual void SetResult(QueryResult* result) = 0;
+            virtual QueryResult* GetResult() = 0;
+            bool IsThreadSafe() const { return threadSafe; }
+            bool threadSafe;
     };
 
     template<class CB>
@@ -430,64 +433,64 @@ namespace MaNGOS
             }
 
             void Execute() { CB::_Execute(); }
-            void SetResult(QueryResultAutoPtr result) { CB::m_param1 = result; }
-            QueryResultAutoPtr GetResult() { return CB::m_param1; }
+            void SetResult(QueryResult* result) { CB::m_param1 = result; }
+            QueryResult* GetResult() { return CB::m_param1; }
     };
 
     template<class Class, typename ParamType1 = void, typename ParamType2 = void, typename ParamType3 = void>
-    class QueryCallback : public _IQueryCallback<_Callback<Class, QueryResultAutoPtr, ParamType1, ParamType2, ParamType3> >
+    class QueryCallback : public _IQueryCallback<_Callback<Class, QueryResult*, ParamType1, ParamType2, ParamType3> >
     {
         private:
 
-            typedef _Callback<Class, QueryResultAutoPtr, ParamType1, ParamType2, ParamType3> QC3;
+            typedef _Callback<Class, QueryResult*, ParamType1, ParamType2, ParamType3> QC3;
 
         public:
 
-            QueryCallback(Class *object, typename QC3::Method method, QueryResultAutoPtr result, ParamType1 param1, ParamType2 param2, ParamType3 param3)
+            QueryCallback(Class *object, typename QC3::Method method, QueryResult* result, ParamType1 param1, ParamType2 param2, ParamType3 param3)
                 : _IQueryCallback<QC3>(QC3(object, method, result, param1, param2, param3))
             {
             }
     };
 
     template<class Class, typename ParamType1, typename ParamType2>
-    class QueryCallback<Class, ParamType1, ParamType2> : public _IQueryCallback<_Callback<Class, QueryResultAutoPtr, ParamType1, ParamType2> >
+    class QueryCallback<Class, ParamType1, ParamType2> : public _IQueryCallback<_Callback<Class, QueryResult*, ParamType1, ParamType2> >
     {
         private:
 
-            typedef _Callback<Class, QueryResultAutoPtr, ParamType1, ParamType2> QC2;
+            typedef _Callback<Class, QueryResult*, ParamType1, ParamType2> QC2;
 
         public:
 
-            QueryCallback(Class *object, typename QC2::Method method, QueryResultAutoPtr result, ParamType1 param1, ParamType2 param2)
+            QueryCallback(Class *object, typename QC2::Method method, QueryResult* result, ParamType1 param1, ParamType2 param2)
                 : _IQueryCallback<QC2>(QC2(object, method, result, param1, param2))
             {
             }
     };
 
     template<class Class, typename ParamType1>
-    class QueryCallback<Class, ParamType1> : public _IQueryCallback<_Callback<Class, QueryResultAutoPtr, ParamType1> >
+    class QueryCallback<Class, ParamType1> : public _IQueryCallback<_Callback<Class, QueryResult*, ParamType1> >
     {
         private:
 
-            typedef _Callback<Class, QueryResultAutoPtr, ParamType1> QC1;
+            typedef _Callback<Class, QueryResult*, ParamType1> QC1;
 
         public:
 
-            QueryCallback(Class *object, typename QC1::Method method, QueryResultAutoPtr result, ParamType1 param1)
+            QueryCallback(Class *object, typename QC1::Method method, QueryResult* result, ParamType1 param1)
                 : _IQueryCallback<QC1>(QC1(object, method, result, param1))
             {
             }
     };
 
     template<class Class>
-    class QueryCallback<Class> : public _IQueryCallback<_Callback<Class, QueryResultAutoPtr> >
+    class QueryCallback<Class> : public _IQueryCallback<_Callback<Class, QueryResult*> >
     {
         private:
 
-            typedef _Callback<Class, QueryResultAutoPtr> QC0;
+            typedef _Callback<Class, QueryResult*> QC0;
 
         public:
-            QueryCallback(Class *object, typename QC0::Method method, QueryResultAutoPtr result)
+            QueryCallback(Class *object, typename QC0::Method method, QueryResult* result)
                 : _IQueryCallback<QC0>(QC0(object, method, result))
             {
             }
@@ -496,60 +499,60 @@ namespace MaNGOS
     /// ---- Statics ----
 
     template<typename ParamType1 = void, typename ParamType2 = void, typename ParamType3 = void>
-    class SQueryCallback : public _IQueryCallback<_SCallback<QueryResultAutoPtr, ParamType1, ParamType2, ParamType3> >
+    class SQueryCallback : public _IQueryCallback<_SCallback<QueryResult*, ParamType1, ParamType2, ParamType3> >
     {
         private:
 
-            typedef _SCallback<QueryResultAutoPtr, ParamType1, ParamType2, ParamType3> QC3;
+            typedef _SCallback<QueryResult*, ParamType1, ParamType2, ParamType3> QC3;
 
         public:
 
-            SQueryCallback(typename QC3::Method method, QueryResultAutoPtr result, ParamType1 param1, ParamType2 param2, ParamType3 param3)
+            SQueryCallback(typename QC3::Method method, QueryResult* result, ParamType1 param1, ParamType2 param2, ParamType3 param3)
                 : _IQueryCallback<QC3>(QC3(method, result, param1, param2, param3))
             {
             }
     };
 
     template<typename ParamType1, typename ParamType2>
-    class SQueryCallback < ParamType1, ParamType2 > : public _IQueryCallback<_SCallback<QueryResultAutoPtr, ParamType1, ParamType2> >
+    class SQueryCallback < ParamType1, ParamType2 > : public _IQueryCallback<_SCallback<QueryResult*, ParamType1, ParamType2> >
     {
         private:
 
-            typedef _SCallback<QueryResultAutoPtr, ParamType1, ParamType2> QC2;
+            typedef _SCallback<QueryResult*, ParamType1, ParamType2> QC2;
 
         public:
 
-            SQueryCallback(typename QC2::Method method, QueryResultAutoPtr result, ParamType1 param1, ParamType2 param2)
+            SQueryCallback(typename QC2::Method method, QueryResult* result, ParamType1 param1, ParamType2 param2)
                 : _IQueryCallback<QC2>(QC2(method, result, param1, param2))
             {
             }
     };
 
     template<typename ParamType1>
-    class SQueryCallback<ParamType1> : public _IQueryCallback<_SCallback<QueryResultAutoPtr, ParamType1> >
+    class SQueryCallback<ParamType1> : public _IQueryCallback<_SCallback<QueryResult*, ParamType1> >
     {
         private:
 
-            typedef _SCallback<QueryResultAutoPtr, ParamType1> QC1;
+            typedef _SCallback<QueryResult*, ParamType1> QC1;
 
         public:
 
-            SQueryCallback(typename QC1::Method method, QueryResultAutoPtr result, ParamType1 param1)
+            SQueryCallback(typename QC1::Method method, QueryResult* result, ParamType1 param1)
                 : _IQueryCallback<QC1>(QC1(method, result, param1))
             {
             }
     };
 
     template<>
-    class SQueryCallback<> : public _IQueryCallback<_SCallback<QueryResultAutoPtr> >
+    class SQueryCallback<> : public _IQueryCallback<_SCallback<QueryResult*> >
     {
         private:
 
-            typedef _SCallback<QueryResultAutoPtr> QC0;
+            typedef _SCallback<QueryResult*> QC0;
 
         public:
 
-            SQueryCallback(QC0::Method method, QueryResultAutoPtr result)
+            SQueryCallback(QC0::Method method, QueryResult* result)
                 : _IQueryCallback<QC0>(QC0(method, result))
             {
             }

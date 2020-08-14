@@ -114,7 +114,7 @@ class SqlQueryHolder
 {
     friend class SqlQueryHolderEx;
     private:
-        typedef std::pair<const char*, QueryResultAutoPtr> SqlResultPair;
+        typedef std::pair<const char*, QueryResult*> SqlResultPair;
         std::vector<SqlResultPair> m_queries;
     public:
         SqlQueryHolder() {}
@@ -122,8 +122,8 @@ class SqlQueryHolder
         bool SetQuery(size_t index, const char *sql);
         bool SetPQuery(size_t index, const char *format, ...) ATTR_PRINTF(3,4);
         void SetSize(size_t size);
-        QueryResultAutoPtr GetResult(size_t index);
-        void SetResult(size_t index, QueryResultAutoPtr result);
+        QueryResult* GetResult(size_t index);
+        void SetResult(size_t index, QueryResult* result);
         bool Execute(MaNGOS::IQueryCallback * callback, SqlDelayThread *thread, SqlResultQueue *queue);
 };
 

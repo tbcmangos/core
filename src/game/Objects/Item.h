@@ -217,7 +217,7 @@ class  Item : public Object
         bool IsBindedNotWith(uint64 guid) const { return IsSoulBound() && GetOwnerGUID()!= guid; }
         bool IsBoundByEnchant() const;
         virtual void SaveToDB();
-        virtual bool LoadFromDB(uint32 guid, uint64 owner_guid, QueryResultAutoPtr result = QueryResultAutoPtr(NULL));
+        virtual bool LoadFromDB(uint32 guid, uint64 owner_guid, QueryResult* result = QueryResult*(NULL));
         virtual void DeleteFromDB();
         void DeleteFromInventoryDB();
 

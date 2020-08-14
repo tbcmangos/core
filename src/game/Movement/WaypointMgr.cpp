@@ -31,7 +31,7 @@ void WaypointMgr::Free()
 
 void WaypointMgr::Load()
 {
-    QueryResultAutoPtr result = GameDataDatabase.PQuery("SELECT MAX(`id`) FROM `waypoint_data`");
+    QueryResult* result = GameDataDatabase.PQuery("SELECT MAX(`id`) FROM `waypoint_data`");
     if (!result)
     {
         sLog.outLog(LOG_DEFAULT, "ERROR: an error occurred while loading the table `waypoint_data` (maybe it doesn't exist ?)\n");
@@ -98,7 +98,7 @@ void WaypointMgr::UpdatePath(uint32 id)
     if (_waypointPathMap.find(id)!= _waypointPathMap.end())
         _waypointPathMap[id]->clear();
 
-    QueryResultAutoPtr result = GameDataDatabase.PQuery("SELECT `id`,`point`,`position_x`,`position_y`,`position_z`,`move_type`,`delay`,`action`,`action_chance` FROM `waypoint_data` WHERE id = %u ORDER BY `point`", id);
+    QueryResult* result = GameDataDatabase.PQuery("SELECT `id`,`point`,`position_x`,`position_y`,`position_z`,`move_type`,`delay`,`action`,`action_chance` FROM `waypoint_data` WHERE id = %u ORDER BY `point`", id);
 
     if (!result)
         return;

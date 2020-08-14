@@ -245,7 +245,7 @@ extern int main(int argc, char **argv)
     
 
 #ifdef REGEX_NAMESPACE
-    QueryResultAutoPtr result = AccountsDatabase.PQuery("SELECT ip_pattern, local_ip_pattern FROM pattern_banned");
+    QueryResult* result = AccountsDatabase.PQuery("SELECT ip_pattern, local_ip_pattern FROM pattern_banned");
     if (result)
     {
         AuthSocket::pattern_banned.clear();

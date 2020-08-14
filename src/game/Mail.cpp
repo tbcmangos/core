@@ -421,7 +421,7 @@ void WorldSession::SendExternalMails()
     if (!sWorld.getConfig(CONFIG_EXTERNAL_MAIL))
         return;
 
-    QueryResultAutoPtr result = RealmDataDatabase.PQuery("SELECT id, subject, message, money, item, item_count FROM mail_external WHERE receiver = %u", GetPlayer()->GetGUIDLow());
+    QueryResult* result = RealmDataDatabase.PQuery("SELECT id, subject, message, money, item, item_count FROM mail_external WHERE receiver = %u", GetPlayer()->GetGUIDLow());
     if (result)
     {
         do

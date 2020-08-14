@@ -75,7 +75,7 @@ void CreatureGroupManager::LoadCreatureFormations()
     CreatureGroupMap.clear();
 
     //Check Integrity of the table
-    QueryResultAutoPtr result = GameDataDatabase.PQuery("SELECT MAX(`leaderGUID`) FROM `creature_formations`");
+    QueryResult* result = GameDataDatabase.PQuery("SELECT MAX(`leaderGUID`) FROM `creature_formations`");
 
     if (!result)
     {

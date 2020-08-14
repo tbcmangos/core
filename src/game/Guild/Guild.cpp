@@ -205,7 +205,7 @@ bool Guild::LoadGuildFromDB(uint32 GuildId)
     if (!LoadMembersFromDB(GuildId))
         return false;
 
-    QueryResultAutoPtr result = RealmDataDatabase.PQuery("SELECT MAX(TabId) FROM guild_bank_tab WHERE guildid='%u'", GuildId);
+    QueryResult* result = RealmDataDatabase.PQuery("SELECT MAX(TabId) FROM guild_bank_tab WHERE guildid='%u'", GuildId);
     if (result)
     {
         Field *fields = result->Fetch();
@@ -268,7 +268,7 @@ bool Guild::LoadGuildFromDB(uint32 GuildId)
 bool Guild::LoadRanksFromDB(uint32 GuildId)
 {
     Field *fields;
-    QueryResultAutoPtr result = RealmDataDatabase.PQuery("SELECT rname,rights,BankMoneyPerDay,rid FROM guild_rank WHERE guildid = '%u' ORDER BY rid ASC", GuildId);
+    QueryResult* result = RealmDataDatabase.PQuery("SELECT rname,rights,BankMoneyPerDay,rid FROM guild_rank WHERE guildid = '%u' ORDER BY rid ASC", GuildId);
 
     if (!result)
         return false;
@@ -322,7 +322,7 @@ bool Guild::LoadRanksFromDB(uint32 GuildId)
 bool Guild::LoadMembersFromDB(uint32 GuildId)
 {
     //                                                     0                 1     2      3        4                  5
-    QueryResultAutoPtr result = RealmDataDatabase.PQuery("SELECT guild_member.guid,rank, pnote, offnote, BankResetTimeMoney,BankRemMoney,"
+    QueryResult* result = RealmDataDatabase.PQuery("SELECT guild_member.guid,rank, pnote, offnote, BankResetTimeMoney,BankRemMoney,"
     //   6                  7                 8                  9                 10                 11
         "BankResetTimeTab0, BankRemSlotsTab0, BankResetTimeTab1, BankRemSlotsTab1, BankResetTimeTab2, BankRemSlotsTab2,"
     //   12                 13                14                 15                16                 17
@@ -408,7 +408,7 @@ bool Guild::FillPlayerData(uint64 guid, MemberSlot* memslot)
     }
     else
     {
-        QueryResultAutoPtr result = RealmDataDatabase.PQuery("SELECT name, level, zone, class, account "
+        QueryResult* result = RealmDataDatabase.PQuery("SELECT name, level, zone, class, account "
                                                              "FROM characters WHERE guid = '%u'", GUID_LOPART(guid));                                 // player doesn't exist
         if (!result)
             return false;
@@ -958,7 +958,7 @@ void Guild::LoadGuildEventLogFromDB()
     if (m_eventlogloaded)
         return;
 
-    QueryResultAutoPtr result = RealmDataDatabase.PQuery("SELECT LogGuid, EventType, PlayerGuid1, PlayerGuid2, NewRank, TimeStamp FROM guild_eventlog WHERE guildid=%u ORDER BY LogGuid DESC LIMIT %u", Id, GUILD_EVENTLOG_MAX_ENTRIES);
+    QueryResult* result = RealmDataDatabase.PQuery("SELECT LogGuid, EventType, PlayerGuid1, PlayerGuid2, NewRank, TimeStamp FROM guild_eventlog WHERE guildid=%u ORDER BY LogGuid DESC LIMIT %u", Id, GUILD_EVENTLOG_MAX_ENTRIES);
     if (!result)
         return;
     do
@@ -1010,7 +1010,7 @@ void Guild::RenumGuildEventlog()
     RealmDataDatabase.PExecute("UPDATE guild_eventlog AS target INNER JOIN (SELECT *, (SELECT @COUNT := -1) FROM guild_eventlog WHERE guildid = %u ORDER BY logguid ASC) "
                                    "AS source ON source.logguid = target.logguid AND source.guildid = target.guildid SET target.logguid = (@COUNT := @COUNT + 1);", Id);
 
-    QueryResultAutoPtr result = RealmDataDatabase.PQuery("SELECT Max(LogGuid) FROM guild_eventlog WHERE guildid = %u", Id);
+    QueryResult* result = RealmDataDatabase.PQuery("SELECT Max(LogGuid) FROM guild_eventlog WHERE guildid = %u", Id);
     if (!result)
         return;
 
@@ -1287,7 +1287,7 @@ void Guild::LoadGuildBankFromDB()
     LoadGuildBankEventLogFromDB();
 
     //                                                     0      1        2        3
-    QueryResultAutoPtr result = RealmDataDatabase.PQuery("SELECT TabId, TabName, TabIcon, TabText FROM guild_bank_tab WHERE guildid='%u' ORDER BY TabId", Id);
+    QueryResult* result = RealmDataDatabase.PQuery("SELECT TabId, TabName, TabIcon, TabText FROM guild_bank_tab WHERE guildid='%u' ORDER BY TabId", Id);
     if (!result)
     {
         purchased_tabs = 0;
@@ -1582,7 +1582,7 @@ uint32 Guild::GetBankSlotPerDay(uint32 rankId, uint8 TabId)
 void Guild::LoadBankRightsFromDB(uint32 GuildId)
 {
     //                                                     0      1    2        3
-    QueryResultAutoPtr result = RealmDataDatabase.PQuery("SELECT TabId, rid, gbright, SlotPerDay FROM guild_bank_right WHERE guildid = '%u' ORDER BY TabId", GuildId);
+    QueryResult* result = RealmDataDatabase.PQuery("SELECT TabId, rid, gbright, SlotPerDay FROM guild_bank_right WHERE guildid = '%u' ORDER BY TabId", GuildId);
 
     if (!result)
         return;
@@ -1609,7 +1609,7 @@ void Guild::LoadGuildBankEventLogFromDB()
 {
     // We can't add a limit as in Guild::LoadGuildEventLogFromDB since we fetch both money and bank log and know nothing about the composition
     //                                                     0        1         2      3           4            5               6          7
-    QueryResultAutoPtr result = RealmDataDatabase.PQuery("SELECT LogGuid, LogEntry, TabId, PlayerGuid, ItemOrMoney, ItemStackCount, DestTabId, TimeStamp FROM guild_bank_eventlog WHERE guildid='%u' ORDER BY TimeStamp DESC", Id);
+    QueryResult* result = RealmDataDatabase.PQuery("SELECT LogGuid, LogEntry, TabId, PlayerGuid, ItemOrMoney, ItemStackCount, DestTabId, TimeStamp FROM guild_bank_eventlog WHERE guildid='%u' ORDER BY TimeStamp DESC", Id);
     if (!result)
         return;
 
@@ -1780,7 +1780,7 @@ void Guild::RenumBankLogs()
     RealmDataDatabase.PExecute("UPDATE guild_bank_eventlog AS target INNER JOIN (SELECT *, (SELECT @COUNT := -1) FROM guild_bank_eventlog WHERE guildid = %u ORDER BY logguid ASC) "
                                    "AS source ON source.logguid = target.logguid AND source.guildid = target.guildid SET target.logguid = (@COUNT := @COUNT + 1);", Id);
 
-    QueryResultAutoPtr result = RealmDataDatabase.PQuery("SELECT Max(LogGuid) FROM guild_bank_eventlog WHERE guildid = %u", Id);
+    QueryResult* result = RealmDataDatabase.PQuery("SELECT Max(LogGuid) FROM guild_bank_eventlog WHERE guildid = %u", Id);
     if (!result)
         return;
 

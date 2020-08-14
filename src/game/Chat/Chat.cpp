@@ -777,7 +777,7 @@ ChatCommand * ChatHandler::getCommandTable()
     {
         load_command_table = false;
 
-        QueryResultAutoPtr result = GameDataDatabase.Query("SELECT name, permission_mask, self_mask, help FROM command");
+        QueryResult* result = GameDataDatabase.Query("SELECT name, permission_mask, self_mask, help FROM command");
         if (result)
         {
             do

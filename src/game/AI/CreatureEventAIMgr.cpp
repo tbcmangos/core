@@ -37,7 +37,7 @@ void CreatureEventAIMgr::LoadCreatureEventAI_Texts(bool check_entry_use)
     sObjectMgr.LoadHellgroundStrings(GameDataDatabase,"creature_ai_texts",MIN_CREATURE_AI_TEXT_STRING_ID,MAX_CREATURE_AI_TEXT_STRING_ID);
 
     // Gather Additional data from EventAI Texts
-    QueryResultAutoPtr result = GameDataDatabase.Query("SELECT entry, sound, type, language, emote FROM creature_ai_texts");
+    QueryResult* result = GameDataDatabase.Query("SELECT entry, sound, type, language, emote FROM creature_ai_texts");
 
     sLog.outString("Loading EventAI Texts additional data...");
     if (result)
@@ -153,7 +153,7 @@ void CreatureEventAIMgr::LoadCreatureEventAI_Summons(bool check_entry_use)
     m_CreatureEventAI_Summon_Map.clear();
 
     // Gather additional data for EventAI
-    QueryResultAutoPtr result = GameDataDatabase.Query("SELECT id, position_x, position_y, position_z, orientation, spawntimesecs FROM creature_ai_summons");
+    QueryResult* result = GameDataDatabase.Query("SELECT id, position_x, position_y, position_z, orientation, spawntimesecs FROM creature_ai_summons");
     if (result)
     {
         BarGoLink bar(result->GetRowCount());
@@ -254,7 +254,7 @@ void CreatureEventAIMgr::LoadCreatureEventAI_Scripts(uint32 creatureId)
         query << " WHERE entryOrGUID = " << creatureId;
 
     // Gather event data
-    QueryResultAutoPtr result = GameDataDatabase.Query(query.str().c_str());
+    QueryResult* result = GameDataDatabase.Query(query.str().c_str());
 
     if (result)
     {

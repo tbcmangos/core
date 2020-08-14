@@ -33,7 +33,7 @@
 
 void MapManager::LoadTransports()
 {
-    QueryResultAutoPtr result = GameDataDatabase.Query("SELECT entry, name, period FROM transports");
+    QueryResult* result = GameDataDatabase.Query("SELECT entry, name, period FROM transports");
 
     uint32 count = 0;
 

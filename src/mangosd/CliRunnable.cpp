@@ -181,7 +181,7 @@ bool ChatHandler::HandleServerExitCommand(const char* args)
 bool ChatHandler::HandleAccountOnlineListCommand(const char* args)
 {
     ///- Get the list of accounts ID logged to the realm
-    QueryResultAutoPtr resultDB = RealmDataDatabase.Query("SELECT name, account FROM characters WHERE online > 0");
+    QueryResult* resultDB = RealmDataDatabase.Query("SELECT name, account FROM characters WHERE online > 0");
     if (!resultDB)
         return true;
 
@@ -200,7 +200,7 @@ bool ChatHandler::HandleAccountOnlineListCommand(const char* args)
         ///- Get the username, last IP and GM level of each account
         // No SQL injection. account is uint32.
         //                                                                  0         1          2              3
-        QueryResultAutoPtr resultLogin = AccountsDatabase.PQuery("SELECT username, last_ip, permission_mask, expansion_id "
+        QueryResult* resultLogin = AccountsDatabase.PQuery("SELECT username, last_ip, permission_mask, expansion_id "
                                                                  "FROM account JOIN account_permissions ON account.account_id = account_permissions.account_id "
                                                                  "WHERE account_id = '%u' AND realm_id = '%u'", account, realmID);
 
@@ -270,7 +270,7 @@ bool ChatHandler::HandleAccountSpecialLogCommand(const char* args)
 
     if(uint32 account_id = AccountMgr::GetId(args))
     {
-        QueryResultAutoPtr result = AccountsDatabase.PQuery("SELECT account_flags FROM account WHERE account_id = '%u'", account_id);
+        QueryResult* result = AccountsDatabase.PQuery("SELECT account_flags FROM account WHERE account_id = '%u'", account_id);
         if (!result)
             return false;
 
@@ -315,7 +315,7 @@ bool ChatHandler::HandleAccountWhispLogCommand(const char* args)
 
     if (uint32 account_id = AccountMgr::GetId(args))
     {
-        QueryResultAutoPtr result = AccountsDatabase.PQuery("SELECT account_flags FROM account WHERE account_id = '%u'", account_id);
+        QueryResult* result = AccountsDatabase.PQuery("SELECT account_flags FROM account WHERE account_id = '%u'", account_id);
         if (!result)
             return false;
 

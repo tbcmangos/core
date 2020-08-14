@@ -130,7 +130,7 @@ void RealmList::UpdateRealms(bool init)
     sLog.outDetail("Updating Realm List...");
 
     ////                                                          0       1         2       3     4      5       6                 7                  8           9
-    QueryResultAutoPtr result = AccountsDatabase.Query("SELECT realm_id, name, ip_address, port, icon, flags, timezone, required_permission_mask, population, allowed_builds "
+    QueryResult* result = AccountsDatabase.Query("SELECT realm_id, name, ip_address, port, icon, flags, timezone, required_permission_mask, population, allowed_builds "
                                                        "FROM realms WHERE (flags & 1) = 0 ORDER BY name");
 
     ///- Circle through results and add them to the realm map

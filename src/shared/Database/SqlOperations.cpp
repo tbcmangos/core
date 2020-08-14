@@ -135,7 +135,7 @@ bool SqlQueryHolder::SetQuery(size_t index, const char *sql)
     }
 
     /// not executed yet, just stored (it's not called a holder for nothing)
-    m_queries[index] = SqlResultPair(mangos_strdup(sql), (QueryResultAutoPtr)NULL);
+    m_queries[index] = SqlResultPair(mangos_strdup(sql), (QueryResult*)NULL);
     return true;
 }
 
@@ -162,7 +162,7 @@ bool SqlQueryHolder::SetPQuery(size_t index, const char *format, ...)
     return SetQuery(index,szQuery);
 }
 
-QueryResultAutoPtr SqlQueryHolder::GetResult(size_t index)
+QueryResult* SqlQueryHolder::GetResult(size_t index)
 {
     if(index < m_queries.size())
     {
@@ -176,10 +176,10 @@ QueryResultAutoPtr SqlQueryHolder::GetResult(size_t index)
         return m_queries[index].second;
     }
     else
-        return QueryResultAutoPtr(NULL);
+        return QueryResult*(NULL);
 }
 
-void SqlQueryHolder::SetResult(size_t index, QueryResultAutoPtr result)
+void SqlQueryHolder::SetResult(size_t index, QueryResult* result)
 {
     /// store the result in the holder
     if(index < m_queries.size())

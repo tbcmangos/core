@@ -1172,7 +1172,7 @@ void TerrainManager::LoadTerrainSpecifics()
 {
     i_TerrainSpecifics.clear();
 
-    QueryResultAutoPtr result = RealmDataDatabase.Query("SELECT `entry`, `visibility`, `pathfinding`, `lineofsight`, `ainotifyperiod`, `viewupdatedistance` FROM `map_template`");
+    QueryResult* result = RealmDataDatabase.Query("SELECT `entry`, `visibility`, `pathfinding`, `lineofsight`, `ainotifyperiod`, `viewupdatedistance` FROM `map_template`");
     if (!result)
     {
         BarGoLink bar(1);

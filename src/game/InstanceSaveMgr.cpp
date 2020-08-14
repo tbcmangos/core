@@ -253,7 +253,7 @@ void InstanceSaveManager::_DelHelper(DatabaseType &db, const char *fields, const
     int res = vsnprintf(szQueryTail, MAX_QUERY_LEN, queryTail, ap);
     va_end(ap);
 
-    QueryResultAutoPtr result = db.PQuery("SELECT %s FROM %s %s", fields, table, szQueryTail);
+    QueryResult* result = db.PQuery("SELECT %s FROM %s %s", fields, table, szQueryTail);
     if (result)
     {
         do
@@ -314,7 +314,7 @@ void InstanceSaveManager::PackInstances()
     // all valid ids are in the instance table
     // any associations to ids not in this table are assumed to be
     // cleaned already in CleanupInstances
-    QueryResultAutoPtr result = RealmDataDatabase.Query("SELECT id FROM instance");
+    QueryResult* result = RealmDataDatabase.Query("SELECT id FROM instance");
     if (result)
     {
         do
@@ -367,7 +367,7 @@ void InstanceSaveManager::LoadResetTimes()
     // resettime = 0 in the DB for raid/heroic instances so those are skipped
     typedef std::map<uint32, std::pair<uint32, uint64> > ResetTimeMapType;
     ResetTimeMapType InstResetTime;
-    QueryResultAutoPtr result = RealmDataDatabase.Query("SELECT id, map, resettime FROM instance WHERE resettime > 0");
+    QueryResult* result = RealmDataDatabase.Query("SELECT id, map, resettime FROM instance WHERE resettime > 0");
     if (result)
     {
         do

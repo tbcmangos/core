@@ -1554,7 +1554,7 @@ void World::LoadAutobroadcasts()
 {
     m_Autobroadcasts.clear();
 
-    QueryResultAutoPtr result = GameDataDatabase.Query("SELECT text FROM autobroadcast");
+    QueryResult* result = GameDataDatabase.Query("SELECT text FROM autobroadcast");
 
     if (!result)
     {
@@ -2272,7 +2272,7 @@ BanReturn World::BanAccount(BanMode mode, std::string nameIPOrMail, std::string 
     if (mode != BAN_EMAIL)
         duration_secs = TimeStringToSecs(duration);
 
-    QueryResultAutoPtr resultAccounts = QueryResultAutoPtr(NULL);   //used for kicking
+    QueryResult* resultAccounts = QueryResult*(NULL);   //used for kicking
 
     ///- Update the database with ban information
     switch (mode)
@@ -2317,7 +2317,7 @@ BanReturn World::BanAccount(BanMode mode, std::string nameIPOrMail, std::string 
         uint32 account = fieldsAccount[0].GetUInt32();
         uint32 permissions = PERM_PLAYER;
 
-        QueryResultAutoPtr resultAccPerm = AccountsDatabase.PQuery("SELECT permission_mask FROM account_permissions WHERE account_id = '%u' AND realm_id = '%u')", account, realmID);
+        QueryResult* resultAccPerm = AccountsDatabase.PQuery("SELECT permission_mask FROM account_permissions WHERE account_id = '%u' AND realm_id = '%u')", account, realmID);
         if (resultAccPerm)
         {
             Field* fieldsAccId = resultAccPerm->Fetch();
@@ -2522,7 +2522,7 @@ void World::UpdateResultQueue()
 
 void World::UpdateRealmCharCount(uint32 accountId)
 {
-    QueryResultAutoPtr resultCharCount = RealmDataDatabase.PQuery("SELECT COUNT(guid) FROM characters WHERE account = '%u'", accountId);
+    QueryResult* resultCharCount = RealmDataDatabase.PQuery("SELECT COUNT(guid) FROM characters WHERE account = '%u'", accountId);
 
     if (!resultCharCount)
         return;
@@ -2541,7 +2541,7 @@ void World::InitDailyQuestResetTime()
 {
     time_t mostRecentQuestTime;
 
-    QueryResultAutoPtr result = RealmDataDatabase.Query("SELECT MAX(time) FROM character_queststatus_daily");
+    QueryResult* result = RealmDataDatabase.Query("SELECT MAX(time) FROM character_queststatus_daily");
     if (result)
     {
         Field *fields = result->Fetch();
@@ -2577,7 +2577,7 @@ void World::InitDailyQuestResetTime()
 
 void World::UpdateRequiredPermissions()
 {
-     QueryResultAutoPtr result = AccountsDatabase.PQuery("SELECT required_permission_mask from realms WHERE realm_id = '%u'", realmID);
+     QueryResult* result = AccountsDatabase.PQuery("SELECT required_permission_mask from realms WHERE realm_id = '%u'", realmID);
      if (result)
      {
         m_requiredPermissionMask = result->Fetch()->GetUInt64();
@@ -2818,7 +2818,7 @@ void World::UpdateMaxSessionCounters()
 
 void World::LoadDBVersion()
 {
-    QueryResultAutoPtr result = GameDataDatabase.Query("SELECT db_version FROM version LIMIT 1");
+    QueryResult* result = GameDataDatabase.Query("SELECT db_version FROM version LIMIT 1");
     if (result)
     {
         Field* fields = result->Fetch();
@@ -2836,7 +2836,7 @@ void World::CleanupDeletedChars()
     if (keepDays < 1)
         return;
 
-    QueryResultAutoPtr result = RealmDataDatabase.PQuery("SELECT char_guid FROM deleted_chars WHERE DATEDIFF(now(), date) >= %u", keepDays);
+    QueryResult* result = RealmDataDatabase.PQuery("SELECT char_guid FROM deleted_chars WHERE DATEDIFF(now(), date) >= %u", keepDays);
     if (result)
     {
         do

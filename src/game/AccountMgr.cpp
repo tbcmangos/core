@@ -38,7 +38,7 @@ AccountOpResult AccountMgr::CreateAccount(std::string username, std::string pass
     AccountsDatabase.escape_string(username);
     AccountsDatabase.escape_string(password);
 
-    QueryResultAutoPtr result = AccountsDatabase.PQuery("SELECT 1 FROM account WHERE username = '%s'", username.c_str());
+    QueryResult* result = AccountsDatabase.PQuery("SELECT 1 FROM account WHERE username = '%s'", username.c_str());
     if (result)
         return AOR_NAME_ALREDY_EXIST;                       // username does already exist
 
@@ -51,7 +51,7 @@ AccountOpResult AccountMgr::CreateAccount(std::string username, std::string pass
 
 AccountOpResult AccountMgr::DeleteAccount(uint32 accid)
 {
-    QueryResultAutoPtr result = AccountsDatabase.PQuery("SELECT 1 FROM account WHERE account_id = '%u'", accid);
+    QueryResult* result = AccountsDatabase.PQuery("SELECT 1 FROM account WHERE account_id = '%u'", accid);
     if (!result)
         return AOR_NAME_NOT_EXIST;                          // account doesn't exist
 
@@ -88,7 +88,7 @@ AccountOpResult AccountMgr::DeleteAccount(uint32 accid)
 
 AccountOpResult AccountMgr::ChangeUsername(uint32 accid, std::string new_uname, std::string new_passwd)
 {
-    QueryResultAutoPtr result = AccountsDatabase.PQuery("SELECT 1 FROM account WHERE accoun_id = '%u'", accid);
+    QueryResult* result = AccountsDatabase.PQuery("SELECT 1 FROM account WHERE accoun_id = '%u'", accid);
     if (!result)
         return AOR_NAME_NOT_EXIST;                          // account doesn't exist
 
@@ -112,7 +112,7 @@ AccountOpResult AccountMgr::ChangeUsername(uint32 accid, std::string new_uname, 
 
 AccountOpResult AccountMgr::ChangePassword(uint32 accid, std::string new_passwd)
 {
-    QueryResultAutoPtr result = AccountsDatabase.PQuery("SELECT 1 FROM account WHERE account_id = '%u'", accid);
+    QueryResult* result = AccountsDatabase.PQuery("SELECT 1 FROM account WHERE account_id = '%u'", accid);
     if (!result)
         return AOR_NAME_NOT_EXIST;                          // account doesn't exist
 
@@ -131,7 +131,7 @@ AccountOpResult AccountMgr::ChangePassword(uint32 accid, std::string new_passwd)
 uint32 AccountMgr::GetId(std::string username)
 {
     AccountsDatabase.escape_string(username);
-    QueryResultAutoPtr result = AccountsDatabase.PQuery("SELECT account_id FROM account WHERE username = '%s'", username.c_str());
+    QueryResult* result = AccountsDatabase.PQuery("SELECT account_id FROM account WHERE username = '%s'", username.c_str());
     if (result)
         return (*result)[0].GetUInt32();
 
@@ -140,7 +140,7 @@ uint32 AccountMgr::GetId(std::string username)
 
 uint64 AccountMgr::GetPermissions(uint32 acc_id)
 {
-    QueryResultAutoPtr result = AccountsDatabase.PQuery("SELECT permission_mask FROM account_permissions WHERE account_id = '%u' AND realm_id = '%u'", acc_id, realmID);
+    QueryResult* result = AccountsDatabase.PQuery("SELECT permission_mask FROM account_permissions WHERE account_id = '%u' AND realm_id = '%u'", acc_id, realmID);
     if (result)
         return (*result)[0].GetUInt64();
 
@@ -154,7 +154,7 @@ bool AccountMgr::HasPermissions(uint32 accId, uint64 perms)
 
 bool AccountMgr::GetName(uint32 acc_id, std::string &name)
 {
-    QueryResultAutoPtr result = AccountsDatabase.PQuery("SELECT username FROM account WHERE account_id = '%u'", acc_id);
+    QueryResult* result = AccountsDatabase.PQuery("SELECT username FROM account WHERE account_id = '%u'", acc_id);
     if (result)
     {
         name = (*result)[0].GetCppString();
@@ -169,7 +169,7 @@ bool AccountMgr::CheckPassword(uint32 accid, std::string passwd)
     normalizeString(passwd);
     AccountsDatabase.escape_string(passwd);
 
-    QueryResultAutoPtr result = AccountsDatabase.PQuery("SELECT 1 FROM account WHERE account_id ='%u' AND pass_hash=SHA1(CONCAT(username, ':', '%s'))", accid, passwd.c_str());
+    QueryResult* result = AccountsDatabase.PQuery("SELECT 1 FROM account WHERE account_id ='%u' AND pass_hash=SHA1(CONCAT(username, ':', '%s'))", accid, passwd.c_str());
     if (result)
         return true;
 
@@ -192,7 +192,7 @@ bool AccountMgr::normalizeString(std::string& utf8str)
 std::vector<uint32> AccountMgr::GetRAFAccounts(uint32 accid, bool referred)
 {
 
-    QueryResultAutoPtr result;
+    QueryResult* result;
 
     if (referred)
         result = AccountsDatabase.PQuery("SELECT `friend_id` FROM `account_friends` WHERE `id` = %u AND `expire_date` > NOW() LIMIT %u", accid, sWorld.getConfig(CONFIG_UINT32_RAF_MAXREFERERS));

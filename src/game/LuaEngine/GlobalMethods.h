@@ -282,7 +282,7 @@ namespace LuaGlobalFunctions
         if (!query)
             return 0;
 
-        QueryResultAutoPtr result = GameDataDatabase.Query(query);
+        QueryResult* result = GameDataDatabase.Query(query);
         if (!result)
             return 0;
 
@@ -301,7 +301,7 @@ namespace LuaGlobalFunctions
     {
         const char* query = sEluna->CHECKVAL<const char*>(L, 1);
 
-        QueryResultAutoPtr result = RealmDataDatabase.Query(query);
+        QueryResult* result = RealmDataDatabase.Query(query);
         if (!result)
             return 0;
 
@@ -320,7 +320,7 @@ namespace LuaGlobalFunctions
     {
         const char* query = sEluna->CHECKVAL<const char*>(L, 1);
 
-        QueryResultAutoPtr result = AccountsDatabase.Query(query);
+        QueryResult* result = AccountsDatabase.Query(query);
         if (!result)
             return 0;
 

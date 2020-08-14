@@ -169,7 +169,7 @@ class  Group
 
         // group manipulation methods
         bool   Create(const uint64 &guid, const char * name, bool lfg = false);
-        bool   LoadGroupFromDB(const uint64 &leaderGuid, QueryResultAutoPtr result = QueryResultAutoPtr(NULL), bool loadMembers = true);
+        bool   LoadGroupFromDB(const uint64 &leaderGuid, QueryResult* result = QueryResult*(NULL), bool loadMembers = true);
         bool   LoadMemberFromDB(uint32 guidLow, uint8 subgroup, bool assistant);
         bool   AddInvite(Player *player);
         uint32 RemoveInvite(Player *player);

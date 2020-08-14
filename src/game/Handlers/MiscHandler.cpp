@@ -618,7 +618,7 @@ void WorldSession::HandleAddFriendOpcode(WorldPacket & recv_data)
     RealmDataDatabase.AsyncPQuery(&WorldSession::HandleAddFriendOpcodeCallBack, GetAccountId(), friendNote, "SELECT guid, race, account FROM characters WHERE name = '%s'", friendName.c_str());
 }
 
-void WorldSession::HandleAddFriendOpcodeCallBack(QueryResultAutoPtr result, uint32 accountId, std::string friendNote)
+void WorldSession::HandleAddFriendOpcodeCallBack(QueryResult* result, uint32 accountId, std::string friendNote)
 {
     uint64 friendGuid;
     uint64 friendAcctid;
@@ -708,7 +708,7 @@ void WorldSession::HandleAddIgnoreOpcode(WorldPacket & recv_data)
     RealmDataDatabase.AsyncPQuery(&WorldSession::HandleAddIgnoreOpcodeCallBack, GetAccountId(), "SELECT guid FROM characters WHERE name = '%s'", IgnoreName.c_str());
 }
 
-void WorldSession::HandleAddIgnoreOpcodeCallBack(QueryResultAutoPtr result, uint32 accountId)
+void WorldSession::HandleAddIgnoreOpcodeCallBack(QueryResult* result, uint32 accountId)
 {
     uint64 IgnoreGuid;
     FriendsResult ignoreResult;
@@ -1377,7 +1377,7 @@ void WorldSession::HandleWhoisOpcode(WorldPacket& recv_data)
 
     uint32 accid = plr->GetSession()->GetAccountId();
 
-    QueryResultAutoPtr result = AccountsDatabase.PQuery("SELECT username, email, last_ip FROM account WHERE account_id = '%u'", accid);
+    QueryResult* result = AccountsDatabase.PQuery("SELECT username, email, last_ip FROM account WHERE account_id = '%u'", accid);
     if (!result)
     {
         SendNotification(LANG_ACCOUNT_FOR_PLAYER_NOT_FOUND, charname.c_str());

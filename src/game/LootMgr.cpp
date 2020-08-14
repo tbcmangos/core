@@ -99,7 +99,7 @@ void LootStore::LoadLootTable()
     sLog.outString("%s :", GetName());
 
     //                                                        0      1     2                    3        4              5         6              7                 8
-    QueryResultAutoPtr result = GameDataDatabase.PQuery("SELECT entry, item, ChanceOrQuestChance, groupid, mincountOrRef, maxcount, lootcondition, condition_value1, condition_value2 FROM %s",GetName());
+    QueryResult* result = GameDataDatabase.PQuery("SELECT entry, item, ChanceOrQuestChance, groupid, mincountOrRef, maxcount, lootcondition, condition_value1, condition_value2 FROM %s",GetName());
 
     if (result)
     {
@@ -419,7 +419,7 @@ void Loot::FillLootFromDB(Creature *pCreature, Player* pLootOwner)
 {
     clear();
 
-    QueryResultAutoPtr result = RealmDataDatabase.PQuery("SELECT itemId, itemCount, playerGuids FROM group_saved_loot WHERE creatureId='%u' AND instanceId='%u'", pCreature->GetEntry(), pCreature->GetInstanceId());
+    QueryResult* result = RealmDataDatabase.PQuery("SELECT itemId, itemCount, playerGuids FROM group_saved_loot WHERE creatureId='%u' AND instanceId='%u'", pCreature->GetEntry(), pCreature->GetInstanceId());
     if (result)
     {
         m_creatureGUID = pCreature->GetGUID();
@@ -524,7 +524,7 @@ void Loot::removeItemFromSavedLoot(LootItem *item)
         return;
     }
 
-    QueryResultAutoPtr result = RealmDataDatabase.PQuery("SELECT itemCount FROM group_saved_loot WHERE itemId='%u' AND instanceId='%u' AND creatureId='%u'", item->itemid, pMap->GetInstanceId(), pCreature->GetEntry());
+    QueryResult* result = RealmDataDatabase.PQuery("SELECT itemCount FROM group_saved_loot WHERE itemId='%u' AND instanceId='%u' AND creatureId='%u'", item->itemid, pMap->GetInstanceId(), pCreature->GetEntry());
     if (!result)
     {
         if (pMap->IsRaid())

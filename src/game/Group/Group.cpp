@@ -157,7 +157,7 @@ bool Group::Create(const uint64 &guid, const char * name, bool lfg)
     return true;
 }
 
-bool Group::LoadGroupFromDB(const uint64 &leaderGuid, QueryResultAutoPtr result, bool loadMembers)
+bool Group::LoadGroupFromDB(const uint64 &leaderGuid, QueryResult* result, bool loadMembers)
 {
     if (isBGGroup())
         return false;

@@ -414,7 +414,7 @@ bool Master::_StartDB()
 void Master::clearOnlineAccounts()
 {
     // Cleanup online status for characters hosted at current realm
-    QueryResultAutoPtr result = RealmDataDatabase.Query("SELECT DISTINCT account FROM characters WHERE online <> 0");
+    QueryResult* result = RealmDataDatabase.Query("SELECT DISTINCT account FROM characters WHERE online <> 0");
 
     if (!result)
         return;

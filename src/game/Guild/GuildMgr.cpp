@@ -113,7 +113,7 @@ void GuildMgr::LoadGuildAnnCooldowns()
 {
     uint32 count = 0;
 
-    QueryResultAutoPtr result = RealmDataDatabase.Query("SELECT guild_id, cooldown_end FROM guild_announce_cooldown");
+    QueryResult* result = RealmDataDatabase.Query("SELECT guild_id, cooldown_end FROM guild_announce_cooldown");
 
     if (!result)
     {
@@ -151,7 +151,7 @@ void GuildMgr::LoadGuilds()
     Guild *newguild;
     uint32 count = 0;
 
-    QueryResultAutoPtr result = RealmDataDatabase.Query("SELECT guildid FROM guild");
+    QueryResult* result = RealmDataDatabase.Query("SELECT guildid FROM guild");
 
     if (!result)
     {

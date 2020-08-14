@@ -418,7 +418,7 @@ bool AuthSocket::_HandleLogonChallenge()
     // No SQL injection possible (paste the IP address as passed by the socket)
     AccountsDatabase.Execute("DELETE FROM ip_banned WHERE unbandate<=UNIX_TIMESTAMP() AND unbandate<>bandate");
     AccountsDatabase.escape_string(address);
-    QueryResultAutoPtr result = AccountsDatabase.PQuery("SELECT * FROM ip_banned WHERE ip = '%s'", address.c_str());
+    QueryResult* result = AccountsDatabase.PQuery("SELECT * FROM ip_banned WHERE ip = '%s'", address.c_str());
 
     if (result) // ip banned
     {
@@ -475,7 +475,7 @@ bool AuthSocket::_HandleLogonChallenge()
             break;
     }
     ///- If the account is banned, reject the logon attempt
-    QueryResultAutoPtr  banresult = AccountsDatabase.PQuery("SELECT punishment_date, expiration_date "
+    QueryResult*  banresult = AccountsDatabase.PQuery("SELECT punishment_date, expiration_date "
                                                             "FROM account_punishment "
                                                             "WHERE account_id = '%u' AND punishment_type_id = '%u' AND active = 1 "
                                                             "AND (punishment_date = expiration_date OR expiration_date > UNIX_TIMESTAMP())", (*result)[1].GetUInt32(), PUNISHMENT_BAN);
@@ -497,7 +497,7 @@ bool AuthSocket::_HandleLogonChallenge()
         return true;
     }
 
-    QueryResultAutoPtr  emailbanresult = AccountsDatabase.PQuery("SELECT email FROM email_banned WHERE email = '%s'", (*result)[5].GetString());
+    QueryResult*  emailbanresult = AccountsDatabase.PQuery("SELECT email FROM email_banned WHERE email = '%s'", (*result)[5].GetString());
     if (emailbanresult)
     {
         pkt << uint8(WOW_FAIL_BANNED);
@@ -744,7 +744,7 @@ bool AuthSocket::_HandleLogonProof()
         // No SQL injection (escaped user name) and IP address as received by socket
         const char* K_hex = K.AsHexStr();
 
-        QueryResultAutoPtr result = AccountsDatabase.PQuery("SELECT account_id FROM account WHERE username = '%s'", _safelogin.c_str());
+        QueryResult* result = AccountsDatabase.PQuery("SELECT account_id FROM account WHERE username = '%s'", _safelogin.c_str());
 
         if (!result)
         {
@@ -813,7 +813,7 @@ bool AuthSocket::_HandleLogonProof()
             stmt.addString(_login);
             stmt.Execute();
 
-            if (QueryResultAutoPtr loginfail = AccountsDatabase.PQuery("SELECT account_id, failed_logins FROM account WHERE username = '%s'", _safelogin.c_str()))
+            if (QueryResult* loginfail = AccountsDatabase.PQuery("SELECT account_id, failed_logins FROM account WHERE username = '%s'", _safelogin.c_str()))
             {
                 Field* fields = loginfail->Fetch();
                 uint32 failed_logins = fields[1].GetUInt32();
@@ -882,7 +882,7 @@ bool AuthSocket::_HandleReconnectChallenge()
     EndianConvert(ch->build);
     _build = ch->build;
 
-    QueryResultAutoPtr  result = AccountsDatabase.PQuery("SELECT session_key FROM account JOIN account_session ON account.account_id = account_session.account_id WHERE username = '%s'", _safelogin.c_str());
+    QueryResult*  result = AccountsDatabase.PQuery("SELECT session_key FROM account JOIN account_session ON account.account_id = account_session.account_id WHERE username = '%s'", _safelogin.c_str());
 
     // Stop if the account is not found
     if (!result)
@@ -961,7 +961,7 @@ bool AuthSocket::_HandleRealmList()
     ///- Get the user id (else close the connection)
     // No SQL injection (escaped user name)
 
-    QueryResultAutoPtr  result = AccountsDatabase.PQuery("SELECT account_id, pass_hash FROM account WHERE username = '%s'", _safelogin.c_str());
+    QueryResult*  result = AccountsDatabase.PQuery("SELECT account_id, pass_hash FROM account WHERE username = '%s'", _safelogin.c_str());
     if (!result)
     {
         sLog.outLog(LOG_DEFAULT, "ERROR: [ERROR] user %s tried to login and we cannot find him in the database.",_login.c_str());
@@ -1004,7 +1004,7 @@ void AuthSocket::LoadRealmlist(ByteBuffer &pkt, uint32 acctid)
                 uint8 AmountOfCharacters;
 
                 // No SQL injection. id of realm is controlled by the database.
-                QueryResultAutoPtr result = AccountsDatabase.PQuery( "SELECT characters_count FROM realm_characters WHERE realm_id = '%u' AND account_id = '%u'", i->second.m_ID, acctid);
+                QueryResult* result = AccountsDatabase.PQuery( "SELECT characters_count FROM realm_characters WHERE realm_id = '%u' AND account_id = '%u'", i->second.m_ID, acctid);
                 if (result)
                 {
                     Field *fields = result->Fetch();
@@ -1064,7 +1064,7 @@ void AuthSocket::LoadRealmlist(ByteBuffer &pkt, uint32 acctid)
                 uint8 AmountOfCharacters;
 
                 // No SQL injection. id of realm is controlled by the database.
-                QueryResultAutoPtr result = AccountsDatabase.PQuery("SELECT characters_count FROM realm_characters WHERE realm_id = '%u' AND account_id = '%u'", i->second.m_ID, acctid);
+                QueryResult* result = AccountsDatabase.PQuery("SELECT characters_count FROM realm_characters WHERE realm_id = '%u' AND account_id = '%u'", i->second.m_ID, acctid);
                 if (result)
                 {
                     Field *fields = result->Fetch();

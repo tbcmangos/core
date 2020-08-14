@@ -250,14 +250,14 @@ void Database::Ping()
 
     {
         SqlConnection::Lock guard(m_pAsyncConn);
-        if (guard->Query(sql) == QueryResultAutoPtr(nullptr))
+        if (guard->Query(sql) == QueryResult*(nullptr))
             abort();
     }
 
     for (int i = 0; i < m_nQueryConnPoolSize; ++i)
     {
         SqlConnection::Lock guard(m_pQueryConnections[i]);
-        if (guard->Query(sql) == QueryResultAutoPtr(nullptr))
+        if (guard->Query(sql) == QueryResult*(nullptr))
             abort();
     }
 }
@@ -306,10 +306,10 @@ bool Database::PExecuteLog(const char * format,...)
     return Execute(szQuery);
 }
 
-QueryResultAutoPtr Database::PQuery(const char *format,...)
+QueryResult* Database::PQuery(const char *format,...)
 {
     if(!format)
-        return QueryResultAutoPtr(NULL);
+        return QueryResult*(NULL);
 
     va_list ap;
     char szQuery [MAX_QUERY_LEN];
@@ -320,7 +320,7 @@ QueryResultAutoPtr Database::PQuery(const char *format,...)
     if(res==-1)
     {
         sLog.outLog(LOG_DEFAULT, "ERROR: SQL Query truncated (and not execute) for format: %s",format);
-        return QueryResultAutoPtr(NULL);
+        return QueryResult*(NULL);
     }
 
     return Query(szQuery);
@@ -472,7 +472,7 @@ bool Database::RollbackTransaction()
 bool Database::CheckRequiredField( char const* table_name, char const* required_name )
 {
     // check required field
-    QueryResultAutoPtr result = PQuery("SELECT %s FROM %s LIMIT 1",required_name,table_name);
+    QueryResult* result = PQuery("SELECT %s FROM %s LIMIT 1",required_name,table_name);
     if(result)
     {
         return true;

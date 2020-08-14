@@ -215,7 +215,7 @@ bool MySQLConnection::_Query(const char *sql, MYSQL_RES **pResult, MYSQL_FIELD *
     return true;
 }
 
-QueryResultAutoPtr MySQLConnection::Query(const char *sql)
+QueryResult* MySQLConnection::Query(const char *sql)
 {
     MYSQL_RES *result = NULL;
     MYSQL_FIELD *fields = NULL;
@@ -223,12 +223,12 @@ QueryResultAutoPtr MySQLConnection::Query(const char *sql)
     uint32 fieldCount = 0;
 
     if(!_Query(sql,&result,&fields,&rowCount,&fieldCount))
-        return QueryResultAutoPtr(NULL);
+        return QueryResult*(NULL);
 
     QueryResultMysql *queryResult = new QueryResultMysql(result, fields, rowCount, fieldCount);
 
     queryResult->NextRow();
-    return QueryResultAutoPtr(queryResult);
+    return QueryResult*(queryResult);
 }
 
 QueryNamedResult* MySQLConnection::QueryNamed(const char *sql)
@@ -248,7 +248,7 @@ QueryNamedResult* MySQLConnection::QueryNamed(const char *sql)
     QueryResultMysql *queryResult = new QueryResultMysql(result, fields, rowCount, fieldCount);
 
     queryResult->NextRow();
-    return new QueryNamedResult(QueryResultAutoPtr(queryResult),names);
+    return new QueryNamedResult(QueryResult*(queryResult),names);
 }
 
 bool MySQLConnection::Execute(const char* sql)

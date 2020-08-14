@@ -159,7 +159,7 @@ void Corpse::DeleteFromDB()
     }
 }
 
-bool Corpse::LoadFromDB(uint32 guid, QueryResultAutoPtr result, uint32 InstanceId)
+bool Corpse::LoadFromDB(uint32 guid, QueryResult* result, uint32 InstanceId)
 {
     if (! result)
         //                                        0          1          2          3           4   5    6    7           8

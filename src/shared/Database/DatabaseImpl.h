@@ -51,7 +51,7 @@
 
 template<class Class>
 bool
-Database::AsyncQuery(Class *object, void (Class::*method)(QueryResultAutoPtr), const char *sql)
+Database::AsyncQuery(Class *object, void (Class::*method)(QueryResult*), const char *sql)
 {
     ASYNC_QUERY_BODY(sql)
     return m_threadBody->Delay(new SqlQuery(sql, new MaNGOS::QueryCallback<Class>(object, method), m_pResultQueue));
@@ -59,59 +59,59 @@ Database::AsyncQuery(Class *object, void (Class::*method)(QueryResultAutoPtr), c
 
 template<class Class, typename ParamType1>
 bool
-Database::AsyncQuery(Class *object, void (Class::*method)(QueryResultAutoPtr, ParamType1), ParamType1 param1, const char *sql)
+Database::AsyncQuery(Class *object, void (Class::*method)(QueryResult*, ParamType1), ParamType1 param1, const char *sql)
 {
     ASYNC_QUERY_BODY(sql)
-    return m_threadBody->Delay(new SqlQuery(sql, new MaNGOS::QueryCallback<Class, ParamType1>(object, method, (QueryResultAutoPtr)NULL, param1), m_pResultQueue));
+    return m_threadBody->Delay(new SqlQuery(sql, new MaNGOS::QueryCallback<Class, ParamType1>(object, method, (QueryResult*)NULL, param1), m_pResultQueue));
 }
 
 template<class Class, typename ParamType1, typename ParamType2>
 bool
-Database::AsyncQuery(Class *object, void (Class::*method)(QueryResultAutoPtr, ParamType1, ParamType2), ParamType1 param1, ParamType2 param2, const char *sql)
+Database::AsyncQuery(Class *object, void (Class::*method)(QueryResult*, ParamType1, ParamType2), ParamType1 param1, ParamType2 param2, const char *sql)
 {
     ASYNC_QUERY_BODY(sql)
-    return m_threadBody->Delay(new SqlQuery(sql, new MaNGOS::QueryCallback<Class, ParamType1, ParamType2>(object, method, (QueryResultAutoPtr)NULL, param1, param2), m_pResultQueue));
+    return m_threadBody->Delay(new SqlQuery(sql, new MaNGOS::QueryCallback<Class, ParamType1, ParamType2>(object, method, (QueryResult*)NULL, param1, param2), m_pResultQueue));
 }
 
 template<class Class, typename ParamType1, typename ParamType2, typename ParamType3>
 bool
-Database::AsyncQuery(Class *object, void (Class::*method)(QueryResultAutoPtr, ParamType1, ParamType2, ParamType3), ParamType1 param1, ParamType2 param2, ParamType3 param3, const char *sql)
+Database::AsyncQuery(Class *object, void (Class::*method)(QueryResult*, ParamType1, ParamType2, ParamType3), ParamType1 param1, ParamType2 param2, ParamType3 param3, const char *sql)
 {
     ASYNC_QUERY_BODY(sql)
-    return m_threadBody->Delay(new SqlQuery(sql, new MaNGOS::QueryCallback<Class, ParamType1, ParamType2, ParamType3>(object, method, (QueryResultAutoPtr)NULL, param1, param2, param3), m_pResultQueue));
+    return m_threadBody->Delay(new SqlQuery(sql, new MaNGOS::QueryCallback<Class, ParamType1, ParamType2, ParamType3>(object, method, (QueryResult*)NULL, param1, param2, param3), m_pResultQueue));
 }
 
 // -- Query / static --
 
 template<typename ParamType1>
 bool
-Database::AsyncQuery(void (*method)(QueryResultAutoPtr, ParamType1), ParamType1 param1, const char *sql)
+Database::AsyncQuery(void (*method)(QueryResult*, ParamType1), ParamType1 param1, const char *sql)
 {
     ASYNC_QUERY_BODY(sql)
-    return m_threadBody->Delay(new SqlQuery(sql, new MaNGOS::SQueryCallback<ParamType1>(method, (QueryResultAutoPtr)NULL, param1), m_pResultQueue));
+    return m_threadBody->Delay(new SqlQuery(sql, new MaNGOS::SQueryCallback<ParamType1>(method, (QueryResult*)NULL, param1), m_pResultQueue));
 }
 
 template<typename ParamType1, typename ParamType2>
 bool
-Database::AsyncQuery(void (*method)(QueryResultAutoPtr, ParamType1, ParamType2), ParamType1 param1, ParamType2 param2, const char *sql)
+Database::AsyncQuery(void (*method)(QueryResult*, ParamType1, ParamType2), ParamType1 param1, ParamType2 param2, const char *sql)
 {
     ASYNC_QUERY_BODY(sql)
-    return m_threadBody->Delay(new SqlQuery(sql, new MaNGOS::SQueryCallback<ParamType1, ParamType2>(method, (QueryResultAutoPtr)NULL, param1, param2), m_pResultQueue));
+    return m_threadBody->Delay(new SqlQuery(sql, new MaNGOS::SQueryCallback<ParamType1, ParamType2>(method, (QueryResult*)NULL, param1, param2), m_pResultQueue));
 }
 
 template<typename ParamType1, typename ParamType2, typename ParamType3>
 bool
-Database::AsyncQuery(void (*method)(QueryResultAutoPtr, ParamType1, ParamType2, ParamType3), ParamType1 param1, ParamType2 param2, ParamType3 param3, const char *sql)
+Database::AsyncQuery(void (*method)(QueryResult*, ParamType1, ParamType2, ParamType3), ParamType1 param1, ParamType2 param2, ParamType3 param3, const char *sql)
 {
     ASYNC_QUERY_BODY(sql)
-    return m_threadBody->Delay(new SqlQuery(sql, new MaNGOS::SQueryCallback<ParamType1, ParamType2, ParamType3>(method, (QueryResultAutoPtr)NULL, param1, param2, param3), m_pResultQueue));
+    return m_threadBody->Delay(new SqlQuery(sql, new MaNGOS::SQueryCallback<ParamType1, ParamType2, ParamType3>(method, (QueryResult*)NULL, param1, param2, param3), m_pResultQueue));
 }
 
 // -- PQuery / member --
 
 template<class Class>
 bool
-Database::AsyncPQuery(Class *object, void (Class::*method)(QueryResultAutoPtr), const char *format,...)
+Database::AsyncPQuery(Class *object, void (Class::*method)(QueryResult*), const char *format,...)
 {
     ASYNC_PQUERY_BODY(format, szQuery)
     return AsyncQuery(object, method, szQuery);
@@ -119,7 +119,7 @@ Database::AsyncPQuery(Class *object, void (Class::*method)(QueryResultAutoPtr), 
 
 template<class Class, typename ParamType1>
 bool
-Database::AsyncPQuery(Class *object, void (Class::*method)(QueryResultAutoPtr, ParamType1), ParamType1 param1, const char *format,...)
+Database::AsyncPQuery(Class *object, void (Class::*method)(QueryResult*, ParamType1), ParamType1 param1, const char *format,...)
 {
     ASYNC_PQUERY_BODY(format, szQuery)
     return AsyncQuery(object, method, param1, szQuery);
@@ -127,7 +127,7 @@ Database::AsyncPQuery(Class *object, void (Class::*method)(QueryResultAutoPtr, P
 
 template<class Class, typename ParamType1, typename ParamType2>
 bool
-Database::AsyncPQuery(Class *object, void (Class::*method)(QueryResultAutoPtr, ParamType1, ParamType2), ParamType1 param1, ParamType2 param2, const char *format,...)
+Database::AsyncPQuery(Class *object, void (Class::*method)(QueryResult*, ParamType1, ParamType2), ParamType1 param1, ParamType2 param2, const char *format,...)
 {
     ASYNC_PQUERY_BODY(format, szQuery)
     return AsyncQuery(object, method, param1, param2, szQuery);
@@ -135,7 +135,7 @@ Database::AsyncPQuery(Class *object, void (Class::*method)(QueryResultAutoPtr, P
 
 template<class Class, typename ParamType1, typename ParamType2, typename ParamType3>
 bool
-Database::AsyncPQuery(Class *object, void (Class::*method)(QueryResultAutoPtr, ParamType1, ParamType2, ParamType3), ParamType1 param1, ParamType2 param2, ParamType3 param3, const char *format,...)
+Database::AsyncPQuery(Class *object, void (Class::*method)(QueryResult*, ParamType1, ParamType2, ParamType3), ParamType1 param1, ParamType2 param2, ParamType3 param3, const char *format,...)
 {
     ASYNC_PQUERY_BODY(format, szQuery)
     return AsyncQuery(object, method, param1, param2, param3, szQuery);
@@ -145,7 +145,7 @@ Database::AsyncPQuery(Class *object, void (Class::*method)(QueryResultAutoPtr, P
 
 template<typename ParamType1>
 bool
-Database::AsyncPQuery(void (*method)(QueryResultAutoPtr, ParamType1), ParamType1 param1, const char *format,...)
+Database::AsyncPQuery(void (*method)(QueryResult*, ParamType1), ParamType1 param1, const char *format,...)
 {
     ASYNC_PQUERY_BODY(format, szQuery)
     return AsyncQuery(method, param1, szQuery);
@@ -153,7 +153,7 @@ Database::AsyncPQuery(void (*method)(QueryResultAutoPtr, ParamType1), ParamType1
 
 template<typename ParamType1, typename ParamType2>
 bool
-Database::AsyncPQuery(void (*method)(QueryResultAutoPtr, ParamType1, ParamType2), ParamType1 param1, ParamType2 param2, const char *format,...)
+Database::AsyncPQuery(void (*method)(QueryResult*, ParamType1, ParamType2), ParamType1 param1, ParamType2 param2, const char *format,...)
 {
     ASYNC_PQUERY_BODY(format, szQuery)
     return AsyncQuery(method, param1, param2, szQuery);
@@ -161,7 +161,7 @@ Database::AsyncPQuery(void (*method)(QueryResultAutoPtr, ParamType1, ParamType2)
 
 template<typename ParamType1, typename ParamType2, typename ParamType3>
 bool
-Database::AsyncPQuery(void (*method)(QueryResultAutoPtr, ParamType1, ParamType2, ParamType3), ParamType1 param1, ParamType2 param2, ParamType3 param3, const char *format,...)
+Database::AsyncPQuery(void (*method)(QueryResult*, ParamType1, ParamType2, ParamType3), ParamType1 param1, ParamType2 param2, ParamType3 param3, const char *format,...)
 {
     ASYNC_PQUERY_BODY(format, szQuery)
     return AsyncQuery(method, param1, param2, param3, szQuery);
@@ -171,18 +171,18 @@ Database::AsyncPQuery(void (*method)(QueryResultAutoPtr, ParamType1, ParamType2,
 
 template<class Class>
 bool
-Database::DelayQueryHolder(Class *object, void (Class::*method)(QueryResultAutoPtr, SqlQueryHolder*), SqlQueryHolder *holder)
+Database::DelayQueryHolder(Class *object, void (Class::*method)(QueryResult*, SqlQueryHolder*), SqlQueryHolder *holder)
 {
     ASYNC_DELAYHOLDER_BODY(holder)
-    return holder->Execute(new MaNGOS::QueryCallback<Class, SqlQueryHolder*>(object, method, (QueryResultAutoPtr)NULL, holder), m_threadBody, m_pResultQueue);
+    return holder->Execute(new MaNGOS::QueryCallback<Class, SqlQueryHolder*>(object, method, (QueryResult*)NULL, holder), m_threadBody, m_pResultQueue);
 }
 
 template<class Class, typename ParamType1>
 bool
-Database::DelayQueryHolder(Class *object, void (Class::*method)(QueryResultAutoPtr, SqlQueryHolder*, ParamType1), SqlQueryHolder *holder, ParamType1 param1)
+Database::DelayQueryHolder(Class *object, void (Class::*method)(QueryResult*, SqlQueryHolder*, ParamType1), SqlQueryHolder *holder, ParamType1 param1)
 {
     ASYNC_DELAYHOLDER_BODY(holder)
-    return holder->Execute(new MaNGOS::QueryCallback<Class, SqlQueryHolder*, ParamType1>(object, method, (QueryResultAutoPtr)NULL, holder, param1), m_threadBody, m_pResultQueue);
+    return holder->Execute(new MaNGOS::QueryCallback<Class, SqlQueryHolder*, ParamType1>(object, method, (QueryResult*)NULL, holder, param1), m_threadBody, m_pResultQueue);
 }
 
 #undef ASYNC_QUERY_BODY

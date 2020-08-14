@@ -273,7 +273,7 @@ void AuctionHouseMgr::SendAuctionExpiredMail(AuctionEntry * auction)
 void AuctionHouseMgr::LoadAuctionItems()
 {
     // data needs to be at first place for Item::LoadFromDB       0      1        2
-    QueryResultAutoPtr result = RealmDataDatabase.Query("SELECT data,itemguid,item_template FROM auctionhouse JOIN item_instance ON itemguid = guid");
+    QueryResult* result = RealmDataDatabase.Query("SELECT data,itemguid,item_template FROM auctionhouse JOIN item_instance ON itemguid = guid");
 
     if (!result)
     {
@@ -324,7 +324,7 @@ void AuctionHouseMgr::LoadAuctionItems()
 
 void AuctionHouseMgr::LoadAuctions()
 {
-    QueryResultAutoPtr result = RealmDataDatabase.Query("SELECT COUNT(*) FROM auctionhouse");
+    QueryResult* result = RealmDataDatabase.Query("SELECT COUNT(*) FROM auctionhouse");
     if (!result)
     {
         BarGoLink bar(1);

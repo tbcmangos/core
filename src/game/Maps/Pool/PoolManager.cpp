@@ -608,7 +608,7 @@ struct PoolMapChecker
 
 void PoolManager::LoadFromDB()
 {
-    QueryResultAutoPtr result = GameDataDatabase.Query("SELECT MAX(entry) FROM pool_template");
+    QueryResult* result = GameDataDatabase.Query("SELECT MAX(entry) FROM pool_template");
     if (!result)
     {
         sLog.outString(">> Table pool_template is empty.");

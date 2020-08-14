@@ -126,7 +126,7 @@ void SQLStorageLoaderBase<T>::Load(SQLStorage &store)
 {
     uint32 maxi;
     Field *fields;
-    QueryResultAutoPtr result = GameDataDatabase.PQuery("SELECT MAX(%s) FROM %s", store.entry_field, store.table);
+    QueryResult* result = GameDataDatabase.PQuery("SELECT MAX(%s) FROM %s", store.entry_field, store.table);
     if(!result)
     {
         sLog.outLog(LOG_DEFAULT, "ERROR: Error loading %s table (not exist?)\n", store.table);

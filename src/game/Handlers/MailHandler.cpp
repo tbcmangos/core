@@ -211,7 +211,7 @@ void WorldSession::HandleSendMail(WorldPacket & recv_data)
     else
     {
         rc_team = sObjectMgr.GetPlayerTeamByGUID(rc);
-        QueryResultAutoPtr result = RealmDataDatabase.PQuery("SELECT COUNT(*) FROM mail WHERE receiver = '%u'", GUID_LOPART(rc));
+        QueryResult* result = RealmDataDatabase.PQuery("SELECT COUNT(*) FROM mail WHERE receiver = '%u'", GUID_LOPART(rc));
         if (result)
         {
             Field *fields = result->Fetch();

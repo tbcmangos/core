@@ -51,13 +51,13 @@ class QueryResult
         uint64 mRowCount;
 };
 
-typedef ACE_Refcounted_Auto_Ptr <QueryResult, ACE_Null_Mutex> QueryResultAutoPtr;
+typedef ACE_Refcounted_Auto_Ptr <QueryResult, ACE_Null_Mutex> QueryResult*;
 typedef std::vector<std::string> QueryFieldNames;
 
 class QueryNamedResult
 {
     public:
-        explicit QueryNamedResult(QueryResultAutoPtr query, QueryFieldNames const& names) : mQuery(query), mFieldNames(names) {}
+        explicit QueryNamedResult(QueryResult* query, QueryFieldNames const& names) : mQuery(query), mFieldNames(names) {}
         ~QueryNamedResult() { }
 
         // compatible interface with QueryResult
@@ -83,7 +83,7 @@ class QueryNamedResult
         }
 
     protected:
-        QueryResultAutoPtr mQuery;
+        QueryResult* mQuery;
         QueryFieldNames mFieldNames;
 };
 

@@ -2501,7 +2501,7 @@ bool ChatHandler::HandleWhispersCommand(const char* args)
     if (!target)
     {
         GameDataDatabase.escape_string(firstpart);
-        QueryResultAutoPtr result = RealmDataDatabase.PQuery("SELECT guid FROM characters WHERE name = '%s' ",firstpart.c_str());
+        QueryResult* result = RealmDataDatabase.PQuery("SELECT guid FROM characters WHERE name = '%s' ",firstpart.c_str());
         if (!result)
         {
             SendSysMessage(LANG_PLAYER_NOT_FOUND);
