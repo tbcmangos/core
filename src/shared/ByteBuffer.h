@@ -1,6 +1,5 @@
 /*
- * Copyright (C) 2005-2008 MaNGOS <http://getmangos.com/>
- * Copyright (C) 2008-2014 Hellground <http://hellground.net/>
+ * Copyright (C) 2005-2008 MaNGOS <http://www.mangosproject.org/>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -17,12 +16,13 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
  */
 
-#ifndef HELLGROUND_BYTEBUFFER_H
-#define HELLGROUND_BYTEBUFFER_H
+#ifndef _BYTEBUFFER_H
+#define _BYTEBUFFER_H
 
 #include "Common.h"
 #include "Log.h"
 #include "Utilities/ByteConverter.h"
+#include "Errors.h"
 
 class ByteBufferException
 {
@@ -35,7 +35,8 @@ class ByteBufferException
 
         void PrintPosError() const
         {
-            sLog.outLog(LOG_DEFAULT, "ERROR: Attempted to %s in ByteBuffer (pos: %u size: %u) value with size: %u",
+
+            sLog.outError( "ERROR: Attempted to %s in ByteBuffer (pos: %u size: %u) value with size: %u",
                 (add ? "put" : "get"), pos, size, esize);
         }
     private:
@@ -358,7 +359,7 @@ class ByteBuffer
             if (!cnt)
                 return;
 
-            ASSERT(size() < 10000000);
+            MANGOS_ASSERT(size() < 10000000);
 
             if (_storage.size() < _wpos + cnt)
                 _storage.resize(_wpos + cnt);
@@ -410,23 +411,23 @@ class ByteBuffer
 
         void print_storage() const
         {
-            if(!sLog.IsOutDebug())                          // optimize disabled debug output
+            if (!sLog.HasLogLevelOrHigher(LOG_LVL_DEBUG))   // optimize disabled debug output
                 return;
 
             sLog.outDebug("STORAGE_SIZE: %lu", (unsigned long)size() );
             for(uint32 i = 0; i < size(); ++i)
-                sLog.outDebugInLine("%u - ", read<uint8>(i) );
+                sLog.outDebug("%u - ", read<uint8>(i) );
             sLog.outDebug(" ");
         }
 
         void textlike() const
         {
-            if(!sLog.IsOutDebug())                          // optimize disabled debug output
+            if (!sLog.HasLogLevelOrHigher(LOG_LVL_DEBUG))   // optimize disabled debug output
                 return;
 
             sLog.outDebug("STORAGE_SIZE: %lu", (unsigned long)size() );
             for(uint32 i = 0; i < size(); ++i)
-                sLog.outDebugInLine("%c", read<uint8>(i) );
+                sLog.outDebug("%c", read<uint8>(i) );
             sLog.outDebug(" ");
         }
 
@@ -445,7 +446,7 @@ class ByteBuffer
 
         void hexlike() const
         {
-            if(!sLog.IsOutDebug())                          // optimize disabled debug output
+            if (!sLog.HasLogLevelOrHigher(LOG_LVL_DEBUG))   // optimize disabled debug output
                 return;
 
             uint32 j = 1, k = 1;
@@ -457,11 +458,11 @@ class ByteBuffer
                 {
                     if (read<uint8>(i) < 0x10)
                     {
-                        sLog.outDebugInLine("| 0%X ", read<uint8>(i) );
+                        sLog.outDebug("| 0%X ", read<uint8>(i) );
                     }
                     else
                     {
-                        sLog.outDebugInLine("| %X ", read<uint8>(i) );
+                        sLog.outDebug("| %X ", read<uint8>(i) );
                     }
                     ++j;
                 }
@@ -469,15 +470,15 @@ class ByteBuffer
                 {
                     if (read<uint8>(i) < 0x10)
                     {
-                        sLog.outDebugInLine("\n");
+                        sLog.outDebug("\n");
 
-                        sLog.outDebugInLine("0%X ", read<uint8>(i) );
+                        sLog.outDebug("0%X ", read<uint8>(i) );
                     }
                     else
                     {
-                        sLog.outDebugInLine("\n");
+                        sLog.outDebug("\n");
 
-                        sLog.outDebugInLine("%X ", read<uint8>(i) );
+                        sLog.outDebug("%X ", read<uint8>(i) );
                     }
 
                     ++k;
@@ -487,15 +488,15 @@ class ByteBuffer
                 {
                     if (read<uint8>(i) < 0x10)
                     {
-                        sLog.outDebugInLine("0%X ", read<uint8>(i) );
+                        sLog.outDebug("0%X ", read<uint8>(i) );
                     }
                     else
                     {
-                        sLog.outDebugInLine("%X ", read<uint8>(i) );
+                        sLog.outDebug("%X ", read<uint8>(i) );
                     }
                 }
             }
-            sLog.outDebugInLine("\n");
+            sLog.outDebug("\n");
         }
     private:
         // limited for internal use because can "append" any unexpected type (like pointer and etc) with hard detection problem
