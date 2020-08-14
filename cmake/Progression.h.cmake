@@ -29,7 +29,7 @@
 #define CLIENT_BUILD_1_10_2 5302
 #define CLIENT_BUILD_1_11_2 5464
 #define CLIENT_BUILD_1_12_1 5875
-#define CLIENT_BUILD_2_4_3 5875
+#define CLIENT_BUILD_2_4_3 8606
 // Change this to define which build of the game to emulate.
 // Has an effect on things such as core gameplay mechanics,
 // loading of client data, and network packets structure.
