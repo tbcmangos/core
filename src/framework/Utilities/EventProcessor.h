@@ -1,7 +1,7 @@
 /*
- * Copyright (C) 2005-2008 MaNGOS <http://getmangos.com/>
- * Copyright (C) 2008 TrinityCore <http://www.trinitycore.org/>
- * Copyright (C) 2008-2014 Hellground <http://hellground.net/>
+ * Copyright (C) 2005-2008 MaNGOS <http://www.mangosproject.org/>
+ *
+ * Copyright (C) 2008 Trinity <http://www.trinitycore.org/>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,8 +18,8 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
  */
 
-#ifndef HELLGROUND_EVENTPROCESSOR_H
-#define HELLGROUND_EVENTPROCESSOR_H
+#ifndef __EVENTPROCESSOR_H
+#define __EVENTPROCESSOR_H
 
 #include "Platform/Define.h"
 
@@ -67,7 +67,17 @@ class  EventProcessor
 
         bool HasEventOfType(BasicEvent* type)
         {
-            return std::any_of(m_events.begin(), m_events.end(), [&type](std::pair<uint64, BasicEvent*> i) { return typeid(*i.second) == typeid(*type); });
+#ifdef _WIN32
+			std::multimap<uint64, BasicEvent*>::iterator it;
+			for (it = m_events.begin();it!= m_events.end();it++)  
+			{  
+				if (typeid(*it->second) == typeid(*type))
+					return true;
+			}  
+			return false;
+#else
+			return std::any_of(m_events.begin(), m_events.end(), [&type](std::pair<uint64, BasicEvent*> i) { return typeid(*i.second) == typeid(*type); });
+#endif
         };
 
         uint64 CalculateTime(uint64 t_offset);
