@@ -146,6 +146,8 @@ class ObjectAccessor
         void RemovePet(Pet* pet);
         void RemovePet(uint64 pet);
 
+		void SaveAllPlayers();
+
         Corpse* GetCorpseForPlayerGUID(uint64 guid);
         void RemoveCorpse(Corpse *corpse);
         void AddCorpse(Corpse* corpse);

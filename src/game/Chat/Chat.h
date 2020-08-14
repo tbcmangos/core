@@ -75,7 +75,7 @@ class ChatHandler
         int ParseCommands(const char* text);
 
         bool ContainsNotAllowedSigns(std::string text);
-
+		bool HasSentErrorMessage() { return sentErrorMessage; }
         virtual char const* GetName() const;
         static ChatCommand* getCommandTable();
     protected:
@@ -624,17 +624,18 @@ class ChatHandler
 class CliHandler : public ChatHandler
 {
     public:
-        typedef void Print(char const*);
-        explicit CliHandler(Print* zprint) : m_print(zprint) {}
+		typedef void Print(void*, char const*);
+		explicit CliHandler(void* callbackArg, Print* zprint) : m_callbackArg(callbackArg), m_print(zprint) {}
 
         // overwrite functions
         const char *GetMangosString(int32 entry) const;
-        bool isAvailable(ChatCommand const& cmd, bool) const;
+        bool isAvailable(ChatCommand const& cmd) const;
         void SendSysMessage(const char *str);
         char const* GetName() const;
         bool needReportToTarget(Player* chr) const;
 
     private:
+		void* m_callbackArg;
         Print* m_print;
 };
 

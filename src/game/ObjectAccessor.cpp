@@ -43,6 +43,9 @@ Pet * ObjectAccessor::GetPet(uint64 guid)
 
 Player* ObjectAccessor::FindPlayer(uint64 guid)
 {
+    if (!guid)
+        return NULL;
+
     Player * plr = GetPlayer(guid);
     if (!plr || !plr->IsInWorld())
         return NULL;
@@ -161,6 +164,14 @@ Corpse* ObjectAccessor::GetCorpseForPlayerGUID(uint64 guid)
     }
 
     return NULL;
+}
+
+void ObjectAccessor::SaveAllPlayers()
+{
+	ACE_GUARD(ACE_Thread_Mutex, guard, *HashMapHolder<Player>::GetLock());
+	HashMapHolder<Player>::MapType& m = sObjectAccessor.GetPlayers();
+	for (HashMapHolder<Player>::MapType::iterator itr = m.begin(); itr != m.end(); ++itr)
+		itr->second->SaveToDB();
 }
 
 void ObjectAccessor::RemoveCorpse(Corpse *corpse)

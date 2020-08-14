@@ -219,7 +219,7 @@ enum WorldConfigs
     CONFIG_ALLOW_TWO_SIDE_TRADE,
     CONFIG_ALLOW_TWO_SIDE_WHO_LIST,
     CONFIG_TALENTS_INSPECTING,
-    
+
     // Chat settings
     CONFIG_PRIVATE_CHANNEL_LIMIT,
     CONFIG_GLOBAL_TRADE_CHANNEL,
@@ -244,7 +244,7 @@ enum WorldConfigs
     CONFIG_ALLOW_GM_GROUP,
     CONFIG_ALLOW_GM_FRIEND,
     CONFIG_GM_TRUSTED_LEVEL,
-    
+
     CONFIG_COMMAND_LOG_PERMISSION,
     CONFIG_INSTANT_LOGOUT,
     CONFIG_MIN_GM_TEXT_LVL,
@@ -265,6 +265,7 @@ enum WorldConfigs
 
     CONFIG_DEATH_SICKNESS_LEVEL,
     CONFIG_DEATH_CORPSE_RECLAIM_DELAY_PVP,
+    CONFIG_UINT32_PERFLOG_SLOW_WORLD_UPDATE,
     CONFIG_DEATH_CORPSE_RECLAIM_DELAY_PVE,
     CONFIG_DEATH_BONES_WORLD,
     CONFIG_DEATH_BONES_BG_OR_ARENA,
@@ -284,7 +285,8 @@ enum WorldConfigs
     CONFIG_COMBAT_ACTIVE_ON_CONTINENTS,
     CONFIG_COMBAT_ACTIVE_IN_INSTANCES,
     CONFIG_COMBAT_ACTIVE_FOR_PLAYERS_ONLY,
-
+    CONFIG_UINT32_ANTICRASH_REARM_TIMER,
+    CONFIG_UINT32_ANTICRASH_OPTIONS,
     CONFIG_SIGHT_GUARD,
     CONFIG_SIGHT_MONSTER,
     CONFIG_EVADE_HOMEDIST,
@@ -345,7 +347,7 @@ enum WorldConfigs
 
     // visibility and radiuses
     CONFIG_GROUP_VISIBILITY,
-    
+
     // movement
     CONFIG_TARGET_POS_RECALCULATION_RANGE,
     CONFIG_TARGET_POS_RECHECK_TIMER,
@@ -363,7 +365,7 @@ enum WorldConfigs
     CONFIG_VMSS_MAPFREEMETHOD,
     CONFIG_VMSS_FREEZECHECKPERIOD,
     CONFIG_VMSS_FREEZEDETECTTIME,
-    
+
     // Warden/anticheat
     CONFIG_WARDEN_ENABLED,
     CONFIG_WARDEN_KICK,
@@ -388,8 +390,20 @@ enum WorldConfigs
 
     // Network
     CONFIG_KICK_PLAYER_ON_BAD_PACKET,
-    
+
     CONFIG_VALUE_COUNT
+
+};
+
+enum
+{
+    ANTICRASH_OPTION_ANNOUNCE_PLAYERS   = 0x01,
+    ANTICRASH_OPTION_SAVEALL            = 0x02,
+    ANTICRASH_OPTION_CRASH_INSTANCES    = 0x04,
+    ANTICRASH_OPTION_CRASH_CONTINENTS   = 0x08,
+    ANTICRASH_GENERATE_COREDUMP         = 0x10,
+
+    ANTICRASH_OPTION_FLAGS_THROW_SIGSEGV= (ANTICRASH_OPTION_CRASH_INSTANCES|ANTICRASH_OPTION_CRASH_CONTINENTS),
 };
 
 /// Server rates
@@ -535,15 +549,20 @@ enum RealmZone
 /// Storage class for commands issued for delayed execution
 struct CliCommandHolder
 {
-    typedef void Print(const char*);
+    typedef void Print(void*, char const*);
+    typedef void CommandFinished(void*, bool success);
 
+    uint32 m_cliAccountId;                                  // 0 for console and real account id for RA/soap
+    uint64 m_cliAccessLevel;
+    void* m_callbackArg;
     char *m_command;
     Print* m_print;
+    CommandFinished* m_commandFinished;
 
-    CliCommandHolder(const char *command, Print* zprint)
-        : m_print(zprint)
+    CliCommandHolder(uint32 accountId, uint64 cliAccessLevel, void* callbackArg, char const* command, Print* zprint, CommandFinished* commandFinished)
+        : m_cliAccountId(accountId), m_cliAccessLevel(cliAccessLevel), m_callbackArg(callbackArg), m_print(zprint), m_commandFinished(commandFinished)
     {
-        size_t len = strlen(command)+1;
+        size_t len = strlen(command) + 1;
         m_command = new char[len];
         memcpy(m_command, command, len);
     }
@@ -831,7 +850,7 @@ class  World
         static int32 GetActiveObjectUpdateDistanceInInstances() { return m_activeObjectUpdateDistanceInInstances; }
 
         void ProcessCliCommands();
-        void QueueCliCommand(CliCommandHolder::Print* zprintf, char const* input) { cliCmdQueue.add(new CliCommandHolder(input, zprintf)); }
+		void QueueCliCommand(CliCommandHolder* commandHolder) { cliCmdQueue.add(commandHolder); }
 
         void UpdateResultQueue();
         void InitResultQueue();
@@ -851,7 +870,8 @@ class  World
         //used Script version
         void SetScriptsVersion(char const* version) { m_ScriptsVersion = version ? version : "unknown scripting library"; }
         char const* GetScriptsVersion() { return m_ScriptsVersion.c_str(); }
-
+        void SetAnticrashRearmTimer(uint32 value) { m_anticrashRearmTimer = value; }
+        uint32 GetAnticrashRearmTimer() const { return m_anticrashRearmTimer; }
         void addDisconnectTime(std::pair<uint32,time_t> tPair){ m_disconnects.insert(tPair); }
 
         void CleanupDeletedChars();
@@ -983,6 +1003,7 @@ class  World
 
         //used versions
         std::string m_DBVersion;
+        uint32      m_anticrashRearmTimer;
         std::string m_ScriptsVersion;
 };
 
