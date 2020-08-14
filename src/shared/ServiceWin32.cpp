@@ -1,12 +1,12 @@
 /*
- * Copyright (C) 2005-2008 MaNGOS <http://getmangos.com/>
- * Copyright (C) 2008 TrinityCore <http://www.trinitycore.org/>
- * Copyright (C) 2008-2014 Hellground <http://hellground.net/>
+ * Copyright (C) 2005-2008 MaNGOS <http://www.mangosproject.org/>
  *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
- * (at your option) any later version.
+ * Copyright (C) 2008 Trinity <http://www.trinitycore.org/>
+ *
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation; either version 2
+ * of the License, or (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -15,7 +15,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  */
 
 #ifdef WIN32
@@ -33,7 +33,6 @@
 #define WINADVAPI
 #endif
 #endif
-
 #ifdef main
 #undef main
 #endif
@@ -42,7 +41,7 @@ extern char serviceLongName[];
 extern char serviceName[];
 extern char serviceDescription[];
 
-extern RunModes runMode;
+extern int m_ServiceStatus;
 
 SERVICE_STATUS serviceStatus;
 
@@ -58,7 +57,7 @@ bool WinServiceInstall()
 
     if (!serviceControlManager)
     {
-        sLog.outLog(LOG_DEFAULT, "Error: SERVICE: No access to service control manager.");
+        sLog.outError( "Error: SERVICE: No access to service control manager.");
         return false;
     }
 
@@ -66,7 +65,7 @@ bool WinServiceInstall()
     if (!GetModuleFileName( 0, path, sizeof(path)/sizeof(path[0])))
     {
         CloseServiceHandle(serviceControlManager);
-        sLog.outLog(LOG_DEFAULT, "Error: SERVICE: Can't get service binary filename.");
+        sLog.outError( "Error: SERVICE: Can't get service binary filename.");
         return false;
     }
 
@@ -90,14 +89,14 @@ bool WinServiceInstall()
     if (!service)
     {
         CloseServiceHandle(serviceControlManager);
-        sLog.outLog(LOG_DEFAULT, "Error: SERVICE: Can't register service for: %s", path);
+        sLog.outError( "Error: SERVICE: Can't register service for: %s", path);
         return false;
     }
 
     advapi32 = GetModuleHandle("ADVAPI32.DLL");
     if(!advapi32)
     {
-        sLog.outLog(LOG_DEFAULT, "Error: SERVICE: Can't access ADVAPI32.DLL");
+        sLog.outError( "Error: SERVICE: Can't access ADVAPI32.DLL");
         CloseServiceHandle(service);
         CloseServiceHandle(serviceControlManager);
         return false;
@@ -106,7 +105,7 @@ bool WinServiceInstall()
     ChangeService_Config2 = (CSD_T) GetProcAddress(advapi32, "ChangeServiceConfig2A");
     if (!ChangeService_Config2)
     {
-        sLog.outLog(LOG_DEFAULT, "Error: SERVICE: Can't access ChangeServiceConfig2A from ADVAPI32.DLL");
+        sLog.outError( "Error: SERVICE: Can't access ChangeServiceConfig2A from ADVAPI32.DLL");
         CloseServiceHandle(service);
         CloseServiceHandle(serviceControlManager);
         return false;
@@ -143,7 +142,7 @@ bool WinServiceUninstall()
 
     if (!serviceControlManager)
     {
-        sLog.outLog(LOG_DEFAULT, "Error: SERVICE: No access to service control manager.");
+        sLog.outError( "Error: SERVICE: No access to service control manager.");
         return false;
     }
 
@@ -153,7 +152,7 @@ bool WinServiceUninstall()
     if (!service)
     {
         CloseServiceHandle(serviceControlManager);
-        sLog.outLog(LOG_DEFAULT, "Error: SERVICE: Service not found: %s", serviceName);
+        sLog.outError( "Error: SERVICE: Service not found: %s", serviceName);
         return false;
     }
 
@@ -181,11 +180,11 @@ void WINAPI ServiceControlHandler(DWORD controlCode)
             serviceStatus.dwCurrentState = SERVICE_STOP_PENDING;
             SetServiceStatus(serviceStatusHandle, &serviceStatus);
 
-            runMode = MODE_SERVICE_STOPPED;
+            m_ServiceStatus = 0;
             return;
 
         case SERVICE_CONTROL_PAUSE:
-            runMode = MODE_SERVICE_PAUSED;
+            m_ServiceStatus = 2;
             serviceStatus.dwCurrentState = SERVICE_PAUSED;
             SetServiceStatus(serviceStatusHandle, &serviceStatus);
             break;
@@ -193,7 +192,7 @@ void WINAPI ServiceControlHandler(DWORD controlCode)
         case SERVICE_CONTROL_CONTINUE:
             serviceStatus.dwCurrentState = SERVICE_RUNNING;
             SetServiceStatus(serviceStatusHandle, &serviceStatus);
-            runMode = MODE_SERVICE_RUNNING;
+            m_ServiceStatus = 1;
             break;
 
         default:
@@ -251,7 +250,7 @@ void WINAPI ServiceMain(DWORD argc, char *argv[])
         // service main cycle //
         ////////////////////////
 
-        runMode = MODE_SERVICE_RUNNING;
+        m_ServiceStatus = 1;
         argc = 1;
         main(argc , argv);
 
@@ -278,7 +277,7 @@ bool WinServiceRun()
 
     if (!StartServiceCtrlDispatcher(serviceTable))
     {
-        sLog.outLog(LOG_DEFAULT, "Error: StartService Failed. Error [%u]", ::GetLastError());
+        sLog.outError( "Error: StartService Failed. Error [%u]", ::GetLastError());
         return false;
     }
     return true;
