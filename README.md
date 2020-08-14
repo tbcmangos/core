@@ -19,7 +19,10 @@ test another badge
 
 https://github.com/exogen/badge-matrix 
 
-![BADGE=test1](https://badges.herokuapp.com/travis/tbcmangos/core?branch=master&env=BADGE=TEST1&label=BADGE=TEST1)
+![BADGE=test1](https://badges.herokuapp.com/travis/tbcmangos/core?branch=master&env=BADGE=TEST1&label=BUILD=gcc5)
+![BADGE=test2](https://badges.herokuapp.com/travis/tbcmangos/core?branch=master&env=BADGE=TEST2&label=BUILD=gcc6)
+![BADGE=test3](https://badges.herokuapp.com/travis/tbcmangos/core?branch=master&env=BADGE=TEST3&label=BUILD=gcc7)
+![BADGE=test4](https://badges.herokuapp.com/travis/tbcmangos/core?branch=master&env=BADGE=TEST4&label=BUILD=clang7)
 
 ######################
 #   HellGroundCore   #
