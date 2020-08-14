@@ -106,9 +106,9 @@ void ScriptMgr::InitScriptLibrary()
         m_scripts[i] = NULL;
 
     FillSpellSummary();
-
+#ifdef SCRIPTS
     AddScripts();
-
+#endif
     outstring_log(">> Loaded %i C++ Scripts.", num_sc_scripts);
 }
 

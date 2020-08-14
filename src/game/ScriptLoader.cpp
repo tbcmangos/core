@@ -18,7 +18,7 @@
  */
 
 #include "ScriptedPch.h"
-
+#ifdef SCRIPTS
 // -- Scripts to be added --
 
 // -- Areatrigger --
@@ -1258,3 +1258,4 @@ void AddScripts()
 
     // -------------------
 }
+#endif

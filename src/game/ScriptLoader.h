@@ -20,6 +20,8 @@
 #ifndef SC_SCRIPTLOADER_H
 #define SC_SCRIPTLOADER_H
 
+#ifdef SCRIPTS
 void AddScripts();
+#endif
 
 #endif
