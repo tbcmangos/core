@@ -1,7 +1,7 @@
 /*
- * Copyright (C) 2005-2008 MaNGOS <http://getmangos.com/>
- * Copyright (C) 2008 TrinityCore <http://www.trinitycore.org/>
- * Copyright (C) 2008-2014 Hellground <http://hellground.net/>
+ * Copyright (C) 2005-2008 MaNGOS <http://www.mangosproject.org/>
+ *
+ * Copyright (C) 2008 Trinity <http://www.trinitycore.org/>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -55,12 +55,6 @@ void HmacHash::UpdateData(const std::string &str)
 {
     UpdateData((uint8 const*)str.c_str(), str.length());
 }
-
-void HmacHash::UpdateData(const uint8* data, size_t len)
-{
-    HMAC_Update(&m_ctx, data, len);
-}
-
 
 void HmacHash::Initialize()
 {
