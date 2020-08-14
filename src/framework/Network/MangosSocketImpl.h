@@ -14,14 +14,14 @@
 
 #include "Util.h"
 #include "WorldPacket.h"
-#include "SharedDefines.h"
+//#include "SharedDefines.h"
 #include "ByteBuffer.h"
 #include "Database/DatabaseEnv.h"
 #include "Auth/BigNumber.h"
 #include "Auth/Sha1.h"
-#include "WorldSession.h"
+//#include "WorldSession.h"
 #include "Log.h"
-#include "DBCStores.h"
+//#include "DBCStores.h"
 
 
 template <typename SessionType, typename SocketName, typename Crypt>
