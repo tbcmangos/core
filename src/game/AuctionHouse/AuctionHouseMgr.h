@@ -26,6 +26,7 @@
 #include "SharedDefines.h"
 #include "DBCStructure.h"
 #include "Log.h"
+#include "Errors.h"
 
 class Item;
 class Player;

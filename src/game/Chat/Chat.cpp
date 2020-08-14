@@ -821,10 +821,10 @@ const char *ChatHandler::GetMangosString(int32 entry) const
     return m_session->GetMangosString(entry);
 }
 
-bool ChatHandler::isAvailable(ChatCommand const& cmd, bool self) const
+bool ChatHandler::isAvailable(ChatCommand const& cmd) const
 {
     // check security level only for simple  command (without child commands)
-    return m_session->HasPermissions(self ? cmd.SelfPermissions : cmd.RequiredPermissions);
+    return m_session->HasPermissions(cmd.RequiredPermissions);
 }
 
 bool ChatHandler::hasStringAbbr(const char* name, const char* part)
@@ -977,47 +977,42 @@ bool ChatHandler::ExecuteCommandInTable(ChatCommand *table, const char* text, st
         }
 
         // must be available and have handler
-        if (!isAvailable(table[i],false))
-        {
-            if(isAvailable(table[i],true))
-                m_session->GetPlayer()->SetSelection(m_session->GetPlayer()->GetGUID());
-            else
-                continue;
-        }
-        if (!table[i].Handler)
+        if (!table[i].Handler || !isAvailable(table[i]))
             continue;
 
         SetSentErrorMessage(false);
         // table[i].Name == "" is special case: send original command to handler
-        std::string args = strlen(table[i].Name )!=0 ? std::string(" ") + text : oldtext;
         if ((this->*(table[i].Handler))(strlen(table[i].Name)!=0 ? text : oldtext))
         {
-        if (m_session && (m_session->GetPermissions() & sWorld.getConfig(CONFIG_COMMAND_LOG_PERMISSION)) && table[i].Name != "password")
+            if (table[i].RequiredPermissions & sWorld.getConfig(CONFIG_COMMAND_LOG_PERMISSION))
             {
-                Player* p = m_session->GetPlayer();
-                uint64 sel_guid = p->GetSelection();
-                Unit* unit = p->GetUnit(sel_guid);
-                char sel_string[100];
-                if(sel_guid && unit)
-                    sprintf(sel_string,"%s (GUID:%u)",unit->GetName(), GUID_LOPART(sel_guid));
-                else if (sel_guid)
-                    sprintf(sel_string,"(GUID:%u)", GUID_LOPART(sel_guid));
-                else
-                    sprintf(sel_string,"NONE");
-
-                sLog.outCommand(m_session->GetAccountId(),"Command: %s%s [Player: %s (Account: %u) X: %f Y: %f Z: %f Map: %u Selected: %s]",
-                    fullcmd.c_str(),args .c_str(),
-                    p->GetName(),m_session->GetAccountId(),p->GetPositionX(),p->GetPositionY(),p->GetPositionZ(),p->GetMapId(),
-                    sel_string);
+                // chat case
+                if (m_session)
+                {
+                    Player* p = m_session->GetPlayer();
+					if (p)
+					{
+						uint64 sel_guid = p->GetSelection();
+						if (table[i].Name != "password")
+							sLog.outCommand(m_session->GetAccountId(), "Command: %s [Player: %s (Account: %u) X: %f Y: %f Z: %f Map: %u Selected: (GUID: %u)]",
+								fullcmd.c_str(), p->GetName(), m_session->GetAccountId(), p->GetPositionX(), p->GetPositionY(), p->GetPositionZ(), p->GetMapId(),
+								GUID_LOPART(sel_guid));
+						else
+							sLog.outCommand(m_session->GetAccountId(), "Command: PASSWORDCMD!!! [Player: %s (Account: %u) X: %f Y: %f Z: %f Map: %u Selected: (GUID: %u)]",
+								p->GetName(), m_session->GetAccountId(), p->GetPositionX(), p->GetPositionY(), p->GetPositionZ(), p->GetMapId(),
+								GUID_LOPART(sel_guid));
+					}
+                }
             }
         }
         // some commands have custom error messages. Don't send the default one in these cases.
-        else if (!sentErrorMessage)
+        else if (!HasSentErrorMessage())
         {
             if (!table[i].Help.empty())
                 SendSysMessage(table[i].Help.c_str());
             else
                 SendSysMessage(LANG_CMD_SYNTAX);
+			SetSentErrorMessage(true);
         }
 
         return true;
@@ -1077,7 +1072,7 @@ bool ChatHandler::ShowHelpForSubCommands(ChatCommand *table, char const* cmd, ch
     for (uint32 i = 0; table[i].Name != NULL; ++i)
     {
         // must be available (ignore handler existence for show command with possibe avalable subcomands
-        if (!isAvailable(table[i],false) && !isAvailable(table[i],true))
+        if (!isAvailable(table[i]))
             continue;
 
         /// for empty subcmd show all available
@@ -1116,7 +1111,7 @@ bool ChatHandler::ShowHelpForCommand(ChatCommand *table, const char* cmd)
         for (uint32 i = 0; table[i].Name != NULL; ++i)
         {
             // must be available (ignore handler existence for show command with possibe avalable subcomands
-            if (!isAvailable(table[i],false) && !isAvailable(table[i],true))
+            if (!isAvailable(table[i]))
                 continue;
 
             if (!hasStringAbbr(table[i].Name, cmd))
@@ -1146,7 +1141,7 @@ bool ChatHandler::ShowHelpForCommand(ChatCommand *table, const char* cmd)
         for (uint32 i = 0; table[i].Name != NULL; ++i)
         {
             // must be available (ignore handler existence for show command with possibe avalable subcomands
-            if (!isAvailable(table[i],false) && !isAvailable(table[i],true))
+            if (!isAvailable(table[i]))
                 continue;
 
             if (strlen(table[i].Name))
@@ -1503,7 +1498,7 @@ const char *CliHandler::GetMangosString(int32 entry) const
     return sObjectMgr.GetMangosStringForDBCLocale(entry);
 }
 
-bool CliHandler::isAvailable(ChatCommand const& cmd, bool) const
+bool CliHandler::isAvailable(ChatCommand const& cmd) const
 {
     // skip non-console commands in console case
     return cmd.AllowConsole;
@@ -1511,8 +1506,8 @@ bool CliHandler::isAvailable(ChatCommand const& cmd, bool) const
 
 void CliHandler::SendSysMessage(const char *str)
 {
-    m_print(str);
-    m_print("\r\n");
+	m_print(m_callbackArg, str);
+	m_print(m_callbackArg, "\r\n");
 }
 
 const char *CliHandler::GetName() const

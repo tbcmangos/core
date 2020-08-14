@@ -83,7 +83,7 @@ class ChatHandler
 
         bool hasStringAbbr(const char* name, const char* part);
 
-        virtual bool isAvailable(ChatCommand const& cmd, bool self) const;
+        virtual bool isAvailable(ChatCommand const& cmd) const;
         virtual bool needReportToTarget(Player* chr) const;
 
         void SendGlobalSysMessage(const char *str);
@@ -424,6 +424,7 @@ class ChatHandler
         bool HandleServerMuteCommand(const char* args);
         bool HandleServerRestartCommand(const char* args);
         bool HandleServerSetMotdCommand(const char* args);
+        bool HandleServerSetLogLevelCommand(const char* args);
         bool HandleServerSetDiffTimeCommand(const char* args);
         bool HandleServerShutDownCommand(const char* args);
         bool HandleServerRollShutDownCommand(const char* args);

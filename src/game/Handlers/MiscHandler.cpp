@@ -1774,3 +1774,329 @@ void WorldSession::HandleAcceptGrantLevel(WorldPacket& recv_data)
 
     _player->GiveLevel(_player->getLevel() + 1);
 }
+
+
+/// Delete a user account and all associated characters in this realm
+/// \todo This function has to be enhanced to respect the login/realm split (delete char, delete account chars in realm, delete account chars in realm then delete account
+bool ChatHandler::HandleAccountDeleteCommand(const char* args)
+{
+    if (!*args)
+        return false;
+
+    ///- Get the account name from the command line
+    char *account_name_str = strtok((char*)args, " ");
+    if (!account_name_str)
+        return false;
+
+    std::string account_name = account_name_str;
+    if (!AccountMgr::normalizeString(account_name))
+    {
+        PSendSysMessage(LANG_ACCOUNT_NOT_EXIST, account_name.c_str());
+        SetSentErrorMessage(true);
+        return false;
+    }
+
+    uint32 account_id = AccountMgr::GetId(account_name);
+    if (!account_id)
+    {
+        PSendSysMessage(LANG_ACCOUNT_NOT_EXIST, account_name.c_str());
+        SetSentErrorMessage(true);
+        return false;
+    }
+
+    /// Commands not recommended call from chat, but support anyway
+    if (m_session)
+    {
+        /// can delete only for account with less security
+        /// This is also reject self apply in fact
+        if (AccountMgr::GetPermissions(account_id) >= m_session->GetPermissions())
+        {
+            SendSysMessage(LANG_YOURS_SECURITY_IS_LOW);
+            SetSentErrorMessage(true);
+            return false;
+        }
+    }
+
+    AccountOpResult result = AccountMgr::DeleteAccount(account_id);
+    switch (result)
+    {
+    case AOR_OK:
+        PSendSysMessage(LANG_ACCOUNT_DELETED, account_name.c_str());
+        break;
+    case AOR_NAME_NOT_EXIST:
+        PSendSysMessage(LANG_ACCOUNT_NOT_EXIST, account_name.c_str());
+        SetSentErrorMessage(true);
+        return false;
+    case AOR_DB_INTERNAL_ERROR:
+        PSendSysMessage(LANG_ACCOUNT_NOT_DELETED_SQL_ERROR, account_name.c_str());
+        SetSentErrorMessage(true);
+        return false;
+    default:
+        PSendSysMessage(LANG_ACCOUNT_NOT_DELETED, account_name.c_str());
+        SetSentErrorMessage(true);
+        return false;
+    }
+
+    return true;
+}
+
+bool ChatHandler::HandleCharacterDeleteCommand(const char* args)
+{
+    if (!*args)
+        return false;
+
+    char *character_name_str = strtok((char*)args, " ");
+    if (!character_name_str)
+        return false;
+
+    std::string character_name = character_name_str;
+    if (!normalizePlayerName(character_name))
+        return false;
+
+    uint64 character_guid;
+    uint32 account_id;
+
+    Player *player = sObjectMgr.GetPlayer(character_name.c_str());
+    if (player)
+    {
+        character_guid = player->GetGUID();
+        account_id = player->GetSession()->GetAccountId();
+        player->GetSession()->KickPlayer();
+    }
+    else
+    {
+        character_guid = sObjectMgr.GetPlayerGUIDByName(character_name);
+        if (!character_guid)
+        {
+            PSendSysMessage(LANG_NO_PLAYER, character_name.c_str());
+            SetSentErrorMessage(true);
+            return false;
+        }
+
+        account_id = sObjectMgr.GetPlayerAccountIdByGUID(character_guid);
+    }
+
+    std::string account_name;
+    AccountMgr::GetName(account_id, account_name);
+
+    Player::DeleteFromDB(character_guid, account_id, true);
+    PSendSysMessage(LANG_CHARACTER_DELETED, character_name.c_str(), GUID_LOPART(character_guid), account_name.c_str(), account_id);
+    return true;
+}
+
+/// Exit the realm
+bool ChatHandler::HandleServerExitCommand(const char* args)
+{
+    SendSysMessage(LANG_COMMAND_EXIT);
+    World::StopNow(SHUTDOWN_EXIT_CODE);
+    return true;
+}
+
+/// Display info on users currently in the realm
+bool ChatHandler::HandleAccountOnlineListCommand(const char* args)
+{
+    ///- Get the list of accounts ID logged to the realm
+    QueryResult* resultDB = CharacterDatabase.Query("SELECT name, account FROM characters WHERE online > 0");
+    if (!resultDB)
+        return true;
+
+    ///- Display the list of account/characters online
+    SendSysMessage("=====================================================================");
+    SendSysMessage(LANG_ACCOUNT_LIST_HEADER);
+    SendSysMessage("=====================================================================");
+
+    ///- Circle through accounts
+    do
+    {
+        Field *fieldsDB = resultDB->Fetch();
+        std::string name = fieldsDB[0].GetCppString();
+        uint32 account = fieldsDB[1].GetUInt32();
+
+        ///- Get the username, last IP and GM level of each account
+        // No SQL injection. account is uint32.
+        //                                                                  0         1               2                        3
+        QueryResult* resultLogin = LoginDatabase.PQuery("SELECT account.username, account.last_ip, account_access.gmlevel, account.expansion "
+            "FROM account JOIN account_access ON account.id = account_access.id "
+            "WHERE id = '%u' AND RealmID = '%u'", account, realmID);
+
+        if (resultLogin)
+        {
+            Field *fieldsLogin = resultLogin->Fetch();
+            PSendSysMessage("|%15s| %20s | %15s |%4d|%5d|",
+                fieldsLogin[0].GetString(), name.c_str(), fieldsLogin[1].GetString(), fieldsLogin[2].GetUInt32(), fieldsLogin[3].GetUInt32());
+        }
+        else
+            PSendSysMessage(LANG_ACCOUNT_LIST_ERROR, name.c_str());
+
+    } while (resultDB->NextRow());
+
+    SendSysMessage("=====================================================================");
+    return true;
+}
+
+/// Create an account
+bool ChatHandler::HandleAccountCreateCommand(const char* args)
+{
+    if (!*args)
+        return false;
+
+    ///- %Parse the command line arguments
+    char *szAcc = strtok((char*)args, " ");
+    char *szPassword = strtok(NULL, " ");
+    if (!szAcc || !szPassword)
+        return false;
+
+    // normilized in AccountMgr::CreateAccount
+    std::string account_name = szAcc;
+    std::string password = szPassword;
+
+    AccountOpResult result = AccountMgr::CreateAccount(account_name, password);
+    switch (result)
+    {
+    case AOR_OK:
+        PSendSysMessage(LANG_ACCOUNT_CREATED, account_name.c_str());
+        break;
+    case AOR_NAME_TOO_LONG:
+        SendSysMessage(LANG_ACCOUNT_TOO_LONG);
+        SetSentErrorMessage(true);
+        return false;
+    case AOR_NAME_ALREDY_EXIST:
+        SendSysMessage(LANG_ACCOUNT_ALREADY_EXIST);
+        SetSentErrorMessage(true);
+        return false;
+    case AOR_DB_INTERNAL_ERROR:
+        PSendSysMessage(LANG_ACCOUNT_NOT_CREATED_SQL_ERROR, account_name.c_str());
+        SetSentErrorMessage(true);
+        return false;
+    default:
+        PSendSysMessage(LANG_ACCOUNT_NOT_CREATED, account_name.c_str());
+        SetSentErrorMessage(true);
+        return false;
+    }
+
+    return true;
+}
+
+bool ChatHandler::HandleAccountSpecialLogCommand(const char* args)
+{
+    if (!*args)
+        return false;
+
+    if (uint32 account_id = AccountMgr::GetId(args))
+    {
+        QueryResult* result = LoginDatabase.PQuery("SELECT account_flags FROM account WHERE id = '%u'", account_id);
+        if (!result)
+            return false;
+
+        Field * fields = result->Fetch();
+
+        uint64 accFlags = fields[0].GetUInt64();
+
+        if (WorldSession *session = sWorld.FindSession(account_id))
+        {
+            if (session->IsAccountFlagged(ACC_SPECIAL_LOG))
+                session->RemoveAccountFlag(ACC_SPECIAL_LOG);
+            else
+                session->AddAccountFlag(ACC_SPECIAL_LOG);
+        }
+        else
+        {
+            if (accFlags & ACC_SPECIAL_LOG)
+                WorldSession::SaveAccountFlags(account_id, accFlags &= ~ACC_SPECIAL_LOG);
+            else
+                WorldSession::SaveAccountFlags(account_id, accFlags |= ACC_SPECIAL_LOG);
+        }
+
+        if (accFlags & ACC_SPECIAL_LOG)
+            PSendSysMessage("SpecialLog have been enabled for account: %u.", account_id);
+        else
+            PSendSysMessage("SpecialLog have been disabled for account: %u.", account_id);
+    }
+    else
+    {
+        PSendSysMessage("Specified account not found.");
+        SetSentErrorMessage(true);
+        return false;
+    }
+
+    return true;
+}
+
+bool ChatHandler::HandleAccountWhispLogCommand(const char* args)
+{
+    if (!*args)
+        return false;
+
+    if (uint32 account_id = AccountMgr::GetId(args))
+    {
+        QueryResult* result = LoginDatabase.PQuery("SELECT account_flags FROM account WHERE id = '%u'", account_id);
+        if (!result)
+            return false;
+
+        Field * fields = result->Fetch();
+
+        uint64 accFlags = fields[0].GetUInt64();
+
+        if (WorldSession *session = sWorld.FindSession(account_id))
+        {
+            if (accFlags & ACC_WHISPER_LOG)
+                session->RemoveAccountFlag(ACC_WHISPER_LOG);
+            else
+                session->AddAccountFlag(ACC_WHISPER_LOG);
+        }
+        else
+        {
+            if (accFlags & ACC_WHISPER_LOG)
+                WorldSession::SaveAccountFlags(account_id, accFlags &= ~ACC_WHISPER_LOG);
+            else
+                WorldSession::SaveAccountFlags(account_id, accFlags |= ACC_WHISPER_LOG);
+        }
+
+        if (accFlags & ACC_WHISPER_LOG)
+            PSendSysMessage("WhispLog have been disabled for account: %u.", account_id);
+        else
+            PSendSysMessage("WhispLog have been enabled for account: %u.", account_id);
+    }
+    else
+    {
+        PSendSysMessage("Specified account not found.");
+        SetSentErrorMessage(true);
+        return false;
+    }
+
+    return true;
+}
+
+/// Set the level of logging
+bool ChatHandler::HandleServerSetLogLevelCommand(const char *args)
+{
+    if (!*args)
+        return false;
+
+    char *NewLevel = strtok((char*)args, " ");
+    if (!NewLevel)
+        return false;
+
+    sLog.SetLogLevel(NewLevel);
+    return true;
+}
+
+/// set diff time record interval
+bool ChatHandler::HandleServerSetDiffTimeCommand(const char *args)
+{
+    if (!*args)
+        return false;
+
+    char *NewTimeStr = strtok((char*)args, " ");
+    if (!NewTimeStr)
+        return false;
+
+    int32 NewTime = atoi(NewTimeStr);
+    if (NewTime < 0)
+        return false;
+
+    sWorld.SetRecordDiffInterval(NewTime);
+    printf("Record diff every %u ms\n", NewTime);
+    return true;
+}
+
