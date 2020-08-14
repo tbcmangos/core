@@ -28,17 +28,16 @@ set(CMAKE_MODULE_PATH
 
 
 option(DEBUG "Debug mode" 0)
-option(CLI "With CLI" 1)
+set(SUPPORTED_CLIENT_BUILD "CLIENT_BUILD_2_4_3" CACHE STRING "Client version the core will support")
 option(TBB_USE_EXTERNAL "Use external TBB" 1)
 option(USE_STD_MALLOC "Use standard malloc instead of TBB" 0)
 option(TBB_DEBUG "Use TBB debug librairies" 0)
 option(ACE_USE_EXTERNAL "Use external ACE" 1)
+option(USE_ANTICHEAT "Use anticheat" 0)
+option(SCRIPTS "Compile scripts" 1)
 option(USE_EXTRACTORS "Compile extractors" 0)
-option(LARGE_CELL "Use large cell size" 0)
+option(USE_LIBCURL "Compile with libcurl for email support" 0)
 option(NOT_USE_ELUNA_HOOKS "Do not use Elunas HookMgr" 0)
-option(ADD_COMPILE_F "Add additional compile flags" 1)
-option(ADD_MATH_F "Add additional compile math flags" 0)
-option(ADD_GPROF_F "Add additional compile gprof flag" 0)
 option(MAP_UPDATE_DIFF_INFO "Used for gathering info about execution time for specific parts of Map::Update" 0)
 
 find_package(PCHSupport)
