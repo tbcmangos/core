@@ -75,7 +75,7 @@ void WorldSession::HandleQuestgiverStatusQueryOpcode(WorldPacket & recv_data)
             break;
         }
         default:
-            sLog.outLog(LOG_DEFAULT, "ERROR: QuestGiver called for unexpected type %u", questgiver->GetTypeId());
+            sLog.outError( "ERROR: QuestGiver called for unexpected type %u", questgiver->GetTypeId());
             break;
     }
 
@@ -283,7 +283,7 @@ void WorldSession::HandleQuestgiverChooseRewardOpcode(WorldPacket & recv_data)
 
     if (reward >= QUEST_REWARD_CHOICES_COUNT)
     {
-        sLog.outLog(LOG_DEFAULT, "ERROR: Error in CMSG_QUESTGIVER_CHOOSE_REWARD: player %s (guid %d) tried to get invalid reward (%u) (probably packet hacking)", _player->GetName(), _player->GetGUIDLow(), reward);
+        sLog.outError( "ERROR: Error in CMSG_QUESTGIVER_CHOOSE_REWARD: player %s (guid %d) tried to get invalid reward (%u) (probably packet hacking)", _player->GetName(), _player->GetGUIDLow(), reward);
         return;
     }
 
@@ -304,7 +304,7 @@ void WorldSession::HandleQuestgiverChooseRewardOpcode(WorldPacket & recv_data)
         if ((!_player->CanSeeStartQuest(pQuest) &&  _player->GetQuestStatus(quest) == QUEST_STATUS_NONE) ||
             (_player->GetQuestStatus(quest) != QUEST_STATUS_COMPLETE && !pQuest->IsAutoComplete()))
         {
-            sLog.outLog(LOG_DEFAULT,"HACK ALERT: Player %s (guid: %u) is trying to complete quest (id: %u) but he has no right to do it!",
+            sLog.out(LOG_CHAR,"HACK ALERT: Player %s (guid: %u) is trying to complete quest (id: %u) but he has no right to do it!",
                             _player->GetName(), _player->GetGUIDLow(), quest);
             return;
         }
@@ -595,7 +595,7 @@ uint32 WorldSession::getDialogStatus(Player *pPlayer, Object* questgiver, uint32
         }
         default:
             //its imposible, but check ^)
-            sLog.outLog(LOG_DEFAULT, "ERROR: Warning: GetDialogStatus called for unexpected type %u", questgiver->GetTypeId());
+            sLog.outError( "ERROR: Warning: GetDialogStatus called for unexpected type %u", questgiver->GetTypeId());
             return DIALOG_STATUS_NONE;
     }
 

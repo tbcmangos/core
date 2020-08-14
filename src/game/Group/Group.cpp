@@ -61,7 +61,7 @@ Group::~Group()
         else if (m_bgGroup->GetBgRaid(HORDE) == this)
             m_bgGroup->SetBgRaid(HORDE, NULL);
         else
-            sLog.outLog(LOG_DEFAULT, "ERROR: Group::~Group: battleground group is not linked to the correct battleground.");
+            sLog.outError( "ERROR: Group::~Group: battleground group is not linked to the correct battleground.");
     }
 
     Rolls::iterator itr;
@@ -116,14 +116,14 @@ bool Group::Create(const uint64 &guid, const char * name, bool lfg)
         static SqlStatementID insertGroup;
 
         // store group in database
-        RealmDataDatabase.BeginTransaction();
-        SqlStatement stmt = RealmDataDatabase.CreateStatement(deleteGroupByLeader, "DELETE FROM groups WHERE leaderGuid = ?");
+        CharacterDatabase.BeginTransaction();
+        SqlStatement stmt = CharacterDatabase.CreateStatement(deleteGroupByLeader, "DELETE FROM groups WHERE leaderGuid = ?");
         stmt.PExecute(GUID_LOPART(m_leaderGuid));
 
-        stmt = RealmDataDatabase.CreateStatement(deleteGroupMemberByLeader, "DELETE FROM group_member WHERE leaderGuid = ?");
+        stmt = CharacterDatabase.CreateStatement(deleteGroupMemberByLeader, "DELETE FROM group_member WHERE leaderGuid = ?");
         stmt.PExecute(GUID_LOPART(m_leaderGuid));
 
-        stmt = RealmDataDatabase.CreateStatement(insertGroup, "INSERT INTO groups (leaderGuid, mainTank, mainAssistant, lootMethod, looterGuid, lootThreshold, icon1, icon2, icon3, icon4, icon5, icon6, icon7, icon8, isRaid, difficulty) "
+        stmt = CharacterDatabase.CreateStatement(insertGroup, "INSERT INTO groups (leaderGuid, mainTank, mainAssistant, lootMethod, looterGuid, lootThreshold, icon1, icon2, icon3, icon4, icon5, icon6, icon7, icon8, isRaid, difficulty) "
                                                     "VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
 
         stmt.addUInt32(GUID_LOPART(m_leaderGuid));
@@ -149,7 +149,7 @@ bool Group::Create(const uint64 &guid, const char * name, bool lfg)
         return false;
 
     if (!isBGGroup())
-        RealmDataDatabase.CommitTransaction();
+        CharacterDatabase.CommitTransaction();
 
     // used by eluna
     sHookMgr->OnCreate(this, m_leaderGuid, m_groupType);
@@ -167,7 +167,7 @@ bool Group::LoadGroupFromDB(const uint64 &leaderGuid, QueryResult* result, bool 
     {
         external = false;
         //                                       0          1              2           3           4              5      6      7      8      9      10     11     12     13      14
-        result = RealmDataDatabase.PQuery("SELECT mainTank, mainAssistant, lootMethod, looterGuid, lootThreshold, icon1, icon2, icon3, icon4, icon5, icon6, icon7, icon8, isRaid, difficulty FROM groups WHERE leaderGuid ='%u'", GUID_LOPART(leaderGuid));
+        result = CharacterDatabase.PQuery("SELECT mainTank, mainAssistant, lootMethod, looterGuid, lootThreshold, icon1, icon2, icon3, icon4, icon5, icon6, icon7, icon8, isRaid, difficulty FROM groups WHERE leaderGuid ='%u'", GUID_LOPART(leaderGuid));
         if (!result)
             return false;
     }
@@ -195,7 +195,7 @@ bool Group::LoadGroupFromDB(const uint64 &leaderGuid, QueryResult* result, bool 
 
     if (loadMembers)
     {
-        result = RealmDataDatabase.PQuery("SELECT memberGuid, assistant, subgroup FROM group_member WHERE leaderGuid ='%u'", GUID_LOPART(leaderGuid));
+        result = CharacterDatabase.PQuery("SELECT memberGuid, assistant, subgroup FROM group_member WHERE leaderGuid ='%u'", GUID_LOPART(leaderGuid));
         if (!result)
             return false;
 
@@ -239,7 +239,7 @@ void Group::ConvertToRaid()
 
     if (!isBGGroup())
     {
-        SqlStatement stmt = RealmDataDatabase.CreateStatement(convertToRaid, "UPDATE groups SET isRaid = 1 WHERE leaderGuid = ?");
+        SqlStatement stmt = CharacterDatabase.CreateStatement(convertToRaid, "UPDATE groups SET isRaid = 1 WHERE leaderGuid = ?");
         stmt.PExecute(GUID_LOPART(m_leaderGuid));
     }
 
@@ -563,13 +563,13 @@ void Group::Disband(bool hideDestroy)
         static SqlStatementID deleteGroupByLeader;
         static SqlStatementID deleteGroupMemberByLeader;
 
-        RealmDataDatabase.BeginTransaction();
-        SqlStatement stmt = RealmDataDatabase.CreateStatement(deleteGroupByLeader, "DELETE FROM groups WHERE leaderGuid = ?");
+        CharacterDatabase.BeginTransaction();
+        SqlStatement stmt = CharacterDatabase.CreateStatement(deleteGroupByLeader, "DELETE FROM groups WHERE leaderGuid = ?");
         stmt.PExecute(GUID_LOPART(m_leaderGuid));
 
-        stmt = RealmDataDatabase.CreateStatement(deleteGroupMemberByLeader, "DELETE FROM group_member WHERE leaderGuid = ?");
+        stmt = CharacterDatabase.CreateStatement(deleteGroupMemberByLeader, "DELETE FROM group_member WHERE leaderGuid = ?");
         stmt.PExecute(GUID_LOPART(m_leaderGuid));
-        RealmDataDatabase.CommitTransaction();
+        CharacterDatabase.CommitTransaction();
 
         ResetInstances(INSTANCE_RESET_GROUP_DISBAND, NULL);
     }
@@ -1250,7 +1250,7 @@ bool Group::_addMember(const uint64 &guid, const char* name, bool isAssistant, u
     {
         static SqlStatementID insertGroupMember;
         // insert into group table
-        SqlStatement stmt = RealmDataDatabase.CreateStatement(insertGroupMember, "INSERT INTO group_member (leaderGuid, memberGuid, assistant, subgroup) VALUES (?, ?, ?, ?)");
+        SqlStatement stmt = CharacterDatabase.CreateStatement(insertGroupMember, "INSERT INTO group_member (leaderGuid, memberGuid, assistant, subgroup) VALUES (?, ?, ?, ?)");
         stmt.addUInt32(GUID_LOPART(m_leaderGuid));
         stmt.addUInt32(GUID_LOPART(member.guid));
         stmt.addBool(member.assistant);
@@ -1293,7 +1293,7 @@ bool Group::_removeMember(const uint64 &guid)
 
     if (!isBGGroup())
     {
-        SqlStatement stmt = RealmDataDatabase.CreateStatement(deleteGroupMember, "DELETE FROM group_member WHERE memberGuid = ?");
+        SqlStatement stmt = CharacterDatabase.CreateStatement(deleteGroupMember, "DELETE FROM group_member WHERE memberGuid = ?");
         stmt.PExecute(GUID_LOPART(guid));
     }
 
@@ -1316,14 +1316,14 @@ void Group::_setLeader(const uint64 &guid)
     if (!isBGGroup())
     {
         // TODO: set a time limit to have this function run rarely cause it can be slow
-        RealmDataDatabase.BeginTransaction();
+        CharacterDatabase.BeginTransaction();
 
         // update the group's bound instances when changing leaders
 
         // remove all permanent binds from the group
         // in the DB also remove solo binds that will be replaced with permbinds
         // from the new leader
-        RealmDataDatabase.PExecute(
+        CharacterDatabase.PExecute(
             "DELETE FROM group_instance WHERE leaderguid='%u' AND (permanent = 1 OR "
             "instance IN (SELECT instance FROM character_instance WHERE guid = '%u')"
             ")", GUID_LOPART(m_leaderGuid), GUID_LOPART(slot->guid)
@@ -1352,7 +1352,7 @@ void Group::_setLeader(const uint64 &guid)
         static SqlStatementID updateMemberLeader;
 
         // update the group's solo binds to the new leader
-        SqlStatement stmt = RealmDataDatabase.CreateStatement(updateBindLeader, "UPDATE group_instance SET leaderGuid = ? WHERE leaderGuid = ?");
+        SqlStatement stmt = CharacterDatabase.CreateStatement(updateBindLeader, "UPDATE group_instance SET leaderGuid = ? WHERE leaderGuid = ?");
         stmt.PExecute(GUID_LOPART(slot->guid), GUID_LOPART(m_leaderGuid));
 
         // copy the permanent binds from the new leader to the group
@@ -1361,12 +1361,12 @@ void Group::_setLeader(const uint64 &guid)
         Player::ConvertInstancesToGroup(player, this, slot->guid);
 
         // update the group leader
-        stmt = RealmDataDatabase.CreateStatement(updateGroupLeader, "UPDATE groups SET leaderGuid = ? WHERE leaderGuid = ?");
+        stmt = CharacterDatabase.CreateStatement(updateGroupLeader, "UPDATE groups SET leaderGuid = ? WHERE leaderGuid = ?");
         stmt.PExecute(GUID_LOPART(slot->guid), GUID_LOPART(m_leaderGuid));
 
-        stmt = RealmDataDatabase.CreateStatement(updateMemberLeader, "UPDATE group_member SET leaderGuid = ? WHERE leaderGuid = ?");
+        stmt = CharacterDatabase.CreateStatement(updateMemberLeader, "UPDATE group_member SET leaderGuid = ? WHERE leaderGuid = ?");
         stmt.PExecute(GUID_LOPART(slot->guid), GUID_LOPART(m_leaderGuid));
-        RealmDataDatabase.CommitTransaction();
+        CharacterDatabase.CommitTransaction();
     }
 
     m_leaderGuid = slot->guid;
@@ -1407,7 +1407,7 @@ bool Group::_setMembersGroup(const uint64 &guid, const uint8 &group)
     static SqlStatementID updateSubGroup;
     if (!isBGGroup())
     {
-        SqlStatement stmt = RealmDataDatabase.CreateStatement(updateSubGroup, "UPDATE group_member SET subgroup = ? WHERE memberGuid = ?");
+        SqlStatement stmt = CharacterDatabase.CreateStatement(updateSubGroup, "UPDATE group_member SET subgroup = ? WHERE memberGuid = ?");
         stmt.PExecute(group, GUID_LOPART(guid));
     }
 
@@ -1425,7 +1425,7 @@ bool Group::_setAssistantFlag(const uint64 &guid, const bool &state)
     slot->assistant = state;
     if (!isBGGroup())
     {
-        SqlStatement stmt = RealmDataDatabase.CreateStatement(updateMemberAssistant, "UPDATE group_member SET assistant = ? WHERE memberGuid = ?");
+        SqlStatement stmt = CharacterDatabase.CreateStatement(updateMemberAssistant, "UPDATE group_member SET assistant = ? WHERE memberGuid = ?");
         stmt.PExecute(state, GUID_LOPART(guid));
     }
 
@@ -1450,7 +1450,7 @@ bool Group::_setMainTank(const uint64 &guid)
     if (!isBGGroup())
     {
         static SqlStatementID updateMainTank;
-        SqlStatement stmt = RealmDataDatabase.CreateStatement(updateMainTank, "UPDATE groups SET mainTank = ? WHERE leaderGuid = ?");
+        SqlStatement stmt = CharacterDatabase.CreateStatement(updateMainTank, "UPDATE groups SET mainTank = ? WHERE leaderGuid = ?");
         stmt.PExecute(GUID_LOPART(m_mainTank), GUID_LOPART(m_leaderGuid));
     }
 
@@ -1475,7 +1475,7 @@ bool Group::_setMainAssistant(const uint64 &guid)
     if (!isBGGroup())
     {
         static SqlStatementID updateMainAssist;
-        SqlStatement stmt = RealmDataDatabase.CreateStatement(updateMainAssist, "UPDATE groups SET mainAssistant = ? WHERE leaderGuid = ?");
+        SqlStatement stmt = CharacterDatabase.CreateStatement(updateMainAssist, "UPDATE groups SET mainAssistant = ? WHERE leaderGuid = ?");
         stmt.PExecute(GUID_LOPART(m_mainAssistant), GUID_LOPART(m_leaderGuid));
     }
 
@@ -1661,7 +1661,7 @@ void Group::SetDifficulty(uint8 difficulty)
     m_difficulty = difficulty;
     if (!isBGGroup())
     {
-        SqlStatement stmt = RealmDataDatabase.CreateStatement(updateGroupDifficulty, "UPDATE groups SET difficulty = ? WHERE leaderGuid = ?");
+        SqlStatement stmt = CharacterDatabase.CreateStatement(updateGroupDifficulty, "UPDATE groups SET difficulty = ? WHERE leaderGuid = ?");
         stmt.PExecute(m_difficulty, GUID_LOPART(m_leaderGuid));
     }
 
@@ -1733,7 +1733,7 @@ void Group::ResetInstances(uint8 method, Player* SendMsgTo)
                 p->DeleteFromDB();
             else
             {
-                SqlStatement stmt = RealmDataDatabase.CreateStatement(deleteGroupInstance, "DELETE FROM group_instance WHERE instance = ?");
+                SqlStatement stmt = CharacterDatabase.CreateStatement(deleteGroupInstance, "DELETE FROM group_instance WHERE instance = ?");
                 stmt.PExecute(p->GetInstanceId());
             }
 
@@ -1776,13 +1776,13 @@ InstanceGroupBind* Group::BindToInstance(InstanceSave *save, bool permanent, boo
             // when a boss is killed or when copying the player's binds to the group
             if (!load && (permanent != bind.perm || save != bind.save))
             {
-                SqlStatement stmt = RealmDataDatabase.CreateStatement(updateGroupInstance, "UPDATE group_instance SET instance = ?, permanent = ? WHERE leaderGuid = ? AND instance = ?");
+                SqlStatement stmt = CharacterDatabase.CreateStatement(updateGroupInstance, "UPDATE group_instance SET instance = ?, permanent = ? WHERE leaderGuid = ? AND instance = ?");
                 stmt.PExecute(save->GetInstanceId(), permanent, GUID_LOPART(GetLeaderGUID()), bind.save->GetInstanceId());
             }
         }
         else if (!load)
         {
-            SqlStatement stmt = RealmDataDatabase.CreateStatement(insertGroupInstance, "INSERT INTO group_instance (leaderGuid, instance, permanent) VALUES (?, ?, ?)");
+            SqlStatement stmt = CharacterDatabase.CreateStatement(insertGroupInstance, "INSERT INTO group_instance (leaderGuid, instance, permanent) VALUES (?, ?, ?)");
             stmt.PExecute(GUID_LOPART(GetLeaderGUID()), save->GetInstanceId(), permanent);
         }
 
@@ -1813,18 +1813,18 @@ void Group::UnbindInstance(uint32 mapid, uint8 difficulty, bool unload)
         static SqlStatementID deleteGroupInstance;
         static SqlStatementID deleteGroupSavedLoot;
 
-        RealmDataDatabase.BeginTransaction();
+        CharacterDatabase.BeginTransaction();
         if (!unload)
         {
-            SqlStatement stmt = RealmDataDatabase.CreateStatement(deleteGroupInstance, "DELETE FROM group_instance WHERE leaderGuid = ? AND instance = ?");
+            SqlStatement stmt = CharacterDatabase.CreateStatement(deleteGroupInstance, "DELETE FROM group_instance WHERE leaderGuid = ? AND instance = ?");
             stmt.PExecute(GUID_LOPART(GetLeaderGUID()), itr->second.save->GetInstanceId());
 
-            stmt = RealmDataDatabase.CreateStatement(deleteGroupSavedLoot, "DELETE FROM group_saved_loot WHERE instanceId = ?");
+            stmt = CharacterDatabase.CreateStatement(deleteGroupSavedLoot, "DELETE FROM group_saved_loot WHERE instanceId = ?");
             stmt.PExecute((*itr).second.save->GetInstanceId());
         }
 
         itr->second.save->RemoveGroup(this);                // save can become invalid
-        RealmDataDatabase.CommitTransaction();
+        CharacterDatabase.CommitTransaction();
 
         m_boundInstances[difficulty].erase(itr);
     }

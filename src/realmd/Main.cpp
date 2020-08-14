@@ -68,7 +68,7 @@ void HookSignals();
 
 bool stopEvent = false;                                     ///< Setting it to true stops the server
 
-DatabaseType AccountsDatabase;                                 ///< Accessor to the realm server database
+DatabaseType LoginDatabase;                                 ///< Accessor to the realm server database
 
 /// Print out the usage string for this program on the console.
 void usage(const char *prog)
@@ -193,11 +193,11 @@ extern int main(int argc, char **argv)
     uint32 confVersion = sConfig.GetIntDefault("ConfVersion", 0);
     if (confVersion < _REALMDCONFVERSION)
     {
-        sLog.outLog(LOG_DEFAULT, "ERROR: **********************************************************************************");
-        sLog.outLog(LOG_DEFAULT, "ERROR:  WARNING: Your realmd.conf version indicates your conf file is out of date!");
-        sLog.outLog(LOG_DEFAULT, "ERROR:           Please check for updates, as your current default values may cause");
-        sLog.outLog(LOG_DEFAULT, "ERROR:           strange behavior.");
-        sLog.outLog(LOG_DEFAULT, "ERROR: **********************************************************************************");
+        sLog.outError( "ERROR: **********************************************************************************");
+        sLog.outError( "ERROR:  WARNING: Your realmd.conf version indicates your conf file is out of date!");
+        sLog.outError( "ERROR:           Please check for updates, as your current default values may cause");
+        sLog.outError( "ERROR:           strange behavior.");
+        sLog.outError( "ERROR: **********************************************************************************");
         clock_t pause = 3000 + clock();
 
         while (pause > clock()) {}
@@ -227,7 +227,7 @@ extern int main(int argc, char **argv)
         uint32 pid = CreatePIDFile(pidfile);
         if( !pid )
         {
-            sLog.outLog(LOG_DEFAULT, "ERROR: Cannot create PID file %s.\n", pidfile.c_str());
+            sLog.outError( "ERROR: Cannot create PID file %s.\n", pidfile.c_str());
             return 1;
         }
 
@@ -241,11 +241,11 @@ extern int main(int argc, char **argv)
     ///- start realm list
     sRealmList.Initialize();
     if (sRealmList.size() == 0)
-        sLog.outLog(LOG_DEFAULT, "ERROR: No valid realms specified.");
+        sLog.outError( "ERROR: No valid realms specified.");
     
 
 #ifdef REGEX_NAMESPACE
-    QueryResult* result = AccountsDatabase.PQuery("SELECT ip_pattern, local_ip_pattern FROM pattern_banned");
+    QueryResult* result = LoginDatabase.PQuery("SELECT ip_pattern, local_ip_pattern FROM pattern_banned");
     if (result)
     {
         AuthSocket::pattern_banned.clear();
@@ -257,12 +257,12 @@ extern int main(int argc, char **argv)
         while (result->NextRow());
     }
 #else
-        sLog.outLog(LOG_DEFAULT, "ERROR: No Valid Regex Library for your Compiler, the pattern_banned feature will be disabled");
+        sLog.outError( "ERROR: No Valid Regex Library for your Compiler, the pattern_banned feature will be disabled");
 #endif
 
     // cleanup query
     // set expired bans to inactive
-    AccountsDatabase.Execute("DELETE FROM ip_banned WHERE expiration_date <= UNIX_TIMESTAMP() AND expiration_date <> punishment_date");
+    LoginDatabase.Execute("DELETE FROM ip_banned WHERE expiration_date <= UNIX_TIMESTAMP() AND expiration_date <> punishment_date");
 
     ///- Launch the listening network socket
     ACE_Acceptor<AuthSocket, ACE_SOCK_Acceptor> acceptor;
@@ -274,7 +274,7 @@ extern int main(int argc, char **argv)
 
     if (acceptor.open(bind_addr, ACE_Reactor::instance(), ACE_NONBLOCK) == -1)
     {
-        sLog.outLog(LOG_DEFAULT, "ERROR: realmd can not bind to %s:%d", bind_ip.c_str(), rmport);
+        sLog.outError( "ERROR: realmd can not bind to %s:%d", bind_ip.c_str(), rmport);
         return 1;
     }
 
@@ -298,14 +298,14 @@ extern int main(int argc, char **argv)
 
                 if(!curAff )
                 {
-                    sLog.outLog(LOG_DEFAULT, "ERROR: Processors marked in UseProcessors bitmask (hex) %x not accessible for realmd. Accessible processors bitmask (hex): %x",Aff,appAff);
+                    sLog.outError( "ERROR: Processors marked in UseProcessors bitmask (hex) %x not accessible for realmd. Accessible processors bitmask (hex): %x",Aff,appAff);
                 }
                 else
                 {
                     if(SetProcessAffinityMask(hProcess,curAff))
                         sLog.outString("Using processors (bitmask, hex): %x", curAff);
                     else
-                        sLog.outLog(LOG_DEFAULT, "ERROR: Can't set used processors (hex): %x", curAff);
+                        sLog.outError( "ERROR: Can't set used processors (hex): %x", curAff);
                 }
             }
         }
@@ -317,14 +317,14 @@ extern int main(int argc, char **argv)
             if(SetPriorityClass(hProcess,HIGH_PRIORITY_CLASS))
                 sLog.outString("realmd process priority class set to HIGH");
             else
-                sLog.outLog(LOG_DEFAULT, "ERROR: Can't set realmd process priority class.");
+                sLog.outError( "ERROR: Can't set realmd process priority class.");
         }
     }
     #endif
 
     //server has started up successfully => enable async DB requests
-    AccountsDatabase.AllowAsyncTransactions();
-    AccountsDatabase.EnableLogging();
+    LoginDatabase.AllowAsyncTransactions();
+    LoginDatabase.EnableLogging();
 
     // maximum counter for next ping
     uint32 numLoops = (sConfig.GetIntDefault("MaxPingTime", 30) * (MINUTE * 1000000 / 100000));
@@ -347,7 +347,7 @@ extern int main(int argc, char **argv)
         {
             loopCounter = 0;
             sLog.outDetail("Ping MySQL to keep connection alive");
-            AccountsDatabase.Ping();
+            LoginDatabase.Ping();
         }
 #ifdef WIN32
         if (runMode == MODE_SERVICE_STOPPED)
@@ -359,7 +359,7 @@ extern int main(int argc, char **argv)
     }
 
     ///- Wait for the delay thread to exit
-    AccountsDatabase.HaltDelayThread();
+    LoginDatabase.HaltDelayThread();
 
     ///- Remove signal handling before leaving
     UnhookSignals();
@@ -394,15 +394,15 @@ bool StartDB()
     std::string dbstring = sConfig.GetStringDefault("LoginDatabaseInfo", "");
     if(dbstring.empty())
     {
-        sLog.outLog(LOG_DEFAULT, "ERROR: Database not specified");
+        sLog.outError( "ERROR: Database not specified");
         return false;
     }
 
     //sLog.outString("Database: %s", dbstring.c_str() );
 
-    if(!AccountsDatabase.Initialize(dbstring.c_str()))
+    if(!LoginDatabase.Initialize(dbstring.c_str()))
     {
-        sLog.outLog(LOG_DEFAULT, "ERROR: Cannot connect to database");
+        sLog.outError( "ERROR: Cannot connect to database");
         return false;
     }
 

@@ -46,7 +46,7 @@ void CreatureAI::DoZoneInCombat(float max_dist)
     Map *pMap = me->GetMap();
     if (!pMap->IsDungeon())                                  //use IsDungeon instead of Instanceable, in case battlegrounds will be instantiated
     {
-        sLog.outLog(LOG_DEFAULT, "ERROR: DoZoneInCombat call for map that isn't an instance (creature entry = %d)", creature->GetTypeId() == TYPEID_UNIT ? ((Creature*)creature)->GetEntry() : 0);
+        sLog.outError( "ERROR: DoZoneInCombat call for map that isn't an instance (creature entry = %d)", creature->GetTypeId() == TYPEID_UNIT ? ((Creature*)creature)->GetEntry() : 0);
         return;
     }
 

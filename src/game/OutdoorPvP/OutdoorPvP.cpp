@@ -124,7 +124,7 @@ bool OPvPCapturePoint::SetCapturePointData(uint32 entry, uint32 map, float x, fl
     GameObjectInfo const* goinfo = ObjectMgr::GetGameObjectInfo(entry);
     if (!goinfo || goinfo->type != GAMEOBJECT_TYPE_CAPTURE_POINT)
     {
-        sLog.outLog(LOG_DEFAULT, "ERROR: OutdoorPvP: GO %u is not capture point!", entry);
+        sLog.outError( "ERROR: OutdoorPvP: GO %u is not capture point!", entry);
         return false;
     }
 
@@ -151,7 +151,7 @@ bool OPvPCapturePoint::DelCreature(uint32 type)
 
     if (!m_PvP->GetMap())
     {
-        sLog.outLog(LOG_DEFAULT, "ERROR: opvp couldn't get map to find creature");
+        sLog.outError( "ERROR: opvp couldn't get map to find creature");
         return false;
     }
 
@@ -173,7 +173,7 @@ bool OPvPCapturePoint::DelCreature(uint32 type)
     if (Map * map = sMapMgr.FindMap(cr->GetMapId()))
         map->Remove(cr,false);
     // delete respawn time for this creature
-    RealmDataDatabase.PExecute("DELETE FROM creature_respawn WHERE guid = '%u'", guid);
+    CharacterDatabase.PExecute("DELETE FROM creature_respawn WHERE guid = '%u'", guid);
     cr->AddObjectToRemoveList();
     sObjectMgr.DeleteCreatureData(guid);
     m_CreatureTypes[m_Creatures[type]] = 0;
@@ -188,7 +188,7 @@ bool OPvPCapturePoint::DelObject(uint32 type)
 
     if (!m_PvP->GetMap())
     {
-        sLog.outLog(LOG_DEFAULT, "ERROR: opvp capture point couldn't get map to find creature");
+        sLog.outError( "ERROR: opvp capture point couldn't get map to find creature");
         return false;
     }
 
@@ -386,7 +386,7 @@ bool OPvPCapturePoint::Update(uint32 diff)
 
     if (m_OldState != m_State)
     {
-        //sLog.outLog(LOG_DEFAULT, "ERROR: %u->%u", m_OldState, m_State);
+        //sLog.outError( "ERROR: %u->%u", m_OldState, m_State);
         if (oldTeam != m_team)
             ChangeTeam(oldTeam);
         ChangeState();

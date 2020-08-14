@@ -153,7 +153,7 @@ void TemporarySummon::Update(uint32 update_diff, uint32 diff)
         }
         default:
             UnSummon();
-            sLog.outLog(LOG_DEFAULT, "ERROR: Temporary summoned creature (entry: %u) have unknown type %u of ",GetEntry(),m_type);
+            sLog.outError( "ERROR: Temporary summoned creature (entry: %u) have unknown type %u of ",GetEntry(),m_type);
             break;
     }
 

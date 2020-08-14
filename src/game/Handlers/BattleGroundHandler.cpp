@@ -89,7 +89,7 @@ void WorldSession::HandleBattleGroundJoinOpcode(WorldPacket & recv_data )
 
     if (!sBattlemasterListStore.LookupEntry(bgTypeId_))
     {
-        sLog.outLog(LOG_DEFAULT, "ERROR: Battleground: invalid bgtype (%u) received. possible cheater? player guid %u",bgTypeId_,_player->GetGUIDLow());
+        sLog.outError( "ERROR: Battleground: invalid bgtype (%u) received. possible cheater? player guid %u",bgTypeId_,_player->GetGUIDLow());
         return;
     }
 
@@ -118,7 +118,7 @@ void WorldSession::HandleBattleGroundJoinOpcode(WorldPacket & recv_data )
 
     if (!bg && !(bg = sBattleGroundMgr.GetBattleGroundTemplate(bgTypeId)))
     {
-        sLog.outLog(LOG_DEFAULT, "ERROR: Battleground: no available bg / template found");
+        sLog.outError( "ERROR: Battleground: no available bg / template found");
         return;
     }
 
@@ -314,7 +314,7 @@ void WorldSession::HandleBattleGroundListOpcode(WorldPacket &recv_data)
     BattlemasterListEntry const* bl = sBattlemasterListStore.LookupEntry(bgTypeId);
     if (!bl)
     {
-        sLog.outLog(LOG_DEFAULT, "ERROR: Battleground: invalid bgtype received.");
+        sLog.outError( "ERROR: Battleground: invalid bgtype received.");
         return;
     }
 
@@ -338,7 +338,7 @@ void WorldSession::HandleBattleGroundPlayerPortOpcode(WorldPacket &recv_data)
 
     if (!sBattlemasterListStore.LookupEntry(bgTypeId_))
     {
-        sLog.outLog(LOG_DEFAULT, "ERROR: Battleground: invalid bgtype (%u) received.",bgTypeId_);
+        sLog.outError( "ERROR: Battleground: invalid bgtype (%u) received.",bgTypeId_);
         // update battleground slots for the player to fix his UI and sent data.
         // this is a HACK, I don't know why the client starts sending invalid packets in the first place.
         // it usually happens with extremely high latency (if debugging / stepping in the code for example)
@@ -408,7 +408,7 @@ void WorldSession::HandleBattleGroundPlayerPortOpcode(WorldPacket &recv_data)
     BattleGroundQueue::QueuedPlayersMap::iterator itrPlayerStatus = qpMap.find(_player->GetGUID());
     if (itrPlayerStatus == qpMap.end())
     {
-        sLog.outLog(LOG_DEFAULT, "ERROR: Battleground: itrplayerstatus not found.");
+        sLog.outError( "ERROR: Battleground: itrplayerstatus not found.");
         return;
     }
     instanceId = itrPlayerStatus->second.GroupInfo->IsInvitedToBGInstanceGUID;
@@ -416,7 +416,7 @@ void WorldSession::HandleBattleGroundPlayerPortOpcode(WorldPacket &recv_data)
     // if action == 1, then instanceId is _required_
     if (!instanceId && action == 1)
     {
-        sLog.outLog(LOG_DEFAULT, "ERROR: Battleground: instance not found.");
+        sLog.outError( "ERROR: Battleground: instance not found.");
         return;
     }
 
@@ -427,7 +427,7 @@ void WorldSession::HandleBattleGroundPlayerPortOpcode(WorldPacket &recv_data)
         bg = sBattleGroundMgr.GetBattleGroundTemplate(bgTypeId);
     if (!bg)
     {
-        sLog.outLog(LOG_DEFAULT, "ERROR: BattlegroundHandler: bg_template not found for type id %u.", bgTypeId);
+        sLog.outError( "ERROR: BattlegroundHandler: bg_template not found for type id %u.", bgTypeId);
         return;
     }
 
@@ -456,7 +456,7 @@ void WorldSession::HandleBattleGroundPlayerPortOpcode(WorldPacket &recv_data)
         }
         else
         {
-            sLog.outLog(LOG_DEFAULT, "ERROR: Battleground: Invalid player queue info!");
+            sLog.outError( "ERROR: Battleground: Invalid player queue info!");
             return;
         }
 
@@ -526,7 +526,7 @@ void WorldSession::HandleBattleGroundPlayerPortOpcode(WorldPacket &recv_data)
                 DEBUG_LOG("Battleground: player %s (%u) left queue for bgtype %u, queue type %u.",_player->GetName(),_player->GetGUIDLow(),bg->GetTypeID(),bgQueueTypeId);
                 break;
             default:
-                sLog.outLog(LOG_DEFAULT, "ERROR: Battleground port: unknown action %u", action);
+                sLog.outError( "ERROR: Battleground port: unknown action %u", action);
                 break;
         }
     }
@@ -709,7 +709,7 @@ void WorldSession::HandleBattleGroundArenaJoin(WorldPacket & recv_data)
             arenatype = ARENA_TYPE_5v5;
             break;
         default:
-            sLog.outLog(LOG_DEFAULT, "ERROR: Unknown arena slot %u at HandleBattlemasterJoinArena()", arenaslot);
+            sLog.outError( "ERROR: Unknown arena slot %u at HandleBattlemasterJoinArena()", arenaslot);
             return;
     }
 
@@ -717,7 +717,7 @@ void WorldSession::HandleBattleGroundArenaJoin(WorldPacket & recv_data)
     BattleGround* bg = sBattleGroundMgr.GetBattleGroundTemplate(BATTLEGROUND_AA);
     if (!bg)
     {
-        sLog.outLog(LOG_DEFAULT, "ERROR: Battleground: template bg (all arenas) not found");
+        sLog.outError( "ERROR: Battleground: template bg (all arenas) not found");
         return;
     }
 

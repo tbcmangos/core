@@ -52,7 +52,7 @@ void WorldSession::HandlePetAction(WorldPacket & recv_data)
     Unit* pCharm = pPlayer->GetUnit(charmGUID);
     if (!pCharm || (charmGUID != pPlayer->GetPetGUID() && charmGUID != pPlayer->GetCharmGUID()))
     {
-        sLog.outLog(LOG_DEFAULT, "ERROR: PetHandler:: charm(%u), player doesn't have such pet/charm.", uint32(GUID_LOPART(charmGUID)));
+        sLog.outError( "ERROR: PetHandler:: charm(%u), player doesn't have such pet/charm.", uint32(GUID_LOPART(charmGUID)));
         return;
     }
 
@@ -70,7 +70,7 @@ void WorldSession::HandlePetAction(WorldPacket & recv_data)
     CharmInfo *pCharmInfo = pCharm->GetCharmInfo();
     if (!pCharmInfo)
     {
-        sLog.outLog(LOG_DEFAULT, "ERROR: WorldSession::HandlePetAction: object " UI64FMTD " is considered pet-like but doesn't have a charminfo!", charmGUID);
+        sLog.outError( "ERROR: WorldSession::HandlePetAction: object " UI64FMTD " is considered pet-like but doesn't have a charminfo!", charmGUID);
         return;
     }
 
@@ -104,7 +104,7 @@ void WorldSession::HandlePetAction(WorldPacket & recv_data)
                         pPlayer->Uncharm();
                     break;
                 default:
-                    sLog.outLog(LOG_DEFAULT, "ERROR: WORLD: unknown PET flag Action %i and spellid %i.\n", flag, spellId);
+                    sLog.outError( "ERROR: WORLD: unknown PET flag Action %i and spellid %i.\n", flag, spellId);
             }
             break;
         case ACT_REACTION:                                  // 0x600
@@ -126,7 +126,7 @@ void WorldSession::HandlePetAction(WorldPacket & recv_data)
             break;
         }
         default:
-            sLog.outLog(LOG_DEFAULT, "ERROR: WORLD: unknown PET flag Action %i and spellid %i.\n", flag, spellId);
+            sLog.outError( "ERROR: WORLD: unknown PET flag Action %i and spellid %i.\n", flag, spellId);
     }
 }
 
@@ -206,14 +206,14 @@ void WorldSession::HandlePetSetAction(WorldPacket & recv_data)
 
     if (!pet || (pet != _player->GetPet() && pet != _player->GetCharm()))
     {
-        sLog.outLog(LOG_DEFAULT, "ERROR: HandlePetSetAction: Unknown pet or pet owner.\n");
+        sLog.outError( "ERROR: HandlePetSetAction: Unknown pet or pet owner.\n");
         return;
     }
 
     CharmInfo *charmInfo = pet->GetCharmInfo();
     if (!charmInfo)
     {
-        sLog.outLog(LOG_DEFAULT, "ERROR: WorldSession::HandlePetSetAction: object " UI64FMTD " is considered pet-like but doesn't have a charminfo!", pet->GetGUID());
+        sLog.outError( "ERROR: WorldSession::HandlePetSetAction: object " UI64FMTD " is considered pet-like but doesn't have a charminfo!", pet->GetGUID());
         return;
     }
 
@@ -313,19 +313,19 @@ void WorldSession::HandlePetRename(WorldPacket & recv_data)
         }
     }
 
-    RealmDataDatabase.BeginTransaction();
+    CharacterDatabase.BeginTransaction();
     if (isdeclined)
     {
         for (int i = 0; i < MAX_DECLINED_NAME_CASES; ++i)
-            RealmDataDatabase.escape_string(declinedname.name[i]);
-        RealmDataDatabase.PExecute("DELETE FROM character_pet_declinedname WHERE owner = '%u' AND id = '%u'", _player->GetGUIDLow(), pet->GetCharmInfo()->GetPetNumber());
-        RealmDataDatabase.PExecute("INSERT INTO character_pet_declinedname (id, owner, genitive, dative, accusative, instrumental, prepositional) VALUES ('%u','%u','%s','%s','%s','%s','%s')",
+            CharacterDatabase.escape_string(declinedname.name[i]);
+        CharacterDatabase.PExecute("DELETE FROM character_pet_declinedname WHERE owner = '%u' AND id = '%u'", _player->GetGUIDLow(), pet->GetCharmInfo()->GetPetNumber());
+        CharacterDatabase.PExecute("INSERT INTO character_pet_declinedname (id, owner, genitive, dative, accusative, instrumental, prepositional) VALUES ('%u','%u','%s','%s','%s','%s','%s')",
             pet->GetCharmInfo()->GetPetNumber(), _player->GetGUIDLow(), declinedname.name[0].c_str(), declinedname.name[1].c_str(), declinedname.name[2].c_str(), declinedname.name[3].c_str(), declinedname.name[4].c_str());
     }
 
-    RealmDataDatabase.escape_string(name);
-    RealmDataDatabase.PExecute("UPDATE character_pet SET name = '%s', renamed = '1' WHERE owner = '%u' AND id = '%u'", name.c_str(), _player->GetGUIDLow(), pet->GetCharmInfo()->GetPetNumber());
-    RealmDataDatabase.CommitTransaction();
+    CharacterDatabase.escape_string(name);
+    CharacterDatabase.PExecute("UPDATE character_pet SET name = '%s', renamed = '1' WHERE owner = '%u' AND id = '%u'", name.c_str(), _player->GetGUIDLow(), pet->GetCharmInfo()->GetPetNumber());
+    CharacterDatabase.CommitTransaction();
 
     pet->SetUInt32Value(UNIT_FIELD_PET_NAME_TIMESTAMP, time(NULL));
 }
@@ -375,14 +375,14 @@ void WorldSession::HandlePetUnlearnOpcode(WorldPacket& recvPacket)
 
     if (guid != pet->GetGUID())
     {
-        sLog.outLog(LOG_DEFAULT, "ERROR: HandlePetUnlearnOpcode.Pet %u isn't pet of player %s .\n", uint32(GUID_LOPART(guid)),GetPlayer()->GetName());
+        sLog.outError( "ERROR: HandlePetUnlearnOpcode.Pet %u isn't pet of player %s .\n", uint32(GUID_LOPART(guid)),GetPlayer()->GetName());
         return;
     }
 
     CharmInfo *charmInfo = pet->GetCharmInfo();
     if (!charmInfo)
     {
-        sLog.outLog(LOG_DEFAULT, "ERROR: WorldSession::HandlePetUnlearnOpcode: object " UI64FMTD " is considered pet-like but doesn't have a charminfo!", pet->GetGUID());
+        sLog.outError( "ERROR: WorldSession::HandlePetUnlearnOpcode: object " UI64FMTD " is considered pet-like but doesn't have a charminfo!", pet->GetGUID());
         return;
     }
 
@@ -440,7 +440,7 @@ void WorldSession::HandlePetSpellAutocastOpcode(WorldPacket& recvPacket)
 
     if (!pet || (pet != _player->GetPet() && pet != _player->GetCharm()))
     {
-        sLog.outLog(LOG_DEFAULT, "ERROR: HandlePetSpellAutocastOpcode.Pet %u isn't pet of player %s .\n", uint32(GUID_LOPART(guid)),GetPlayer()->GetName());
+        sLog.outError( "ERROR: HandlePetSpellAutocastOpcode.Pet %u isn't pet of player %s .\n", uint32(GUID_LOPART(guid)),GetPlayer()->GetName());
         return;
     }
 
@@ -451,7 +451,7 @@ void WorldSession::HandlePetSpellAutocastOpcode(WorldPacket& recvPacket)
     CharmInfo *charmInfo = pet->GetCharmInfo();
     if (!charmInfo)
     {
-        sLog.outLog(LOG_DEFAULT, "ERROR: WorldSession::HandlePetSpellAutocastOpcod: object " UI64FMTD " is considered pet-like but doesn't have a charminfo!", pet->GetGUID());
+        sLog.outError( "ERROR: WorldSession::HandlePetSpellAutocastOpcod: object " UI64FMTD " is considered pet-like but doesn't have a charminfo!", pet->GetGUID());
         return;
     }
 
@@ -486,14 +486,14 @@ void WorldSession::HandlePetCastSpellOpcode(WorldPacket& recvPacket)
 
     if (!caster || (caster != _player->GetPet() && caster != _player->GetCharm()))
     {
-        sLog.outLog(LOG_DEFAULT, "ERROR: HandlePetCastSpellOpcode: Pet %u isn't pet of player %s .\n", uint32(GUID_LOPART(guid)),GetPlayer()->GetName());
+        sLog.outError( "ERROR: HandlePetCastSpellOpcode: Pet %u isn't pet of player %s .\n", uint32(GUID_LOPART(guid)),GetPlayer()->GetName());
         return;
     }
 
     SpellEntry const *spellInfo = sSpellStore.LookupEntry(spellid);
     if (!spellInfo)
     {
-        sLog.outLog(LOG_DEFAULT, "ERROR: WORLD: unknown PET spell id %i\n", spellid);
+        sLog.outError( "ERROR: WORLD: unknown PET spell id %i\n", spellid);
         return;
     }
 

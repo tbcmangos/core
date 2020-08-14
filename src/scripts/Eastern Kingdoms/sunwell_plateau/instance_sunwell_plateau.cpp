@@ -165,7 +165,7 @@ struct instance_sunwell_plateau : public ScriptedInstance
             }
         }
 
-        debug_log("TSCR: Instance Sunwell Plateau: GetPlayerInMap, but PlayerList is empty!");
+        sLog.outDebug("TSCR: Instance Sunwell Plateau: GetPlayerInMap, but PlayerList is empty!");
         return NULL;
     }
 
@@ -175,7 +175,7 @@ struct instance_sunwell_plateau : public ScriptedInstance
 
         if (!player || !guid)
         {
-            debug_log("TSCR: Sunwell Plateau: HandleGameObject fail");
+            sLog.outDebug("TSCR: Sunwell Plateau: HandleGameObject fail");
             return;
         }
 

@@ -282,7 +282,7 @@ namespace LuaGlobalFunctions
         if (!query)
             return 0;
 
-        QueryResult* result = GameDataDatabase.Query(query);
+        QueryResult* result = WorldDatabase.Query(query);
         if (!result)
             return 0;
 
@@ -293,7 +293,7 @@ namespace LuaGlobalFunctions
     int WorldDBExecute(lua_State* L)
     {
         const char* query = sEluna->CHECKVAL<const char*>(L, 1);
-        GameDataDatabase.Execute(query);
+        WorldDatabase.Execute(query);
         return 0;
     }
 
@@ -301,7 +301,7 @@ namespace LuaGlobalFunctions
     {
         const char* query = sEluna->CHECKVAL<const char*>(L, 1);
 
-        QueryResult* result = RealmDataDatabase.Query(query);
+        QueryResult* result = CharacterDatabase.Query(query);
         if (!result)
             return 0;
 
@@ -312,7 +312,7 @@ namespace LuaGlobalFunctions
     int CharDBExecute(lua_State* L)
     {
         const char* query = sEluna->CHECKVAL<const char*>(L, 1);
-        RealmDataDatabase.Execute(query);
+        CharacterDatabase.Execute(query);
         return 0;
     }
 
@@ -320,7 +320,7 @@ namespace LuaGlobalFunctions
     {
         const char* query = sEluna->CHECKVAL<const char*>(L, 1);
 
-        QueryResult* result = AccountsDatabase.Query(query);
+        QueryResult* result = LoginDatabase.Query(query);
         if (!result)
             return 0;
 
@@ -331,7 +331,7 @@ namespace LuaGlobalFunctions
     int AuthDBExecute(lua_State* L)
     {
         const char* query = sEluna->CHECKVAL<const char*>(L, 1);
-        AccountsDatabase.Execute(query);
+        LoginDatabase.Execute(query);
         return 0;
     }
 
@@ -559,7 +559,7 @@ namespace LuaGlobalFunctions
                     return NULL;
                 }
 
-                pGameObj->SetRespawnTime(durorresptime / IN_MILISECONDS);
+                pGameObj->SetRespawnTime(durorresptime / IN_MILLISECONDS);
 
                 map->Add(pGameObj);
 

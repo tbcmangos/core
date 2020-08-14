@@ -66,13 +66,13 @@ void Camera::SetView(WorldObject *obj, bool update_far_sight_field /*= true*/)
 
     if (!_owner.IsInMap(obj))
     {
-        sLog.outLog(LOG_DEFAULT, "ERROR: Camera::SetView, viewpoint is not in map with camera's owner");
+        sLog.outError( "ERROR: Camera::SetView, viewpoint is not in map with camera's owner");
         return;
     }
 
     if (!obj->isType(TypeMask(TYPEMASK_DYNAMICOBJECT | TYPEMASK_UNIT)))
     {
-        sLog.outLog(LOG_DEFAULT, "ERROR: Camera::SetView, viewpoint type is not available for client");
+        sLog.outError( "ERROR: Camera::SetView, viewpoint type is not available for client");
         return;
     }
 
@@ -166,7 +166,7 @@ ViewPoint::~ViewPoint()
 {
     if (!_cameras.empty())
     {
-        sLog.outLog(LOG_DEFAULT, "ERROR: ViewPoint destructor called, but some cameras referenced to it");
+        sLog.outError( "ERROR: ViewPoint destructor called, but some cameras referenced to it");
         _cameras.clear();
     }
 }

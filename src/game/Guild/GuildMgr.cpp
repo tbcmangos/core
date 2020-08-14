@@ -113,7 +113,7 @@ void GuildMgr::LoadGuildAnnCooldowns()
 {
     uint32 count = 0;
 
-    QueryResult* result = RealmDataDatabase.Query("SELECT guild_id, cooldown_end FROM guild_announce_cooldown");
+    QueryResult* result = CharacterDatabase.Query("SELECT guild_id, cooldown_end FROM guild_announce_cooldown");
 
     if (!result)
     {
@@ -151,7 +151,7 @@ void GuildMgr::LoadGuilds()
     Guild *newguild;
     uint32 count = 0;
 
-    QueryResult* result = RealmDataDatabase.Query("SELECT guildid FROM guild");
+    QueryResult* result = CharacterDatabase.Query("SELECT guildid FROM guild");
 
     if (!result)
     {
@@ -187,7 +187,7 @@ void GuildMgr::LoadGuilds()
     while ( result->NextRow( ));
 
 
-    result = RealmDataDatabase.Query("SELECT MAX(guildid) FROM guild");
+    result = CharacterDatabase.Query("SELECT MAX(guildid) FROM guild");
     if (result)
         m_guildId = (*result)[0].GetUInt32()+1;
 
@@ -200,7 +200,7 @@ uint32 GuildMgr::GenerateGuildId()
 {
     if (m_guildId >= 0xFFFFFFFE)
     {
-        sLog.outLog(LOG_DEFAULT, "ERROR: Guild ids overflow!! Can't continue, shutting down server. ");
+        sLog.outError( "ERROR: Guild ids overflow!! Can't continue, shutting down server. ");
         World::StopNow(ERROR_EXIT_CODE);
     }
     return m_guildId++;
@@ -210,5 +210,5 @@ void GuildMgr::SaveGuildAnnCooldown(uint32 guild_id)
 {
     time_t tmpTime = time_t(time(NULL) + sWorld.getConfig(CONFIG_GUILD_ANN_COOLDOWN));
     m_guildCooldownTimes[guild_id] = tmpTime;
-    RealmDataDatabase.PExecute("REPLACE INTO guild_announce_cooldown VALUES ('%u', '" UI64FMTD "')", guild_id, uint64(tmpTime));
+    CharacterDatabase.PExecute("REPLACE INTO guild_announce_cooldown VALUES ('%u', '" UI64FMTD "')", guild_id, uint64(tmpTime));
 }

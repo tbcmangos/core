@@ -187,7 +187,7 @@ struct boss_selin_fireheartAI : public ScriptedAI
             else
             {
                 // Make an error message in case something weird happened here
-                error_log("TSCR: Selin Fireheart unable to drain crystal as the crystal is either dead or despawned");
+                sLog.outError("TSCR: Selin Fireheart unable to drain crystal as the crystal is either dead or despawned");
                 DrainingCrystal = false;
             }
         }

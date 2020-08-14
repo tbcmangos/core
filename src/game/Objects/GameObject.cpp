@@ -94,7 +94,7 @@ void GameObject::CleanupsBeforeDelete()
                 else if (IS_PET_GUID(owner_guid))
                     ownerType = "pet";
 
-                sLog.outLog(LOG_DEFAULT, "ERROR: Delete GameObject (GUID: %u Entry: %u SpellId %u LinkedGO %u) that lost references to owner (GUID %u Type '%s') GO list. Crash possible later.",
+                sLog.outError( "ERROR: Delete GameObject (GUID: %u Entry: %u SpellId %u LinkedGO %u) that lost references to owner (GUID %u Type '%s') GO list. Crash possible later.",
                     GetGUIDLow(), GetGOInfo()->id, m_spellId, GetLinkedGameObjectEntry(), GUID_LOPART(owner_guid), ownerType);
             }
         }
@@ -152,14 +152,14 @@ bool GameObject::Create(uint32 guidlow, uint32 name_id, Map *map, float x, float
 
     if (!IsPositionValid())
     {
-        sLog.outLog(LOG_DEFAULT, "ERROR: Gameobject (GUID: %u Entry: %u) not created. Suggested coordinates isn't valid (X: %f Y: %f)",guidlow,name_id,x,y);
+        sLog.outError( "ERROR: Gameobject (GUID: %u Entry: %u) not created. Suggested coordinates isn't valid (X: %f Y: %f)",guidlow,name_id,x,y);
         return false;
     }
 
     GameObjectInfo const* goinfo = ObjectMgr::GetGameObjectInfo(name_id);
     if (!goinfo)
     {
-        sLog.outLog(LOG_DB_ERR, "Gameobject (GUID: %u Entry: %u) not created: it have not exist entry in `gameobject_template`. Map: %u  (X: %f Y: %f Z: %f) ang: %f rotation0: %f rotation1: %f rotation2: %f rotation3: %f",guidlow, name_id, map->GetId(), x, y, z, ang, rotation0, rotation1, rotation2, rotation3);
+        sLog.outErrorDb( "Gameobject (GUID: %u Entry: %u) not created: it have not exist entry in `gameobject_template`. Map: %u  (X: %f Y: %f Z: %f) ang: %f rotation0: %f rotation1: %f rotation2: %f rotation3: %f",guidlow, name_id, map->GetId(), x, y, z, ang, rotation0, rotation1, rotation2, rotation3);
         return false;
     }
 
@@ -169,7 +169,7 @@ bool GameObject::Create(uint32 guidlow, uint32 name_id, Map *map, float x, float
 
     if (goinfo->type >= MAX_GAMEOBJECT_TYPE)
     {
-        sLog.outLog(LOG_DB_ERR, "Gameobject (GUID: %u Entry: %u) not created: it have not exist GO type '%u' in `gameobject_template`. It's will crash client if created.",guidlow,name_id,goinfo->type);
+        sLog.outErrorDb( "Gameobject (GUID: %u Entry: %u) not created: it have not exist GO type '%u' in `gameobject_template`. It's will crash client if created.",guidlow,name_id,goinfo->type);
         return false;
     }
 
@@ -548,7 +548,7 @@ void GameObject::SaveToDB()
     GameObjectData const *data = sObjectMgr.GetGOData(m_DBTableGuid);
     if (!data)
     {
-        sLog.outLog(LOG_DEFAULT, "ERROR: GameObject::SaveToDB failed, cannot get gameobject data!");
+        sLog.outError( "ERROR: GameObject::SaveToDB failed, cannot get gameobject data!");
         return;
     }
 
@@ -588,12 +588,12 @@ void GameObject::SaveToDB(uint32 mapid, uint8 spawnMask)
     static SqlStatementID saveGameObject;
     static SqlStatementID deleteGameObject;
 
-    GameDataDatabase.BeginTransaction();
+    WorldDatabase.BeginTransaction();
 
-    SqlStatement stmt = GameDataDatabase.CreateStatement(deleteGameObject,"DELETE FROM gameobject WHERE guid = ?");
+    SqlStatement stmt = WorldDatabase.CreateStatement(deleteGameObject,"DELETE FROM gameobject WHERE guid = ?");
     stmt.PExecute(m_DBTableGuid);
 
-    stmt = GameDataDatabase.CreateStatement(saveGameObject,"INSERT INTO gameobject VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+    stmt = WorldDatabase.CreateStatement(saveGameObject,"INSERT INTO gameobject VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
 
     stmt.addUInt64(m_DBTableGuid);
     stmt.addUInt32(GetUInt32Value(OBJECT_FIELD_ENTRY));
@@ -612,7 +612,7 @@ void GameObject::SaveToDB(uint32 mapid, uint8 spawnMask)
     stmt.addUInt32(GetGoState());
 
     stmt.Execute();
-    GameDataDatabase.CommitTransaction();
+    WorldDatabase.CommitTransaction();
 }
 
 bool GameObject::LoadFromDB(uint32 guid, Map *map)
@@ -621,7 +621,7 @@ bool GameObject::LoadFromDB(uint32 guid, Map *map)
 
     if (!data)
     {
-        sLog.outLog(LOG_DB_ERR, "ERROR: Gameobject (GUID: %u) not found in table `gameobject`, can't load. ",guid);
+        sLog.outErrorDb( "ERROR: Gameobject (GUID: %u) not found in table `gameobject`, can't load. ",guid);
         return false;
     }
 
@@ -692,10 +692,10 @@ void GameObject::DeleteFromDB()
     sObjectMgr.SaveGORespawnTime(m_DBTableGuid,GetInstanceId(),0);
     sObjectMgr.DeleteGOData(m_DBTableGuid);
 
-    SqlStatement stmt = GameDataDatabase.CreateStatement(deleteGO, "DELETE FROM gameobject WHERE guid = ?");
+    SqlStatement stmt = WorldDatabase.CreateStatement(deleteGO, "DELETE FROM gameobject WHERE guid = ?");
     stmt.PExecute(m_DBTableGuid);
 
-    stmt = GameDataDatabase.CreateStatement(deleteGEGO, "DELETE FROM game_event_gameobject WHERE guid = ?");
+    stmt = WorldDatabase.CreateStatement(deleteGEGO, "DELETE FROM game_event_gameobject WHERE guid = ?");
     stmt.PExecute(m_DBTableGuid);
 }
 
@@ -1217,7 +1217,7 @@ void GameObject::Use(Unit* user)
 
                     //provide error, no fishable zone or area should be 0
                     if (!zone_skill)
-                        sLog.outLog(LOG_DB_ERR, "Fishable areaId %u are not properly defined in `skill_fishing_base_level`.",subzone);
+                        sLog.outErrorDb( "Fishable areaId %u are not properly defined in `skill_fishing_base_level`.",subzone);
 
                     int32 skill = player->GetSkillValue(SKILL_FISHING);
                     int32 chance = skill - zone_skill + 5;

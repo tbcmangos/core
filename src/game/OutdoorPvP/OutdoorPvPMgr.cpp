@@ -46,15 +46,15 @@ void OutdoorPvPMgr::InitOutdoorPvP()
     // THIS CODE IS WRONG AND HACKISH !! Here we create continent maps, someday it will be done somewhere else ;]
     Map *pKingdom  = sMapMgr.CreateMap(0, NULL);       // Find Eastern Kingdom
     if (!pKingdom)
-        sLog.outLog(LOG_DEFAULT, "ERROR: Couldn't find map with id: 0");
+        sLog.outError( "ERROR: Couldn't find map with id: 0");
 
     Map *pKalimdor = sMapMgr.CreateMap(1, NULL);       // Find Kalimdor
     if (!pKalimdor)
-        sLog.outLog(LOG_DEFAULT, "ERROR: Couldn't find map with id: 1");
+        sLog.outError( "ERROR: Couldn't find map with id: 1");
 
     Map *pOutland  = sMapMgr.CreateMap(530, NULL);     // Find Outland
     if (!pOutland)
-        sLog.outLog(LOG_DEFAULT, "ERROR: Couldn't find map with id: 530");
+        sLog.outError( "ERROR: Couldn't find map with id: 530");
 
     // create new opvp
     OutdoorPvP * pOP = new OutdoorPvPHP;

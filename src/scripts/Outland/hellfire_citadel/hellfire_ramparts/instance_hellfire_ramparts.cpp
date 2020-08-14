@@ -88,7 +88,7 @@ struct instance_ramparts : public ScriptedInstance
             }
         }
 
-        debug_log("OSCR: Instance Hellfire Ramparts: GetPlayerInMap, but PlayerList is empty!");
+        sLog.outDebug("OSCR: Instance Hellfire Ramparts: GetPlayerInMap, but PlayerList is empty!");
         return NULL;
     }
 

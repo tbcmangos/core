@@ -39,7 +39,7 @@
 
 #include <sstream>
 
-extern DatabaseType AccountsDatabase;
+extern DatabaseType LoginDatabase;
 
 enum eStatus
 {
@@ -188,7 +188,7 @@ AuthSocket::AuthSocket()
     g.SetDword(7);
     _authed = false;
 
-    accountPermissionMask_ = PERM_PLAYER;
+    accountPermissionMask_ = SEC_PLAYER;
 
     _build = 0;
     patch_ = ACE_INVALID_HANDLE;
@@ -276,7 +276,7 @@ void AuthSocket::_SetVSFields(const std::string& rI)
     v_hex = v.AsHexStr();
     s_hex = s.AsHexStr();
 
-    AccountsDatabase.DirectPExecute("UPDATE account_session SET v = '%s', s = '%s' WHERE username = '%s'", v_hex, s_hex, _safelogin.c_str() );
+    LoginDatabase.DirectPExecute("UPDATE account_session SET v = '%s', s = '%s' WHERE username = '%s'", v_hex, s_hex, _safelogin.c_str() );
 
     OPENSSL_free((void*)v_hex);
     OPENSSL_free((void*)s_hex);
@@ -385,7 +385,7 @@ bool AuthSocket::_HandleLogonChallenge()
     else if (sRealmList.GetChatboxOsName() != "" && operatingSystem_ == sRealmList.GetChatboxOsName())
         OS = CLIENT_OS_CHAT;
     else {
-        sLog.outLog(LOG_WARDEN, "Client %s got unsupported operating system (%s)", _login.c_str(), operatingSystem_.c_str());
+        sLog.outWarden( "Client %s got unsupported operating system (%s)", _login.c_str(), operatingSystem_.c_str());
         return false;
     }
 
@@ -395,7 +395,7 @@ bool AuthSocket::_HandleLogonChallenge()
     //Escape the user login to avoid further SQL injection
     //Memory will be freed on AuthSocket object destruction
     _safelogin = _login;
-    AccountsDatabase.escape_string(_safelogin);
+    LoginDatabase.escape_string(_safelogin);
 
     pkt << (uint8) CMD_AUTH_LOGON_CHALLENGE;
     pkt << (uint8) 0x00;
@@ -416,9 +416,9 @@ bool AuthSocket::_HandleLogonChallenge()
 
     ///- Verify that this IP is not in the ip_banned table
     // No SQL injection possible (paste the IP address as passed by the socket)
-    AccountsDatabase.Execute("DELETE FROM ip_banned WHERE unbandate<=UNIX_TIMESTAMP() AND unbandate<>bandate");
-    AccountsDatabase.escape_string(address);
-    QueryResult* result = AccountsDatabase.PQuery("SELECT * FROM ip_banned WHERE ip = '%s'", address.c_str());
+    LoginDatabase.Execute("DELETE FROM ip_banned WHERE unbandate<=UNIX_TIMESTAMP() AND unbandate<>bandate");
+    LoginDatabase.escape_string(address);
+    QueryResult* result = LoginDatabase.PQuery("SELECT * FROM ip_banned WHERE ip = '%s'", address.c_str());
 
     if (result) // ip banned
     {
@@ -431,7 +431,7 @@ bool AuthSocket::_HandleLogonChallenge()
     ///- Get the account details from the account table
     // No SQL injection (escaped user name)
 
-    result = AccountsDatabase.PQuery("SELECT pass_hash, account.account_id, account_state_id, token_key, last_ip, permission_mask, email "
+    result = LoginDatabase.PQuery("SELECT pass_hash, account.account_id, account_state_id, token_key, last_ip, permission_mask, email "
                                      "FROM account JOIN account_permissions ON account.account_id = account_permissions.account_id "
                                      "WHERE username = '%s'", _safelogin.c_str());
 
@@ -475,7 +475,7 @@ bool AuthSocket::_HandleLogonChallenge()
             break;
     }
     ///- If the account is banned, reject the logon attempt
-    QueryResult*  banresult = AccountsDatabase.PQuery("SELECT punishment_date, expiration_date "
+    QueryResult*  banresult = LoginDatabase.PQuery("SELECT punishment_date, expiration_date "
                                                             "FROM account_punishment "
                                                             "WHERE account_id = '%u' AND punishment_type_id = '%u' AND active = 1 "
                                                             "AND (punishment_date = expiration_date OR expiration_date > UNIX_TIMESTAMP())", (*result)[1].GetUInt32(), PUNISHMENT_BAN);
@@ -497,7 +497,7 @@ bool AuthSocket::_HandleLogonChallenge()
         return true;
     }
 
-    QueryResult*  emailbanresult = AccountsDatabase.PQuery("SELECT email FROM email_banned WHERE email = '%s'", (*result)[5].GetString());
+    QueryResult*  emailbanresult = LoginDatabase.PQuery("SELECT email FROM email_banned WHERE email = '%s'", (*result)[5].GetString());
     if (emailbanresult)
     {
         pkt << uint8(WOW_FAIL_BANNED);
@@ -744,7 +744,7 @@ bool AuthSocket::_HandleLogonProof()
         // No SQL injection (escaped user name) and IP address as received by socket
         const char* K_hex = K.AsHexStr();
 
-        QueryResult* result = AccountsDatabase.PQuery("SELECT account_id FROM account WHERE username = '%s'", _safelogin.c_str());
+        QueryResult* result = LoginDatabase.PQuery("SELECT account_id FROM account WHERE username = '%s'", _safelogin.c_str());
 
         if (!result)
         {
@@ -765,10 +765,10 @@ bool AuthSocket::_HandleLogonProof()
         uint32 accId = result->Fetch()->GetUInt32();
 
         // direct to be sure that values will be set before character choose, this will slow down logging in a bit ;p
-        AccountsDatabase.DirectPExecute("UPDATE account_session SET session_key = '%s' WHERE account_id = '%u'", K_hex, accId);
+        LoginDatabase.DirectPExecute("UPDATE account_session SET session_key = '%s' WHERE account_id = '%u'", K_hex, accId);
 
         static SqlStatementID updateAccount;
-        SqlStatement stmt = AccountsDatabase.CreateStatement(updateAccount, "UPDATE account SET last_ip = ?, last_local_ip = ?, last_login = NOW(), locale_id = ?, failed_logins = 0, client_os_version_id = ? WHERE account_id = ?");
+        SqlStatement stmt = LoginDatabase.CreateStatement(updateAccount, "UPDATE account SET last_ip = ?, last_local_ip = ?, last_login = NOW(), locale_id = ?, failed_logins = 0, client_os_version_id = ? WHERE account_id = ?");
         std::string tmpIp = get_remote_address();
         stmt.addString(tmpIp.c_str());
         stmt.addString(localIp_.c_str());
@@ -809,11 +809,11 @@ bool AuthSocket::_HandleLogonProof()
         {
             static SqlStatementID updateAccountFailedLogins;
             //Increment number of failed logins by one and if it reaches the limit temporarily ban that account or IP
-            SqlStatement stmt = AccountsDatabase.CreateStatement(updateAccountFailedLogins, "UPDATE account SET failed_logins = failed_logins + 1 WHERE username = ?");
+            SqlStatement stmt = LoginDatabase.CreateStatement(updateAccountFailedLogins, "UPDATE account SET failed_logins = failed_logins + 1 WHERE username = ?");
             stmt.addString(_login);
             stmt.Execute();
 
-            if (QueryResult* loginfail = AccountsDatabase.PQuery("SELECT account_id, failed_logins FROM account WHERE username = '%s'", _safelogin.c_str()))
+            if (QueryResult* loginfail = LoginDatabase.PQuery("SELECT account_id, failed_logins FROM account WHERE username = '%s'", _safelogin.c_str()))
             {
                 Field* fields = loginfail->Fetch();
                 uint32 failed_logins = fields[1].GetUInt32();
@@ -823,7 +823,7 @@ bool AuthSocket::_HandleLogonProof()
                     if (sRealmList.GetWrongPassBanType())
                     {
                         uint32 acc_id = fields[0].GetUInt32();
-                        AccountsDatabase.PExecute("INSERT INTO account_punishment VALUES ('%u', '%u', UNIX_TIMESTAMP(), UNIX_TIMESTAMP()+%u, 'Realm', 'Incorrect password for: %u times. Ban for: %u seconds', '1')",
+                        LoginDatabase.PExecute("INSERT INTO account_punishment VALUES ('%u', '%u', UNIX_TIMESTAMP(), UNIX_TIMESTAMP()+%u, 'Realm', 'Incorrect password for: %u times. Ban for: %u seconds', '1')",
                                                 acc_id, PUNISHMENT_BAN, sRealmList.GetWrongPassBanTime(), failed_logins, sRealmList.GetWrongPassBanTime());
                         sLog.outBasic("[AuthChallenge] account %s got banned for '%u' seconds because it failed to authenticate '%u' times",
                             _login.c_str(), sRealmList.GetWrongPassBanTime(), failed_logins);
@@ -831,8 +831,8 @@ bool AuthSocket::_HandleLogonProof()
                     else
                     {
                         std::string current_ip = get_remote_address();
-                        AccountsDatabase.escape_string(current_ip);
-                        AccountsDatabase.PExecute("INSERT INTO ip_banned VALUES ('%s',UNIX_TIMESTAMP(),UNIX_TIMESTAMP()+'%u','Realm','Incorrect password for: %u times. Ban for: %u seconds')",
+                        LoginDatabase.escape_string(current_ip);
+                        LoginDatabase.PExecute("INSERT INTO ip_banned VALUES ('%s',UNIX_TIMESTAMP(),UNIX_TIMESTAMP()+'%u','Realm','Incorrect password for: %u times. Ban for: %u seconds')",
                             current_ip.c_str(), sRealmList.GetWrongPassBanTime(), failed_logins, sRealmList.GetWrongPassBanTime());
                         sLog.outBasic("[AuthChallenge] IP %s got banned for '%u' seconds because account %s failed to authenticate '%u' times",
                             current_ip.c_str(), sRealmList.GetWrongPassBanTime(), _login.c_str(), failed_logins);
@@ -877,17 +877,17 @@ bool AuthSocket::_HandleReconnectChallenge()
     _login = (const char*)ch->I;
 
     _safelogin = _login;
-    AccountsDatabase.escape_string(_safelogin);
+    LoginDatabase.escape_string(_safelogin);
 
     EndianConvert(ch->build);
     _build = ch->build;
 
-    QueryResult*  result = AccountsDatabase.PQuery("SELECT session_key FROM account JOIN account_session ON account.account_id = account_session.account_id WHERE username = '%s'", _safelogin.c_str());
+    QueryResult*  result = LoginDatabase.PQuery("SELECT session_key FROM account JOIN account_session ON account.account_id = account_session.account_id WHERE username = '%s'", _safelogin.c_str());
 
     // Stop if the account is not found
     if (!result)
     {
-        sLog.outLog(LOG_DEFAULT, "ERROR: [ERROR] user %s tried to login and we cannot find his session key in the database.", _login.c_str());
+        sLog.outError( "ERROR: [ERROR] user %s tried to login and we cannot find his session key in the database.", _login.c_str());
         close_connection();
         return false;
     }
@@ -943,7 +943,7 @@ bool AuthSocket::_HandleReconnectProof()
     }
     else
     {
-        sLog.outLog(LOG_DEFAULT, "ERROR: [ERROR] user %s tried to login, but session invalid.", _login.c_str());
+        sLog.outError( "ERROR: [ERROR] user %s tried to login, but session invalid.", _login.c_str());
         close_connection();
         return false;
     }
@@ -961,10 +961,10 @@ bool AuthSocket::_HandleRealmList()
     ///- Get the user id (else close the connection)
     // No SQL injection (escaped user name)
 
-    QueryResult*  result = AccountsDatabase.PQuery("SELECT account_id, pass_hash FROM account WHERE username = '%s'", _safelogin.c_str());
+    QueryResult*  result = LoginDatabase.PQuery("SELECT account_id, pass_hash FROM account WHERE username = '%s'", _safelogin.c_str());
     if (!result)
     {
-        sLog.outLog(LOG_DEFAULT, "ERROR: [ERROR] user %s tried to login and we cannot find him in the database.",_login.c_str());
+        sLog.outError( "ERROR: [ERROR] user %s tried to login and we cannot find him in the database.",_login.c_str());
         close_connection();
         return false;
     }
@@ -1004,7 +1004,7 @@ void AuthSocket::LoadRealmlist(ByteBuffer &pkt, uint32 acctid)
                 uint8 AmountOfCharacters;
 
                 // No SQL injection. id of realm is controlled by the database.
-                QueryResult* result = AccountsDatabase.PQuery( "SELECT characters_count FROM realm_characters WHERE realm_id = '%u' AND account_id = '%u'", i->second.m_ID, acctid);
+                QueryResult* result = LoginDatabase.PQuery( "SELECT characters_count FROM realm_characters WHERE realm_id = '%u' AND account_id = '%u'", i->second.m_ID, acctid);
                 if (result)
                 {
                     Field *fields = result->Fetch();
@@ -1064,7 +1064,7 @@ void AuthSocket::LoadRealmlist(ByteBuffer &pkt, uint32 acctid)
                 uint8 AmountOfCharacters;
 
                 // No SQL injection. id of realm is controlled by the database.
-                QueryResult* result = AccountsDatabase.PQuery("SELECT characters_count FROM realm_characters WHERE realm_id = '%u' AND account_id = '%u'", i->second.m_ID, acctid);
+                QueryResult* result = LoginDatabase.PQuery("SELECT characters_count FROM realm_characters WHERE realm_id = '%u' AND account_id = '%u'", i->second.m_ID, acctid);
                 if (result)
                 {
                     Field *fields = result->Fetch();

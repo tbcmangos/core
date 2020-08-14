@@ -55,7 +55,7 @@ class Bag : public Item
         // overwrite virtual Item::SaveToDB
         void SaveToDB();
         // overwrite virtual Item::LoadFromDB
-        bool LoadFromDB(uint32 guid, uint64 owner_guid, QueryResult* result = QueryResult*(NULL));
+        bool LoadFromDB(uint32 guid, uint64 owner_guid, QueryResult* result = nullptr);
         // overwrite virtual Item::DeleteFromDB
         void DeleteFromDB();
 

@@ -329,7 +329,7 @@ bool ChatHandler::HandleSaveCommand(const char* /*args*/)
     Player *player=m_session->GetPlayer();
 
     // save GM account without delay and output message (testing, etc)
-    if (m_session->HasPermissions(PERM_GMT))
+    if (m_session->HasPermissions(SEC_GAMEMASTER))
     {
         player->SaveToDB();
         SendSysMessage(LANG_PLAYER_SAVED);
@@ -406,14 +406,14 @@ bool ChatHandler::HandleLockAccountCommand(const char* args)
     std::string argstr = (char*)args;
     if (argstr == "on")
     {
-        AccountsDatabase.PExecute("UPDATE account SET account_state_id = '2' WHERE account_id = '%u'",m_session->GetAccountId());
+        LoginDatabase.PExecute("UPDATE account SET account_state_id = '2' WHERE account_id = '%u'",m_session->GetAccountId());
         PSendSysMessage(LANG_COMMAND_ACCLOCKLOCKED);
         return true;
     }
 
     if (argstr == "off")
     {
-        AccountsDatabase.PExecute("UPDATE account SET account_state_id = '1' WHERE account_id = '%u'",m_session->GetAccountId());
+        LoginDatabase.PExecute("UPDATE account SET account_state_id = '1' WHERE account_id = '%u'",m_session->GetAccountId());
         PSendSysMessage(LANG_COMMAND_ACCLOCKUNLOCKED);
         return true;
     }

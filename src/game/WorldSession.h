@@ -29,7 +29,7 @@
 #include "Log.h"
 #include "SharedDefines.h"
 #include "AuctionHouseMgr.h"
-#include "WardenBase.h"
+#include "Warden.h"
 #include "Item.h"
 
 struct ItemPrototype;

@@ -119,7 +119,7 @@ struct instance_sethekk_halls : public ScriptedInstance
             }
         }
         else
-            debug_log("TSCR: Instance Sethek Halls: PlayerList is empty!");
+            sLog.outDebug("TSCR: Instance Sethek Halls: PlayerList is empty!");
     }
 
     void SetData(uint32 type, uint32 data)

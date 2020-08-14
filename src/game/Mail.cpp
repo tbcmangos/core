@@ -66,7 +66,7 @@ MailSender::MailSender( Object* sender, MailStationery stationery ) : m_statione
         default:
             m_messageType = MAIL_NORMAL;
             m_senderId = 0;                                 // will show mail from nonexistent player
-            sLog.outLog(LOG_DEFAULT, "ERROR: MailSender::MailSender - Mail have unexpected sender typeid (%u)", sender->GetTypeId());
+            sLog.outError( "ERROR: MailSender::MailSender - Mail have unexpected sender typeid (%u)", sender->GetTypeId());
             break;
     }
 }
@@ -176,7 +176,7 @@ void MailDraft::deleteIncludedItems( bool inDB /**= false*/ )
         Item* item = mailItemIter->second;
 
         if(inDB)
-            RealmDataDatabase.PExecute("DELETE FROM item_instance WHERE guid='%u'", item->GetGUIDLow());
+            CharacterDatabase.PExecute("DELETE FROM item_instance WHERE guid='%u'", item->GetGUIDLow());
 
         delete item;
     }
@@ -247,15 +247,15 @@ void MailDraft::SendReturnToSender(uint32 sender_acc, ObjectGuid sender_guid, Ob
         needItemDelay = sender_acc != rc_account;
 
         // set owner to new receiver (to prevent delete item with sender char deleting)
-        RealmDataDatabase.BeginTransaction();
+        CharacterDatabase.BeginTransaction();
         for (MailItemMap::iterator mailItemIter = m_items.begin(); mailItemIter != m_items.end(); ++mailItemIter)
         {
             Item* item = mailItemIter->second;
             item->SaveToDB();                               // item not in inventory and can be save standalone
             // owner in data will set at mail receive and item extracting
-            RealmDataDatabase.PExecute("UPDATE item_instance SET owner_guid = '%u' WHERE guid='%u'", receiver_guid.GetCounter(), item->GetGUIDLow());
+            CharacterDatabase.PExecute("UPDATE item_instance SET owner_guid = '%u' WHERE guid='%u'", receiver_guid.GetCounter(), item->GetGUIDLow());
         }
-        RealmDataDatabase.CommitTransaction();
+        CharacterDatabase.CommitTransaction();
     }
 
     // If theres is an item, there is a one hour delivery delay.
@@ -317,19 +317,19 @@ void MailDraft::SendMailTo(MailReceiver const& receiver, MailSender const& sende
     // Add to DB
     std::string safe_subject = GetSubject();
 
-    RealmDataDatabase.BeginTransaction();
-    RealmDataDatabase.escape_string(safe_subject);
-    RealmDataDatabase.PExecute("INSERT INTO mail (id,messageType,stationery,mailTemplateId,sender,receiver,subject,itemTextId,has_items,expire_time,deliver_time,money,cod,checked) "
+    CharacterDatabase.BeginTransaction();
+    CharacterDatabase.escape_string(safe_subject);
+    CharacterDatabase.PExecute("INSERT INTO mail (id,messageType,stationery,mailTemplateId,sender,receiver,subject,itemTextId,has_items,expire_time,deliver_time,money,cod,checked) "
         "VALUES ('%u', '%u', '%u', '%u', '%u', '%u', '%s', '%u', '%u', '" UI64FMTD "','" UI64FMTD "', '%u', '%u', '%u')",
         mailId, sender.GetMailMessageType(), sender.GetStationery(), GetMailTemplateId(), sender.GetSenderId(), receiver.GetPlayerGuid().GetCounter(), safe_subject.c_str(), GetBodyId(), (has_items ? 1 : 0), (uint64)expire_time, (uint64)deliver_time, m_money, m_COD, checked);
 
     for(MailItemMap::const_iterator mailItemIter = m_items.begin(); mailItemIter != m_items.end(); ++mailItemIter)
     {
         Item* item = mailItemIter->second;
-        RealmDataDatabase.PExecute("INSERT INTO mail_items (mail_id,item_guid,item_template,receiver) VALUES ('%u', '%u', '%u','%u')",
+        CharacterDatabase.PExecute("INSERT INTO mail_items (mail_id,item_guid,item_template,receiver) VALUES ('%u', '%u', '%u','%u')",
             mailId, item->GetGUIDLow(), item->GetEntry(), receiver.GetPlayerGuid().GetCounter());
     }
-    RealmDataDatabase.CommitTransaction();
+    CharacterDatabase.CommitTransaction();
 
     // For online receiver update in game mail status and data
     if (pReceiver)
@@ -389,8 +389,8 @@ void Mail::prepareTemplateItems( Player* receiver )
     // can be empty
     mailLoot.FillLoot(mailTemplateId, LootTemplates_QuestMail, receiver, true);
 
-    RealmDataDatabase.BeginTransaction();
-    RealmDataDatabase.PExecute("UPDATE mail SET has_items = 1 WHERE id = %u", messageID);
+    CharacterDatabase.BeginTransaction();
+    CharacterDatabase.PExecute("UPDATE mail SET has_items = 1 WHERE id = %u", messageID);
 
     uint32 max_slot = mailLoot.GetMaxSlotInLootFor(receiver);
     for(uint32 i = 0; items.size() < MAX_MAIL_ITEMS && i < max_slot; ++i)
@@ -405,13 +405,13 @@ void Mail::prepareTemplateItems( Player* receiver )
 
                 receiver->AddMItem(item);
 
-                RealmDataDatabase.PExecute("INSERT INTO mail_items (mail_id,item_guid,item_template,receiver) VALUES ('%u', '%u', '%u','%u')",
+                CharacterDatabase.PExecute("INSERT INTO mail_items (mail_id,item_guid,item_template,receiver) VALUES ('%u', '%u', '%u','%u')",
                     messageID, item->GetGUIDLow(), item->GetEntry(), receiver->GetGUIDLow());
             }
         }
     }
 
-    RealmDataDatabase.CommitTransaction();
+    CharacterDatabase.CommitTransaction();
 }
 
 /*! @} */
@@ -421,7 +421,7 @@ void WorldSession::SendExternalMails()
     if (!sWorld.getConfig(CONFIG_EXTERNAL_MAIL))
         return;
 
-    QueryResult* result = RealmDataDatabase.PQuery("SELECT id, subject, message, money, item, item_count FROM mail_external WHERE receiver = %u", GetPlayer()->GetGUIDLow());
+    QueryResult* result = CharacterDatabase.PQuery("SELECT id, subject, message, money, item, item_count FROM mail_external WHERE receiver = %u", GetPlayer()->GetGUIDLow());
     if (result)
     {
         do
@@ -441,7 +441,7 @@ void WorldSession::SendExternalMails()
                 sLog.outDebug("EXTERNAL MAIL> Sending mail to %u, Item:%u", receiver->GetGUIDLow(), ItemID);
                 uint32 itemTextId = !message.empty() ? sObjectMgr.CreateItemText(message) : 0;
 
-                RealmDataDatabase.PExecute("DELETE FROM mail_external WHERE id=%u", id);
+                CharacterDatabase.PExecute("DELETE FROM mail_external WHERE id=%u", id);
 
                 if (ItemID != 0)
                 {

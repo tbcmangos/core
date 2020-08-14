@@ -209,7 +209,7 @@ void WorldSession::HandlePetitionBuyOpcode(WorldPacket & recv_data)
     // a petition is invalid, if both the owner and the type matches
     // we checked above, if this player is in an arenateam, so this must be
     // datacorruption
-    QueryResult* result = RealmDataDatabase.PQuery("SELECT petitionguid FROM petition WHERE ownerguid = '%u'  AND type = '%u'", _player->GetGUIDLow(), type);
+    QueryResult* result = CharacterDatabase.PQuery("SELECT petitionguid FROM petition WHERE ownerguid = '%u'  AND type = '%u'", _player->GetGUIDLow(), type);
 
     std::ostringstream ssInvalidPetitionGUIDs;
 
@@ -228,13 +228,13 @@ void WorldSession::HandlePetitionBuyOpcode(WorldPacket & recv_data)
     ssInvalidPetitionGUIDs << "'" << charter->GetGUIDLow() << "'";
 
     sLog.outDebug("Invalid petition GUIDs: %s", ssInvalidPetitionGUIDs.str().c_str());
-    RealmDataDatabase.escape_string(name);
-    RealmDataDatabase.BeginTransaction();
-    RealmDataDatabase.PExecute("DELETE FROM petition WHERE petitionguid IN (%s)",  ssInvalidPetitionGUIDs.str().c_str());
-    RealmDataDatabase.PExecute("DELETE FROM petition_sign WHERE petitionguid IN (%s)", ssInvalidPetitionGUIDs.str().c_str());
-    RealmDataDatabase.PExecute("INSERT INTO petition (ownerguid, petitionguid, name, type) VALUES ('%u', '%u', '%s', '%u')",
+    CharacterDatabase.escape_string(name);
+    CharacterDatabase.BeginTransaction();
+    CharacterDatabase.PExecute("DELETE FROM petition WHERE petitionguid IN (%s)",  ssInvalidPetitionGUIDs.str().c_str());
+    CharacterDatabase.PExecute("DELETE FROM petition_sign WHERE petitionguid IN (%s)", ssInvalidPetitionGUIDs.str().c_str());
+    CharacterDatabase.PExecute("INSERT INTO petition (ownerguid, petitionguid, name, type) VALUES ('%u', '%u', '%s', '%u')",
         _player->GetGUIDLow(), charter->GetGUIDLow(), name.c_str(), type);
-    RealmDataDatabase.CommitTransaction();
+    CharacterDatabase.CommitTransaction();
 }
 
 void WorldSession::HandlePetitionShowSignOpcode(WorldPacket & recv_data)
@@ -252,10 +252,10 @@ void WorldSession::HandlePetitionShowSignOpcode(WorldPacket & recv_data)
     // solve (possible) some strange compile problems with explicit use GUID_LOPART(petitionguid) at some GCC versions (wrong code optimization in compiler?)
     uint32 petitionguid_low = GUID_LOPART(petitionguid);
 
-    QueryResult* result = RealmDataDatabase.PQuery("SELECT type FROM petition WHERE petitionguid = '%u'", petitionguid_low);
+    QueryResult* result = CharacterDatabase.PQuery("SELECT type FROM petition WHERE petitionguid = '%u'", petitionguid_low);
     if (!result)
     {
-        sLog.outLog(LOG_DEFAULT, "ERROR: any petition on server...");
+        sLog.outError( "ERROR: any petition on server...");
         return;
     }
     Field *fields = result->Fetch();
@@ -265,7 +265,7 @@ void WorldSession::HandlePetitionShowSignOpcode(WorldPacket & recv_data)
     if (type==9 && _player->GetGuildId())
         return;
 
-    result = RealmDataDatabase.PQuery("SELECT playerguid FROM petition_sign WHERE petitionguid = '%u'", petitionguid_low);
+    result = CharacterDatabase.PQuery("SELECT playerguid FROM petition_sign WHERE petitionguid = '%u'", petitionguid_low);
 
     // result==NULL also correct in case no sign yet
     if (result)
@@ -315,7 +315,7 @@ void WorldSession::SendPetitionQueryOpcode(uint64 petitionguid)
     std::string name = "NO_NAME_FOR_GUID";
     uint8 signs = 0;
 
-    QueryResult* result = RealmDataDatabase.PQuery(
+    QueryResult* result = CharacterDatabase.PQuery(
         "SELECT ownerguid, name, "
         "  (SELECT COUNT(playerguid) FROM petition_sign WHERE petition_sign.petitionguid = '%u') AS signs, "
         "  type "
@@ -386,7 +386,7 @@ void WorldSession::HandlePetitionRenameOpcode(WorldPacket & recv_data)
     if (!item)
         return;
 
-    QueryResult* result = RealmDataDatabase.PQuery("SELECT type FROM petition WHERE petitionguid = '%u'", GUID_LOPART(petitionguid));
+    QueryResult* result = CharacterDatabase.PQuery("SELECT type FROM petition WHERE petitionguid = '%u'", GUID_LOPART(petitionguid));
 
     if (result)
     {
@@ -427,8 +427,8 @@ void WorldSession::HandlePetitionRenameOpcode(WorldPacket & recv_data)
     }
 
     std::string db_newname = newname;
-    RealmDataDatabase.escape_string(db_newname);
-    RealmDataDatabase.PExecute("UPDATE petition SET name = '%s' WHERE petitionguid = '%u'",
+    CharacterDatabase.escape_string(db_newname);
+    CharacterDatabase.PExecute("UPDATE petition SET name = '%s' WHERE petitionguid = '%u'",
         db_newname.c_str(), GUID_LOPART(petitionguid));
 
     sLog.outDebug("Petition (GUID: %u) renamed to '%s'", GUID_LOPART(petitionguid), newname.c_str());
@@ -451,7 +451,7 @@ void WorldSession::HandlePetitionSignOpcode(WorldPacket & recv_data)
     recv_data >> petitionguid;                              // petition guid
     recv_data >> unk;
 
-    QueryResult* result = RealmDataDatabase.PQuery(
+    QueryResult* result = CharacterDatabase.PQuery(
         "SELECT ownerguid, "
         "  (SELECT COUNT(playerguid) FROM petition_sign WHERE petition_sign.petitionguid = '%u') AS signs, "
         "  type "
@@ -459,7 +459,7 @@ void WorldSession::HandlePetitionSignOpcode(WorldPacket & recv_data)
 
     if (!result)
     {
-        sLog.outLog(LOG_DEFAULT, "ERROR: any petition on server...");
+        sLog.outError( "ERROR: any petition on server...");
         return;
     }
 
@@ -525,7 +525,7 @@ void WorldSession::HandlePetitionSignOpcode(WorldPacket & recv_data)
 
     //client doesn't allow to sign petition two times by one character, but not check sign by another character from same account
     //not allow sign another player from already sign player account
-    result = RealmDataDatabase.PQuery("SELECT playerguid FROM petition_sign WHERE player_account = '%u' AND petitionguid = '%u'", GetAccountId(), GUID_LOPART(petitionguid));
+    result = CharacterDatabase.PQuery("SELECT playerguid FROM petition_sign WHERE player_account = '%u' AND petitionguid = '%u'", GetAccountId(), GUID_LOPART(petitionguid));
 
     if (result)
     {
@@ -543,7 +543,7 @@ void WorldSession::HandlePetitionSignOpcode(WorldPacket & recv_data)
         return;
     }
 
-    RealmDataDatabase.PExecute("INSERT INTO petition_sign (ownerguid,petitionguid, playerguid, player_account) VALUES ('%u', '%u', '%u','%u')", GUID_LOPART(ownerguid),GUID_LOPART(petitionguid), plguidlo,GetAccountId());
+    CharacterDatabase.PExecute("INSERT INTO petition_sign (ownerguid,petitionguid, playerguid, player_account) VALUES ('%u', '%u', '%u','%u')", GUID_LOPART(ownerguid),GUID_LOPART(petitionguid), plguidlo,GetAccountId());
 
     sLog.outDebug("PETITION SIGN: GUID %u by player: %s (GUID: %u Account: %u)", GUID_LOPART(petitionguid), _player->GetName(),plguidlo,GetAccountId());
 
@@ -577,7 +577,7 @@ void WorldSession::HandlePetitionDeclineOpcode(WorldPacket & recv_data)
     recv_data >> petitionguid;                              // petition guid
     sLog.outDebug("Petition %u declined by %u", GUID_LOPART(petitionguid), _player->GetGUIDLow());
 
-    QueryResult* result = RealmDataDatabase.PQuery("SELECT ownerguid FROM petition WHERE petitionguid = '%u'", GUID_LOPART(petitionguid));
+    QueryResult* result = CharacterDatabase.PQuery("SELECT ownerguid FROM petition WHERE petitionguid = '%u'", GUID_LOPART(petitionguid));
     if (!result)
         return;
 
@@ -612,7 +612,7 @@ void WorldSession::HandleOfferPetitionOpcode(WorldPacket & recv_data)
     if (!player)
         return;
 
-    QueryResult* result = RealmDataDatabase.PQuery("SELECT type FROM petition WHERE petitionguid = '%u'", GUID_LOPART(petitionguid));
+    QueryResult* result = CharacterDatabase.PQuery("SELECT type FROM petition WHERE petitionguid = '%u'", GUID_LOPART(petitionguid));
     if (!result)
         return;
 
@@ -671,7 +671,7 @@ void WorldSession::HandleOfferPetitionOpcode(WorldPacket & recv_data)
         }
     }
 
-    result = RealmDataDatabase.PQuery("SELECT playerguid FROM petition_sign WHERE petitionguid = '%u'", GUID_LOPART(petitionguid));
+    result = CharacterDatabase.PQuery("SELECT playerguid FROM petition_sign WHERE petitionguid = '%u'", GUID_LOPART(petitionguid));
     // result==NULL also correct charter without signs
     if (result)
         signs = result->GetRowCount();
@@ -715,7 +715,7 @@ void WorldSession::HandleTurnInPetitionOpcode(WorldPacket & recv_data)
     sLog.outDebug("Petition %u turned in by %u", GUID_LOPART(petitionguid), _player->GetGUIDLow());
 
     // data
-    QueryResult* result = RealmDataDatabase.PQuery("SELECT ownerguid, name, type FROM petition WHERE petitionguid = '%u'", GUID_LOPART(petitionguid));
+    QueryResult* result = CharacterDatabase.PQuery("SELECT ownerguid, name, type FROM petition WHERE petitionguid = '%u'", GUID_LOPART(petitionguid));
     if (result)
     {
         Field *fields = result->Fetch();
@@ -725,7 +725,7 @@ void WorldSession::HandleTurnInPetitionOpcode(WorldPacket & recv_data)
     }
     else
     {
-        sLog.outLog(LOG_DEFAULT, "ERROR: petition table has broken data!");
+        sLog.outError( "ERROR: petition table has broken data!");
         return;
     }
 
@@ -760,7 +760,7 @@ void WorldSession::HandleTurnInPetitionOpcode(WorldPacket & recv_data)
 
     // signs
     uint8 signs;
-    result = RealmDataDatabase.PQuery("SELECT playerguid FROM petition_sign WHERE petitionguid = '%u'", GUID_LOPART(petitionguid));
+    result = CharacterDatabase.PQuery("SELECT playerguid FROM petition_sign WHERE petitionguid = '%u'", GUID_LOPART(petitionguid));
     if (result)
         signs = result->GetRowCount();
     else
@@ -832,7 +832,7 @@ void WorldSession::HandleTurnInPetitionOpcode(WorldPacket & recv_data)
         ArenaTeam* at = new ArenaTeam;
         if (!at->Create(_player->GetGUID(), type, name))
         {
-            sLog.outLog(LOG_DEFAULT, "ERROR: PetitionsHandler: arena team create failed.");
+            sLog.outError( "ERROR: PetitionsHandler: arena team create failed.");
             delete at;
             return;
         }
@@ -858,10 +858,10 @@ void WorldSession::HandleTurnInPetitionOpcode(WorldPacket & recv_data)
         }
     }
 
-    RealmDataDatabase.BeginTransaction();
-    RealmDataDatabase.PExecute("DELETE FROM petition WHERE petitionguid = '%u'", GUID_LOPART(petitionguid));
-    RealmDataDatabase.PExecute("DELETE FROM petition_sign WHERE petitionguid = '%u'", GUID_LOPART(petitionguid));
-    RealmDataDatabase.CommitTransaction();
+    CharacterDatabase.BeginTransaction();
+    CharacterDatabase.PExecute("DELETE FROM petition WHERE petitionguid = '%u'", GUID_LOPART(petitionguid));
+    CharacterDatabase.PExecute("DELETE FROM petition_sign WHERE petitionguid = '%u'", GUID_LOPART(petitionguid));
+    CharacterDatabase.CommitTransaction();
 
     // created
     sLog.outDebug("TURN IN PETITION GUID %u", GUID_LOPART(petitionguid));

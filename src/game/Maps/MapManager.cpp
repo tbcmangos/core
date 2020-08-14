@@ -59,7 +59,7 @@ void MapManager::Initialize()
     // Start mtmaps if needed.
     if (m_updater.activate(num_threads) == -1)
     {
-        sLog.outLog(LOG_DEFAULT, "ERROR: MapUpdater cannot be activated !!!!!");
+        sLog.outError( "ERROR: MapUpdater cannot be activated !!!!!");
         abort();
     }
 }
@@ -307,7 +307,7 @@ void MapManager::InitMaxInstanceId()
 {
     i_MaxInstanceId = 0;
 
-    QueryResult* result = RealmDataDatabase.Query("SELECT MAX(id) FROM instance");
+    QueryResult* result = CharacterDatabase.Query("SELECT MAX(id) FROM instance");
     if (result)
         i_MaxInstanceId = result->Fetch()[0].GetUInt32();
 }
@@ -397,13 +397,13 @@ InstanceMap* MapManager::CreateInstanceMap(uint32 id, uint32 InstanceId, Dungeon
     const MapEntry* entry = sMapStore.LookupEntry(id);
     if (!entry)
     {
-        sLog.outLog(LOG_DEFAULT, "ERROR: CreateInstanceMap: no entry for map %d", id);
+        sLog.outError( "ERROR: CreateInstanceMap: no entry for map %d", id);
         ASSERT(false);
     }
 
     if (!ObjectMgr::GetInstanceTemplate(id))
     {
-        sLog.outLog(LOG_DEFAULT, "ERROR: CreateInstanceMap: no instance template for map %d", id);
+        sLog.outError( "ERROR: CreateInstanceMap: no instance template for map %d", id);
         ASSERT(false);
     }
 

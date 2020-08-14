@@ -344,7 +344,7 @@ float UnitAI::DoGetSpellMaxRange(uint32 spellId, bool positive)
 void UnitAI::DoCast(uint32 spellId)
 {
     Unit *target = NULL;
-    //sLog.outLog(LOG_DEFAULT, "ERROR: aggre %u %u", spellId, (uint32)AISpellEntry[spellId].target);
+    //sLog.outError( "ERROR: aggre %u %u", spellId, (uint32)AISpellEntry[spellId].target);
     switch (AISpellEntry[spellId].target)
     {
         default:

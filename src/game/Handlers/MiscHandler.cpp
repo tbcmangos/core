@@ -282,14 +282,14 @@ void WorldSession::HandleWhoOpcode(WorldPacket & recv_data)
     HashMapHolder<Player>::MapType& m = sObjectAccessor.GetPlayers();
     for (HashMapHolder<Player>::MapType::iterator itr = m.begin(); itr != m.end(); ++itr)
     {
-        if (!HasPermissions(PERM_GMT_HDEV))
+        if (!HasPermissions(SEC_DEVELOPPER))
         {
             // player can see member of other team only if CONFIG_ALLOW_TWO_SIDE_WHO_LIST
             if (itr->second->GetTeam() != team && !allowTwoSideWhoList)
                 continue;
 
             // player can see MODERATOR, GAME MASTER, ADMINISTRATOR only if CONFIG_GM_IN_WHO_LIST
-            if (itr->second->GetSession()->HasPermissions(PERM_GMT) && !gmInWhoList)
+            if (itr->second->GetSession()->HasPermissions(SEC_GAMEMASTER) && !gmInWhoList)
                 continue;
         }
 
@@ -610,12 +610,12 @@ void WorldSession::HandleAddFriendOpcode(WorldPacket & recv_data)
     if (!normalizePlayerName(friendName))
         return;
 
-    RealmDataDatabase.escape_string(friendName);            // prevent SQL injection - normal name don't must changed by this call
+    CharacterDatabase.escape_string(friendName);            // prevent SQL injection - normal name don't must changed by this call
 
     sLog.outDebug("WORLD: %s asked to add friend : '%s'",
         GetPlayer()->GetName(), friendName.c_str());
 
-    RealmDataDatabase.AsyncPQuery(&WorldSession::HandleAddFriendOpcodeCallBack, GetAccountId(), friendNote, "SELECT guid, race, account FROM characters WHERE name = '%s'", friendName.c_str());
+    CharacterDatabase.AsyncPQuery(&WorldSession::HandleAddFriendOpcodeCallBack, GetAccountId(), friendNote, "SELECT guid, race, account FROM characters WHERE name = '%s'", friendName.c_str());
 }
 
 void WorldSession::HandleAddFriendOpcodeCallBack(QueryResult* result, uint32 accountId, std::string friendNote)
@@ -639,12 +639,12 @@ void WorldSession::HandleAddFriendOpcodeCallBack(QueryResult* result, uint32 acc
         team = Player::TeamForRace((*result)[1].GetUInt8());
         friendAcctid = (*result)[2].GetUInt32();
 
-        if (session->HasPermissions(PERM_GMT_HDEV) || sWorld.getConfig(CONFIG_ALLOW_GM_FRIEND) || !AccountMgr::HasPermissions(friendAcctid, PERM_GMT))
+        if (session->HasPermissions(SEC_DEVELOPPER) || sWorld.getConfig(CONFIG_ALLOW_GM_FRIEND) || !AccountMgr::HasPermissions(friendAcctid, SEC_GAMEMASTER))
             if (friendGuid)
             {
                 if (friendGuid==session->GetPlayer()->GetGUID())
                     friendResult = FRIEND_SELF;
-                else if (session->GetPlayer()->GetTeam() != team && !sWorld.getConfig(CONFIG_ALLOW_TWO_SIDE_ADD_FRIEND) && !session->HasPermissions(PERM_GMT_HDEV))
+                else if (session->GetPlayer()->GetTeam() != team && !sWorld.getConfig(CONFIG_ALLOW_TWO_SIDE_ADD_FRIEND) && !session->HasPermissions(SEC_DEVELOPPER))
                     friendResult = FRIEND_ENEMY;
                 else if (session->GetPlayer()->GetSocial()->HasFriend(GUID_LOPART(friendGuid)))
                     friendResult = FRIEND_ALREADY;
@@ -700,12 +700,12 @@ void WorldSession::HandleAddIgnoreOpcode(WorldPacket & recv_data)
     if (!normalizePlayerName(IgnoreName))
         return;
 
-    RealmDataDatabase.escape_string(IgnoreName);            // prevent SQL injection - normal name don't must changed by this call
+    CharacterDatabase.escape_string(IgnoreName);            // prevent SQL injection - normal name don't must changed by this call
 
     sLog.outDebug("WORLD: %s asked to Ignore: '%s'",
         GetPlayer()->GetName(), IgnoreName.c_str());
 
-    RealmDataDatabase.AsyncPQuery(&WorldSession::HandleAddIgnoreOpcodeCallBack, GetAccountId(), "SELECT guid FROM characters WHERE name = '%s'", IgnoreName.c_str());
+    CharacterDatabase.AsyncPQuery(&WorldSession::HandleAddIgnoreOpcodeCallBack, GetAccountId(), "SELECT guid FROM characters WHERE name = '%s'", IgnoreName.c_str());
 }
 
 void WorldSession::HandleAddIgnoreOpcodeCallBack(QueryResult* result, uint32 accountId)
@@ -728,7 +728,7 @@ void WorldSession::HandleAddIgnoreOpcodeCallBack(QueryResult* result, uint32 acc
         if (IgnoreGuid)
         {
             Player * tmp = ObjectAccessor::GetPlayer(IgnoreGuid);
-            if (!tmp || !tmp->GetSession()->HasPermissions(PERM_GMT_HDEV))  // add only players
+            if (!tmp || !tmp->GetSession()->HasPermissions(SEC_DEVELOPPER))  // add only players
             {
                 if (IgnoreGuid==session->GetPlayer()->GetGUID())            // not add yourself
                     ignoreResult = FRIEND_IGNORE_SELF;
@@ -801,9 +801,9 @@ void WorldSession::HandleBugOpcode(WorldPacket & recv_data)
     sLog.outDebug(type.c_str());
     sLog.outDebug(content.c_str());
 
-    RealmDataDatabase.escape_string(type);
-    RealmDataDatabase.escape_string(content);
-    RealmDataDatabase.PExecute ("INSERT INTO bugreport (type,content) VALUES('%s', '%s')", type.c_str(), content.c_str());
+    CharacterDatabase.escape_string(type);
+    CharacterDatabase.escape_string(content);
+    CharacterDatabase.PExecute ("INSERT INTO bugreport (type,content) VALUES('%s', '%s')", type.c_str(), content.c_str());
 }
 
 void WorldSession::HandleCorpseReclaimOpcode(WorldPacket &recv_data)
@@ -1039,7 +1039,7 @@ void WorldSession::HandleSetActionButtonOpcode(WorldPacket& recv_data)
             GetPlayer()->addActionButton(button,action,type,misc);
         }
         else
-            sLog.outLog(LOG_DEFAULT, "ERROR: MISC: Unknown action button type %u for action %u into button %u", type, action, button);
+            sLog.outError( "ERROR: MISC: Unknown action button type %u for action %u into button %u", type, action, button);
     }
 }
 
@@ -1174,7 +1174,7 @@ void WorldSession::HandleSetActionBar(WorldPacket& recv_data)
     if (!GetPlayer())                                        // ignore until not logged (check needed because STATUS_AUTHED)
     {
         if (ActionBar!=0)
-            sLog.outLog(LOG_DEFAULT, "ERROR: WorldSession::HandleSetActionBar in not logged state with value: %u, ignored",uint32(ActionBar));
+            sLog.outError( "ERROR: WorldSession::HandleSetActionBar in not logged state with value: %u, ignored",uint32(ActionBar));
         return;
     }
 
@@ -1295,7 +1295,7 @@ void WorldSession::HandleInspectHonorStatsOpcode(WorldPacket& recv_data)
 
     if (!player)
     {
-        sLog.outLog(LOG_DEFAULT, "ERROR: InspectHonorStats: WTF, player not found...");
+        sLog.outError( "ERROR: InspectHonorStats: WTF, player not found...");
         return;
     }
 
@@ -1340,7 +1340,7 @@ void WorldSession::HandleWorldTeleportOpcode(WorldPacket& recv_data)
     recv_data >> Orientation;                               // o (3.141593 = 180 degrees)
     DEBUG_LOG("Time %u sec, map=%u, x=%f, y=%f, z=%f, orient=%f", time/1000, mapid, PositionX, PositionY, PositionZ, Orientation);
 
-    if (HasPermissions(PERM_ADM))
+    if (HasPermissions(SEC_ADMINISTRATOR))
         GetPlayer()->TeleportTo(mapid, PositionX, PositionY, PositionZ, Orientation);
     else
         SendNotification(LANG_YOU_NOT_HAVE_PERMISSION);
@@ -1355,7 +1355,7 @@ void WorldSession::HandleWhoisOpcode(WorldPacket& recv_data)
     std::string charname;
     recv_data >> charname;
 
-    if (!HasPermissions(PERM_ADM))
+    if (!HasPermissions(SEC_ADMINISTRATOR))
     {
         SendNotification(LANG_YOU_NOT_HAVE_PERMISSION);
         return;
@@ -1377,7 +1377,7 @@ void WorldSession::HandleWhoisOpcode(WorldPacket& recv_data)
 
     uint32 accid = plr->GetSession()->GetAccountId();
 
-    QueryResult* result = AccountsDatabase.PQuery("SELECT username, email, last_ip FROM account WHERE account_id = '%u'", accid);
+    QueryResult* result = LoginDatabase.PQuery("SELECT username, email, last_ip FROM account WHERE account_id = '%u'", accid);
     if (!result)
     {
         SendNotification(LANG_ACCOUNT_FOR_PLAYER_NOT_FOUND, charname.c_str());
@@ -1549,14 +1549,14 @@ void WorldSession::HandleResetInstancesOpcode(WorldPacket & /*recv_data*/)
                 const MapEntry *mapEntry = sMapStore.LookupEntry(pl->GetMapId());
                 if (mapEntry->IsDungeon() || mapEntry->IsRaid())
                 {
-                    sLog.outLog(LOG_DEFAULT, "ERROR: WorldSession::HandleResetInstancesOpcode: player %d tried to reset instances while player %d inside raid instance!", _player->GetGUIDLow(), pl->GetGUIDLow());
+                    sLog.outError( "ERROR: WorldSession::HandleResetInstancesOpcode: player %d tried to reset instances while player %d inside raid instance!", _player->GetGUIDLow(), pl->GetGUIDLow());
                     _player->SendResetInstanceFailed(0, pl->GetMapId());
                     return;
                 }
             }
             else
             {
-                sLog.outLog(LOG_DEFAULT, "ERROR: WorldSession::HandleResetInstancesOpcode: player %d tried to reset instances while player %d offline!", _player->GetGUIDLow(), citr->guid);
+                sLog.outError( "ERROR: WorldSession::HandleResetInstancesOpcode: player %d tried to reset instances while player %d offline!", _player->GetGUIDLow(), citr->guid);
                 //_player->SendResetInstanceFailed(0, /* mapid pl ktorego nie ma ;] */);
                 return;
             }
@@ -1582,7 +1582,7 @@ void WorldSession::HandleDungeonDifficultyOpcode(WorldPacket & recv_data)
 
     if (mode > DIFFICULTY_HEROIC)
     {
-        sLog.outLog(LOG_DEFAULT, "ERROR: WorldSession::HandleDungeonDifficultyOpcode: player %d sent an invalid instance mode %d!", _player->GetGUIDLow(), mode);
+        sLog.outError( "ERROR: WorldSession::HandleDungeonDifficultyOpcode: player %d sent an invalid instance mode %d!", _player->GetGUIDLow(), mode);
         return;
     }
 
@@ -1590,7 +1590,7 @@ void WorldSession::HandleDungeonDifficultyOpcode(WorldPacket & recv_data)
     Map *map = _player->GetMap();
     if (map && map->IsDungeon())
     {
-        sLog.outLog(LOG_DEFAULT, "ERROR: WorldSession::HandleDungeonDifficultyOpcode: player %d tried to reset the instance while inside!", _player->GetGUIDLow());
+        sLog.outError( "ERROR: WorldSession::HandleDungeonDifficultyOpcode: player %d tried to reset the instance while inside!", _player->GetGUIDLow());
         return;
     }
 
@@ -1601,7 +1601,7 @@ void WorldSession::HandleDungeonDifficultyOpcode(WorldPacket & recv_data)
     {
         if (pGroup->isRaidGroup())
         {
-            sLog.outLog(LOG_DEFAULT, "ERROR: WorldSession::HandleDungeonDifficultyOpcode: player %d tried to change difficulty while in raid group!", _player->GetGUIDLow());
+            sLog.outError( "ERROR: WorldSession::HandleDungeonDifficultyOpcode: player %d tried to change difficulty while in raid group!", _player->GetGUIDLow());
             ChatHandler(this).SendSysMessage(LANG_CHANGE_DIFFICULTY_RAID);
             return;
         }
@@ -1616,14 +1616,14 @@ void WorldSession::HandleDungeonDifficultyOpcode(WorldPacket & recv_data)
                 const MapEntry *mapEntry = sMapStore.LookupEntry(pl->GetMapId());
                 if (mapEntry->IsDungeon())
                 {
-                    sLog.outLog(LOG_DEFAULT, "ERROR: WorldSession::HandleDungeonDifficultyOpcode: player %d tried to change difficulty while player %d inside the instance!", _player->GetGUIDLow(), pl->GetGUIDLow());
+                    sLog.outError( "ERROR: WorldSession::HandleDungeonDifficultyOpcode: player %d tried to change difficulty while player %d inside the instance!", _player->GetGUIDLow(), pl->GetGUIDLow());
                     ChatHandler(this).SendSysMessage(LANG_CHANGE_DIFFICULTY_INSIDE);
                     return;
                 }
             }
             else
             {
-                sLog.outLog(LOG_DEFAULT, "ERROR: WorldSession::HandleDungeonDifficultyOpcode: player %d tried to change difficulty while player %d offline!", _player->GetGUIDLow(), citr->guid);
+                sLog.outError( "ERROR: WorldSession::HandleDungeonDifficultyOpcode: player %d tried to change difficulty while player %d offline!", _player->GetGUIDLow(), citr->guid);
                 ChatHandler(this).SendSysMessage(LANG_CHANGE_DIFFICULTY_OFFLINE);
                 return;
             }

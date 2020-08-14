@@ -638,7 +638,7 @@ struct boss_kiljaedenAI : public Scripted_NoMovementAI
                                 if (!randomPlayer->HasAura(SPELL_VENGEANCE_OF_THE_BLUE_FLIGHT,0)) break;
                             }
                             if(randomPlayer)DoCast(randomPlayer, SPELL_LEGION_LIGHTNING, false);
-                            else error_log("try to cast SPELL_LEGION_LIGHTNING on invalid target");
+                            else sLog.outError("try to cast SPELL_LEGION_LIGHTNING on invalid target");
                             Timer[TIMER_LEGION_LIGHTNING] = (Phase == PHASE_SACRIFICE) ? 18000 : 30000; // 18 seconds in PHASE_SACRIFICE
                             Timer[TIMER_SOUL_FLAY] = 2500;
                         }
@@ -1326,7 +1326,7 @@ struct mob_sinster_reflectionAI : public ScriptedAI
                 DoMeleeAttackIfReady();
                 break;
             }
-            debug_log("Sinister-Timer");
+            sLog.outDebug("Sinister-Timer");
             for(uint8 i = 0; i < 3; ++i)
                 Timer[i] -= diff;
         }

@@ -25,7 +25,7 @@
 #include "Player.h"
 #include "Util.h"
 
-extern DatabaseType AccountsDatabase;
+extern DatabaseType LoginDatabase;
 
 AccountOpResult AccountMgr::CreateAccount(std::string username, std::string password)
 {
@@ -35,14 +35,14 @@ AccountOpResult AccountMgr::CreateAccount(std::string username, std::string pass
     normalizeString(username);
     normalizeString(password);
 
-    AccountsDatabase.escape_string(username);
-    AccountsDatabase.escape_string(password);
+    LoginDatabase.escape_string(username);
+    LoginDatabase.escape_string(password);
 
-    QueryResult* result = AccountsDatabase.PQuery("SELECT 1 FROM account WHERE username = '%s'", username.c_str());
+    QueryResult* result = LoginDatabase.PQuery("SELECT 1 FROM account WHERE username = '%s'", username.c_str());
     if (result)
         return AOR_NAME_ALREDY_EXIST;                       // username does already exist
 
-    if (!AccountsDatabase.PExecute("INSERT INTO account(username, pass_hash, join_date) "
+    if (!LoginDatabase.PExecute("INSERT INTO account(username, pass_hash, join_date) "
                                    "VALUES ('%s', SHA1(CONCAT('%s', ':', '%s')), NOW())", username.c_str(), username.c_str(), password.c_str()))
         return AOR_DB_INTERNAL_ERROR;                       // unexpected error
 
@@ -51,11 +51,11 @@ AccountOpResult AccountMgr::CreateAccount(std::string username, std::string pass
 
 AccountOpResult AccountMgr::DeleteAccount(uint32 accid)
 {
-    QueryResult* result = AccountsDatabase.PQuery("SELECT 1 FROM account WHERE account_id = '%u'", accid);
+    QueryResult* result = LoginDatabase.PQuery("SELECT 1 FROM account WHERE account_id = '%u'", accid);
     if (!result)
         return AOR_NAME_NOT_EXIST;                          // account doesn't exist
 
-    result = RealmDataDatabase.PQuery("SELECT guid FROM characters WHERE account = '%u'",accid);
+    result = CharacterDatabase.PQuery("SELECT guid FROM characters WHERE account = '%u'",accid);
     if (result)
     {
         do
@@ -78,9 +78,9 @@ AccountOpResult AccountMgr::DeleteAccount(uint32 accid)
     }
 
     // table realm specific but common for all characters of account for realm
-    RealmDataDatabase.PExecute("DELETE FROM character_tutorial WHERE account = '%u'",accid);
+    CharacterDatabase.PExecute("DELETE FROM character_tutorial WHERE account = '%u'",accid);
 
-    if (!AccountsDatabase.PExecute("DELETE FROM account WHERE account_id = '%u'", accid))
+    if (!LoginDatabase.PExecute("DELETE FROM account WHERE account_id = '%u'", accid))
         return AOR_DB_INTERNAL_ERROR;                       // unexpected error;
 
     return AOR_OK;
@@ -88,7 +88,7 @@ AccountOpResult AccountMgr::DeleteAccount(uint32 accid)
 
 AccountOpResult AccountMgr::ChangeUsername(uint32 accid, std::string new_uname, std::string new_passwd)
 {
-    QueryResult* result = AccountsDatabase.PQuery("SELECT 1 FROM account WHERE accoun_id = '%u'", accid);
+    QueryResult* result = LoginDatabase.PQuery("SELECT 1 FROM account WHERE accoun_id = '%u'", accid);
     if (!result)
         return AOR_NAME_NOT_EXIST;                          // account doesn't exist
 
@@ -101,9 +101,9 @@ AccountOpResult AccountMgr::ChangeUsername(uint32 accid, std::string new_uname, 
     normalizeString(new_uname);
     normalizeString(new_passwd);
 
-    AccountsDatabase.escape_string(new_uname);
-    AccountsDatabase.escape_string(new_passwd);
-    if (!AccountsDatabase.PExecute("UPDATE account SET username = '%s', pass_hash = SHA1(CONCAT('%s', ':', '%s')) WHERE account_id = '%u'",
+    LoginDatabase.escape_string(new_uname);
+    LoginDatabase.escape_string(new_passwd);
+    if (!LoginDatabase.PExecute("UPDATE account SET username = '%s', pass_hash = SHA1(CONCAT('%s', ':', '%s')) WHERE account_id = '%u'",
                                    new_uname.c_str(), new_uname.c_str(), new_passwd.c_str(), accid))
         return AOR_DB_INTERNAL_ERROR;                       // unexpected error
 
@@ -112,7 +112,7 @@ AccountOpResult AccountMgr::ChangeUsername(uint32 accid, std::string new_uname, 
 
 AccountOpResult AccountMgr::ChangePassword(uint32 accid, std::string new_passwd)
 {
-    QueryResult* result = AccountsDatabase.PQuery("SELECT 1 FROM account WHERE account_id = '%u'", accid);
+    QueryResult* result = LoginDatabase.PQuery("SELECT 1 FROM account WHERE account_id = '%u'", accid);
     if (!result)
         return AOR_NAME_NOT_EXIST;                          // account doesn't exist
 
@@ -121,8 +121,8 @@ AccountOpResult AccountMgr::ChangePassword(uint32 accid, std::string new_passwd)
 
     normalizeString(new_passwd);
 
-    AccountsDatabase.escape_string(new_passwd);
-    if (!AccountsDatabase.PExecute("UPDATE account SET pass_hash = SHA1(CONCAT(username, ':', '%s')) WHERE account_id = '%u'", new_passwd.c_str(), accid))
+    LoginDatabase.escape_string(new_passwd);
+    if (!LoginDatabase.PExecute("UPDATE account SET pass_hash = SHA1(CONCAT(username, ':', '%s')) WHERE account_id = '%u'", new_passwd.c_str(), accid))
         return AOR_DB_INTERNAL_ERROR;                       // unexpected error
 
     return AOR_OK;
@@ -130,8 +130,8 @@ AccountOpResult AccountMgr::ChangePassword(uint32 accid, std::string new_passwd)
 
 uint32 AccountMgr::GetId(std::string username)
 {
-    AccountsDatabase.escape_string(username);
-    QueryResult* result = AccountsDatabase.PQuery("SELECT account_id FROM account WHERE username = '%s'", username.c_str());
+    LoginDatabase.escape_string(username);
+    QueryResult* result = LoginDatabase.PQuery("SELECT account_id FROM account WHERE username = '%s'", username.c_str());
     if (result)
         return (*result)[0].GetUInt32();
 
@@ -140,7 +140,7 @@ uint32 AccountMgr::GetId(std::string username)
 
 uint64 AccountMgr::GetPermissions(uint32 acc_id)
 {
-    QueryResult* result = AccountsDatabase.PQuery("SELECT permission_mask FROM account_permissions WHERE account_id = '%u' AND realm_id = '%u'", acc_id, realmID);
+    QueryResult* result = LoginDatabase.PQuery("SELECT permission_mask FROM account_permissions WHERE account_id = '%u' AND realm_id = '%u'", acc_id, realmID);
     if (result)
         return (*result)[0].GetUInt64();
 
@@ -154,7 +154,7 @@ bool AccountMgr::HasPermissions(uint32 accId, uint64 perms)
 
 bool AccountMgr::GetName(uint32 acc_id, std::string &name)
 {
-    QueryResult* result = AccountsDatabase.PQuery("SELECT username FROM account WHERE account_id = '%u'", acc_id);
+    QueryResult* result = LoginDatabase.PQuery("SELECT username FROM account WHERE account_id = '%u'", acc_id);
     if (result)
     {
         name = (*result)[0].GetCppString();
@@ -167,9 +167,9 @@ bool AccountMgr::GetName(uint32 acc_id, std::string &name)
 bool AccountMgr::CheckPassword(uint32 accid, std::string passwd)
 {
     normalizeString(passwd);
-    AccountsDatabase.escape_string(passwd);
+    LoginDatabase.escape_string(passwd);
 
-    QueryResult* result = AccountsDatabase.PQuery("SELECT 1 FROM account WHERE account_id ='%u' AND pass_hash=SHA1(CONCAT(username, ':', '%s'))", accid, passwd.c_str());
+    QueryResult* result = LoginDatabase.PQuery("SELECT 1 FROM account WHERE account_id ='%u' AND pass_hash=SHA1(CONCAT(username, ':', '%s'))", accid, passwd.c_str());
     if (result)
         return true;
 
@@ -178,15 +178,16 @@ bool AccountMgr::CheckPassword(uint32 accid, std::string passwd)
 
 bool AccountMgr::normalizeString(std::string& utf8str)
 {
-    wchar_t wstr_buf[MAX_ACCOUNT_STR+1];
-
-    size_t wstr_len = MAX_ACCOUNT_STR;
-    if (!Utf8toWStr(utf8str,wstr_buf,wstr_len))
+    std::wstring wstr_buf;
+    if (!Utf8toWStr(utf8str, wstr_buf))
         return false;
 
-    std::transform(&wstr_buf[0], wstr_buf+wstr_len, &wstr_buf[0], wcharToUpperOnlyLatin);
+    if (wstr_buf.size() > MAX_ACCOUNT_STR)
+        return false;
 
-    return WStrToUtf8(wstr_buf,wstr_len,utf8str);
+    std::transform(wstr_buf.begin(), wstr_buf.end(), wstr_buf.begin(), wcharToUpperOnlyLatin);
+
+    return WStrToUtf8(wstr_buf, utf8str);
 }
 
 std::vector<uint32> AccountMgr::GetRAFAccounts(uint32 accid, bool referred)
@@ -195,9 +196,9 @@ std::vector<uint32> AccountMgr::GetRAFAccounts(uint32 accid, bool referred)
     QueryResult* result;
 
     if (referred)
-        result = AccountsDatabase.PQuery("SELECT `friend_id` FROM `account_friends` WHERE `id` = %u AND `expire_date` > NOW() LIMIT %u", accid, sWorld.getConfig(CONFIG_UINT32_RAF_MAXREFERERS));
+        result = LoginDatabase.PQuery("SELECT `friend_id` FROM `account_friends` WHERE `id` = %u AND `expire_date` > NOW() LIMIT %u", accid, sWorld.getConfig(CONFIG_UINT32_RAF_MAXREFERERS));
     else
-        result = AccountsDatabase.PQuery("SELECT `id` FROM `account_friends` WHERE `friend_id` = %u AND `expire_date` > NOW() LIMIT %u", accid, sWorld.getConfig(CONFIG_UINT32_RAF_MAXREFERALS));
+        result = LoginDatabase.PQuery("SELECT `id` FROM `account_friends` WHERE `friend_id` = %u AND `expire_date` > NOW() LIMIT %u", accid, sWorld.getConfig(CONFIG_UINT32_RAF_MAXREFERALS));
 
     std::vector<uint32> acclist;
 
@@ -217,7 +218,7 @@ std::vector<uint32> AccountMgr::GetRAFAccounts(uint32 accid, bool referred)
 
 AccountOpResult AccountMgr::AddRAFLink(uint32 accid, uint32 friendid)
 {
-    if (!AccountsDatabase.PExecute("INSERT INTO `account_friends`  (`id`, `friend_id`, `expire_date`) VALUES (%u,%u,NOW() + INTERVAL 3 MONTH)", accid, friendid))
+    if (!LoginDatabase.PExecute("INSERT INTO `account_friends`  (`id`, `friend_id`, `expire_date`) VALUES (%u,%u,NOW() + INTERVAL 3 MONTH)", accid, friendid))
         return AOR_DB_INTERNAL_ERROR;
 
     return AOR_OK;
@@ -225,7 +226,7 @@ AccountOpResult AccountMgr::AddRAFLink(uint32 accid, uint32 friendid)
 
 AccountOpResult AccountMgr::DeleteRAFLink(uint32 accid, uint32 friendid)
 {
-    if (!AccountsDatabase.PExecute("DELETE FROM `account_friends` WHERE `id` = %u AND `friend_id` = %u", accid, friendid))
+    if (!LoginDatabase.PExecute("DELETE FROM `account_friends` WHERE `id` = %u AND `friend_id` = %u", accid, friendid))
         return AOR_DB_INTERNAL_ERROR;
 
     return AOR_OK;

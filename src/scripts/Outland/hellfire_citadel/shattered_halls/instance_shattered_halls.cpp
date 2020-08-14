@@ -125,7 +125,7 @@ struct instance_shattered_halls : public ScriptedInstance
 
         Team = 0;
         ExecutionStage =0;
-        ExecutionTimer = 55*MINUTE*IN_MILISECONDS;
+        ExecutionTimer = 55*MINUTE*IN_MILLISECONDS;
 
         summon = NOT_SUMMONED;
 
@@ -163,7 +163,7 @@ struct instance_shattered_halls : public ScriptedInstance
             }
         }
 
-        debug_log("TSCR: Instance Shattered Halls: GetPlayerInMap, but PlayerList is empty!");
+        sLog.outDebug("TSCR: Instance Shattered Halls: GetPlayerInMap, but PlayerList is empty!");
         return NULL;
     }
 
@@ -270,11 +270,11 @@ struct instance_shattered_halls : public ScriptedInstance
                         for (uint8 i = 2; i < 5; ++i)
                             player->SummonCreature(Team == ALLIANCE ? aSoldiersLocs[i].AllianceEntry : aSoldiersLocs[i].HordeEntry, aSoldiersLocs[i].fX, aSoldiersLocs[i].fY, aSoldiersLocs[i].fZ, aSoldiersLocs[i].fO, TEMPSUMMON_DEAD_DESPAWN, 0);
 
-                        if (Creature* Executioner = player->SummonCreature(NPC_EXECUTIONER, afExecutionerLoc[0], afExecutionerLoc[1], afExecutionerLoc[2], afExecutionerLoc[3], TEMPSUMMON_TIMED_OR_DEAD_DESPAWN, 80*MINUTE*IN_MILISECONDS))
+                        if (Creature* Executioner = player->SummonCreature(NPC_EXECUTIONER, afExecutionerLoc[0], afExecutionerLoc[1], afExecutionerLoc[2], afExecutionerLoc[3], TEMPSUMMON_TIMED_OR_DEAD_DESPAWN, 80*MINUTE*IN_MILLISECONDS))
                             Executioner->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE | UNIT_FLAG_NON_ATTACKABLE);
 
                         DoCastGroupDebuff(SPELL_KARGATH_EXECUTIONER_1);
-                        ExecutionTimer = 55*MINUTE*IN_MILISECONDS;
+                        ExecutionTimer = 55*MINUTE*IN_MILLISECONDS;
                    }
                }
                else
@@ -377,14 +377,14 @@ struct instance_shattered_halls : public ScriptedInstance
                         //DoScriptText(Team == ALLIANCE ? SAY_KARGATH_EXECUTE_ALLY : SAY_KARGATH_EXECUTE_HORDE, instance->GetCreature(kargathGUID));
 
                         DoCastGroupDebuff(SPELL_KARGATH_EXECUTIONER_2);
-                        ExecutionTimer = 10*MINUTE*IN_MILISECONDS;
+                        ExecutionTimer = 10*MINUTE*IN_MILLISECONDS;
                         break;
                     case 1:
                         if (Creature* Soldier = instance->GetCreature(Team == ALLIANCE ? soldiera2GUID : soldierh2GUID))
                             Soldier->DealDamage(Soldier, Soldier->GetHealth(), DIRECT_DAMAGE, SPELL_SCHOOL_MASK_NORMAL, NULL, false);
 
                         DoCastGroupDebuff(SPELL_KARGATH_EXECUTIONER_3);
-                        ExecutionTimer = 15*MINUTE*IN_MILISECONDS;
+                        ExecutionTimer = 15*MINUTE*IN_MILLISECONDS;
                         break;
                      case 2:
                          if (Creature* Soldier = instance->GetCreature(Team == ALLIANCE ? soldiera3GUID : soldierh3GUID))

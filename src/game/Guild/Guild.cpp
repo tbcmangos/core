@@ -66,7 +66,7 @@ bool Guild::create(uint64 lGuid, std::string gname)
     if (sGuildMgr.GetGuildByName(gname))
         return false;
 
-    sLog.outLog(LOG_SPECIAL, "GUILD: creating guild %s to leader: %u", gname.c_str(), GUID_LOPART(lGuid));
+    sLog.out(LOG_CHAR, "GUILD: creating guild %s to leader: %u", gname.c_str(), GUID_LOPART(lGuid));
 
     leaderGuid = lGuid;
     name = gname;
@@ -78,21 +78,21 @@ bool Guild::create(uint64 lGuid, std::string gname)
     Id = sGuildMgr.GenerateGuildId();
 
     // gname already assigned to Guild::name, use it to encode string for DB
-    RealmDataDatabase.escape_string(gname);
+    CharacterDatabase.escape_string(gname);
 
     std::string dbGINFO = GINFO;
     std::string dbMOTD = MOTD;
-    RealmDataDatabase.escape_string(dbGINFO);
-    RealmDataDatabase.escape_string(dbMOTD);
+    CharacterDatabase.escape_string(dbGINFO);
+    CharacterDatabase.escape_string(dbMOTD);
 
-    RealmDataDatabase.BeginTransaction();
+    CharacterDatabase.BeginTransaction();
     // CharacterDatabase.PExecute("DELETE FROM guild WHERE guildid='%u'", Id); - MAX(guildid)+1 not exist
-    RealmDataDatabase.PExecute("DELETE FROM guild_rank WHERE guildid='%u'", Id);
-    RealmDataDatabase.PExecute("DELETE FROM guild_member WHERE guildid='%u'", Id);
-    RealmDataDatabase.PExecute("INSERT INTO guild (guildid,name,leaderguid,info,motd,createdate,EmblemStyle,EmblemColor,BorderStyle,BorderColor,BackgroundColor,BankMoney) "
+    CharacterDatabase.PExecute("DELETE FROM guild_rank WHERE guildid='%u'", Id);
+    CharacterDatabase.PExecute("DELETE FROM guild_member WHERE guildid='%u'", Id);
+    CharacterDatabase.PExecute("INSERT INTO guild (guildid,name,leaderguid,info,motd,createdate,EmblemStyle,EmblemColor,BorderStyle,BorderColor,BackgroundColor,BankMoney) "
         "VALUES('%u','%s','%u', '%s', '%s', NOW(),'%u','%u','%u','%u','%u','" UI64FMTD "')",
         Id, gname.c_str(), GUID_LOPART(leaderGuid), dbGINFO.c_str(), dbMOTD.c_str(), EmblemStyle, EmblemColor, BorderStyle, BorderColor, BackgroundColor, guildbank_money);
-    RealmDataDatabase.CommitTransaction();
+    CharacterDatabase.CommitTransaction();
 
     rname = "Guild Master";
     CreateRank(rname,GR_RIGHT_ALL);
@@ -149,10 +149,10 @@ bool Guild::AddMember(uint64 plGuid, uint32 plRank)
 
     std::string dbPnote = newmember.Pnote;
     std::string dbOFFnote = newmember.OFFnote;
-    RealmDataDatabase.escape_string(dbPnote);
-    RealmDataDatabase.escape_string(dbOFFnote);
+    CharacterDatabase.escape_string(dbPnote);
+    CharacterDatabase.escape_string(dbOFFnote);
 
-    RealmDataDatabase.PExecute("INSERT INTO guild_member (guildid,guid,rank,pnote,offnote) VALUES ('%u', '%u', '%u','%s','%s')",
+    CharacterDatabase.PExecute("INSERT INTO guild_member (guildid,guid,rank,pnote,offnote) VALUES ('%u', '%u', '%u','%s','%s')",
         Id, GUID_LOPART(plGuid), newmember.RankId, dbPnote.c_str(), dbOFFnote.c_str());
 
     // If player not in game data in data field will be loaded from guild tables, no need to update it!!
@@ -178,8 +178,8 @@ void Guild::SetMOTD(std::string motd)
     MOTD = motd;
 
     // motd now can be used for encoding to DB
-    RealmDataDatabase.escape_string(motd);
-    RealmDataDatabase.PExecute("UPDATE guild SET motd='%s' WHERE guildid='%u'", motd.c_str(), Id);
+    CharacterDatabase.escape_string(motd);
+    CharacterDatabase.PExecute("UPDATE guild SET motd='%s' WHERE guildid='%u'", motd.c_str(), Id);
 
     // used by eluna
     sHookMgr->OnMOTDChanged(this, motd);
@@ -190,8 +190,8 @@ void Guild::SetGINFO(std::string ginfo)
     GINFO = ginfo;
 
     // ginfo now can be used for encoding to DB
-    RealmDataDatabase.escape_string(ginfo);
-    RealmDataDatabase.PExecute("UPDATE guild SET info='%s' WHERE guildid='%u'", ginfo.c_str(), Id);
+    CharacterDatabase.escape_string(ginfo);
+    CharacterDatabase.PExecute("UPDATE guild SET info='%s' WHERE guildid='%u'", ginfo.c_str(), Id);
 
     // used by eluna
     sHookMgr->OnInfoChanged(this, ginfo);
@@ -205,7 +205,7 @@ bool Guild::LoadGuildFromDB(uint32 GuildId)
     if (!LoadMembersFromDB(GuildId))
         return false;
 
-    QueryResult* result = RealmDataDatabase.PQuery("SELECT MAX(TabId) FROM guild_bank_tab WHERE guildid='%u'", GuildId);
+    QueryResult* result = CharacterDatabase.PQuery("SELECT MAX(TabId) FROM guild_bank_tab WHERE guildid='%u'", GuildId);
     if (result)
     {
         Field *fields = result->Fetch();
@@ -217,7 +217,7 @@ bool Guild::LoadGuildFromDB(uint32 GuildId)
     LoadBankRightsFromDB(GuildId);                          // Must be after LoadRanksFromDB because it populates rank struct
 
     //                                        0        1     2           3            4            5           6
-    result = RealmDataDatabase.PQuery("SELECT guildid, name, leaderguid, EmblemStyle, EmblemColor, BorderStyle, BorderColor,"
+    result = CharacterDatabase.PQuery("SELECT guildid, name, leaderguid, EmblemStyle, EmblemColor, BorderStyle, BorderColor,"
     //   7                8     9     10          11          12
         "BackgroundColor, info, motd, createdate, BankMoney, flags FROM guild WHERE guildid = '%u'", GuildId);
 
@@ -268,7 +268,7 @@ bool Guild::LoadGuildFromDB(uint32 GuildId)
 bool Guild::LoadRanksFromDB(uint32 GuildId)
 {
     Field *fields;
-    QueryResult* result = RealmDataDatabase.PQuery("SELECT rname,rights,BankMoneyPerDay,rid FROM guild_rank WHERE guildid = '%u' ORDER BY rid ASC", GuildId);
+    QueryResult* result = CharacterDatabase.PQuery("SELECT rname,rights,BankMoneyPerDay,rid FROM guild_rank WHERE guildid = '%u' ORDER BY rid ASC", GuildId);
 
     if (!result)
         return false;
@@ -302,18 +302,18 @@ bool Guild::LoadRanksFromDB(uint32 GuildId)
     // guild_rank have wrong numbered ranks, repair
     if (broken_ranks)
     {
-        sLog.outLog(LOG_DEFAULT, "ERROR: Guild %u have broken `guild_rank` data, repairing...",GuildId);
-        RealmDataDatabase.BeginTransaction();
-        RealmDataDatabase.PExecute("DELETE FROM guild_rank WHERE guildid='%u'", GuildId);
+        sLog.outError( "ERROR: Guild %u have broken `guild_rank` data, repairing...",GuildId);
+        CharacterDatabase.BeginTransaction();
+        CharacterDatabase.PExecute("DELETE FROM guild_rank WHERE guildid='%u'", GuildId);
         for (size_t i =0; i < m_ranks.size(); ++i)
         {
             // guild_rank.rid always store rank+1
             std::string name = m_ranks[i].name;
             uint32 rights = m_ranks[i].rights;
-            RealmDataDatabase.escape_string(name);
-            RealmDataDatabase.PExecute("INSERT INTO guild_rank (guildid,rid,rname,rights) VALUES ('%u', '%u', '%s', '%u')", GuildId, i+1, name.c_str(), rights);
+            CharacterDatabase.escape_string(name);
+            CharacterDatabase.PExecute("INSERT INTO guild_rank (guildid,rid,rname,rights) VALUES ('%u', '%u', '%s', '%u')", GuildId, i+1, name.c_str(), rights);
         }
-        RealmDataDatabase.CommitTransaction();
+        CharacterDatabase.CommitTransaction();
     }
 
     return true;
@@ -322,7 +322,7 @@ bool Guild::LoadRanksFromDB(uint32 GuildId)
 bool Guild::LoadMembersFromDB(uint32 GuildId)
 {
     //                                                     0                 1     2      3        4                  5
-    QueryResult* result = RealmDataDatabase.PQuery("SELECT guild_member.guid,rank, pnote, offnote, BankResetTimeMoney,BankRemMoney,"
+    QueryResult* result = CharacterDatabase.PQuery("SELECT guild_member.guid,rank, pnote, offnote, BankResetTimeMoney,BankRemMoney,"
     //   6                  7                 8                  9                 10                 11
         "BankResetTimeTab0, BankRemSlotsTab0, BankResetTimeTab1, BankRemSlotsTab1, BankResetTimeTab2, BankRemSlotsTab2,"
     //   12                 13                14                 15                16                 17
@@ -408,7 +408,7 @@ bool Guild::FillPlayerData(uint64 guid, MemberSlot* memslot)
     }
     else
     {
-        QueryResult* result = RealmDataDatabase.PQuery("SELECT name, level, zone, class, account "
+        QueryResult* result = CharacterDatabase.PQuery("SELECT name, level, zone, class, account "
                                                              "FROM characters WHERE guid = '%u'", GUID_LOPART(guid));                                 // player doesn't exist
         if (!result)
             return false;
@@ -423,13 +423,13 @@ bool Guild::FillPlayerData(uint64 guid, MemberSlot* memslot)
 
         if (plLevel < 1 || plLevel > STRONG_MAX_LEVEL)             // can be at broken `data` field
         {
-            sLog.outLog(LOG_DEFAULT, "ERROR: Player (GUID: %u) has a broken data in field `characters`.`data`.",GUID_LOPART(guid));
+            sLog.outError( "ERROR: Player (GUID: %u) has a broken data in field `characters`.`data`.",GUID_LOPART(guid));
             return false;
         }
 
         if (!plZone)
         {
-            sLog.outLog(LOG_DEFAULT, "ERROR: Player (GUID: %u) has broken zone-data",GUID_LOPART(guid));
+            sLog.outError( "ERROR: Player (GUID: %u) has broken zone-data",GUID_LOPART(guid));
             //here it will also try the same, to get the zone from characters-table, but additional it tries to find
             plZone = Player::GetZoneIdFromDB(guid);
             //the zone through xy coords.. this is a bit redundant, but
@@ -438,7 +438,7 @@ bool Guild::FillPlayerData(uint64 guid, MemberSlot* memslot)
 
         if (plClass < CLASS_WARRIOR || plClass >= MAX_CLASSES)     // can be at broken `class` field
         {
-            sLog.outLog(LOG_DEFAULT, "ERROR: Player (GUID: %u) has a broken data in field `characters`.`class`.",GUID_LOPART(guid));
+            sLog.outError( "ERROR: Player (GUID: %u) has a broken data in field `characters`.`class`.",GUID_LOPART(guid));
             return false;
         }
     }
@@ -471,7 +471,7 @@ void Guild::SetLeader(uint64 guid)
     leaderGuid = guid;
     ChangeRank(guid, GR_GUILDMASTER);
 
-    RealmDataDatabase.PExecute("UPDATE guild SET leaderguid='%u' WHERE guildid='%u'", GUID_LOPART(guid), Id);
+    CharacterDatabase.PExecute("UPDATE guild SET leaderguid='%u' WHERE guildid='%u'", GUID_LOPART(guid), Id);
 }
 
 void Guild::DelMember(uint64 guid, bool isDisbanding)
@@ -538,7 +538,7 @@ void Guild::DelMember(uint64 guid, bool isDisbanding)
         player->SetRank(0);
     }
 
-    RealmDataDatabase.PExecute("DELETE FROM guild_member WHERE guid = '%u'", GUID_LOPART(guid));
+    CharacterDatabase.PExecute("DELETE FROM guild_member WHERE guid = '%u'", GUID_LOPART(guid));
     UpdateAccountsCount();
 
     // used by eluna
@@ -556,7 +556,7 @@ void Guild::ChangeRank(uint64 guid, uint32 newRank)
     if (player)
         player->SetRank(newRank);
 
-    RealmDataDatabase.PExecute("UPDATE guild_member SET rank='%u' WHERE guid='%u'", newRank, GUID_LOPART(guid));
+    CharacterDatabase.PExecute("UPDATE guild_member SET rank='%u' WHERE guid='%u'", newRank, GUID_LOPART(guid));
 }
 
 void Guild::SetPNOTE(uint64 guid,std::string pnote)
@@ -568,8 +568,8 @@ void Guild::SetPNOTE(uint64 guid,std::string pnote)
     itr->second.Pnote = pnote;
 
     // pnote now can be used for encoding to DB
-    RealmDataDatabase.escape_string(pnote);
-    RealmDataDatabase.PExecute("UPDATE guild_member SET pnote = '%s' WHERE guid = '%u'", pnote.c_str(), itr->first);
+    CharacterDatabase.escape_string(pnote);
+    CharacterDatabase.PExecute("UPDATE guild_member SET pnote = '%s' WHERE guid = '%u'", pnote.c_str(), itr->first);
 }
 
 void Guild::SetOFFNOTE(uint64 guid,std::string offnote)
@@ -579,13 +579,13 @@ void Guild::SetOFFNOTE(uint64 guid,std::string offnote)
         return;
     itr->second.OFFnote = offnote;
     // offnote now can be used for encoding to DB
-    RealmDataDatabase.escape_string(offnote);
-    RealmDataDatabase.PExecute("UPDATE guild_member SET offnote = '%s' WHERE guid = '%u'", offnote.c_str(), itr->first);
+    CharacterDatabase.escape_string(offnote);
+    CharacterDatabase.PExecute("UPDATE guild_member SET offnote = '%s' WHERE guid = '%u'", offnote.c_str(), itr->first);
 }
 
 void Guild::BroadcastToGuild(WorldSession *session, const std::string& msg, uint32 language)
 {
-    if (session && (session->HasPermissions(PERM_GMT) || (session->GetPlayer() && HasRankRight(session->GetPlayer()->GetRank(), GR_RIGHT_GCHATSPEAK))))
+    if (session && (session->HasPermissions(SEC_GAMEMASTER) || (session->GetPlayer() && HasRankRight(session->GetPlayer()->GetRank(), GR_RIGHT_GCHATSPEAK))))
     {
         WorldPacket data;
         ChatHandler(session).FillMessageData(&data, CHAT_MSG_GUILD, language, 0, msg.c_str());
@@ -655,8 +655,8 @@ void Guild::CreateRank(std::string name_,uint32 rights)
     // guild_rank.rid always store rank+1 value
 
     // name now can be used for encoding to DB
-    RealmDataDatabase.escape_string(name_);
-    RealmDataDatabase.PExecute("INSERT INTO guild_rank (guildid,rid,rname,rights) VALUES ('%u', '%u', '%s', '%u')", Id, m_ranks.size(), name_.c_str(), rights);
+    CharacterDatabase.escape_string(name_);
+    CharacterDatabase.PExecute("INSERT INTO guild_rank (guildid,rid,rname,rights) VALUES ('%u', '%u', '%s', '%u')", Id, m_ranks.size(), name_.c_str(), rights);
 }
 
 void Guild::AddRank(const std::string& name_,uint32 rights, uint32 money)
@@ -671,7 +671,7 @@ void Guild::DelRank()
 
     // guild_rank.rid always store rank+1 value
     uint32 rank = m_ranks.size()-1;
-    RealmDataDatabase.PExecute("DELETE FROM guild_rank WHERE rid>='%u' AND guildid='%u'", (rank+1), Id);
+    CharacterDatabase.PExecute("DELETE FROM guild_rank WHERE rid>='%u' AND guildid='%u'", (rank+1), Id);
 
     m_ranks.pop_back();
 }
@@ -700,8 +700,8 @@ void Guild::SetRankName(uint32 rankId, std::string name_)
     m_ranks[rankId].name = name_;
 
     // name now can be used for encoding to DB
-    RealmDataDatabase.escape_string(name_);
-    RealmDataDatabase.PExecute("UPDATE guild_rank SET rname='%s' WHERE rid='%u' AND guildid='%u'", name_.c_str(), (rankId+1), Id);
+    CharacterDatabase.escape_string(name_);
+    CharacterDatabase.PExecute("UPDATE guild_rank SET rname='%s' WHERE rid='%u' AND guildid='%u'", name_.c_str(), (rankId+1), Id);
 }
 
 void Guild::SetRankRights(uint32 rankId, uint32 rights)
@@ -711,7 +711,7 @@ void Guild::SetRankRights(uint32 rankId, uint32 rights)
 
     m_ranks[rankId].rights = rights;
 
-    RealmDataDatabase.PExecute("UPDATE guild_rank SET rights='%u' WHERE rid='%u' AND guildid='%u'", rights, (rankId+1), Id);
+    CharacterDatabase.PExecute("UPDATE guild_rank SET rights='%u' WHERE rid='%u' AND guildid='%u'", rights, (rankId+1), Id);
 }
 
 int32 Guild::GetRank(uint32 LowGuid)
@@ -735,15 +735,15 @@ void Guild::Disband()
         DelMember(MAKE_NEW_GUID(itr->first, 0, HIGHGUID_PLAYER), true);
     }
 
-    RealmDataDatabase.BeginTransaction();
-    RealmDataDatabase.PExecute("DELETE FROM guild WHERE guildid = '%u'",Id);
-    RealmDataDatabase.PExecute("DELETE FROM guild_rank WHERE guildid = '%u'",Id);
-    RealmDataDatabase.PExecute("DELETE FROM guild_bank_tab WHERE guildid = '%u'",Id);
-    RealmDataDatabase.PExecute("DELETE FROM guild_bank_item WHERE guildid = '%u'",Id);
-    RealmDataDatabase.PExecute("DELETE FROM guild_bank_right WHERE guildid = '%u'",Id);
-    RealmDataDatabase.PExecute("DELETE FROM guild_bank_eventlog WHERE guildid = '%u'",Id);
-    RealmDataDatabase.PExecute("DELETE FROM guild_eventlog WHERE guildid = '%u'",Id);
-    RealmDataDatabase.CommitTransaction();
+    CharacterDatabase.BeginTransaction();
+    CharacterDatabase.PExecute("DELETE FROM guild WHERE guildid = '%u'",Id);
+    CharacterDatabase.PExecute("DELETE FROM guild_rank WHERE guildid = '%u'",Id);
+    CharacterDatabase.PExecute("DELETE FROM guild_bank_tab WHERE guildid = '%u'",Id);
+    CharacterDatabase.PExecute("DELETE FROM guild_bank_item WHERE guildid = '%u'",Id);
+    CharacterDatabase.PExecute("DELETE FROM guild_bank_right WHERE guildid = '%u'",Id);
+    CharacterDatabase.PExecute("DELETE FROM guild_bank_eventlog WHERE guildid = '%u'",Id);
+    CharacterDatabase.PExecute("DELETE FROM guild_eventlog WHERE guildid = '%u'",Id);
+    CharacterDatabase.CommitTransaction();
 
     // used by eluna
     sHookMgr->OnDisband(this);
@@ -885,7 +885,7 @@ void Guild::SetEmblem(uint32 emblemStyle, uint32 emblemColor, uint32 borderStyle
     BorderColor = borderColor;
     BackgroundColor = backgroundColor;
 
-    RealmDataDatabase.PExecute("UPDATE guild SET EmblemStyle=%u, EmblemColor=%u, BorderStyle=%u, BorderColor=%u, BackgroundColor=%u WHERE guildid = %u", EmblemStyle, EmblemColor, BorderStyle, BorderColor, BackgroundColor, Id);
+    CharacterDatabase.PExecute("UPDATE guild SET EmblemStyle=%u, EmblemColor=%u, BorderStyle=%u, BorderColor=%u, BackgroundColor=%u WHERE guildid = %u", EmblemStyle, EmblemColor, BorderStyle, BorderColor, BackgroundColor, Id);
 }
 
 void Guild::UpdateLogoutTime(uint64 guid)
@@ -958,7 +958,7 @@ void Guild::LoadGuildEventLogFromDB()
     if (m_eventlogloaded)
         return;
 
-    QueryResult* result = RealmDataDatabase.PQuery("SELECT LogGuid, EventType, PlayerGuid1, PlayerGuid2, NewRank, TimeStamp FROM guild_eventlog WHERE guildid=%u ORDER BY LogGuid DESC LIMIT %u", Id, GUILD_EVENTLOG_MAX_ENTRIES);
+    QueryResult* result = CharacterDatabase.PQuery("SELECT LogGuid, EventType, PlayerGuid1, PlayerGuid2, NewRank, TimeStamp FROM guild_eventlog WHERE guildid=%u ORDER BY LogGuid DESC LIMIT %u", Id, GUILD_EVENTLOG_MAX_ENTRIES);
     if (!result)
         return;
     do
@@ -981,7 +981,7 @@ void Guild::LoadGuildEventLogFromDB()
     // This cases can happen only if a crash occured somewhere and table has too many log entries
     if (!m_GuildEventlog.empty())
     {
-        RealmDataDatabase.PExecute("DELETE FROM guild_eventlog WHERE guildid=%u AND LogGuid < %u", Id, m_GuildEventlog.front()->LogGuid);
+        CharacterDatabase.PExecute("DELETE FROM guild_eventlog WHERE guildid=%u AND LogGuid < %u", Id, m_GuildEventlog.front()->LogGuid);
     }
     m_eventlogloaded = true;
 }
@@ -1007,10 +1007,10 @@ void Guild::UnloadGuildEventlog()
 // This will renum guids used at load to prevent always going up until infinit
 void Guild::RenumGuildEventlog()
 {
-    RealmDataDatabase.PExecute("UPDATE guild_eventlog AS target INNER JOIN (SELECT *, (SELECT @COUNT := -1) FROM guild_eventlog WHERE guildid = %u ORDER BY logguid ASC) "
+    CharacterDatabase.PExecute("UPDATE guild_eventlog AS target INNER JOIN (SELECT *, (SELECT @COUNT := -1) FROM guild_eventlog WHERE guildid = %u ORDER BY logguid ASC) "
                                    "AS source ON source.logguid = target.logguid AND source.guildid = target.guildid SET target.logguid = (@COUNT := @COUNT + 1);", Id);
 
-    QueryResult* result = RealmDataDatabase.PQuery("SELECT Max(LogGuid) FROM guild_eventlog WHERE guildid = %u", Id);
+    QueryResult* result = CharacterDatabase.PQuery("SELECT Max(LogGuid) FROM guild_eventlog WHERE guildid = %u", Id);
     if (!result)
         return;
 
@@ -1034,13 +1034,13 @@ void Guild::LogGuildEvent(uint8 EventType, uint32 PlayerGuid1, uint32 PlayerGuid
     {
         GuildEventlogEntry *OldEvent = *(m_GuildEventlog.begin());
         m_GuildEventlog.pop_front();
-        RealmDataDatabase.PExecute("DELETE FROM guild_eventlog WHERE guildid='%u' AND LogGuid='%u'", Id, OldEvent->LogGuid);
+        CharacterDatabase.PExecute("DELETE FROM guild_eventlog WHERE guildid='%u' AND LogGuid='%u'", Id, OldEvent->LogGuid);
         delete OldEvent;
     }
     // Add entry to map
     m_GuildEventlog.push_back(NewEvent);
     // Add new eventlog entry into DB
-    RealmDataDatabase.PExecute("INSERT INTO guild_eventlog (guildid, LogGuid, EventType, PlayerGuid1, PlayerGuid2, NewRank, TimeStamp) VALUES ('%u','%u','%u','%u','%u','%u','" UI64FMTD "')",
+    CharacterDatabase.PExecute("INSERT INTO guild_eventlog (guildid, LogGuid, EventType, PlayerGuid1, PlayerGuid2, NewRank, TimeStamp) VALUES ('%u','%u','%u','%u','%u','%u','" UI64FMTD "')",
         Id, NewEvent->LogGuid, uint32(NewEvent->EventType), NewEvent->PlayerGuid1, NewEvent->PlayerGuid2, uint32(NewEvent->NewRank), NewEvent->TimeStamp);
 }
 
@@ -1225,10 +1225,10 @@ void Guild::CreateNewBankTab()
     m_TabListMap.resize(purchased_tabs);
     m_TabListMap[purchased_tabs-1] = AnotherTab;
 
-    RealmDataDatabase.BeginTransaction();
-    RealmDataDatabase.PExecute("DELETE FROM guild_bank_tab WHERE guildid='%u' AND TabId='%u'", Id, uint32(purchased_tabs-1));
-    RealmDataDatabase.PExecute("INSERT INTO guild_bank_tab (guildid,TabId) VALUES ('%u','%u')", Id, uint32(purchased_tabs-1));
-    RealmDataDatabase.CommitTransaction();
+    CharacterDatabase.BeginTransaction();
+    CharacterDatabase.PExecute("DELETE FROM guild_bank_tab WHERE guildid='%u' AND TabId='%u'", Id, uint32(purchased_tabs-1));
+    CharacterDatabase.PExecute("INSERT INTO guild_bank_tab (guildid,TabId) VALUES ('%u','%u')", Id, uint32(purchased_tabs-1));
+    CharacterDatabase.CommitTransaction();
 }
 
 void Guild::SetGuildBankTabInfo(uint8 TabId, std::string Name, std::string Icon)
@@ -1247,9 +1247,9 @@ void Guild::SetGuildBankTabInfo(uint8 TabId, std::string Name, std::string Icon)
     m_TabListMap[TabId]->Name = Name;
     m_TabListMap[TabId]->Icon = Icon;
 
-    RealmDataDatabase.escape_string(Name);
-    RealmDataDatabase.escape_string(Icon);
-    RealmDataDatabase.PExecute("UPDATE guild_bank_tab SET TabName='%s',TabIcon='%s' WHERE guildid='%u' AND TabId='%u'", Name.c_str(), Icon.c_str(), Id, uint32(TabId));
+    CharacterDatabase.escape_string(Name);
+    CharacterDatabase.escape_string(Icon);
+    CharacterDatabase.PExecute("UPDATE guild_bank_tab SET TabName='%s',TabIcon='%s' WHERE guildid='%u' AND TabId='%u'", Name.c_str(), Icon.c_str(), Id, uint32(TabId));
 }
 
 void Guild::CreateBankRightForTab(uint32 rankId, uint8 TabId)
@@ -1260,10 +1260,10 @@ void Guild::CreateBankRightForTab(uint32 rankId, uint8 TabId)
 
     m_ranks[rankId].TabRight[TabId]=0;
     m_ranks[rankId].TabSlotPerDay[TabId]=0;
-    RealmDataDatabase.BeginTransaction();
-    RealmDataDatabase.PExecute("DELETE FROM guild_bank_right WHERE guildid = '%u' AND TabId = '%u' AND rid = '%u'", Id, uint32(TabId), rankId);
-    RealmDataDatabase.PExecute("INSERT INTO guild_bank_right (guildid,TabId,rid) VALUES ('%u','%u','%u')", Id, uint32(TabId), rankId);
-    RealmDataDatabase.CommitTransaction();
+    CharacterDatabase.BeginTransaction();
+    CharacterDatabase.PExecute("DELETE FROM guild_bank_right WHERE guildid = '%u' AND TabId = '%u' AND rid = '%u'", Id, uint32(TabId), rankId);
+    CharacterDatabase.PExecute("INSERT INTO guild_bank_right (guildid,TabId,rid) VALUES ('%u','%u','%u')", Id, uint32(TabId), rankId);
+    CharacterDatabase.CommitTransaction();
 }
 
 uint32 Guild::GetBankRights(uint32 rankId, uint8 TabId) const
@@ -1287,7 +1287,7 @@ void Guild::LoadGuildBankFromDB()
     LoadGuildBankEventLogFromDB();
 
     //                                                     0      1        2        3
-    QueryResult* result = RealmDataDatabase.PQuery("SELECT TabId, TabName, TabIcon, TabText FROM guild_bank_tab WHERE guildid='%u' ORDER BY TabId", Id);
+    QueryResult* result = CharacterDatabase.PQuery("SELECT TabId, TabName, TabIcon, TabText FROM guild_bank_tab WHERE guildid='%u' ORDER BY TabId", Id);
     if (!result)
     {
         purchased_tabs = 0;
@@ -1312,7 +1312,7 @@ void Guild::LoadGuildBankFromDB()
 
     // data needs to be at first place for Item::LoadFromDB
     //                                        0     1      2       3          4
-    result = RealmDataDatabase.PQuery("SELECT data, TabId, SlotId, item_guid, item_entry FROM guild_bank_item JOIN item_instance ON item_guid = guid WHERE guildid='%u' ORDER BY TabId", Id);
+    result = CharacterDatabase.PQuery("SELECT data, TabId, SlotId, item_guid, item_entry FROM guild_bank_item JOIN item_instance ON item_guid = guid WHERE guildid='%u' ORDER BY TabId", Id);
     if (!result)
         return;
 
@@ -1327,13 +1327,13 @@ void Guild::LoadGuildBankFromDB()
         // sprawdzamy rozmiar tab ? moze byc rozny od purchased_tabs? oO
         if (TabId >= m_TabListMap.size() || TabId >= purchased_tabs || TabId >= GUILD_BANK_MAX_TABS)
         {
-            sLog.outLog(LOG_DEFAULT, "ERROR: Guild::LoadGuildBankFromDB: Invalid tab for item (GUID: %u id: #%u) in guild bank, skipped.", ItemGuid,ItemEntry);
+            sLog.outError( "ERROR: Guild::LoadGuildBankFromDB: Invalid tab for item (GUID: %u id: #%u) in guild bank, skipped.", ItemGuid,ItemEntry);
             continue;
         }
 
         if (SlotId >= GUILD_BANK_MAX_SLOTS)
         {
-            sLog.outLog(LOG_DEFAULT, "ERROR: Guild::LoadGuildBankFromDB: Invalid slot for item (GUID: %u id: #%u) in guild bank, skipped.", ItemGuid,ItemEntry);
+            sLog.outError( "ERROR: Guild::LoadGuildBankFromDB: Invalid slot for item (GUID: %u id: #%u) in guild bank, skipped.", ItemGuid,ItemEntry);
             continue;
         }
 
@@ -1341,15 +1341,15 @@ void Guild::LoadGuildBankFromDB()
 
         if (!proto)
         {
-            sLog.outLog(LOG_DEFAULT, "ERROR: Guild::LoadGuildBankFromDB: Unknown item (GUID: %u id: #%u) in guild bank, skipped.", ItemGuid,ItemEntry);
+            sLog.outError( "ERROR: Guild::LoadGuildBankFromDB: Unknown item (GUID: %u id: #%u) in guild bank, skipped.", ItemGuid,ItemEntry);
             continue;
         }
 
         Item *pItem = NewItemOrBag(proto);
         if (!pItem->LoadFromDB(ItemGuid, 0, result))
         {
-            RealmDataDatabase.PExecute("DELETE FROM guild_bank_item WHERE guildid='%u' AND TabId='%u' AND SlotId='%u'", Id, uint32(TabId), uint32(SlotId));
-            sLog.outLog(LOG_DEFAULT, "ERROR: Item GUID %u not found in item_instance, deleting from Guild Bank!", ItemGuid);
+            CharacterDatabase.PExecute("DELETE FROM guild_bank_item WHERE guildid='%u' AND TabId='%u' AND SlotId='%u'", Id, uint32(TabId), uint32(SlotId));
+            sLog.outError( "ERROR: Item GUID %u not found in item_instance, deleting from Guild Bank!", ItemGuid);
             delete pItem;
             continue;
         }
@@ -1408,7 +1408,7 @@ bool Guild::MemberMoneyWithdraw(uint32 amount, uint32 LowGuid)
         if (itr == members.end())
             return false;
         itr->second.BankRemMoney -= amount;
-        RealmDataDatabase.PExecute("UPDATE guild_member SET BankRemMoney='%u' WHERE guildid='%u' AND guid='%u'",
+        CharacterDatabase.PExecute("UPDATE guild_member SET BankRemMoney='%u' WHERE guildid='%u' AND guid='%u'",
             itr->second.BankRemMoney, Id, LowGuid);
     }
 
@@ -1427,7 +1427,7 @@ void Guild::SetBankMoney(int64 money)
         money = 0;
     guildbank_money = money;
 
-    RealmDataDatabase.PExecute("UPDATE guild SET BankMoney='" UI64FMTD "' WHERE guildid='%u'", money, Id);
+    CharacterDatabase.PExecute("UPDATE guild SET BankMoney='" UI64FMTD "' WHERE guildid='%u'", money, Id);
 }
 
 // *************************************************
@@ -1446,7 +1446,7 @@ bool Guild::MemberItemWithdraw(uint8 TabId, uint32 LowGuid)
         if (itr == members.end())
             return false;
         --itr->second.BankRemSlotsTab[TabId];
-        RealmDataDatabase.PExecute("UPDATE guild_member SET BankRemSlotsTab%u='%u' WHERE guildid='%u' AND guid='%u'",
+        CharacterDatabase.PExecute("UPDATE guild_member SET BankRemSlotsTab%u='%u' WHERE guildid='%u' AND guid='%u'",
             uint32(TabId), itr->second.BankRemSlotsTab[TabId], Id, LowGuid);
     }
     return true;
@@ -1481,7 +1481,7 @@ uint32 Guild::GetMemberSlotWithdrawRem(uint32 LowGuid, uint8 TabId)
     {
         itr->second.BankResetTimeTab[TabId] = curTime;
         itr->second.BankRemSlotsTab[TabId] = GetBankSlotPerDay(itr->second.RankId, TabId);
-        RealmDataDatabase.PExecute("UPDATE guild_member SET BankResetTimeTab%u='%u',BankRemSlotsTab%u='%u' WHERE guildid='%u' AND guid='%u'",
+        CharacterDatabase.PExecute("UPDATE guild_member SET BankResetTimeTab%u='%u',BankRemSlotsTab%u='%u' WHERE guildid='%u' AND guid='%u'",
             uint32(TabId), itr->second.BankResetTimeTab[TabId], uint32(TabId), itr->second.BankRemSlotsTab[TabId], Id, LowGuid);
     }
     return itr->second.BankRemSlotsTab[TabId];
@@ -1502,7 +1502,7 @@ uint32 Guild::GetMemberMoneyWithdrawRem(uint32 LowGuid)
     {
         itr->second.BankResetTimeMoney = curTime;
         itr->second.BankRemMoney = GetBankMoneyPerDay(itr->second.RankId);
-        RealmDataDatabase.PExecute("UPDATE guild_member SET BankResetTimeMoney='%u',BankRemMoney='%u' WHERE guildid='%u' AND guid='%u'",
+        CharacterDatabase.PExecute("UPDATE guild_member SET BankResetTimeMoney='%u',BankRemMoney='%u' WHERE guildid='%u' AND guid='%u'",
             itr->second.BankResetTimeMoney, itr->second.BankRemMoney, Id, LowGuid);
     }
     return itr->second.BankRemMoney;
@@ -1522,8 +1522,8 @@ void Guild::SetBankMoneyPerDay(uint32 rankId, uint32 money)
         if (itr->second.RankId == rankId)
             itr->second.BankResetTimeMoney = 0;
 
-    RealmDataDatabase.PExecute("UPDATE guild_rank SET BankMoneyPerDay='%u' WHERE rid='%u' AND guildid='%u'", money, (rankId+1), Id);
-    RealmDataDatabase.PExecute("UPDATE guild_member SET BankResetTimeMoney='0' WHERE guildid='%u' AND rank='%u'", Id, rankId);
+    CharacterDatabase.PExecute("UPDATE guild_rank SET BankMoneyPerDay='%u' WHERE rid='%u' AND guildid='%u'", money, (rankId+1), Id);
+    CharacterDatabase.PExecute("UPDATE guild_member SET BankResetTimeMoney='0' WHERE guildid='%u' AND rank='%u'", Id, rankId);
 }
 
 void Guild::SetBankRightsAndSlots(uint32 rankId, uint8 TabId, uint32 right, uint32 nbSlots, bool db)
@@ -1549,10 +1549,10 @@ void Guild::SetBankRightsAndSlots(uint32 rankId, uint8 TabId, uint32 right, uint
                 for (int i = 0; i < GUILD_BANK_MAX_TABS; ++i)
                     itr->second.BankResetTimeTab[i] = 0;
 
-        RealmDataDatabase.PExecute("DELETE FROM guild_bank_right WHERE guildid='%u' AND TabId='%u' AND rid='%u'", Id, uint32(TabId), rankId);
-        RealmDataDatabase.PExecute("INSERT INTO guild_bank_right (guildid,TabId,rid,gbright,SlotPerDay) VALUES "
+        CharacterDatabase.PExecute("DELETE FROM guild_bank_right WHERE guildid='%u' AND TabId='%u' AND rid='%u'", Id, uint32(TabId), rankId);
+        CharacterDatabase.PExecute("INSERT INTO guild_bank_right (guildid,TabId,rid,gbright,SlotPerDay) VALUES "
             "('%u','%u','%u','%u','%u')", Id, uint32(TabId), rankId, m_ranks[rankId].TabRight[TabId], m_ranks[rankId].TabSlotPerDay[TabId]);
-        RealmDataDatabase.PExecute("UPDATE guild_member SET BankResetTimeTab%u='0' WHERE guildid='%u' AND rank='%u'", uint32(TabId), Id, rankId);
+        CharacterDatabase.PExecute("UPDATE guild_member SET BankResetTimeTab%u='0' WHERE guildid='%u' AND rank='%u'", uint32(TabId), Id, rankId);
     }
 }
 
@@ -1582,7 +1582,7 @@ uint32 Guild::GetBankSlotPerDay(uint32 rankId, uint8 TabId)
 void Guild::LoadBankRightsFromDB(uint32 GuildId)
 {
     //                                                     0      1    2        3
-    QueryResult* result = RealmDataDatabase.PQuery("SELECT TabId, rid, gbright, SlotPerDay FROM guild_bank_right WHERE guildid = '%u' ORDER BY TabId", GuildId);
+    QueryResult* result = CharacterDatabase.PQuery("SELECT TabId, rid, gbright, SlotPerDay FROM guild_bank_right WHERE guildid = '%u' ORDER BY TabId", GuildId);
 
     if (!result)
         return;
@@ -1609,7 +1609,7 @@ void Guild::LoadGuildBankEventLogFromDB()
 {
     // We can't add a limit as in Guild::LoadGuildEventLogFromDB since we fetch both money and bank log and know nothing about the composition
     //                                                     0        1         2      3           4            5               6          7
-    QueryResult* result = RealmDataDatabase.PQuery("SELECT LogGuid, LogEntry, TabId, PlayerGuid, ItemOrMoney, ItemStackCount, DestTabId, TimeStamp FROM guild_bank_eventlog WHERE guildid='%u' ORDER BY TimeStamp DESC", Id);
+    QueryResult* result = CharacterDatabase.PQuery("SELECT LogGuid, LogEntry, TabId, PlayerGuid, ItemOrMoney, ItemStackCount, DestTabId, TimeStamp FROM guild_bank_eventlog WHERE guildid='%u' ORDER BY TimeStamp DESC", Id);
     if (!result)
         return;
 
@@ -1629,7 +1629,7 @@ void Guild::LoadGuildBankEventLogFromDB()
 
         if (TabId >= GUILD_BANK_MAX_TABS)
         {
-            sLog.outLog(LOG_DEFAULT, "ERROR: Guild::LoadGuildBankEventLogFromDB: Invalid tabid '%u' for guild bank log entry (guild: '%s', LogGuid: %u), skipped.", TabId, GetName().c_str(), NewEvent->LogGuid);
+            sLog.outError( "ERROR: Guild::LoadGuildBankEventLogFromDB: Invalid tabid '%u' for guild bank log entry (guild: '%s', LogGuid: %u), skipped.", TabId, GetName().c_str(), NewEvent->LogGuid);
             delete NewEvent;
             continue;
         }
@@ -1650,14 +1650,14 @@ void Guild::LoadGuildBankEventLogFromDB()
     // This cases can happen only if a crash occured somewhere and table has too many log entries
     if (!m_GuildBankEventLog_Money.empty())
     {
-        RealmDataDatabase.PExecute("DELETE FROM guild_bank_eventlog WHERE guildid=%u AND LogGuid < %u",
+        CharacterDatabase.PExecute("DELETE FROM guild_bank_eventlog WHERE guildid=%u AND LogGuid < %u",
             Id, m_GuildBankEventLog_Money.front()->LogGuid);
     }
     for (int i = 0; i < GUILD_BANK_MAX_TABS; ++i)
     {
         if (!m_GuildBankEventLog_Item[i].empty())
         {
-            RealmDataDatabase.PExecute("DELETE FROM guild_bank_eventlog WHERE guildid=%u AND LogGuid < %u",
+            CharacterDatabase.PExecute("DELETE FROM guild_bank_eventlog WHERE guildid=%u AND LogGuid < %u",
                 Id, m_GuildBankEventLog_Item[i].front()->LogGuid);
         }
     }
@@ -1750,7 +1750,7 @@ void Guild::LogBankEvent(uint8 LogEntry, uint8 TabId, uint32 PlayerGuidLow, uint
         {
             GuildBankEvent *OldEvent = *(m_GuildBankEventLog_Money.begin());
             m_GuildBankEventLog_Money.pop_front();
-            RealmDataDatabase.PExecute("DELETE FROM guild_bank_eventlog WHERE guildid='%u' AND LogGuid='%u'", Id, OldEvent->LogGuid);
+            CharacterDatabase.PExecute("DELETE FROM guild_bank_eventlog WHERE guildid='%u' AND LogGuid='%u'", Id, OldEvent->LogGuid);
             delete OldEvent;
         }
         m_GuildBankEventLog_Money.push_back(NewEvent);
@@ -1761,7 +1761,7 @@ void Guild::LogBankEvent(uint8 LogEntry, uint8 TabId, uint32 PlayerGuidLow, uint
         {
             GuildBankEvent *OldEvent = *(m_GuildBankEventLog_Item[TabId].begin());
             m_GuildBankEventLog_Item[TabId].pop_front();
-            RealmDataDatabase.PExecute("DELETE FROM guild_bank_eventlog WHERE guildid='%u' AND LogGuid='%u'", Id, OldEvent->LogGuid);
+            CharacterDatabase.PExecute("DELETE FROM guild_bank_eventlog WHERE guildid='%u' AND LogGuid='%u'", Id, OldEvent->LogGuid);
             delete OldEvent;
         }
         m_GuildBankEventLog_Item[TabId].push_back(NewEvent);
@@ -1770,17 +1770,17 @@ void Guild::LogBankEvent(uint8 LogEntry, uint8 TabId, uint32 PlayerGuidLow, uint
     // used by eluna
     sHookMgr->OnBankEvent(this, LogEntry, TabId, PlayerGuidLow, ItemOrMoney, ItemStackCount, DestTabId);
 
-    RealmDataDatabase.PExecute("INSERT INTO guild_bank_eventlog (guildid,LogGuid,LogEntry,TabId,PlayerGuid,ItemOrMoney,ItemStackCount,DestTabId,TimeStamp) VALUES ('%u','%u','%u','%u','%u','%u','%u','%u','" UI64FMTD "')",
+    CharacterDatabase.PExecute("INSERT INTO guild_bank_eventlog (guildid,LogGuid,LogEntry,TabId,PlayerGuid,ItemOrMoney,ItemStackCount,DestTabId,TimeStamp) VALUES ('%u','%u','%u','%u','%u','%u','%u','%u','" UI64FMTD "')",
         Id, NewEvent->LogGuid, uint32(NewEvent->LogEntry), uint32(TabId), NewEvent->PlayerGuid, NewEvent->ItemOrMoney, uint32(NewEvent->ItemStackCount), uint32(NewEvent->DestTabId), NewEvent->TimeStamp);
 }
 
 // This will renum guids used at load to prevent always going up until infinit
 void Guild::RenumBankLogs()
 {
-    RealmDataDatabase.PExecute("UPDATE guild_bank_eventlog AS target INNER JOIN (SELECT *, (SELECT @COUNT := -1) FROM guild_bank_eventlog WHERE guildid = %u ORDER BY logguid ASC) "
+    CharacterDatabase.PExecute("UPDATE guild_bank_eventlog AS target INNER JOIN (SELECT *, (SELECT @COUNT := -1) FROM guild_bank_eventlog WHERE guildid = %u ORDER BY logguid ASC) "
                                    "AS source ON source.logguid = target.logguid AND source.guildid = target.guildid SET target.logguid = (@COUNT := @COUNT + 1);", Id);
 
-    QueryResult* result = RealmDataDatabase.PQuery("SELECT Max(LogGuid) FROM guild_bank_eventlog WHERE guildid = %u", Id);
+    QueryResult* result = CharacterDatabase.PQuery("SELECT Max(LogGuid) FROM guild_bank_eventlog WHERE guildid = %u", Id);
     if (!result)
         return;
 
@@ -1790,8 +1790,8 @@ void Guild::RenumBankLogs()
 
 bool Guild::AddGBankItemToDB(uint32 GuildId, uint32 BankTab , uint32 BankTabSlot , uint32 GUIDLow, uint32 Entry)
 {
-    RealmDataDatabase.PExecute("DELETE FROM guild_bank_item WHERE guildid = '%u' AND TabId = '%u'AND SlotId = '%u'", GuildId, BankTab, BankTabSlot);
-    RealmDataDatabase.PExecute("INSERT INTO guild_bank_item (guildid,TabId,SlotId,item_guid,item_entry) "
+    CharacterDatabase.PExecute("DELETE FROM guild_bank_item WHERE guildid = '%u' AND TabId = '%u'AND SlotId = '%u'", GuildId, BankTab, BankTabSlot);
+    CharacterDatabase.PExecute("INSERT INTO guild_bank_item (guildid,TabId,SlotId,item_guid,item_entry) "
         "VALUES ('%u', '%u', '%u', '%u', '%u')", GuildId, BankTab, BankTabSlot, GUIDLow, Entry);
     return true;
 }
@@ -1901,7 +1901,7 @@ Item* Guild::_StoreItem(uint8 tab, uint8 slot, Item *pItem, uint32 count, bool c
 void Guild::RemoveItem(uint8 tab, uint8 slot)
 {
     m_TabListMap[tab]->Slots[slot] = NULL;
-    RealmDataDatabase.PExecute("DELETE FROM guild_bank_item WHERE guildid='%u' AND TabId='%u' AND SlotId='%u'",
+    CharacterDatabase.PExecute("DELETE FROM guild_bank_item WHERE guildid='%u' AND TabId='%u' AND SlotId='%u'",
         GetId(), uint32(tab), uint32(slot));
 }
 
@@ -2066,8 +2066,8 @@ void Guild::SetGuildBankTabText(uint8 TabId, std::string text)
 
     m_TabListMap[TabId]->Text = text;
 
-    RealmDataDatabase.escape_string(text);
-    RealmDataDatabase.PExecute("UPDATE guild_bank_tab SET TabText='%s' WHERE guildid='%u' AND TabId='%u'", text.c_str(), Id, uint32(TabId));
+    CharacterDatabase.escape_string(text);
+    CharacterDatabase.PExecute("UPDATE guild_bank_tab SET TabText='%s' WHERE guildid='%u' AND TabId='%u'", text.c_str(), Id, uint32(TabId));
 }
 
 void Guild::SendGuildBankTabTextToAll(uint8 TabId)
@@ -2124,7 +2124,7 @@ void Guild::SetFlags(uint64 flags)
     m_guildFlags = flags;
 
     static SqlStatementID setFlags;
-    SqlStatement stmt = RealmDataDatabase.CreateStatement(setFlags, "UPDATE guild SET flags = ? WHERE guildid = ?");
+    SqlStatement stmt = CharacterDatabase.CreateStatement(setFlags, "UPDATE guild SET flags = ? WHERE guildid = ?");
     stmt.addUInt64(m_guildFlags);
     stmt.addUInt32(GetId());
     stmt.Execute();

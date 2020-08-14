@@ -47,7 +47,7 @@ namespace LuaPlayer
         WorldPacket data(SMSG_SUMMON_REQUEST, 8 + 4 + 4);
         data << uint64(player->GetGUIDLow());
         data << uint32(zoneId);
-        data << uint32(delay ? delay* IN_MILISECONDS : MAX_PLAYER_SUMMON_DELAY * IN_MILISECONDS);
+        data << uint32(delay ? delay* IN_MILLISECONDS : MAX_PLAYER_SUMMON_DELAY * IN_MILLISECONDS);
         target->GetSession()->SendPacket(&data);
         return 0;
     }

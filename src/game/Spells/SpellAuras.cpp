@@ -485,7 +485,7 @@ Unit *caster, Item* castItem) : Aura(spellproto, eff, currentBasePoints, target,
                 m_modifier.m_auraname = SPELL_AURA_NONE;
             break;
         default:
-            sLog.outLog(LOG_DEFAULT, "ERROR: Wrong spell effect in AreaAura constructor");
+            sLog.outError( "ERROR: Wrong spell effect in AreaAura constructor");
             ASSERT(false);
             break;
     }
@@ -2493,7 +2493,7 @@ void Aura::HandleAuraDummy(bool apply, bool Real)
                 return;
             case 7057:                                      // Haunting Spirits
                 m_isPeriodic = true;
-                m_modifier.periodictime = 30*IN_MILISECONDS;
+                m_modifier.periodictime = 30*IN_MILLISECONDS;
                 m_periodicTimer = m_modifier.periodictime;
                 return;
             case 10255:                             // Stoned
@@ -3203,7 +3203,7 @@ void Aura::HandleAuraMounted(bool apply, bool Real)
         CreatureInfo const* ci = ObjectMgr::GetCreatureTemplate(m_modifier.m_miscvalue);
         if (!ci)
         {
-            sLog.outLog(LOG_DB_ERR, "AuraMounted: `creature_template`='%u' not found in database (only need it modelid)", m_modifier.m_miscvalue);
+            sLog.outErrorDb( "AuraMounted: `creature_template`='%u' not found in database (only need it modelid)", m_modifier.m_miscvalue);
             return;
         }
 
@@ -3366,7 +3366,7 @@ void Aura::HandleAuraModShapeshift(bool apply, bool Real)
             modelid = 16031;
             break;
         default:
-            sLog.outLog(LOG_DEFAULT, "ERROR: Auras: Unknown Shapeshift Type: %u", m_modifier.m_miscvalue);
+            sLog.outError( "ERROR: Auras: Unknown Shapeshift Type: %u", m_modifier.m_miscvalue);
     }
 
     // remove polymorph before changing display id to keep new display id
@@ -3693,7 +3693,7 @@ void Aura::HandleAuraTransform(bool apply, bool Real)
             {
                                                             //pig pink ^_^
                 m_target->SetDisplayId(16358);
-                sLog.outLog(LOG_DEFAULT, "ERROR: Auras: unknown creature id = %d (only need its modelid) Form Spell Aura Transform in Spell ID = %d", m_modifier.m_miscvalue, GetId());
+                sLog.outError( "ERROR: Auras: unknown creature id = %d (only need its modelid) Form Spell Aura Transform in Spell ID = %d", m_modifier.m_miscvalue, GetId());
             }
             else
             {
@@ -5580,7 +5580,7 @@ void Aura::HandleAuraModStat(bool apply, bool Real)
 {
     if (m_modifier.m_miscvalue < -2 || m_modifier.m_miscvalue > 4)
     {
-        sLog.outLog(LOG_DEFAULT, "ERROR: WARNING: Spell %u effect %u have unsupported misc value (%i) for SPELL_AURA_MOD_STAT ",GetId(),GetEffIndex(),m_modifier.m_miscvalue);
+        sLog.outError( "ERROR: WARNING: Spell %u effect %u have unsupported misc value (%i) for SPELL_AURA_MOD_STAT ",GetId(),GetEffIndex(),m_modifier.m_miscvalue);
         return;
     }
 
@@ -5608,7 +5608,7 @@ void Aura::HandleModPercentStat(bool apply, bool Real)
 {
     if (m_modifier.m_miscvalue < -1 || m_modifier.m_miscvalue > 4)
     {
-        sLog.outLog(LOG_DEFAULT, "ERROR: WARNING: Misc Value for SPELL_AURA_MOD_PERCENT_STAT not valid");
+        sLog.outError( "ERROR: WARNING: Misc Value for SPELL_AURA_MOD_PERCENT_STAT not valid");
         return;
     }
 
@@ -5686,7 +5686,7 @@ void Aura::HandleModTotalPercentStat(bool apply, bool Real)
 {
     if (m_modifier.m_miscvalue < -1 || m_modifier.m_miscvalue > 4)
     {
-        sLog.outLog(LOG_DEFAULT, "ERROR: WARNING: Misc Value for SPELL_AURA_MOD_PERCENT_STAT not valid");
+        sLog.outError( "ERROR: WARNING: Misc Value for SPELL_AURA_MOD_PERCENT_STAT not valid");
         return;
     }
 
@@ -5722,7 +5722,7 @@ void Aura::HandleAuraModResistenceOfStatPercent(bool /*apply*/, bool Real)
     {
         // support required adding replace UpdateArmor by loop by UpdateResistence at intellect update
         // and include in UpdateResistence same code as in UpdateArmor for aura mod apply.
-        sLog.outLog(LOG_DEFAULT, "ERROR: Aura SPELL_AURA_MOD_RESISTANCE_OF_STAT_PERCENT(182) need adding support for non-armor resistances!");
+        sLog.outError( "ERROR: Aura SPELL_AURA_MOD_RESISTANCE_OF_STAT_PERCENT(182) need adding support for non-armor resistances!");
         return;
     }
 
@@ -5976,7 +5976,7 @@ void Aura::HandleAuraModDodgePercent(bool /*apply*/, bool Real)
         return;
 
     ((Player*)m_target)->UpdateDodgePercentage();
-    //sLog.outLog(LOG_DEFAULT, "ERROR: BONUS DODGE CHANCE: + %f", float(m_modifier.m_amount));
+    //sLog.outError( "ERROR: BONUS DODGE CHANCE: + %f", float(m_modifier.m_amount));
 }
 
 void Aura::HandleAuraModBlockPercent(bool /*apply*/, bool Real)
@@ -5985,7 +5985,7 @@ void Aura::HandleAuraModBlockPercent(bool /*apply*/, bool Real)
         return;
 
     ((Player*)m_target)->UpdateBlockPercentage();
-    //sLog.outLog(LOG_DEFAULT, "ERROR: BONUS BLOCK CHANCE: + %f", float(m_modifier.m_amount));
+    //sLog.outError( "ERROR: BONUS BLOCK CHANCE: + %f", float(m_modifier.m_amount));
 }
 
 void Aura::HandleAuraModRegenInterrupt(bool /*apply*/, bool Real)
@@ -6201,7 +6201,7 @@ void Aura::HandleAuraModRangedAttackPowerOfStatPercent(bool apply, bool Real)
     if (m_modifier.m_miscvalue != STAT_INTELLECT)
     {
         // support required adding UpdateAttackPowerAndDamage calls at stat update
-        sLog.outLog(LOG_DEFAULT, "ERROR: Aura SPELL_AURA_MOD_RANGED_ATTACK_POWER_OF_STAT_PERCENT (212) need support non-intellect stats!");
+        sLog.outError( "ERROR: Aura SPELL_AURA_MOD_RANGED_ATTACK_POWER_OF_STAT_PERCENT (212) need support non-intellect stats!");
         return;
     }
 
@@ -7139,7 +7139,7 @@ void Aura::PeriodicTick()
                     {
                         if ((*i)->GetEffIndex()!=1)
                         {
-                            sLog.outLog(LOG_DEFAULT, "ERROR: Expected spell %u structure change, need code update",(*i)->GetId());
+                            sLog.outError( "ERROR: Expected spell %u structure change, need code update",(*i)->GetId());
                             break;
                         }
 
@@ -8143,7 +8143,7 @@ void Aura::UnregisterSingleCastAura()
         }
         else
         {
-            sLog.outLog(LOG_DEFAULT, "ERROR: Couldn't find the caster of the single target aura, may crash later!");
+            sLog.outError( "ERROR: Couldn't find the caster of the single target aura, may crash later!");
             ASSERT(false);
         }
         m_isSingleTargetAura = false;

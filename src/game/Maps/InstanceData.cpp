@@ -38,7 +38,7 @@ void InstanceData::SaveToDB()
 
     static SqlStatementID updateInstance;
 
-    SqlStatement stmt = RealmDataDatabase.CreateStatement(updateInstance, "UPDATE instance SET data = ? WHERE id = ?");
+    SqlStatement stmt = CharacterDatabase.CreateStatement(updateInstance, "UPDATE instance SET data = ? WHERE id = ?");
     stmt.addString(data);
     stmt.addUInt32(instance->GetInstanceId());
     stmt.Execute();
@@ -52,7 +52,7 @@ void InstanceData::HandleGameObject(uint64 GUID, bool open, GameObject *go)
     if (go)
         go->SetGoState(open ? GO_STATE_ACTIVE : GO_STATE_READY);
     else
-        debug_log("TSCR: InstanceData: HandleGameObject failed");
+        sLog.outDebug("TSCR: InstanceData: HandleGameObject failed");
 }
 
 bool InstanceData::IsEncounterInProgress() const
@@ -245,7 +245,7 @@ void InstanceData::LogPossibleCheaters(const char* cheatName)
             playerlist += itr->getSource()->GetName();
             playerlist += " ";
         }
-        sLog.outLog(LOG_CHEAT,"Possible cheaters(%s): %s",cheatName,playerlist.c_str());
+        sLog.out(LOG_CHAR,"Possible cheaters(%s): %s",cheatName,playerlist.c_str());
     
         sWorld.SendGMText(LANG_POSSIBLE_CHEAT, cheatName, pPlayer->GetName(),playerlist.c_str());
     }

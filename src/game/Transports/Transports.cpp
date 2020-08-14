@@ -33,7 +33,7 @@
 
 void MapManager::LoadTransports()
 {
-    QueryResult* result = GameDataDatabase.Query("SELECT entry, name, period FROM transports");
+    QueryResult* result = WorldDatabase.Query("SELECT entry, name, period FROM transports");
 
     uint32 count = 0;
 
@@ -65,14 +65,14 @@ void MapManager::LoadTransports()
 
         if (!goinfo)
         {
-            sLog.outLog(LOG_DB_ERR, "Transport ID:%u, Name: %s, will not be loaded, gameobject_template missing", entry, name.c_str());
+            sLog.outErrorDb( "Transport ID:%u, Name: %s, will not be loaded, gameobject_template missing", entry, name.c_str());
             delete t;
             continue;
         }
 
         if (goinfo->type != GAMEOBJECT_TYPE_MO_TRANSPORT)
         {
-            sLog.outLog(LOG_DB_ERR, "Transport ID:%u, Name: %s, will not be loaded, gameobject_template type wrong", entry, name.c_str());
+            sLog.outErrorDb( "Transport ID:%u, Name: %s, will not be loaded, gameobject_template type wrong", entry, name.c_str());
             delete t;
             continue;
         }
@@ -84,7 +84,7 @@ void MapManager::LoadTransports()
         if (!t->GenerateWaypoints(goinfo->moTransport.taxiPathId, mapsUsed))
             // skip transports with empty waypoints list
         {
-            sLog.outLog(LOG_DB_ERR, "Transport (path id %u) path size = 0. Transport ignored, check DBC files or transport GO data0 field.",goinfo->moTransport.taxiPathId);
+            sLog.outErrorDb( "Transport (path id %u) path size = 0. Transport ignored, check DBC files or transport GO data0 field.",goinfo->moTransport.taxiPathId);
             delete t;
             continue;
         }
@@ -123,7 +123,7 @@ void MapManager::LoadTransports()
     sLog.outString(">> Loaded %u transports", count);
 
     // check transport data DB integrity
-    result = GameDataDatabase.Query("SELECT gameobject.guid,gameobject.id,transports.name FROM gameobject,transports WHERE gameobject.id = transports.entry");
+    result = WorldDatabase.Query("SELECT gameobject.guid,gameobject.id,transports.name FROM gameobject,transports WHERE gameobject.id = transports.entry");
     if (result)                                              // wrong data found
     {
         do
@@ -133,7 +133,7 @@ void MapManager::LoadTransports()
             uint32 guid  = fields[0].GetUInt32();
             uint32 entry = fields[1].GetUInt32();
             std::string name = fields[2].GetCppString();
-            sLog.outLog(LOG_DB_ERR, "Transport %u '%s' have record (GUID: %u) in `gameobject`. Transports DON'T must have any records in `gameobject` or its behavior will be unpredictable/bugged.",entry,name.c_str(),guid);
+            sLog.outErrorDb( "Transport %u '%s' have record (GUID: %u) in `gameobject`. Transports DON'T must have any records in `gameobject` or its behavior will be unpredictable/bugged.",entry,name.c_str(),guid);
         }
         while (result->NextRow());
     }
@@ -153,7 +153,7 @@ bool Transport::Create(uint32 guidlow, uint32 mapid, float x, float y, float z, 
 
     if (!IsPositionValid())
     {
-        sLog.outLog(LOG_DEFAULT, "ERROR: Transport (GUID: %u) not created. Suggested coordinates isn't valid (X: %f Y: %f)",
+        sLog.outError( "ERROR: Transport (GUID: %u) not created. Suggested coordinates isn't valid (X: %f Y: %f)",
             guidlow,x,y);
         return false;
     }
@@ -164,7 +164,7 @@ bool Transport::Create(uint32 guidlow, uint32 mapid, float x, float y, float z, 
 
     if (!goinfo)
     {
-        sLog.outLog(LOG_DB_ERR, "Transport not created: entry in `gameobject_template` not found, guidlow: %u map: %u  (X: %f Y: %f Z: %f) ang: %f",guidlow, mapid, x, y, z, ang);
+        sLog.outErrorDb( "Transport not created: entry in `gameobject_template` not found, guidlow: %u map: %u  (X: %f Y: %f Z: %f) ang: %f",guidlow, mapid, x, y, z, ang);
         return false;
     }
 
@@ -564,10 +564,10 @@ void Transport::Update(uint32 update_diff, uint32 p_diff)
 
         m_nextNodeTime = m_curr->first;
 
-        if (m_curr == m_WayPoints.begin() && (sLog.getLogFilter() & LOG_FILTER_TRANSPORT_MOVES)==0)
+        if (m_curr == m_WayPoints.begin())
             sLog.outDetail(" ************ BEGIN ************** %s", GetName());
 
-        if ((sLog.getLogFilter() & LOG_FILTER_TRANSPORT_MOVES)==0)
+        if (1)
             sLog.outDetail("%s moved to %d %f %f %f %d", GetName(), m_curr->second.id, m_curr->second.x, m_curr->second.y, m_curr->second.z, m_curr->second.mapid);
 
         //Transport Event System

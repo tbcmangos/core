@@ -134,7 +134,7 @@ struct instance_dark_portal : public ScriptedInstance
             }
         }
 
-        debug_log("TSCR: Instance Black Portal: GetPlayerInMap, but PlayerList is empty!");
+        sLog.outDebug("TSCR: Instance Black Portal: GetPlayerInMap, but PlayerList is empty!");
         return NULL;
     }
 
@@ -156,7 +156,7 @@ struct instance_dark_portal : public ScriptedInstance
             }
         }
         else
-            debug_log("TSCR: Instance Black Portal: FailQuests, but PlayerList is empty!");
+            sLog.outDebug("TSCR: Instance Black Portal: FailQuests, but PlayerList is empty!");
     }
 
     bool IsAnyPortalOpened()
@@ -191,7 +191,7 @@ struct instance_dark_portal : public ScriptedInstance
             }
         }
         else
-            debug_log("TSCR: Instance Black Portal: UpdateBMWorldState, but PlayerList is empty!");
+            sLog.outDebug("TSCR: Instance Black Portal: UpdateBMWorldState, but PlayerList is empty!");
     }
 
     void InitWorldState(bool Enable = true)
@@ -291,7 +291,7 @@ struct instance_dark_portal : public ScriptedInstance
 
         if (!player)
         {
-            debug_log("TSCR: Instance Black Portal: SetData (Type: %u Data %u) cannot find any player.", type, data);
+            sLog.outDebug("TSCR: Instance Black Portal: SetData (Type: %u Data %u) cannot find any player.", type, data);
             return;
         }
 
@@ -320,7 +320,7 @@ struct instance_dark_portal : public ScriptedInstance
                 {
                     if (data == IN_PROGRESS)
                     {
-                        debug_log("TSCR: Instance Dark Portal: Starting event.");
+                        sLog.outDebug("TSCR: Instance Dark Portal: Starting event.");
                         InitWorldState();
                         Encounter[1] = IN_PROGRESS;
                         NextPortal_Timer = 15000;
@@ -434,7 +434,7 @@ struct instance_dark_portal : public ScriptedInstance
         //normalize Z-level if we can, if rift is not at ground level.
         source->UpdateAllowedPositionZ(x, y, z);
 
-        debug_log("TSCR: Instance Dark Portal: Summoning rift boss entry %u.",entry);
+        sLog.outDebug("TSCR: Instance Dark Portal: Summoning rift boss entry %u.",entry);
 
         Unit *Summon = source->SummonCreature(entry,x,y,z,source->GetOrientation(),
             TEMPSUMMON_TIMED_OR_DEAD_DESPAWN,300000);
@@ -442,7 +442,7 @@ struct instance_dark_portal : public ScriptedInstance
         if (Summon)
             return Summon;
 
-        debug_log("TSCR: Instance Dark Portal: what just happened there? No boss, no loot, no fun...");
+        sLog.outDebug("TSCR: Instance Dark Portal: what just happened there? No boss, no loot, no fun...");
         return NULL;
     }
 
@@ -459,7 +459,7 @@ struct instance_dark_portal : public ScriptedInstance
                 int tmp = rand()%4;
                 if (tmp != CurrentRiftId)
                 {
-                    debug_log("TSCR: Instance Dark Portal: Creating Time Rift at locationId %i (old locationId was %u).",tmp,CurrentRiftId);
+                    sLog.outDebug("TSCR: Instance Dark Portal: Creating Time Rift at locationId %i (old locationId was %u).",tmp,CurrentRiftId);
 
                     CurrentRiftId = tmp;
 

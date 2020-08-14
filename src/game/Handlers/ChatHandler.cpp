@@ -66,7 +66,7 @@ void WorldSession::HandleMessagechatOpcode(WorldPacket & recv_data)
 
     if (type >= MAX_CHAT_MSG_TYPE)
     {
-        sLog.outLog(LOG_DEFAULT, "ERROR: CHAT: Wrong message type received: %u", type);
+        sLog.outError( "ERROR: CHAT: Wrong message type received: %u", type);
         return;
     }
 
@@ -131,7 +131,7 @@ void WorldSession::HandleMessagechatOpcode(WorldPacket & recv_data)
     }
 
     // mass mute for players check
-    if (!HasPermissions(PERM_GMT) && sWorld.GetMassMuteTime() && sWorld.GetMassMuteTime() > time(NULL))
+    if (!HasPermissions(SEC_GAMEMASTER) && sWorld.GetMassMuteTime() && sWorld.GetMassMuteTime() > time(NULL))
     {
         if (sWorld.GetMassMuteReason())
             ChatHandler(_player).PSendSysMessage("Mass mute reason: %s", sWorld.GetMassMuteReason());
@@ -309,7 +309,7 @@ void WorldSession::HandleMessagechatOpcode(WorldPacket & recv_data)
 
             Player *player = sObjectMgr.GetPlayer(to.c_str());
             if (!player ||
-                ( player->GetSession()->HasPermissions(PERM_GMT) && !HasPermissions(PERM_GMT_HDEV) &&
+                ( player->GetSession()->HasPermissions(SEC_GAMEMASTER) && !HasPermissions(SEC_DEVELOPPER) &&
                 !player->isAcceptWhispers() && !GetPlayer()->canWhisperToGM())
                 )
             {
@@ -319,7 +319,7 @@ void WorldSession::HandleMessagechatOpcode(WorldPacket & recv_data)
                 return;
             }
 
-            if (!sWorld.getConfig(CONFIG_ALLOW_TWO_SIDE_INTERACTION_CHAT) && !HasPermissions(PERM_GMT_HDEV) && !player->GetSession()->HasPermissions(PERM_GMT_HDEV))
+            if (!sWorld.getConfig(CONFIG_ALLOW_TWO_SIDE_INTERACTION_CHAT) && !HasPermissions(SEC_DEVELOPPER) && !player->GetSession()->HasPermissions(SEC_DEVELOPPER))
             {
                 uint32 sidea = GetPlayer()->GetTeam();
                 uint32 sideb = player->GetTeam();
@@ -545,7 +545,7 @@ void WorldSession::HandleMessagechatOpcode(WorldPacket & recv_data)
         } break;
 
         default:
-            sLog.outLog(LOG_DEFAULT, "ERROR: CHAT: unknown message type %u, lang: %u", type, lang);
+            sLog.outError( "ERROR: CHAT: unknown message type %u, lang: %u", type, lang);
             break;
     }
 }

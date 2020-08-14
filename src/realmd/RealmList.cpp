@@ -27,7 +27,7 @@
 #include "Util.h"                                           // for Tokens typedef
 #include "Database/DatabaseEnv.h"
 
-extern DatabaseType AccountsDatabase;
+extern DatabaseType LoginDatabase;
 
 // will only support WoW 1.12.1/1.12.2 , WoW:TBC 2.4.3 and official release for WoW:WotLK and later, client builds 10505, 8606, 6005, 5875
 // if you need more from old build then add it in cases in realmd sources code
@@ -130,7 +130,7 @@ void RealmList::UpdateRealms(bool init)
     sLog.outDetail("Updating Realm List...");
 
     ////                                                          0       1         2       3     4      5       6                 7                  8           9
-    QueryResult* result = AccountsDatabase.Query("SELECT realm_id, name, ip_address, port, icon, flags, timezone, required_permission_mask, population, allowed_builds "
+    QueryResult* result = LoginDatabase.Query("SELECT realm_id, name, ip_address, port, icon, flags, timezone, required_permission_mask, population, allowed_builds "
                                                        "FROM realms WHERE (flags & 1) = 0 ORDER BY name");
 
     ///- Circle through results and add them to the realm map
@@ -146,7 +146,7 @@ void RealmList::UpdateRealms(bool init)
 
             if (realmflags & ~(REALM_FLAG_OFFLINE|REALM_FLAG_NEW_PLAYERS|REALM_FLAG_RECOMMENDED|REALM_FLAG_SPECIFYBUILD))
             {
-                sLog.outLog(LOG_DEFAULT, "ERROR: Realm allowed have only OFFLINE Mask 0x2), or NEWPLAYERS (mask 0x20), or RECOMENDED (mask 0x40), or SPECIFICBUILD (mask 0x04) flags in DB");
+                sLog.outError( "ERROR: Realm allowed have only OFFLINE Mask 0x2), or NEWPLAYERS (mask 0x20), or RECOMENDED (mask 0x40), or SPECIFICBUILD (mask 0x04) flags in DB");
                 realmflags &= (REALM_FLAG_OFFLINE|REALM_FLAG_NEW_PLAYERS|REALM_FLAG_RECOMMENDED|REALM_FLAG_SPECIFYBUILD);
             }
 

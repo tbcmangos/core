@@ -83,7 +83,7 @@ void AuctionHouseMgr::SendAuctionWonMail(AuctionEntry *auction)
     Player *bidder = sObjectMgr.GetPlayer(bidderGuid);
     uint32 bidderAccId = 0;
     std::string bidderName;
-    uint64 bidderPermissions = PERM_PLAYER;
+    uint64 bidderPermissions = SEC_PLAYER;
 
     ObjectGuid ownerGuid = ObjectGuid(HIGHGUID_PLAYER, auction->owner);
 
@@ -96,7 +96,7 @@ void AuctionHouseMgr::SendAuctionWonMail(AuctionEntry *auction)
     else
     {
         bidderAccId = sObjectMgr.GetPlayerAccountIdByGUID(bidderGuid);
-        bidderPermissions = bidderAccId ? AccountMgr::GetPermissions(bidderAccId) : PERM_PLAYER;
+        bidderPermissions = bidderAccId ? AccountMgr::GetPermissions(bidderAccId) : SEC_PLAYER;
         if (!sObjectMgr.GetPlayerNameByGUID(bidderGuid, bidderName))
             bidderName = sObjectMgr.GetHellgroundStringForDBCLocale(LANG_UNKNOWN);
     }
@@ -107,13 +107,13 @@ void AuctionHouseMgr::SendAuctionWonMail(AuctionEntry *auction)
 
     uint32 ownerAccId = sObjectMgr.GetPlayerAccountIdByGUID(ownerGuid);
 
-    sLog.outLog(LOG_AUCTION, "Player %s (Account: %u) won item in auction: %s (Entry: %u Count: %u) and pay money: %u. Original owner %s (Account: %u)",
+    sLog.out(LOG_CHAR,"Player %s (Account: %u) won item in auction: %s (Entry: %u Count: %u) and pay money: %u. Original owner %s (Account: %u)",
         bidderName.c_str(), bidderAccId, pItem->GetProto()->Name1, pItem->GetEntry(), pItem->GetCount(), auction->bid, ownerName.c_str(), ownerAccId);
 
     // gm.log
     if (sWorld.getConfig(CONFIG_GM_LOG_TRADE))
     {
-        if (bidderPermissions & PERM_GMT)
+        if (bidderPermissions & SEC_GAMEMASTER)
         {
             sLog.outCommand(bidderAccId,"GM %s (Account: %u) won item in auction (Entry: %u Count: %u) and pay money: %u. Original owner %s (Account: %u)",
                 bidderName.c_str(), bidderAccId, auction->itemTemplate, auction->itemCount, auction->bid, ownerName.c_str(), ownerAccId);
@@ -134,7 +134,7 @@ void AuctionHouseMgr::SendAuctionWonMail(AuctionEntry *auction)
 
         // set owner to bidder (to prevent delete item with sender char deleting)
         // owner in `data` will set at mail receive and item extracting
-        RealmDataDatabase.PExecute("UPDATE item_instance SET owner_guid = '%u' WHERE guid='%u'", auction->bidder, auction->itemGuidLow);
+        CharacterDatabase.PExecute("UPDATE item_instance SET owner_guid = '%u' WHERE guid='%u'", auction->bidder, auction->itemGuidLow);
 
         if (bidder)
             bidder->GetSession()->SendAuctionBidderNotification(auction, true);
@@ -150,7 +150,7 @@ void AuctionHouseMgr::SendAuctionWonMail(AuctionEntry *auction)
     // receiver not exist
     else
     {
-        RealmDataDatabase.PExecute("DELETE FROM item_instance WHERE guid='%u'", auction->itemGuidLow);
+        CharacterDatabase.PExecute("DELETE FROM item_instance WHERE guid='%u'", auction->itemGuidLow);
         RemoveAItem(auction->itemGuidLow);                  // we have to remove the item, before we delete it !!
         auction->itemGuidLow = 0;
         delete pItem;
@@ -232,7 +232,7 @@ void AuctionHouseMgr::SendAuctionExpiredMail(AuctionEntry * auction)
     Item *pItem = GetAItem(auction->itemGuidLow);
     if (!pItem)
     {
-        sLog.outLog(LOG_DEFAULT, "ERROR: Auction item (GUID: %u) not found, and lost.", auction->itemGuidLow);
+        sLog.outError( "ERROR: Auction item (GUID: %u) not found, and lost.", auction->itemGuidLow);
         return;
     }
 
@@ -263,7 +263,7 @@ void AuctionHouseMgr::SendAuctionExpiredMail(AuctionEntry * auction)
     // owner not found
     else
     {
-        RealmDataDatabase.PExecute("DELETE FROM item_instance WHERE guid='%u'", auction->itemGuidLow);
+        CharacterDatabase.PExecute("DELETE FROM item_instance WHERE guid='%u'", auction->itemGuidLow);
         RemoveAItem(auction->itemGuidLow);                  // we have to remove the item, before we delete it !!
         auction->itemGuidLow = 0;
         delete pItem;
@@ -273,7 +273,7 @@ void AuctionHouseMgr::SendAuctionExpiredMail(AuctionEntry * auction)
 void AuctionHouseMgr::LoadAuctionItems()
 {
     // data needs to be at first place for Item::LoadFromDB       0      1        2
-    QueryResult* result = RealmDataDatabase.Query("SELECT data,itemguid,item_template FROM auctionhouse JOIN item_instance ON itemguid = guid");
+    QueryResult* result = CharacterDatabase.Query("SELECT data,itemguid,item_template FROM auctionhouse JOIN item_instance ON itemguid = guid");
 
     if (!result)
     {
@@ -301,7 +301,7 @@ void AuctionHouseMgr::LoadAuctionItems()
 
         if (!proto)
         {
-            sLog.outLog(LOG_DEFAULT, "ERROR: AuctionHouseMgr::LoadAuctionItems: Unknown item (GUID: %u id: #%u) in auction, skipped.", item_guid,item_template);
+            sLog.outError( "ERROR: AuctionHouseMgr::LoadAuctionItems: Unknown item (GUID: %u id: #%u) in auction, skipped.", item_guid,item_template);
             continue;
         }
 
@@ -324,7 +324,7 @@ void AuctionHouseMgr::LoadAuctionItems()
 
 void AuctionHouseMgr::LoadAuctions()
 {
-    QueryResult* result = RealmDataDatabase.Query("SELECT COUNT(*) FROM auctionhouse");
+    QueryResult* result = CharacterDatabase.Query("SELECT COUNT(*) FROM auctionhouse");
     if (!result)
     {
         BarGoLink bar(1);
@@ -346,7 +346,7 @@ void AuctionHouseMgr::LoadAuctions()
         return;
     }
 
-    result = RealmDataDatabase.Query("SELECT id,houseid,itemguid,item_template,item_count,item_randompropertyid,itemowner,buyoutprice,time,buyguid,lastbid,startbid,deposit FROM auctionhouse");
+    result = CharacterDatabase.Query("SELECT id,houseid,itemguid,item_template,item_count,item_randompropertyid,itemowner,buyoutprice,time,buyguid,lastbid,startbid,deposit FROM auctionhouse");
     if (!result)
     {
         BarGoLink bar(1);
@@ -406,7 +406,7 @@ void AuctionHouseMgr::LoadAuctions()
         if (!pItem)
         {
             auction->DeleteFromDB();
-            sLog.outLog(LOG_DEFAULT, "ERROR: Auction %u has not a existing item : %u, deleted", auction->Id, auction->itemGuidLow);
+            sLog.outError( "ERROR: Auction %u has not a existing item : %u, deleted", auction->Id, auction->itemGuidLow);
             delete auction;
             continue;
         }
@@ -421,7 +421,7 @@ void AuctionHouseMgr::LoadAuctions()
             auction->itemRandomPropertyId = pItem->GetItemRandomPropertyId();
 
             //No SQL injection (no strings)
-            RealmDataDatabase.PExecute("UPDATE auctionhouse SET item_template = %u, item_count = %u, item_randompropertyid = %i WHERE itemguid = %u",
+            CharacterDatabase.PExecute("UPDATE auctionhouse SET item_template = %u, item_count = %u, item_randompropertyid = %i WHERE itemguid = %u",
                 auction->itemTemplate, auction->itemCount, auction->itemRandomPropertyId, auction->itemGuidLow);
         }
 
@@ -923,7 +923,7 @@ AuctionEntry* AuctionHouseObject::AddAuction(AuctionHouseEntry const* auctionHou
     if (pl)
         pl->MoveItemFromInventory(it->GetBagSlot(), it->GetSlot(), true);
 
-    RealmDataDatabase.BeginTransaction();
+    CharacterDatabase.BeginTransaction();
 
     if (pl)
         it->DeleteFromInventoryDB();
@@ -934,7 +934,7 @@ AuctionEntry* AuctionHouseObject::AddAuction(AuctionHouseEntry const* auctionHou
     if (pl)
         pl->SaveInventoryAndGoldToDB();
 
-    RealmDataDatabase.CommitTransaction();
+    CharacterDatabase.CommitTransaction();
 
     return AH;
 }
@@ -945,7 +945,7 @@ bool AuctionEntry::BuildAuctionInfo(WorldPacket & data) const
     Item *pItem = sAuctionMgr.GetAItem(itemGuidLow);
     if (!pItem)
     {
-        sLog.outLog(LOG_DEFAULT, "ERROR: auction to item, that doesn't exist !!!!");
+        sLog.outError( "ERROR: auction to item, that doesn't exist !!!!");
         return false;
     }
     data << uint32(Id);
@@ -967,7 +967,7 @@ bool AuctionEntry::BuildAuctionInfo(WorldPacket & data) const
     data << uint32(startbid);                               // Auction->startbid (not sure if useful)
     data << uint32(bid ? GetAuctionOutBid() : 0);           // minimal outbid
     data << uint32(buyout);                                 // auction->buyout
-    data << uint32((expireTime-time(NULL))*IN_MILISECONDS); // time left
+    data << uint32((expireTime-time(NULL))*IN_MILLISECONDS); // time left
     data << ObjectGuid(HIGHGUID_PLAYER, bidder);            // auction->bidder current
     data << uint32(bid);                                    // current bid
     return true;
@@ -990,13 +990,13 @@ uint32 AuctionEntry::GetAuctionOutBid() const
 void AuctionEntry::DeleteFromDB() const
 {
     //No SQL injection (Id is integer)
-    RealmDataDatabase.PExecute("DELETE FROM auctionhouse WHERE id = '%u'",Id);
+    CharacterDatabase.PExecute("DELETE FROM auctionhouse WHERE id = '%u'",Id);
 }
 
 void AuctionEntry::SaveToDB() const
 {
     static SqlStatementID saveAuction;
-    SqlStatement stmt = RealmDataDatabase.CreateStatement(saveAuction, "INSERT INTO auctionhouse (id,houseid,itemguid,item_template,item_count,item_randompropertyid,itemowner,buyoutprice,time,buyguid,lastbid,startbid,deposit) "
+    SqlStatement stmt = CharacterDatabase.CreateStatement(saveAuction, "INSERT INTO auctionhouse (id,houseid,itemguid,item_template,item_count,item_randompropertyid,itemowner,buyoutprice,time,buyguid,lastbid,startbid,deposit) "
                                                                         "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
 
     stmt.addUInt32(Id);
@@ -1025,11 +1025,11 @@ void AuctionEntry::AuctionBidWinning(Player* newbidder)
     sAuctionMgr.RemoveAItem(this->itemGuidLow);
     sAuctionMgr.GetAuctionsMap(this->auctionHouseEntry)->RemoveAuction(this->Id);
 
-    RealmDataDatabase.BeginTransaction();
+    CharacterDatabase.BeginTransaction();
     this->DeleteFromDB();
     if (newbidder)
         newbidder->SaveInventoryAndGoldToDB();
-    RealmDataDatabase.CommitTransaction();
+    CharacterDatabase.CommitTransaction();
 
     delete this;
 }
@@ -1064,11 +1064,11 @@ bool AuctionEntry::UpdateBid(uint32 newbid, Player* newbidder /*=NULL*/)
             auction_owner->GetSession()->SendAuctionOwnerNotification(this, false);
 
         // after this update we should save player's money ...
-        RealmDataDatabase.BeginTransaction();
-        RealmDataDatabase.PExecute("UPDATE auctionhouse SET buyguid = '%u', lastbid = '%u' WHERE id = '%u'", bidder, bid, Id);
+        CharacterDatabase.BeginTransaction();
+        CharacterDatabase.PExecute("UPDATE auctionhouse SET buyguid = '%u', lastbid = '%u' WHERE id = '%u'", bidder, bid, Id);
         if (newbidder)
             newbidder->SaveInventoryAndGoldToDB();
-        RealmDataDatabase.CommitTransaction();
+        CharacterDatabase.CommitTransaction();
         return true;
     }
     else                                                    // buyout

@@ -64,7 +64,7 @@ void MotionMaster::MoveIdle()
 void MotionMaster::MoveRandom(float spawndist)
 {
     if (m_owner->GetTypeId() == TYPEID_PLAYER)
-        sLog.outLog(LOG_DEFAULT, "ERROR: MotionMaster: Player %u attempt to move random.", m_owner->GetGUIDLow());
+        sLog.outError( "ERROR: MotionMaster: Player %u attempt to move random.", m_owner->GetGUIDLow());
     else
         Mutate(new RandomMovementGenerator<Creature>(spawndist), UNIT_ACTION_DOWAYPOINTS);
 }
@@ -87,7 +87,7 @@ void MotionMaster::MoveTargetedHome()
             Mutate(new FollowMovementGenerator<Creature>(*target,PET_FOLLOW_DIST,PET_FOLLOW_ANGLE), UNIT_ACTION_HOME);
     }
     else
-        sLog.outLog(LOG_DEFAULT, "ERROR: MotionMaster: LowGUID: %u attempt targeted home", m_owner->GetGUIDLow());
+        sLog.outError( "ERROR: MotionMaster: LowGUID: %u attempt targeted home", m_owner->GetGUIDLow());
 }
 
 void MotionMaster::MoveConfused()
@@ -135,7 +135,7 @@ void MotionMaster::MovePoint(uint32 id, float x, float y, float z, bool generate
 void MotionMaster::MoveSeekAssistance(float x, float y, float z)
 {
     if (m_owner->GetTypeId() == TYPEID_PLAYER)
-        sLog.outLog(LOG_DEFAULT, "ERROR: MotionMaster: %s attempt to seek assistance", m_owner->GetGuidStr().c_str());
+        sLog.outError( "ERROR: MotionMaster: %s attempt to seek assistance", m_owner->GetGuidStr().c_str());
     else
         Mutate(new AssistanceMovementGenerator(x,y,z), UNIT_ACTION_ASSISTANCE);
 }
@@ -143,7 +143,7 @@ void MotionMaster::MoveSeekAssistance(float x, float y, float z)
 void MotionMaster::MoveSeekAssistanceDistract(uint32 time)
 {
     if (m_owner->GetTypeId() == TYPEID_PLAYER)
-        sLog.outLog(LOG_DEFAULT, "ERROR: MotionMaster: %s attempt to call distract after assistance", m_owner->GetGuidStr().c_str());
+        sLog.outError( "ERROR: MotionMaster: %s attempt to call distract after assistance", m_owner->GetGuidStr().c_str());
     else
         Mutate(new AssistanceDistractMovementGenerator(time), UNIT_ACTION_ASSISTANCE);
 }
@@ -170,7 +170,7 @@ void MotionMaster::MovePath(uint32 path_id, bool repeatable)
     {
         if (GetCurrentMovementGeneratorType() == WAYPOINT_MOTION_TYPE)
         {
-            sLog.outLog(LOG_DEFAULT, "ERROR: MotionMaster: Creature %s (Entry %u) attempt to MoveWaypoint() but creature is already using waypoint", m_owner->GetGuidStr().c_str(), m_owner->GetEntry());
+            sLog.outError( "ERROR: MotionMaster: Creature %s (Entry %u) attempt to MoveWaypoint() but creature is already using waypoint", m_owner->GetGuidStr().c_str(), m_owner->GetEntry());
             return;
         }
 
@@ -179,7 +179,7 @@ void MotionMaster::MovePath(uint32 path_id, bool repeatable)
         Mutate(new WaypointMovementGenerator<Creature>(path_id, repeatable), UNIT_ACTION_DOWAYPOINTS);
     }
     else
-        sLog.outLog(LOG_DEFAULT, "ERROR: MotionMaster: Non-creature %s attempt to MoveWaypoint()", m_owner->GetGuidStr().c_str());
+        sLog.outError( "ERROR: MotionMaster: Non-creature %s attempt to MoveWaypoint()", m_owner->GetGuidStr().c_str());
 }
 
 void MotionMaster::MoveDistract(uint32 timer)
@@ -238,7 +238,7 @@ MovementGenerator* MotionMaster::top()
     UnitActionPtr mgen = impl()->CurrentAction();
     if (!mgen)
     {
-        sLog.outLog(LOG_DEFAULT, "ERROR: MotionMaster::top() %s has empty states list!", m_owner->GetGuidStr().c_str());
+        sLog.outError( "ERROR: MotionMaster::top() %s has empty states list!", m_owner->GetGuidStr().c_str());
         return &si_idleMovement;
     }
     return ((MovementGenerator*)&*mgen);
@@ -267,7 +267,7 @@ void MotionMaster::MoveFall()
     float tz = m_owner->GetTerrain()->GetHeight(m_owner->GetPositionX(), m_owner->GetPositionY(), m_owner->GetPositionZ(), true, MAX_FALL_DISTANCE);
     if (tz <= INVALID_HEIGHT)
     {
-        sLog.outLog(LOG_DEFAULT, "ERROR: MotionMaster::MoveFall: unable retrive a proper height at map %u (x: %f, y: %f, z: %f).",
+        sLog.outError( "ERROR: MotionMaster::MoveFall: unable retrive a proper height at map %u (x: %f, y: %f, z: %f).",
             m_owner->GetMap()->GetId(), m_owner->GetPositionX(), m_owner->GetPositionX(), m_owner->GetPositionZ());
         return;
     }

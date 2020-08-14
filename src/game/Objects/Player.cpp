@@ -298,7 +298,7 @@ Player::Player (WorldSession *session): Unit(), m_reputationMgr(this), m_camera(
     m_ExtraFlags = 0;
 
     // players always accept
-    if (!GetSession()->HasPermissions(PERM_GMT_HDEV))
+    if (!GetSession()->HasPermissions(SEC_DEVELOPPER))
         SetAcceptWhispers(true);
 
     m_curSelection = 0;
@@ -563,7 +563,7 @@ bool Player::Create(uint32 guidlow, const std::string& name, uint8 race, uint8 c
     PlayerInfo const* info = sObjectMgr.GetPlayerInfo(race, class_);
     if (!info)
     {
-        sLog.outLog(LOG_DEFAULT, "ERROR: Player have incorrect race/class pair. Can't be loaded.");
+        sLog.outError( "ERROR: Player have incorrect race/class pair. Can't be loaded.");
         return false;
     }
 
@@ -578,7 +578,7 @@ bool Player::Create(uint32 guidlow, const std::string& name, uint8 race, uint8 c
     ChrClassesEntry const* cEntry = sChrClassesStore.LookupEntry(class_);
     if (!cEntry)
     {
-        sLog.outLog(LOG_DEFAULT, "ERROR: Class %u not found in DBC (Wrong DBC files?)",class_);
+        sLog.outError( "ERROR: Class %u not found in DBC (Wrong DBC files?)",class_);
         return false;
     }
 
@@ -596,7 +596,7 @@ bool Player::Create(uint32 guidlow, const std::string& name, uint8 race, uint8 c
             unitfield = 0x00110000;
             break;
         default:
-            sLog.outLog(LOG_DEFAULT, "ERROR: Invalid default powertype %u for player (class %u)",powertype,class_);
+            sLog.outError( "ERROR: Invalid default powertype %u for player (class %u)",powertype,class_);
             return false;
     }
 
@@ -614,7 +614,7 @@ bool Player::Create(uint32 guidlow, const std::string& name, uint8 race, uint8 c
             SetNativeDisplayId(info->displayId_m);
             break;
         default:
-            sLog.outLog(LOG_DEFAULT, "ERROR: Invalid gender %u for player",gender);
+            sLog.outError( "ERROR: Invalid gender %u for player",gender);
             return false;
             break;
     }
@@ -656,7 +656,7 @@ bool Player::Create(uint32 guidlow, const std::string& name, uint8 race, uint8 c
     SetUInt32Value(PLAYER_FIELD_YESTERDAY_CONTRIBUTION, 0);
 
     // set starting level
-    if (GetSession()->HasPermissions(PERM_GMT_HDEV))
+    if (GetSession()->HasPermissions(SEC_DEVELOPPER))
         SetUInt32Value (UNIT_FIELD_LEVEL, sWorld.getConfig(CONFIG_START_GM_LEVEL));
     else
         SetUInt32Value (UNIT_FIELD_LEVEL, sWorld.getConfig(CONFIG_START_PLAYER_LEVEL));
@@ -781,7 +781,7 @@ bool Player::Create(uint32 guidlow, const std::string& name, uint8 race, uint8 c
             ItemPrototype const* iProto = ObjectMgr::GetItemPrototype(item_id);
             if (!iProto)
             {
-                sLog.outLog(LOG_DB_ERR, "Initial item id %u (race %u class %u) from CharStartOutfit.dbc not listed in `item_template`, ignoring.",item_id,getRace(),getClass());
+                sLog.outErrorDb( "Initial item id %u (race %u class %u) from CharStartOutfit.dbc not listed in `item_template`, ignoring.",item_id,getRace(),getClass());
                 continue;
             }
 
@@ -877,7 +877,7 @@ bool Player::StoreNewItemInBestSlots(uint32 titem_id, uint32 titem_amount)
     }
 
     // item can't be added
-    sLog.outLog(LOG_DEFAULT, "ERROR: STORAGE: Can't equip or store initial item %u for race %u class %u , error msg = %u",titem_id,getRace(),getClass(),msg);
+    sLog.outError( "ERROR: STORAGE: Can't equip or store initial item %u for race %u class %u , error msg = %u",titem_id,getRace(),getClass(),msg);
     return false;
 }
 
@@ -943,13 +943,13 @@ int32 Player::getMaxTimer(MirrorTimerType timer)
     switch (timer)
     {
         case FATIGUE_TIMER:
-            return MINUTE*IN_MILISECONDS;
+            return MINUTE*IN_MILLISECONDS;
         case BREATH_TIMER:
         {
             if (!isAlive() || HasAuraType(SPELL_AURA_WATER_BREATHING) || GetSession()->HasPermissions(sWorld.getConfig(CONFIG_DISABLE_BREATHING)))
                 return DISABLED_MIRROR_TIMER;
 
-            int32 UnderWaterTime = MINUTE*IN_MILISECONDS;
+            int32 UnderWaterTime = MINUTE*IN_MILLISECONDS;
             AuraList const& mModWaterBreathing = GetAurasByType(SPELL_AURA_MOD_WATER_BREATHING);
             for (AuraList::const_iterator i = mModWaterBreathing.begin(); i != mModWaterBreathing.end(); ++i)
                 UnderWaterTime = uint32(UnderWaterTime * (100.0f + (*i)->GetModifierValue()) / 100.0f);
@@ -961,7 +961,7 @@ int32 Player::getMaxTimer(MirrorTimerType timer)
             if (!isAlive())
                 return DISABLED_MIRROR_TIMER;
 
-            return IN_MILISECONDS;
+            return IN_MILLISECONDS;
         }
         default:
             return 0;
@@ -995,7 +995,7 @@ void Player::HandleDrowning(uint32 time_diff)
             // Timer limit - need deal damage
             if (m_MirrorTimer[BREATH_TIMER] < 0)
             {
-                m_MirrorTimer[BREATH_TIMER]+= 1*IN_MILISECONDS;
+                m_MirrorTimer[BREATH_TIMER]+= 1*IN_MILLISECONDS;
                 // Calculate and deal damage
                 // TODO: Check this formula
                 uint32 damage = GetMaxHealth() / 5 + urand(0, getLevel()-1);
@@ -1031,7 +1031,7 @@ void Player::HandleDrowning(uint32 time_diff)
             // Timer limit - need deal damage or teleport ghost to graveyard
             if (m_MirrorTimer[FATIGUE_TIMER] < 0)
             {
-                m_MirrorTimer[FATIGUE_TIMER]+= 1*IN_MILISECONDS;
+                m_MirrorTimer[FATIGUE_TIMER]+= 1*IN_MILLISECONDS;
                 if (isAlive())                                            // Calculate and deal damage
                 {
                     uint32 damage = GetMaxHealth() / 5 + urand(0, getLevel()-1);
@@ -1064,7 +1064,7 @@ void Player::HandleDrowning(uint32 time_diff)
             m_MirrorTimer[FIRE_TIMER]-=time_diff;
             if (m_MirrorTimer[FIRE_TIMER] < 0)
             {
-                m_MirrorTimer[FIRE_TIMER]+= 1*IN_MILISECONDS;
+                m_MirrorTimer[FIRE_TIMER]+= 1*IN_MILLISECONDS;
                 // Calculate and deal damage
                 // TODO: Check this formula
                 uint32 damage = urand(600, 700);
@@ -1167,7 +1167,7 @@ void Player::CreateCharmAI()
             i_AI = new DruidAI(this);
             break;
         default:
-            sLog.outLog(LOG_DEFAULT, "ERROR: Unhandled class type, while creating charmAI");
+            sLog.outError( "ERROR: Unhandled class type, while creating charmAI");
             break;
     }
 }
@@ -1478,7 +1478,7 @@ void Player::setDeathState(DeathState s)
     {
         if (!cur)
         {
-            sLog.outLog(LOG_DEFAULT, "ERROR: setDeathState: attempt to kill a dead player %s(%d)", GetName(), GetGUIDLow());
+            sLog.outError( "ERROR: setDeathState: attempt to kill a dead player %s(%d)", GetName(), GetGUIDLow());
             return;
         }
 
@@ -1532,7 +1532,7 @@ bool Player::BuildEnumData(QueryResult* result, WorldPacket * p_data)
     PlayerInfo const *info = sObjectMgr.GetPlayerInfo(pRace, pClass);
     if (!info)
     {
-        sLog.outLog(LOG_DEFAULT, "ERROR: Player %u has incorrect race/class pair. Don't build enum.", guid);
+        sLog.outError( "ERROR: Player %u has incorrect race/class pair. Don't build enum.", guid);
         return false;
     }
 
@@ -1682,13 +1682,13 @@ bool Player::TeleportTo(uint32 mapid, float x, float y, float z, float orientati
 {
     if (!MapManager::IsValidMapCoord(mapid, x, y, z, orientation))
     {
-        sLog.outLog(LOG_DEFAULT, "ERROR: TeleportTo: invalid map %d or absent instance template.", mapid);
+        sLog.outError( "ERROR: TeleportTo: invalid map %d or absent instance template.", mapid);
         return false;
     }
 
-    if (!GetSession()->HasPermissions(PERM_ADM) && !sWorld.IsAllowedMap(mapid))
+    if (!GetSession()->HasPermissions(SEC_ADMINISTRATOR) && !sWorld.IsAllowedMap(mapid))
     {
-        sLog.outLog(LOG_DEFAULT, "ERROR: Player %s tried to enter a forbidden map", GetName());
+        sLog.outError( "ERROR: Player %s tried to enter a forbidden map", GetName());
         return false;
     }
 
@@ -2623,7 +2623,7 @@ void Player::UpdateFreeTalentPoints(bool resetIfNeed)
         // if used more that have then reset
         if (m_usedTalentCount > talentPointsForLevel)
         {
-            if (resetIfNeed && !GetSession()->HasPermissions(PERM_ADM))
+            if (resetIfNeed && !GetSession()->HasPermissions(SEC_ADMINISTRATOR))
                 resetTalents(true);
             else
                 SetFreeTalentPoints(0);
@@ -2925,11 +2925,11 @@ bool Player::addSpell(uint32 spell_id, bool active, bool learning, bool loading,
         // do character spell book cleanup (all characters)
         if (loading && !learning)                            // spell load case
         {
-            sLog.outLog(LOG_DEFAULT, "ERROR: Player::addSpell: Non-existed in SpellStore spell #%u request, deleting for all characters in `character_spell`.",spell_id);
-            RealmDataDatabase.PExecute("DELETE FROM character_spell WHERE spell = '%u'",spell_id);
+            sLog.outError( "ERROR: Player::addSpell: Non-existed in SpellStore spell #%u request, deleting for all characters in `character_spell`.",spell_id);
+            CharacterDatabase.PExecute("DELETE FROM character_spell WHERE spell = '%u'",spell_id);
         }
         else
-            sLog.outLog(LOG_DEFAULT, "ERROR: Player::addSpell: Non-existed in SpellStore spell #%u request.",spell_id);
+            sLog.outError( "ERROR: Player::addSpell: Non-existed in SpellStore spell #%u request.",spell_id);
 
         return false;
     }
@@ -2939,11 +2939,11 @@ bool Player::addSpell(uint32 spell_id, bool active, bool learning, bool loading,
         // do character spell book cleanup (all characters)
         if (loading && !learning)                            // spell load case
         {
-            sLog.outLog(LOG_DEFAULT, "ERROR: Player::addSpell: Broken spell #%u learning not allowed, deleting for all characters in `character_spell`.",spell_id);
-            RealmDataDatabase.PExecute("DELETE FROM character_spell WHERE spell = '%u'",spell_id);
+            sLog.outError( "ERROR: Player::addSpell: Broken spell #%u learning not allowed, deleting for all characters in `character_spell`.",spell_id);
+            CharacterDatabase.PExecute("DELETE FROM character_spell WHERE spell = '%u'",spell_id);
         }
         else
-            sLog.outLog(LOG_DEFAULT, "ERROR: Player::addSpell: Broken spell #%u learning not allowed.",spell_id);
+            sLog.outError( "ERROR: Player::addSpell: Broken spell #%u learning not allowed.",spell_id);
 
         return false;
     }
@@ -3494,7 +3494,7 @@ void Player::_LoadSpellCooldowns(QueryResult* result)
 
             if (!sSpellStore.LookupEntry(spell_id))
             {
-                sLog.outLog(LOG_DEFAULT, "ERROR: Player %u have unknown spell %u in `character_spell_cooldown`, skipping.",GetGUIDLow(),spell_id);
+                sLog.outError( "ERROR: Player %u have unknown spell %u in `character_spell_cooldown`, skipping.",GetGUIDLow(),spell_id);
                 continue;
             }
 
@@ -3512,7 +3512,7 @@ void Player::_LoadSpellCooldowns(QueryResult* result)
 
 void Player::_SaveSpellCooldowns()
 {
-    RealmDataDatabase.PExecute("DELETE FROM character_spell_cooldown WHERE guid = '%u'", GetGUIDLow());
+    CharacterDatabase.PExecute("DELETE FROM character_spell_cooldown WHERE guid = '%u'", GetGUIDLow());
 
     time_t curTime = time(NULL);
 
@@ -3523,7 +3523,7 @@ void Player::_SaveSpellCooldowns()
             m_spellCooldowns.erase(itr++);
         else
         {
-            RealmDataDatabase.PExecute("INSERT INTO character_spell_cooldown (guid,spell,item,time) VALUES ('%u', '%u', '%u', '" UI64FMTD "')", GetGUIDLow(), itr->first, itr->second.itemid, uint64(itr->second.end));
+            CharacterDatabase.PExecute("INSERT INTO character_spell_cooldown (guid,spell,item,time) VALUES ('%u', '%u', '%u', '" UI64FMTD "')", GetGUIDLow(), itr->first, itr->second.itemid, uint64(itr->second.end));
             ++itr;
         }
     }
@@ -3571,7 +3571,7 @@ bool Player::resetTalents(bool no_cost)
     if (HasAtLoginFlag(AT_LOGIN_RESET_TALENTS))
     {
         m_atLoginFlags = m_atLoginFlags & ~AT_LOGIN_RESET_TALENTS;
-        RealmDataDatabase.PExecute("UPDATE characters set at_login = at_login & ~ %u WHERE guid ='%u'", uint32(AT_LOGIN_RESET_TALENTS), GetGUIDLow());
+        CharacterDatabase.PExecute("UPDATE characters set at_login = at_login & ~ %u WHERE guid ='%u'", uint32(AT_LOGIN_RESET_TALENTS), GetGUIDLow());
     }
 
     uint32 talentPointsForLevel = CalculateTalentsPoints();
@@ -3949,10 +3949,10 @@ void Player::DeleteCharacterInfoFromDB(uint32 playerGUIDLow)
 {
      // unsummon and delete for pets in world is not required: player deleted from CLI or character list with not loaded pet.
     // Get guids of character's pets, will deleted in transaction
-    QueryResult* resultPets = RealmDataDatabase.PQuery("SELECT id FROM character_pet WHERE owner = '%u'", playerGUIDLow);
+    QueryResult* resultPets = CharacterDatabase.PQuery("SELECT id FROM character_pet WHERE owner = '%u'", playerGUIDLow);
 
     // NOW we can finally clear other DB data related to character
-    RealmDataDatabase.BeginTransaction();
+    CharacterDatabase.BeginTransaction();
     if (resultPets)
     {
         do
@@ -3965,28 +3965,28 @@ void Player::DeleteCharacterInfoFromDB(uint32 playerGUIDLow)
         while (resultPets->NextRow());
     }
 
-    RealmDataDatabase.PExecute("DELETE FROM characters WHERE guid = '%u'", playerGUIDLow);
-    RealmDataDatabase.PExecute("DELETE FROM character_declinedname WHERE guid = '%u'", playerGUIDLow);
-    RealmDataDatabase.PExecute("DELETE FROM character_action WHERE guid = '%u'", playerGUIDLow);
-    RealmDataDatabase.PExecute("DELETE FROM character_aura WHERE guid = '%u'", playerGUIDLow);
-    RealmDataDatabase.PExecute("DELETE FROM character_gifts WHERE guid = '%u'", playerGUIDLow);
-    RealmDataDatabase.PExecute("DELETE FROM character_homebind WHERE guid = '%u'", playerGUIDLow);
-    RealmDataDatabase.PExecute("DELETE FROM character_instance WHERE guid = '%u'", playerGUIDLow);
-    RealmDataDatabase.PExecute("DELETE FROM group_instance WHERE leaderGuid = '%u'", playerGUIDLow);
-    RealmDataDatabase.PExecute("DELETE FROM character_inventory WHERE guid = '%u'", playerGUIDLow);
-    RealmDataDatabase.PExecute("DELETE FROM character_queststatus WHERE guid = '%u'", playerGUIDLow);
-    RealmDataDatabase.PExecute("DELETE FROM character_reputation WHERE guid = '%u'", playerGUIDLow);
-    RealmDataDatabase.PExecute("DELETE FROM character_spell WHERE guid = '%u'", playerGUIDLow);
-    RealmDataDatabase.PExecute("DELETE FROM character_spell_cooldown WHERE guid = '%u'", playerGUIDLow);
-    RealmDataDatabase.PExecute("DELETE FROM gm_tickets WHERE playerGuid = '%u'", playerGUIDLow);
-    RealmDataDatabase.PExecute("DELETE FROM item_instance WHERE owner_guid = '%u'", playerGUIDLow);
-    RealmDataDatabase.PExecute("DELETE FROM character_social WHERE guid = '%u' OR friend='%u'", playerGUIDLow, playerGUIDLow);
-    RealmDataDatabase.PExecute("DELETE FROM mail WHERE receiver = '%u'", playerGUIDLow);
-    RealmDataDatabase.PExecute("DELETE FROM mail_items WHERE receiver = '%u'", playerGUIDLow);
-    RealmDataDatabase.PExecute("DELETE FROM character_pet WHERE owner = '%u'", playerGUIDLow);
-    RealmDataDatabase.PExecute("DELETE FROM character_pet_declinedname WHERE owner = '%u'", playerGUIDLow);
-    RealmDataDatabase.PExecute("DELETE FROM deleted_chars WHERE char_guid = '%u'", playerGUIDLow);
-    RealmDataDatabase.CommitTransaction();
+    CharacterDatabase.PExecute("DELETE FROM characters WHERE guid = '%u'", playerGUIDLow);
+    CharacterDatabase.PExecute("DELETE FROM character_declinedname WHERE guid = '%u'", playerGUIDLow);
+    CharacterDatabase.PExecute("DELETE FROM character_action WHERE guid = '%u'", playerGUIDLow);
+    CharacterDatabase.PExecute("DELETE FROM character_aura WHERE guid = '%u'", playerGUIDLow);
+    CharacterDatabase.PExecute("DELETE FROM character_gifts WHERE guid = '%u'", playerGUIDLow);
+    CharacterDatabase.PExecute("DELETE FROM character_homebind WHERE guid = '%u'", playerGUIDLow);
+    CharacterDatabase.PExecute("DELETE FROM character_instance WHERE guid = '%u'", playerGUIDLow);
+    CharacterDatabase.PExecute("DELETE FROM group_instance WHERE leaderGuid = '%u'", playerGUIDLow);
+    CharacterDatabase.PExecute("DELETE FROM character_inventory WHERE guid = '%u'", playerGUIDLow);
+    CharacterDatabase.PExecute("DELETE FROM character_queststatus WHERE guid = '%u'", playerGUIDLow);
+    CharacterDatabase.PExecute("DELETE FROM character_reputation WHERE guid = '%u'", playerGUIDLow);
+    CharacterDatabase.PExecute("DELETE FROM character_spell WHERE guid = '%u'", playerGUIDLow);
+    CharacterDatabase.PExecute("DELETE FROM character_spell_cooldown WHERE guid = '%u'", playerGUIDLow);
+    CharacterDatabase.PExecute("DELETE FROM gm_tickets WHERE playerGuid = '%u'", playerGUIDLow);
+    CharacterDatabase.PExecute("DELETE FROM item_instance WHERE owner_guid = '%u'", playerGUIDLow);
+    CharacterDatabase.PExecute("DELETE FROM character_social WHERE guid = '%u' OR friend='%u'", playerGUIDLow, playerGUIDLow);
+    CharacterDatabase.PExecute("DELETE FROM mail WHERE receiver = '%u'", playerGUIDLow);
+    CharacterDatabase.PExecute("DELETE FROM mail_items WHERE receiver = '%u'", playerGUIDLow);
+    CharacterDatabase.PExecute("DELETE FROM character_pet WHERE owner = '%u'", playerGUIDLow);
+    CharacterDatabase.PExecute("DELETE FROM character_pet_declinedname WHERE owner = '%u'", playerGUIDLow);
+    CharacterDatabase.PExecute("DELETE FROM deleted_chars WHERE char_guid = '%u'", playerGUIDLow);
+    CharacterDatabase.CommitTransaction();
 }
 
 void Player::DeleteFromDB(uint64 playerguid, uint32 accountId, bool updateRealmChars)
@@ -4030,7 +4030,7 @@ void Player::DeleteFromDB(uint64 playerguid, uint32 accountId, bool updateRealmC
     }
 
     // the player was uninvited already on logout so just remove from group
-    QueryResult* resultGroup = RealmDataDatabase.PQuery("SELECT leaderGuid FROM group_member WHERE memberGuid='%u'", guid);
+    QueryResult* resultGroup = CharacterDatabase.PQuery("SELECT leaderGuid FROM group_member WHERE memberGuid='%u'", guid);
     if (resultGroup)
     {
         uint64 leaderGuid = MAKE_NEW_GUID((*resultGroup)[0].GetUInt32(), 0, HIGHGUID_PLAYER);
@@ -4045,7 +4045,7 @@ void Player::DeleteFromDB(uint64 playerguid, uint32 accountId, bool updateRealmC
     RemovePetitionsAndSigns(playerguid, 10);
 
     // return back all mails with COD and Item                        0     1              2         3       4          5      6       7
-    QueryResult* resultMail = RealmDataDatabase.PQuery("SELECT id,messageType,mailTemplateId,sender,subject,itemTextId,money,has_items FROM mail WHERE receiver='%u' AND has_items<>0 AND cod<>0", guid);
+    QueryResult* resultMail = CharacterDatabase.PQuery("SELECT id,messageType,mailTemplateId,sender,subject,itemTextId,money,has_items FROM mail WHERE receiver='%u' AND has_items<>0 AND cod<>0", guid);
     if (resultMail)
     {
         do
@@ -4063,13 +4063,13 @@ void Player::DeleteFromDB(uint64 playerguid, uint32 accountId, bool updateRealmC
 
             //we can return mail now
             //so firstly delete the old one
-            RealmDataDatabase.PExecute("DELETE FROM mail WHERE id = '%u'", mail_id);
+            CharacterDatabase.PExecute("DELETE FROM mail WHERE id = '%u'", mail_id);
 
             // mail not from player
             if (mailType != MAIL_NORMAL)
             {
                 if(has_items)
-                    RealmDataDatabase.PExecute("DELETE FROM mail_items WHERE mail_id = '%u'", mail_id);
+                    CharacterDatabase.PExecute("DELETE FROM mail_items WHERE mail_id = '%u'", mail_id);
                 continue;
             }
 
@@ -4081,7 +4081,7 @@ void Player::DeleteFromDB(uint64 playerguid, uint32 accountId, bool updateRealmC
 
             if (has_items)
             {
-                QueryResult* resultItems = RealmDataDatabase.PQuery("SELECT item_guid,item_template FROM mail_items WHERE mail_id='%u'", mail_id);
+                QueryResult* resultItems = CharacterDatabase.PQuery("SELECT item_guid,item_template FROM mail_items WHERE mail_id='%u'", mail_id);
                 if (resultItems)
                 {
                     do
@@ -4094,7 +4094,7 @@ void Player::DeleteFromDB(uint64 playerguid, uint32 accountId, bool updateRealmC
                         ItemPrototype const* itemProto = ObjectMgr::GetItemPrototype(item_template);
                         if (!itemProto)
                         {
-                            RealmDataDatabase.PExecute("DELETE FROM item_instance WHERE guid = '%u'", item_guidlow);
+                            CharacterDatabase.PExecute("DELETE FROM item_instance WHERE guid = '%u'", item_guidlow);
                             continue;
                         }
 
@@ -4112,7 +4112,7 @@ void Player::DeleteFromDB(uint64 playerguid, uint32 accountId, bool updateRealmC
                 }
             }
 
-            RealmDataDatabase.PExecute("DELETE FROM mail_items WHERE mail_id = '%u'", mail_id);
+            CharacterDatabase.PExecute("DELETE FROM mail_items WHERE mail_id = '%u'", mail_id);
 
             uint32 pl_account = sObjectMgr.GetPlayerAccountIdByGUID(MAKE_NEW_GUID(guid, 0, HIGHGUID_PLAYER));
 
@@ -4123,7 +4123,7 @@ void Player::DeleteFromDB(uint64 playerguid, uint32 accountId, bool updateRealmC
 
     if (sWorld.getConfig(CONFIG_DONT_DELETE_CHARS))
     {
-        if (QueryResult* result= RealmDataDatabase.PQuery("SELECT data FROM characters WHERE guid='%u'",guid))
+        if (QueryResult* result= CharacterDatabase.PQuery("SELECT data FROM characters WHERE guid='%u'",guid))
         {
             Field *fields = result->Fetch();
 
@@ -4132,7 +4132,7 @@ void Player::DeleteFromDB(uint64 playerguid, uint32 accountId, bool updateRealmC
 
             if (plLevel >= sWorld.getConfig(CONFIG_DONT_DELETE_CHARS_LVL))
             {
-                RealmDataDatabase.PExecute("Call PreventCharDelete(%u)", guid);
+                CharacterDatabase.PExecute("Call PreventCharDelete(%u)", guid);
 
                 if (updateRealmChars)
                     sWorld.UpdateRealmCharCount(accountId);
@@ -4159,7 +4159,7 @@ void Player::SetMovement(PlayerMovementType pType)
         case MOVE_WATER_WALK: data.Initialize(SMSG_MOVE_WATER_WALK,   GetPackGUID().size()+4); break;
         case MOVE_LAND_WALK:  data.Initialize(SMSG_MOVE_LAND_WALK,    GetPackGUID().size()+4); break;
         default:
-            sLog.outLog(LOG_DEFAULT, "ERROR: Player::SetMovement: Unsupported move type (%d), data not sent to client.",pType);
+            sLog.outError( "ERROR: Player::SetMovement: Unsupported move type (%d), data not sent to client.",pType);
             return;
     }
     data << GetPackGUID();
@@ -4184,7 +4184,7 @@ void Player::BuildPlayerRepop()
     // the player cannot have a corpse already, only bones which are not returned by GetCorpse
     if (GetCorpse())
     {
-        sLog.outLog(LOG_DEFAULT, "ERROR: BuildPlayerRepop: player %s(%d) already has a corpse", GetName(), GetGUIDLow());
+        sLog.outError( "ERROR: BuildPlayerRepop: player %s(%d) already has a corpse", GetName(), GetGUIDLow());
         ASSERT(false);
     }
 
@@ -4193,7 +4193,7 @@ void Player::BuildPlayerRepop()
     Corpse *corpse = GetCorpse();
     if (!corpse)
     {
-        sLog.outLog(LOG_DEFAULT, "ERROR: Error creating corpse for Player %s [%u]", GetName(), GetGUIDLow());
+        sLog.outError( "ERROR: Error creating corpse for Player %s [%u]", GetName(), GetGUIDLow());
         return;
     }
     GetMap()->Add(corpse);
@@ -4564,7 +4564,7 @@ uint32 Player::DurabilityRepair(uint16 pos, bool cost, float discountMod, bool g
             DurabilityCostsEntry const *dcost = sDurabilityCostsStore.LookupEntry(ditemProto->ItemLevel);
             if (!dcost)
             {
-                sLog.outLog(LOG_DEFAULT, "ERROR: RepairDurability: Wrong item lvl %u", ditemProto->ItemLevel);
+                sLog.outError( "ERROR: RepairDurability: Wrong item lvl %u", ditemProto->ItemLevel);
                 return TotalCost;
             }
 
@@ -4572,7 +4572,7 @@ uint32 Player::DurabilityRepair(uint16 pos, bool cost, float discountMod, bool g
             DurabilityQualityEntry const *dQualitymodEntry = sDurabilityQualityStore.LookupEntry(dQualitymodEntryId);
             if (!dQualitymodEntry)
             {
-                sLog.outLog(LOG_DEFAULT, "ERROR: RepairDurability: Wrong dQualityModEntry %u", dQualitymodEntryId);
+                sLog.outError( "ERROR: RepairDurability: Wrong dQualityModEntry %u", dQualitymodEntryId);
                 return TotalCost;
             }
 
@@ -4775,7 +4775,7 @@ void Player::UpdateLocalChannels(uint32 newZone)
 
 void Player::LeaveLFGChannel()
 {
-    if (!sWorld.getConfig(CONFIG_RESTRICTED_LFG_CHANNEL) || GetSession()->HasPermissions(PERM_GMT))
+    if (!sWorld.getConfig(CONFIG_RESTRICTED_LFG_CHANNEL) || GetSession()->HasPermissions(SEC_GAMEMASTER))
         return;
 
     // don't kick if on lfg or lfm
@@ -4830,7 +4830,7 @@ void Player::HandleBaseModValue(BaseModGroup modGroup, BaseModType modType, floa
 {
     if (modGroup >= BASEMOD_END || modType >= MOD_END)
     {
-        sLog.outLog(LOG_DEFAULT, "ERROR: ERROR in HandleBaseModValue(): non existed BaseModGroup of wrong BaseModType!");
+        sLog.outError( "ERROR: ERROR in HandleBaseModValue(): non existed BaseModGroup of wrong BaseModType!");
         return;
     }
 
@@ -4867,7 +4867,7 @@ float Player::GetBaseModValue(BaseModGroup modGroup, BaseModType modType) const
 {
     if (modGroup >= BASEMOD_END || modType > MOD_END)
     {
-        sLog.outLog(LOG_DEFAULT, "ERROR: trial to access non existed BaseModGroup or wrong BaseModType!");
+        sLog.outError( "ERROR: trial to access non existed BaseModGroup or wrong BaseModType!");
         return 0.0f;
     }
 
@@ -4881,7 +4881,7 @@ float Player::GetTotalBaseModValue(BaseModGroup modGroup) const
 {
     if (modGroup >= BASEMOD_END)
     {
-        sLog.outLog(LOG_DEFAULT, "ERROR: wrong BaseModGroup in GetTotalBaseModValue()!");
+        sLog.outError( "ERROR: wrong BaseModGroup in GetTotalBaseModValue()!");
         return 0.0f;
     }
 
@@ -5542,7 +5542,7 @@ void Player::SetSkill(uint32 id, uint16 currVal, uint16 maxVal)
             SkillLineEntry const *pSkill = sSkillLineStore.LookupEntry(id);
             if (!pSkill)
             {
-                sLog.outLog(LOG_DEFAULT, "ERROR: Skill not found in SkillLineStore: skill #%u", id);
+                sLog.outError( "ERROR: Skill not found in SkillLineStore: skill #%u", id);
                 return;
             }
             // enable unlearn button for primary professions only
@@ -5710,7 +5710,7 @@ void Player::addActionButton(const uint8 button, const uint16 action, const uint
 {
     if (button >= MAX_ACTION_BUTTONS)
     {
-        sLog.outLog(LOG_DEFAULT, "ERROR: Action %u not added into button %u for player %s: button must be < 132", action, button, GetName());
+        sLog.outError( "ERROR: Action %u not added into button %u for player %s: button must be < 132", action, button, GetName());
         return;
     }
 
@@ -5719,13 +5719,13 @@ void Player::addActionButton(const uint8 button, const uint16 action, const uint
     {
         if (!sSpellStore.LookupEntry(action))
         {
-            sLog.outLog(LOG_DEFAULT, "ERROR: Action %u not added into button %u for player %s: spell not exist", action, button, GetName());
+            sLog.outError( "ERROR: Action %u not added into button %u for player %s: spell not exist", action, button, GetName());
             return;
         }
 
         if (!HasSpell(action))
         {
-            sLog.outLog(LOG_DEFAULT, "ERROR: Action %u not added into button %u for player %s: player don't known this spell", action, button, GetName());
+            sLog.outError( "ERROR: Action %u not added into button %u for player %s: player don't known this spell", action, button, GetName());
             return;
         }
     }
@@ -5846,7 +5846,7 @@ void Player::CheckAreaExploreAndOutdoor()
 
     if (offset >= 128)
     {
-        sLog.outLog(LOG_DEFAULT, "ERROR: Wrong area flag %u in map data for (X: %f Y: %f) point to field PLAYER_EXPLORED_ZONES_1 + %u (%u must be < 64).",areaFlag,GetPositionX(),GetPositionY(),offset,offset);
+        sLog.outError( "ERROR: Wrong area flag %u in map data for (X: %f Y: %f) point to field PLAYER_EXPLORED_ZONES_1 + %u (%u must be < 64).",areaFlag,GetPositionX(),GetPositionY(),offset,offset);
         return;
     }
 
@@ -5860,7 +5860,7 @@ void Player::CheckAreaExploreAndOutdoor()
         AreaTableEntry const *p = GetAreaEntryByAreaFlagAndMap(areaFlag,GetMapId());
         if (!p)
         {
-            sLog.outLog(LOG_DEFAULT, "ERROR: PLAYER: Player %u discovered unknown area (x: %f y: %f map: %u", GetGUIDLow(), GetPositionX(),GetPositionY(),GetMapId());
+            sLog.outError( "ERROR: PLAYER: Player %u discovered unknown area (x: %f y: %f map: %u", GetGUIDLow(), GetPositionX(),GetPositionY(),GetMapId());
         }
         else if (p->area_level > 0)
         {
@@ -5905,7 +5905,7 @@ uint32 Player::TeamForRace(uint8 race)
     ChrRacesEntry const* rEntry = sChrRacesStore.LookupEntry(race);
     if (!rEntry)
     {
-        sLog.outLog(LOG_DEFAULT, "ERROR: Race %u not found in DBC: wrong DBC files?",uint32(race));
+        sLog.outError( "ERROR: Race %u not found in DBC: wrong DBC files?",uint32(race));
         return ALLIANCE;
     }
 
@@ -5915,7 +5915,7 @@ uint32 Player::TeamForRace(uint8 race)
         case 1: return HORDE;
     }
 
-    sLog.outLog(LOG_DEFAULT, "ERROR: Race %u have wrong team id in DBC: wrong DBC files?",uint32(race),rEntry->TeamID);
+    sLog.outError( "ERROR: Race %u have wrong team id in DBC: wrong DBC files?",uint32(race),rEntry->TeamID);
     return ALLIANCE;
 }
 
@@ -5924,7 +5924,7 @@ uint32 Player::getFactionForRace(uint8 race)
     ChrRacesEntry const* rEntry = sChrRacesStore.LookupEntry(race);
     if (!rEntry)
     {
-        sLog.outLog(LOG_DEFAULT, "ERROR: Race %u not found in DBC: wrong DBC files?",uint32(race));
+        sLog.outError( "ERROR: Race %u not found in DBC: wrong DBC files?",uint32(race));
         return 0;
     }
 
@@ -6321,7 +6321,7 @@ bool Player::RewardHonor(Unit *uVictim, uint32 groupsize, float honor, bool pvpt
                     stream << "Possible HK / Honor farming exploit (killer: " << GetName() << ", victim: " << pVictim->GetName() << ") kills count: " << killsCount;
         
                     sWorld.SendGMText(LANG_POSSIBLE_CHEAT, stream.str().c_str(), GetName(), GetName());
-                    sLog.outLog(LOG_CHEAT, "%s", stream.str().c_str());
+                    sLog.out(LOG_CHAR, "%s", stream.str().c_str());
                 }
 
                 if (honor <= 0.0f)
@@ -6442,7 +6442,7 @@ uint32 Player::GetGuildIdFromDB(uint64 guid)
 {
     std::ostringstream ss;
     ss<<"SELECT guildid FROM guild_member WHERE guid='"<<guid<<"'";
-    QueryResult* result = RealmDataDatabase.Query(ss.str().c_str());
+    QueryResult* result = CharacterDatabase.Query(ss.str().c_str());
     if (result)
     {
         uint32 v = result->Fetch()[0].GetUInt32();
@@ -6456,7 +6456,7 @@ uint32 Player::GetRankFromDB(uint64 guid)
 {
     std::ostringstream ss;
     ss<<"SELECT rank FROM guild_member WHERE guid='"<<guid<<"'";
-    QueryResult* result = RealmDataDatabase.Query(ss.str().c_str());
+    QueryResult* result = CharacterDatabase.Query(ss.str().c_str());
     if (result)
     {
         uint32 v = result->Fetch()[0].GetUInt32();
@@ -6468,7 +6468,7 @@ uint32 Player::GetRankFromDB(uint64 guid)
 
 uint32 Player::GetArenaTeamIdFromDB(uint64 guid, uint8 type)
 {
-    QueryResult* result = RealmDataDatabase.PQuery("SELECT arena_team_member.arenateamid FROM arena_team_member JOIN arena_team ON arena_team_member.arenateamid = arena_team.arenateamid WHERE guid='%u' AND type='%u' LIMIT 1", GUID_LOPART(guid), type);
+    QueryResult* result = CharacterDatabase.PQuery("SELECT arena_team_member.arenateamid FROM arena_team_member JOIN arena_team ON arena_team_member.arenateamid = arena_team.arenateamid WHERE guid='%u' AND type='%u' LIMIT 1", GUID_LOPART(guid), type);
     if (!result)
         return 0;
 
@@ -6481,7 +6481,7 @@ uint32 Player::GetZoneIdFromDB(uint64 guid)
     std::ostringstream ss;
 
     ss<<"SELECT zone FROM characters WHERE guid='"<<GUID_LOPART(guid)<<"'";
-    QueryResult* result = RealmDataDatabase.Query(ss.str().c_str());
+    QueryResult* result = CharacterDatabase.Query(ss.str().c_str());
     if (!result)
         return 0;
     Field* fields = result->Fetch();
@@ -6492,7 +6492,7 @@ uint32 Player::GetZoneIdFromDB(uint64 guid)
         // stored zone is zero, use generic and slow zone detection
         ss.str("");
         ss<<"SELECT map,position_x,position_y,position_z FROM characters WHERE guid='"<<GUID_LOPART(guid)<<"'";
-        result = RealmDataDatabase.Query(ss.str().c_str());
+        result = CharacterDatabase.Query(ss.str().c_str());
         if (!result)
             return 0;
         fields = result->Fetch();
@@ -6505,7 +6505,7 @@ uint32 Player::GetZoneIdFromDB(uint64 guid)
 
         ss.str("");
         ss << "UPDATE characters SET zone='"<<zone<<"' WHERE guid='"<<GUID_LOPART(guid)<<"'";
-        RealmDataDatabase.Execute(ss.str().c_str());
+        CharacterDatabase.Execute(ss.str().c_str());
     }
 
     return zone;
@@ -6514,7 +6514,7 @@ uint32 Player::GetZoneIdFromDB(uint64 guid)
 uint32 Player::GetLevelFromDB(uint64 guid)
 
 {
-    QueryResult* result = RealmDataDatabase.PQuery("SELECT level FROM characters WHERE guid='%u'", GUID_LOPART(guid));
+    QueryResult* result = CharacterDatabase.PQuery("SELECT level FROM characters WHERE guid='%u'", GUID_LOPART(guid));
     if (!result)
         return 0;
 
@@ -7044,7 +7044,7 @@ void Player::_ApplyItemBonuses(ItemPrototype const *proto,uint8 slot,bool apply)
     {
         damage = apply ? proto->Damage[0].DamageMin : BASE_MINDAMAGE;
         SetBaseWeaponDamage(attType, MINDAMAGE, damage);
-        //sLog.outLog(LOG_DEFAULT, "ERROR: applying mindam: assigning %f to weapon mindamage, now is: %f", damage, GetWeaponDamageRange(attType, MINDAMAGE));
+        //sLog.outError( "ERROR: applying mindam: assigning %f to weapon mindamage, now is: %f", damage, GetWeaponDamageRange(attType, MINDAMAGE));
     }
 
     if (proto->Damage[0].DamageMax  > 0)
@@ -7345,7 +7345,7 @@ void Player::CastItemCombatSpell(Unit *target, WeaponAttackType attType, uint32 
             SpellEntry const *spellInfo = sSpellStore.LookupEntry(spellData.SpellId);
             if (!spellInfo)
             {
-                sLog.outLog(LOG_DEFAULT, "ERROR: WORLD: unknown Item spellid %i", spellData.SpellId);
+                sLog.outError( "ERROR: WORLD: unknown Item spellid %i", spellData.SpellId);
                 continue;
             }
 
@@ -7427,7 +7427,7 @@ void Player::CastItemCombatSpell(Unit *target, WeaponAttackType attType, uint32 
             SpellEntry const *spellInfo = sSpellStore.LookupEntry(spell_id);
             if (!spellInfo)
             {
-                sLog.outLog(LOG_DEFAULT, "ERROR: Player::CastItemCombatSpell Enchant %i, cast unknown spell %i", pEnchant->ID, spell_id);
+                sLog.outError( "ERROR: Player::CastItemCombatSpell Enchant %i, cast unknown spell %i", pEnchant->ID, spell_id);
                 continue;
             }
 
@@ -10822,7 +10822,7 @@ Item* Player::EquipItem(uint16 pos, Item *pItem, bool update)
                 SpellEntry const* spellProto = sSpellStore.LookupEntry(cooldownSpell);
 
                 if (!spellProto)
-                    sLog.outLog(LOG_DEFAULT, "ERROR: Weapon switch cooldown spell %u couldn't be found in Spell.dbc", cooldownSpell);
+                    sLog.outError( "ERROR: Weapon switch cooldown spell %u couldn't be found in Spell.dbc", cooldownSpell);
                 else
                 {
                     m_weaponChangeTimer = spellProto->StartRecoveryTime;
@@ -11096,7 +11096,7 @@ void Player::DestroyItem(uint8 bag, uint8 slot, bool update)
         }
 
         if (pItem->HasFlag(ITEM_FIELD_FLAGS, ITEM_FLAGS_WRAPPED))
-            RealmDataDatabase.PExecute("DELETE FROM character_gifts WHERE item_guid = '%u'", pItem->GetGUIDLow());
+            CharacterDatabase.PExecute("DELETE FROM character_gifts WHERE item_guid = '%u'", pItem->GetGUIDLow());
 
         RemoveEnchantmentDurations(pItem);
         RemoveItemDurations(pItem);
@@ -12500,7 +12500,7 @@ void Player::ApplyEnchantment(Item *item,EnchantmentSlot slot,bool apply, bool a
                     break;
                 }
             default:
-                sLog.outLog(LOG_DEFAULT, "ERROR: Unknown item enchantment display type: %d",enchant_display_type);
+                sLog.outError( "ERROR: Unknown item enchantment display type: %d",enchant_display_type);
                 break;
             }                                                   /*switch (enchant_display_type)*/
         }                                                       /*for*/
@@ -14331,7 +14331,7 @@ bool Player::MinimalLoadFromDB(QueryResult* result, uint32 guid)
     if (!result)
     {
         //                                        0     1     2     3           4           5           6    7          8          9
-        result = RealmDataDatabase.PQuery("SELECT guid, data, name, position_x, position_y, position_z, map, totaltime, leveltime, at_login FROM characters WHERE guid = '%u'",guid);
+        result = CharacterDatabase.PQuery("SELECT guid, data, name, position_x, position_y, position_z, map, totaltime, leveltime, at_login FROM characters WHERE guid = '%u'",guid);
         if (!result)
             return false;
     }
@@ -14340,7 +14340,7 @@ bool Player::MinimalLoadFromDB(QueryResult* result, uint32 guid)
 
     if (!LoadValues(fields[1].GetString()))
     {
-        sLog.outLog(LOG_DEFAULT, "ERROR: Player #%d have broken data in data field. Can't be loaded for character list.",GUID_LOPART(guid));
+        sLog.outError( "ERROR: Player #%d have broken data in data field. Can't be loaded for character list.",GUID_LOPART(guid));
         return false;
     }
 
@@ -14405,7 +14405,7 @@ void Player::_LoadArenaTeamInfo(QueryResult* result)
         ArenaTeam* aTeam = sObjectMgr.GetArenaTeamById(arenateamid);
         if (!aTeam)
         {
-            sLog.outLog(LOG_DEFAULT, "FATAL ERROR: couldn't load arenateam %u", arenateamid);
+            sLog.outError( "FATAL ERROR: couldn't load arenateam %u", arenateamid);
             continue;
         }
         uint8  arenaSlot = aTeam->GetSlot();
@@ -14422,7 +14422,7 @@ void Player::_LoadArenaTeamInfo(QueryResult* result)
 
 bool Player::LoadPositionFromDB(uint32& mapid, float& x,float& y,float& z,float& o, bool& in_flight, uint64 guid)
 {
-    QueryResult* result = RealmDataDatabase.PQuery("SELECT position_x,position_y,position_z,orientation,map,taxi_path FROM characters WHERE guid = '%u'",GUID_LOPART(guid));
+    QueryResult* result = CharacterDatabase.PQuery("SELECT position_x,position_y,position_z,orientation,map,taxi_path FROM characters WHERE guid = '%u'",GUID_LOPART(guid));
     if (!result)
         return false;
 
@@ -14440,7 +14440,7 @@ bool Player::LoadPositionFromDB(uint32& mapid, float& x,float& y,float& z,float&
 
 bool Player::LoadValuesArrayFromDB(Tokens& data, uint64 guid)
 {
-    QueryResult* result = RealmDataDatabase.PQuery("SELECT data FROM characters WHERE guid='%u'",GUID_LOPART(guid));
+    QueryResult* result = CharacterDatabase.PQuery("SELECT data FROM characters WHERE guid='%u'",GUID_LOPART(guid));
     if (!result)
         return false;
 
@@ -14492,7 +14492,7 @@ bool Player::LoadFromDB(uint32 guid, SqlQueryHolder *holder)
 
     if (!result)
     {
-        sLog.outLog(LOG_DEFAULT, "ERROR: Player (GUID: %u) not found in table `characters`, can't load. ",guid);
+        sLog.outError( "ERROR: Player (GUID: %u) not found in table `characters`, can't load. ",guid);
         return false;
     }
 
@@ -14504,7 +14504,7 @@ bool Player::LoadFromDB(uint32 guid, SqlQueryHolder *holder)
     // player should be able to load/delete character only with correct account!
     if (dbAccountId != GetSession()->GetAccountId())
     {
-        sLog.outLog(LOG_DEFAULT, "ERROR: Player (GUID: %u) loading from wrong account (is: %u, should be: %u)", guid, GetSession()->GetAccountId(), dbAccountId);
+        sLog.outError( "ERROR: Player (GUID: %u) loading from wrong account (is: %u, should be: %u)", guid, GetSession()->GetAccountId(), dbAccountId);
         return false;
     }
 
@@ -14513,15 +14513,15 @@ bool Player::LoadFromDB(uint32 guid, SqlQueryHolder *holder)
     m_name = fields[3].GetCppString();
 
     // check name limitations
-    if (!ObjectMgr::IsValidName(m_name) || !GetSession()->HasPermissions(PERM_GMT) && sObjectMgr.IsReservedName(m_name))
+    if (!ObjectMgr::IsValidName(m_name) || !GetSession()->HasPermissions(SEC_GAMEMASTER) && sObjectMgr.IsReservedName(m_name))
     {
-        RealmDataDatabase.PExecute("UPDATE characters SET at_login = at_login | '%u' WHERE guid ='%u'", uint32(AT_LOGIN_RENAME),guid);
+        CharacterDatabase.PExecute("UPDATE characters SET at_login = at_login | '%u' WHERE guid ='%u'", uint32(AT_LOGIN_RENAME),guid);
         return false;
     }
 
     if (!LoadValues(fields[2].GetString()))
     {
-        sLog.outLog(LOG_DEFAULT, "ERROR: Player #%d have broken data in `data` field. Can't be loaded.",GUID_LOPART(guid));
+        sLog.outError( "ERROR: Player #%d have broken data in `data` field. Can't be loaded.",GUID_LOPART(guid));
         return false;
     }
 
@@ -14574,8 +14574,8 @@ bool Player::LoadFromDB(uint32 guid, SqlQueryHolder *holder)
                 DeleteFromDB(guid, GetSession()->GetAccountId(), true);
 
                 m_atLoginFlags = m_atLoginFlags & ~AT_LOGIN_DISPLAY_CHANGE;
-                RealmDataDatabase.PExecute("UPDATE characters SET at_login = at_login & ~ %u WHERE guid ='%u'", uint32(AT_LOGIN_DISPLAY_CHANGE), GetGUIDLow());
-                sLog.outLog(LOG_SPECIAL, "Player: %s [%u] changed character display successfully.", GetName(), GetGUIDLow());
+                CharacterDatabase.PExecute("UPDATE characters SET at_login = at_login & ~ %u WHERE guid ='%u'", uint32(AT_LOGIN_DISPLAY_CHANGE), GetGUIDLow());
+                sLog.out(LOG_CHAR, "Player: %s [%u] changed character display successfully.", GetName(), GetGUIDLow());
             }
         }
     }
@@ -14659,7 +14659,7 @@ bool Player::LoadFromDB(uint32 guid, SqlQueryHolder *holder)
 
     if (!IsPositionValid())
     {
-        sLog.outLog(LOG_DEFAULT, "ERROR: Player (guidlow %d) have invalid coordinates (X: %f Y: %f Z: %f O: %f). Teleport to default race/class locations.",guid,GetPositionX(),GetPositionY(),GetPositionZ(),GetOrientation());
+        sLog.outError( "ERROR: Player (guidlow %d) have invalid coordinates (X: %f Y: %f Z: %f O: %f). Teleport to default race/class locations.",guid,GetPositionX(),GetPositionY(),GetPositionZ(),GetOrientation());
 
         RelocateToHomebind();
 
@@ -14721,7 +14721,7 @@ bool Player::LoadFromDB(uint32 guid, SqlQueryHolder *holder)
             // transport size limited
             m_movementInfo.GetTransportPos()->x > 50 || m_movementInfo.GetTransportPos()->y > 50 || m_movementInfo.GetTransportPos()->z > 50)
         {
-            sLog.outLog(LOG_DEFAULT, "ERROR: Player (guidlow %d) have invalid transport coordinates (X: %f Y: %f Z: %f O: %f). Teleport to default race/class locations.",
+            sLog.outError( "ERROR: Player (guidlow %d) have invalid transport coordinates (X: %f Y: %f Z: %f O: %f). Teleport to default race/class locations.",
                  guid, GetPositionX() + m_movementInfo.GetTransportPos()->x, GetPositionY() + m_movementInfo.GetTransportPos()->y,
                 GetPositionZ() + m_movementInfo.GetTransportPos()->z, GetOrientation() + m_movementInfo.GetTransportPos()->o);
 
@@ -14756,7 +14756,7 @@ bool Player::LoadFromDB(uint32 guid, SqlQueryHolder *holder)
 
         if (!m_transport)
         {
-            sLog.outLog(LOG_DEFAULT, "ERROR: Player (guidlow %d) have problems with transport guid (%u). Teleport to default race/class locations.",
+            sLog.outError( "ERROR: Player (guidlow %d) have problems with transport guid (%u). Teleport to default race/class locations.",
                 guid,transGUID);
 
             RelocateToHomebind();
@@ -14772,7 +14772,7 @@ bool Player::LoadFromDB(uint32 guid, SqlQueryHolder *holder)
         // client without expansion support
         if(GetSession()->Expansion() < mapEntry->Expansion())
         {
-            sLog.outLog(LOG_DEFAULT, "ERROR: Player %s (%u acc: %u) using client without required expansion tried login at non accessible map %u", GetName(), GetGUIDLow(), GetSession()->GetAccountId(), GetMapId());
+            sLog.outError( "ERROR: Player %s (%u acc: %u) using client without required expansion tried login at non accessible map %u", GetName(), GetGUIDLow(), GetSession()->GetAccountId(), GetMapId());
             RelocateToHomebind();
         }
     }
@@ -14792,27 +14792,27 @@ bool Player::LoadFromDB(uint32 guid, SqlQueryHolder *holder)
         {
             SetMapId(at->target_mapId);
             Relocate(at->target_X, at->target_Y, at->target_Z, GetOrientation());
-            sLog.outLog(LOG_DEFAULT, "ERROR: Player (guidlow %d) is teleported to gobacktrigger (Map: %u X: %f Y: %f Z: %f O: %f).",guid,GetMapId(),GetPositionX(),GetPositionY(),GetPositionZ(),GetOrientation());
+            sLog.outError( "ERROR: Player (guidlow %d) is teleported to gobacktrigger (Map: %u X: %f Y: %f Z: %f O: %f).",guid,GetMapId(),GetPositionX(),GetPositionY(),GetPositionZ(),GetOrientation());
         }
         else
         {
             SetMapId(m_homebindMapId);
             Relocate(m_homebindX, m_homebindY, m_homebindZ, GetOrientation());
-            sLog.outLog(LOG_DEFAULT, "ERROR: Player (guidlow %d) is teleported to home (Map: %u X: %f Y: %f Z: %f O: %f).",guid,GetMapId(),GetPositionX(),GetPositionY(),GetPositionZ(),GetOrientation());
+            sLog.outError( "ERROR: Player (guidlow %d) is teleported to home (Map: %u X: %f Y: %f Z: %f O: %f).",guid,GetMapId(),GetPositionX(),GetPositionY(),GetPositionZ(),GetOrientation());
         }
 
         map = sMapMgr.CreateMap(GetMapId(), this);
         if (!map)
         {
-            sLog.outLog(LOG_DEFAULT, "ERROR: Player (guidlow %d) have invalid coordinates (X: %f Y: %f Z: %f O: %f). Teleport to default race/class locations.",guid,GetPositionX(),GetPositionY(),GetPositionZ(),GetOrientation());
+            sLog.outError( "ERROR: Player (guidlow %d) have invalid coordinates (X: %f Y: %f Z: %f O: %f). Teleport to default race/class locations.",guid,GetPositionX(),GetPositionY(),GetPositionZ(),GetOrientation());
 
             RelocateToHomebind();
 
             map = sMapMgr.CreateMap(GetMapId(), this);
             if (!map)
             {
-                sLog.outLog(LOG_DEFAULT, "ERROR: Player (guidlow %d) have invalid coordinates (X: %f Y: %f Z: %f O: %f). Teleport to default race/class locations.",guid,GetPositionX(),GetPositionY(),GetPositionZ(),GetOrientation());
-                sLog.outLog(LOG_DEFAULT, "ERROR: CRASH.");
+                sLog.outError( "ERROR: Player (guidlow %d) have invalid coordinates (X: %f Y: %f Z: %f O: %f). Teleport to default race/class locations.",guid,GetPositionX(),GetPositionY(),GetPositionZ(),GetOrientation());
+                sLog.outError( "ERROR: CRASH.");
                 ASSERT(false);
             }
         }
@@ -14843,7 +14843,7 @@ bool Player::LoadFromDB(uint32 guid, SqlQueryHolder *holder)
             }
             else
             {
-                sLog.outLog(LOG_DEFAULT, "ERROR: Player %s(GUID: %u) logged in to a reset instance (map: %u) and there is no area-trigger leading to this map. Thus he can't be ported back to the entrance. This _might_ be an exploit attempt. Relocate to homebind.", GetName(), GetGUIDLow(), GetMapId());
+                sLog.outError( "ERROR: Player %s(GUID: %u) logged in to a reset instance (map: %u) and there is no area-trigger leading to this map. Thus he can't be ported back to the entrance. This _might_ be an exploit attempt. Relocate to homebind.", GetName(), GetGUIDLow(), GetMapId());
                 RelocateToHomebind();
             }
 
@@ -14905,7 +14905,7 @@ bool Player::LoadFromDB(uint32 guid, SqlQueryHolder *holder)
     m_stableSlots = fields[33].GetUInt32();
     if (m_stableSlots > 2)
     {
-        sLog.outLog(LOG_DEFAULT, "ERROR: Player can have not more 2 stable slots, but have in DB %u",uint32(m_stableSlots));
+        sLog.outError( "ERROR: Player can have not more 2 stable slots, but have in DB %u",uint32(m_stableSlots));
         m_stableSlots = 2;
     }
 
@@ -15047,13 +15047,13 @@ bool Player::LoadFromDB(uint32 guid, SqlQueryHolder *holder)
 
         if (!nodeEntry)                                      // don't know taxi start node, to homebind
         {
-            sLog.outLog(LOG_DEFAULT, "ERROR: Character %u have wrong data in taxi destination list, teleport to homebind.",GetGUIDLow());
+            sLog.outError( "ERROR: Character %u have wrong data in taxi destination list, teleport to homebind.",GetGUIDLow());
             SetMapId(m_homebindMapId);
             Relocate(m_homebindX, m_homebindY, m_homebindZ,0.0f);
         }
         else                                                // have start node, to it
         {
-            sLog.outLog(LOG_DEFAULT, "ERROR: Character %u have too short taxi destination list, teleport to original node.",GetGUIDLow());
+            sLog.outError( "ERROR: Character %u have too short taxi destination list, teleport to original node.",GetGUIDLow());
             SetMapId(nodeEntry->map_id);
             Relocate(nodeEntry->x, nodeEntry->y, nodeEntry->z,0.0f);
         }
@@ -15099,7 +15099,7 @@ bool Player::LoadFromDB(uint32 guid, SqlQueryHolder *holder)
     outDebugValues();
 
     // GM state
-    if (GetSession()->HasPermissions(PERM_GMT_HDEV))
+    if (GetSession()->HasPermissions(SEC_DEVELOPPER))
     {
         switch (sWorld.getConfig(CONFIG_GM_LOGIN_STATE))
         {
@@ -15124,7 +15124,7 @@ bool Player::LoadFromDB(uint32 guid, SqlQueryHolder *holder)
         }
     }
 
-    if (GetSession()->HasPermissions(PERM_GMT))
+    if (GetSession()->HasPermissions(SEC_GAMEMASTER))
     {
         switch (sWorld.getConfig(CONFIG_GM_VISIBLE_STATE))
         {
@@ -15171,7 +15171,7 @@ bool Player::LoadFromDB(uint32 guid, SqlQueryHolder *holder)
     if (changeRaceTo)
     {
         ChangeRace(changeRaceTo);
-        RealmDataDatabase.PExecute("UPDATE characters SET changeRaceTo = '0' WHERE guid ='%u'", GetGUIDLow());
+        CharacterDatabase.PExecute("UPDATE characters SET changeRaceTo = '0' WHERE guid ='%u'", GetGUIDLow());
     }
 
     result = holder->GetResult(PLAYER_LOGIN_QUERY_LOADDAILYARENA);
@@ -15293,13 +15293,13 @@ void Player::_LoadAuras(QueryResult* result, uint32 timediff)
             SpellEntry const* spellproto = sSpellStore.LookupEntry(spellid);
             if (!spellproto)
             {
-                sLog.outLog(LOG_DEFAULT, "ERROR: Unknown aura (spellid %u, effindex %u), ignore.",spellid,effindex);
+                sLog.outError( "ERROR: Unknown aura (spellid %u, effindex %u), ignore.",spellid,effindex);
                 continue;
             }
 
             if (effindex >= 3)
             {
-                sLog.outLog(LOG_DEFAULT, "ERROR: Invalid effect index (spellid %u, effindex %u), ignore.",spellid,effindex);
+                sLog.outError( "ERROR: Invalid effect index (spellid %u, effindex %u), ignore.",spellid,effindex);
                 continue;
             }
 
@@ -15316,10 +15316,10 @@ void Player::_LoadAuras(QueryResult* result, uint32 timediff)
             // negative effects should continue counting down after logout
             if (remaintime != -1 && !SpellMgr::IsPositiveEffect(spellid, effindex))
             {
-                if (remaintime/IN_MILISECONDS <= int32(timediff))
+                if (remaintime/IN_MILLISECONDS <= int32(timediff))
                     continue;
 
-                remaintime -= timediff*IN_MILISECONDS;
+                remaintime -= timediff*IN_MILLISECONDS;
             }
 
             // prevent wrong values of remaincharges
@@ -15402,9 +15402,9 @@ void Player::_LoadInventory(QueryResult* result, uint32 timediff)
 
             if (!proto)
             {
-                RealmDataDatabase.PExecute("DELETE FROM character_inventory WHERE item = '%u'", item_guid);
-                RealmDataDatabase.PExecute("DELETE FROM item_instance WHERE guid = '%u'", item_guid);
-                sLog.outLog(LOG_DEFAULT, "ERROR: Player::_LoadInventory: Player %s has an unknown item (id: #%u) in inventory, deleted.", GetName(),item_id);
+                CharacterDatabase.PExecute("DELETE FROM character_inventory WHERE item = '%u'", item_guid);
+                CharacterDatabase.PExecute("DELETE FROM item_instance WHERE guid = '%u'", item_guid);
+                sLog.outError( "ERROR: Player::_LoadInventory: Player %s has an unknown item (id: #%u) in inventory, deleted.", GetName(),item_id);
                 continue;
             }
 
@@ -15412,8 +15412,8 @@ void Player::_LoadInventory(QueryResult* result, uint32 timediff)
 
             if (!item->LoadFromDB(item_guid, GetGUID(), result))
             {
-                sLog.outLog(LOG_DEFAULT, "ERROR: Player::_LoadInventory: Player %s has broken item (id: #%u) in inventory, deleted.", GetName(),item_id);
-                RealmDataDatabase.PExecute("DELETE FROM character_inventory WHERE item = '%u'", item_guid);
+                sLog.outError( "ERROR: Player::_LoadInventory: Player %s has broken item (id: #%u) in inventory, deleted.", GetName(),item_id);
+                CharacterDatabase.PExecute("DELETE FROM character_inventory WHERE item = '%u'", item_guid);
                 item->FSetState(ITEM_REMOVED);
                 item->SaveToDB();                           // it also deletes item object !
                 continue;
@@ -15422,7 +15422,7 @@ void Player::_LoadInventory(QueryResult* result, uint32 timediff)
             // not allow have in alive state item limited to another map/zone
             if (isAlive() && item->IsLimitedToAnotherMapOrZone(GetMapId(),zone))
             {
-                RealmDataDatabase.PExecute("DELETE FROM character_inventory WHERE item = '%u'", item_guid);
+                CharacterDatabase.PExecute("DELETE FROM character_inventory WHERE item = '%u'", item_guid);
                 item->FSetState(ITEM_REMOVED);
                 item->SaveToDB();                           // it also deletes item object !
                 continue;
@@ -15431,7 +15431,7 @@ void Player::_LoadInventory(QueryResult* result, uint32 timediff)
             // "Conjured items disappear if you are logged out for more than 15 minutes"
             if ((timediff > 15*60) && (item->HasFlag(ITEM_FIELD_FLAGS, ITEM_FLAGS_CONJURED)))
             {
-                RealmDataDatabase.PExecute("DELETE FROM character_inventory WHERE item = '%u'", item_guid);
+                CharacterDatabase.PExecute("DELETE FROM character_inventory WHERE item = '%u'", item_guid);
                 item->FSetState(ITEM_REMOVED);
                 item->SaveToDB();                           // it also deletes item object !
                 continue;
@@ -15496,8 +15496,8 @@ void Player::_LoadInventory(QueryResult* result, uint32 timediff)
                 item->SetState(ITEM_UNCHANGED, this);
             else
             {
-                sLog.outLog(LOG_DEFAULT, "ERROR: Player::_LoadInventory: Player %s has item (GUID: %u Entry: %u) can't be loaded to inventory (Bag GUID: %u Slot: %u) by some reason, will send by mail.", GetName(),item_guid, item_id, bag_guid, slot);
-                RealmDataDatabase.PExecute("DELETE FROM character_inventory WHERE item = '%u'", item_guid);
+                sLog.outError( "ERROR: Player::_LoadInventory: Player %s has item (GUID: %u Entry: %u) can't be loaded to inventory (Bag GUID: %u Slot: %u) by some reason, will send by mail.", GetName(),item_guid, item_id, bag_guid, slot);
+                CharacterDatabase.PExecute("DELETE FROM character_inventory WHERE item = '%u'", item_guid);
                 if (!GetSession()->IsAccountFlagged(ACC_SPECIAL_LOG))
                     problematicItems.push_back(item);
             }
@@ -15551,9 +15551,9 @@ void Player::_LoadMailedItems(QueryResult* result)
 
         if(!proto)
         {
-            sLog.outLog(LOG_DEFAULT, "ERROR: Player %u has unknown item_template (ProtoType) in mailed items(GUID: %u template: %u) in mail (%u), deleted.", GetGUIDLow(), item_guid_low, item_template, mail->messageID);
-            RealmDataDatabase.PExecute("DELETE FROM mail_items WHERE item_guid = '%u'", item_guid_low);
-            RealmDataDatabase.PExecute("DELETE FROM item_instance WHERE guid = '%u'", item_guid_low);
+            sLog.outError( "ERROR: Player %u has unknown item_template (ProtoType) in mailed items(GUID: %u template: %u) in mail (%u), deleted.", GetGUIDLow(), item_guid_low, item_template, mail->messageID);
+            CharacterDatabase.PExecute("DELETE FROM mail_items WHERE item_guid = '%u'", item_guid_low);
+            CharacterDatabase.PExecute("DELETE FROM item_instance WHERE guid = '%u'", item_guid_low);
             continue;
         }
 
@@ -15561,8 +15561,8 @@ void Player::_LoadMailedItems(QueryResult* result)
 
         if (!item->LoadFromDB(item_guid_low, 0))
         {
-            sLog.outLog(LOG_DEFAULT, "ERROR: Player::_LoadMailedItems - Item in mail (%u) doesn't exist !!!! - item guid: %u, deleted from mail", mail->messageID, item_guid_low);
-            RealmDataDatabase.PExecute("DELETE FROM mail_items WHERE item_guid = '%u'", item_guid_low);
+            sLog.outError( "ERROR: Player::_LoadMailedItems - Item in mail (%u) doesn't exist !!!! - item guid: %u, deleted from mail", mail->messageID, item_guid_low);
+            CharacterDatabase.PExecute("DELETE FROM mail_items WHERE item_guid = '%u'", item_guid_low);
             item->FSetState(ITEM_REMOVED);
             item->SaveToDB();                               // it also deletes item object !
             continue;
@@ -15601,7 +15601,7 @@ void Player::_LoadMails(QueryResult* result)
 
         if (m->mailTemplateId && !sMailTemplateStore.LookupEntry(m->mailTemplateId))
         {
-            sLog.outLog(LOG_DEFAULT, "ERROR: Player::_LoadMail - Mail (%u) have not existed MailTemplateId (%u), remove at load", m->messageID, m->mailTemplateId);
+            sLog.outError( "ERROR: Player::_LoadMail - Mail (%u) have not existed MailTemplateId (%u), remove at load", m->messageID, m->mailTemplateId);
             m->mailTemplateId = 0;
         }
 
@@ -15657,7 +15657,7 @@ void Player::_LoadQuestStatus(QueryResult* result)
                 else
                 {
                     questStatusData.m_status = QUEST_STATUS_NONE;
-                    sLog.outLog(LOG_DEFAULT, "ERROR: Player %s have invalid quest %d status (%d), replaced by QUEST_STATUS_NONE(0).",GetName(),quest_id,qstatus);
+                    sLog.outError( "ERROR: Player %s have invalid quest %d status (%d), replaced by QUEST_STATUS_NONE(0).",GetName(),quest_id,qstatus);
                 }
 
                 questStatusData.m_rewarded = (fields[2].GetUInt8() > 0);
@@ -15745,7 +15745,7 @@ void Player::_LoadDailyQuestStatus(QueryResult* result)
         {
             if (quest_daily_idx >= sWorld.getConfig(CONFIG_DAILY_MAX_PER_DAY))  // max amount with exist data in query
             {
-                sLog.outLog(LOG_DEFAULT, "ERROR: Player (GUID: %u) have more 25 daily quest records in `charcter_queststatus_daily`",GetGUIDLow());
+                sLog.outError( "ERROR: Player (GUID: %u) have more 25 daily quest records in `charcter_queststatus_daily`",GetGUIDLow());
                 break;
             }
 
@@ -15853,15 +15853,15 @@ void Player::_LoadBoundInstances(QueryResult* result)
             MapEntry const* mapEntry = sMapStore.LookupEntry(mapId);
             if (!mapEntry || !mapEntry->IsDungeon())
             {
-                sLog.outLog(LOG_DEFAULT, "ERROR: _LoadBoundInstances: player %s(%d) has bind to not existed or not dungeon map %d", GetName(), GetGUIDLow(), mapId);
-                RealmDataDatabase.PExecute("DELETE FROM character_instance WHERE guid = '%d' AND instance = '%d'", GetGUIDLow(), instanceId);
+                sLog.outError( "ERROR: _LoadBoundInstances: player %s(%d) has bind to not existed or not dungeon map %d", GetName(), GetGUIDLow(), mapId);
+                CharacterDatabase.PExecute("DELETE FROM character_instance WHERE guid = '%d' AND instance = '%d'", GetGUIDLow(), instanceId);
                 continue;
             }
 
             if (!perm && group)
             {
-                sLog.outLog(LOG_DEFAULT, "ERROR: _LoadBoundInstances: player %s(%d) is in group %d but has a non-permanent character bind to map %d,%d,%d", GetName(), GetGUIDLow(), GUID_LOPART(group->GetLeaderGUID()), mapId, instanceId, difficulty);
-                RealmDataDatabase.PExecute("DELETE FROM character_instance WHERE guid = '%d' AND instance = '%d'", GetGUIDLow(), instanceId);
+                sLog.outError( "ERROR: _LoadBoundInstances: player %s(%d) is in group %d but has a non-permanent character bind to map %d,%d,%d", GetName(), GetGUIDLow(), GUID_LOPART(group->GetLeaderGUID()), mapId, instanceId, difficulty);
+                CharacterDatabase.PExecute("DELETE FROM character_instance WHERE guid = '%d' AND instance = '%d'", GetGUIDLow(), instanceId);
                 continue;
             }
 
@@ -15909,7 +15909,7 @@ void Player::UnbindInstance(BoundInstancesMap::iterator &itr, uint8 difficulty, 
     if (itr != m_boundInstances[difficulty].end())
     {
         if (!unload)
-            RealmDataDatabase.PExecute("DELETE FROM character_instance WHERE guid = '%u' AND instance = '%u'", GetGUIDLow(), itr->second.save->GetInstanceId());
+            CharacterDatabase.PExecute("DELETE FROM character_instance WHERE guid = '%u' AND instance = '%u'", GetGUIDLow(), itr->second.save->GetInstanceId());
         
         InstanceSave* save = itr->second.save;
         if (save != nullptr)
@@ -15928,10 +15928,10 @@ InstancePlayerBind* Player::BindToInstance(InstanceSave *save, bool permanent, b
         {
             // update the save when the group kills a boss
             if (permanent != bind.perm || save != bind.save)
-                if (!load) RealmDataDatabase.PExecute("UPDATE character_instance SET instance = '%u', permanent = '%u' WHERE guid = '%u' AND instance = '%u'", save->GetInstanceId(), permanent, GetGUIDLow(), bind.save->GetInstanceId());
+                if (!load) CharacterDatabase.PExecute("UPDATE character_instance SET instance = '%u', permanent = '%u' WHERE guid = '%u' AND instance = '%u'", save->GetInstanceId(), permanent, GetGUIDLow(), bind.save->GetInstanceId());
         }
         else
-            if (!load) RealmDataDatabase.PExecute("INSERT INTO character_instance (guid, instance, permanent) VALUES ('%u', '%u', '%u')", GetGUIDLow(), save->GetInstanceId(), permanent);
+            if (!load) CharacterDatabase.PExecute("INSERT INTO character_instance (guid, instance, permanent) VALUES ('%u', '%u', '%u')", GetGUIDLow(), save->GetInstanceId(), permanent);
 
         if (bind.save != save)
         {
@@ -16060,9 +16060,9 @@ void Player::ConvertInstancesToGroup(Player *player, Group *group, uint64 player
     }
 
     // if the player's not online we don't know what binds it has
-    if (!player || !group || has_binds) RealmDataDatabase.PExecute("REPLACE INTO group_instance SELECT guid, instance, permanent FROM character_instance WHERE guid = '%u'", GUID_LOPART(player_guid));
+    if (!player || !group || has_binds) CharacterDatabase.PExecute("REPLACE INTO group_instance SELECT guid, instance, permanent FROM character_instance WHERE guid = '%u'", GUID_LOPART(player_guid));
     // the following should not get executed when changing leaders
-    if (!player || has_solo) RealmDataDatabase.PExecute("DELETE FROM character_instance WHERE guid = '%d' AND permanent = 0", GUID_LOPART(player_guid));
+    if (!player || has_solo) CharacterDatabase.PExecute("DELETE FROM character_instance WHERE guid = '%d' AND permanent = 0", GUID_LOPART(player_guid));
 }
 
 bool Player::Satisfy(AccessRequirement const *ar, uint32 target_map, bool report)
@@ -16140,7 +16140,7 @@ bool Player::_LoadHomeBind(QueryResult* result)
     PlayerInfo const *info = sObjectMgr.GetPlayerInfo(getRace(), getClass());
     if (!info)
     {
-        sLog.outLog(LOG_DEFAULT, "ERROR: Player have incorrect race/class pair. Can't be loaded.");
+        sLog.outError( "ERROR: Player have incorrect race/class pair. Can't be loaded.");
         return false;
     }
 
@@ -16163,7 +16163,7 @@ bool Player::_LoadHomeBind(QueryResult* result)
             ok = true;
         }
         else
-            RealmDataDatabase.PExecute("DELETE FROM character_homebind WHERE guid = '%u'", GetGUIDLow());
+            CharacterDatabase.PExecute("DELETE FROM character_homebind WHERE guid = '%u'", GetGUIDLow());
     }
 
     if (!ok)
@@ -16174,7 +16174,7 @@ bool Player::_LoadHomeBind(QueryResult* result)
         m_homebindY = info->positionY;
         m_homebindZ = info->positionZ;
 
-        RealmDataDatabase.PExecute("INSERT INTO character_homebind (guid,map,zone,position_x,position_y,position_z) VALUES ('%u', '%u', '%u', '%f', '%f', '%f')", GetGUIDLow(), m_homebindMapId, (uint32)m_homebindZoneId, m_homebindX, m_homebindY, m_homebindZ);
+        CharacterDatabase.PExecute("INSERT INTO character_homebind (guid,map,zone,position_x,position_y,position_z) VALUES ('%u', '%u', '%u', '%f', '%f', '%f')", GetGUIDLow(), m_homebindMapId, (uint32)m_homebindZoneId, m_homebindX, m_homebindY, m_homebindZ);
     }
 
     DEBUG_LOG("Setting player home position: mapid is: %u, zoneid is %u, X is %f, Y is %f, Z is %f\n",
@@ -16231,24 +16231,24 @@ void Player::SaveToDB()
 
     bool inworld = IsInWorld();
 
-    RealmDataDatabase.BeginTransaction();
+    CharacterDatabase.BeginTransaction();
 
     //CharacterDatabase.PExecute("DELETE FROM characters WHERE guid = '%u'",GetGUIDLow());
     static SqlStatementID deleteStats;
-    SqlStatement stmt = RealmDataDatabase.CreateStatement(deleteStats, "DELETE FROM character_stats_ro WHERE guid = ?");
+    SqlStatement stmt = CharacterDatabase.CreateStatement(deleteStats, "DELETE FROM character_stats_ro WHERE guid = ?");
     stmt.PExecute(GetGUIDLow());
 
     static SqlStatementID updateStats;
-    stmt = RealmDataDatabase.CreateStatement(updateStats, "INSERT INTO character_stats_ro VALUES (?, ?, ?, ?)");
+    stmt = CharacterDatabase.CreateStatement(updateStats, "INSERT INTO character_stats_ro VALUES (?, ?, ?, ?)");
     stmt.PExecute(GetGUIDLow(), GetUInt32Value(PLAYER_FIELD_HONOR_CURRENCY), GetUInt32Value(PLAYER_FIELD_LIFETIME_HONORABLE_KILLS),m_DailyArenasWon);
 
     static SqlStatementID deleteCharacter;
     static SqlStatementID insertCharacter;
 
-    stmt = RealmDataDatabase.CreateStatement(deleteCharacter, "DELETE FROM characters WHERE guid = ?");
+    stmt = CharacterDatabase.CreateStatement(deleteCharacter, "DELETE FROM characters WHERE guid = ?");
     stmt.PExecute(GetGUIDLow());
 
-    stmt = RealmDataDatabase.CreateStatement(insertCharacter, "INSERT INTO characters (guid, account, name, race, class, gender, level, xp, money, playerBytes, playerBytes2, playerFlags, "
+    stmt = CharacterDatabase.CreateStatement(insertCharacter, "INSERT INTO characters (guid, account, name, race, class, gender, level, xp, money, playerBytes, playerBytes2, playerFlags, "
                                             "map, instance_id, dungeon_difficulty, position_x, position_y, position_z, orientation, data, "
                                             "taximask, online, cinematic, "
                                             "totaltime, leveltime, rest_bonus, logout_time, is_logout_resting, resettalents_cost, resettalents_time, "
@@ -16355,7 +16355,7 @@ void Player::SaveToDB()
     _SaveAuras();
     m_reputationMgr.SaveToDB(false);
 
-    RealmDataDatabase.CommitTransaction();
+    CharacterDatabase.CommitTransaction();
 
     // restore state (before aura apply, if aura remove flag then aura must set it ack by self)
     SetDisplayId(tmp_displayid);
@@ -16381,7 +16381,7 @@ void Player::SaveInventoryAndGoldToDB()
 void Player::SaveGoldToDB()
 {
     static SqlStatementID updateMoney;
-    SqlStatement stmt = RealmDataDatabase.CreateStatement(updateMoney, "UPDATE characters SET money = ? WHERE guid = ?");
+    SqlStatement stmt = CharacterDatabase.CreateStatement(updateMoney, "UPDATE characters SET money = ? WHERE guid = ?");
     stmt.PExecute(GetMoney(), GetGUIDLow());
 }
 
@@ -16397,7 +16397,7 @@ void Player::_SaveActions()
         {
             case ACTIONBUTTON_NEW:
             {
-                SqlStatement stmt = RealmDataDatabase.CreateStatement(insertCharacterAction, "INSERT INTO character_action (guid, button, action, type, misc) VALUES (?, ?, ?, ?, ?)");
+                SqlStatement stmt = CharacterDatabase.CreateStatement(insertCharacterAction, "INSERT INTO character_action (guid, button, action, type, misc) VALUES (?, ?, ?, ?, ?)");
                 stmt.addUInt32(GetGUIDLow());
                 stmt.addUInt32(uint32(itr->first));
                 stmt.addUInt32(uint32(itr->second.action));
@@ -16411,7 +16411,7 @@ void Player::_SaveActions()
             }
             case ACTIONBUTTON_CHANGED:
             {
-                SqlStatement stmt = RealmDataDatabase.CreateStatement(updateCharacterAction, "UPDATE character_action  SET action = ?, type = ?, misc = ? WHERE guid = ? AND button = ?");
+                SqlStatement stmt = CharacterDatabase.CreateStatement(updateCharacterAction, "UPDATE character_action  SET action = ?, type = ?, misc = ? WHERE guid = ? AND button = ?");
                 stmt.addUInt32(uint32(itr->second.action));
                 stmt.addUInt32(uint32(itr->second.type));
                 stmt.addUInt32(uint32(itr->second.misc));
@@ -16425,7 +16425,7 @@ void Player::_SaveActions()
             }
             case ACTIONBUTTON_DELETED:
             {
-                SqlStatement stmt = RealmDataDatabase.CreateStatement(deleteCharacterAction, "DELETE FROM character_action WHERE guid = ? and button = ?");
+                SqlStatement stmt = CharacterDatabase.CreateStatement(deleteCharacterAction, "DELETE FROM character_action WHERE guid = ? and button = ?");
                 stmt.PExecute(GetGUIDLow(), uint32(itr->first));
 
                 m_actionButtons.erase(itr++);
@@ -16443,7 +16443,7 @@ void Player::_SaveAuras()
     static SqlStatementID deleteAuras;
     static SqlStatementID insertAura;
 
-    SqlStatement stmt = RealmDataDatabase.CreateStatement(deleteAuras, "DELETE FROM character_aura WHERE guid = ?");
+    SqlStatement stmt = CharacterDatabase.CreateStatement(deleteAuras, "DELETE FROM character_aura WHERE guid = ?");
     stmt.PExecute(GetGUIDLow());
 
     AuraMap const& auras = GetAuras();
@@ -16478,7 +16478,7 @@ void Player::_SaveAuras()
 
                     if (i == 3)
                     {
-                        stmt = RealmDataDatabase.CreateStatement(insertAura, "INSERT INTO character_aura (guid, caster_guid, spell, effect_index, stackcount, amount, maxduration, remaintime, remaincharges) "
+                        stmt = CharacterDatabase.CreateStatement(insertAura, "INSERT INTO character_aura (guid, caster_guid, spell, effect_index, stackcount, amount, maxduration, remaintime, remaincharges) "
                                                                     "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
                         stmt.addUInt32(GetGUIDLow());
                         stmt.addUInt64(itr2->second->GetCasterGUID());
@@ -16514,14 +16514,14 @@ void Player::_SaveBattleGroundCoord()
     static SqlStatementID deleteBGCoord;
     static SqlStatementID insertBGCoord;
 
-    SqlStatement stmt = RealmDataDatabase.CreateStatement(deleteBGCoord, "DELETE FROM character_bgcoord WHERE guid = ?");
+    SqlStatement stmt = CharacterDatabase.CreateStatement(deleteBGCoord, "DELETE FROM character_bgcoord WHERE guid = ?");
     stmt.PExecute(GetGUIDLow());
 
     // don't save if not needed
     if (!InBattleGround())
         return;
 
-    stmt = RealmDataDatabase.CreateStatement(insertBGCoord, "INSERT INTO character_bgcoord (guid, bgid, bgteam, bgmap, bgx, bgy, bgz, bgo) "
+    stmt = CharacterDatabase.CreateStatement(insertBGCoord, "INSERT INTO character_bgcoord (guid, bgid, bgteam, bgmap, bgx, bgy, bgz, bgo) "
                                              "VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
     stmt.addUInt32(GetGUIDLow());
     stmt.addUInt32(GetBattleGroundId());
@@ -16551,10 +16551,10 @@ void Player::_SaveInventory()
         if (!item || item->GetState() == ITEM_NEW)
             continue;
 
-        SqlStatement stmt = RealmDataDatabase.CreateStatement(deleteCharInvByItem, "DELETE FROM character_inventory WHERE item = ?");
+        SqlStatement stmt = CharacterDatabase.CreateStatement(deleteCharInvByItem, "DELETE FROM character_inventory WHERE item = ?");
         stmt.PExecute(item->GetGUIDLow());
 
-        stmt = RealmDataDatabase.CreateStatement(deleteItemInstance, "DELETE FROM item_instance WHERE guid = ?");
+        stmt = CharacterDatabase.CreateStatement(deleteItemInstance, "DELETE FROM item_instance WHERE guid = ?");
         stmt.PExecute(item->GetGUIDLow());
 
         m_items[i]->FSetState(ITEM_NEW);
@@ -16589,10 +16589,10 @@ void Player::_SaveInventory()
                 if (Item* test2 = GetItemByPos(INVENTORY_SLOT_BAG_0, item->GetBagSlot()))
                     bagTestGUID = test2->GetGUIDLow();
 
-                sLog.outLog(LOG_DEFAULT, "ERROR: Player(GUID: %u Name: %s)::_SaveInventory - the bag(%u) and slot(%u) values for the item with guid %u (state %d) are incorrect, the player doesn't have an item at that position!", lowGuid, GetName(), item->GetBagSlot(), item->GetSlot(), item->GetGUIDLow(), (int32)item->GetState());
+                sLog.outError( "ERROR: Player(GUID: %u Name: %s)::_SaveInventory - the bag(%u) and slot(%u) values for the item with guid %u (state %d) are incorrect, the player doesn't have an item at that position!", lowGuid, GetName(), item->GetBagSlot(), item->GetSlot(), item->GetGUIDLow(), (int32)item->GetState());
 
                 // according to the test that was just performed nothing should be in this slot, delete
-                SqlStatement stmt = RealmDataDatabase.CreateStatement(deleteCharInvByPlace, "DELETE FROM character_inventory WHERE bag = ? AND slot = ?");
+                SqlStatement stmt = CharacterDatabase.CreateStatement(deleteCharInvByPlace, "DELETE FROM character_inventory WHERE bag = ? AND slot = ?");
                 stmt.PExecute(bagTestGUID, item->GetSlot());
 
                 // also THIS item should be somewhere else, cheat attempt
@@ -16602,33 +16602,33 @@ void Player::_SaveInventory()
                 // don't skip, let the switch delete it
                 //continue;
 
-                AccountsDatabase.BeginTransaction();
+                LoginDatabase.BeginTransaction();
                 if (!GetSession()->IsAccountFlagged(ACC_SPECIAL_LOG))
                     GetSession()->AddAccountFlag(ACC_SPECIAL_LOG);
 
-                stmt = AccountsDatabase.CreateStatement(insertBan, "INSERT INTO account_punishment VALUES (?, ?, UNIX_TIMESTAMP(), UNIX_TIMESTAMP(), '[CONSOLE]', 'Cheat CON-01', 1)");
+                stmt = LoginDatabase.CreateStatement(insertBan, "INSERT INTO account_punishment VALUES (?, ?, UNIX_TIMESTAMP(), UNIX_TIMESTAMP(), '[CONSOLE]', 'Cheat CON-01', 1)");
                 stmt.PExecute(GetSession()->GetAccountId(), uint32(PUNISHMENT_BAN));
 
-                AccountsDatabase.CommitTransaction();
+                LoginDatabase.CommitTransaction();
                 //GetSession()->KickPlayer();
             }
             else if (test != item)
             {
-                sLog.outLog(LOG_DEFAULT, "ERROR: Player(GUID: %u Name: %s)::_SaveInventory - the bag(%u) and slot(%u) values for the item with guid %u are incorrect, the item with guid %u is there instead!", lowGuid, GetName(), item->GetBagSlot(), item->GetSlot(), item->GetGUIDLow(), test->GetGUIDLow());
+                sLog.outError( "ERROR: Player(GUID: %u Name: %s)::_SaveInventory - the bag(%u) and slot(%u) values for the item with guid %u are incorrect, the item with guid %u is there instead!", lowGuid, GetName(), item->GetBagSlot(), item->GetSlot(), item->GetGUIDLow(), test->GetGUIDLow());
                 // save all changes to the item...
                 if (item->GetState() != ITEM_NEW) // only for existing items, no dupes
                     item->SaveToDB();
                 // ...but do not save position in invntory
 
-                AccountsDatabase.BeginTransaction();
+                LoginDatabase.BeginTransaction();
 
-                SqlStatement stmt = AccountsDatabase.CreateStatement(insertBan, "INSERT INTO account_punishment VALUES (?, ?, UNIX_TIMESTAMP(), UNIX_TIMESTAMP(), '[CONSOLE]', 'Cheat CON-02', 1)");
+                SqlStatement stmt = LoginDatabase.CreateStatement(insertBan, "INSERT INTO account_punishment VALUES (?, ?, UNIX_TIMESTAMP(), UNIX_TIMESTAMP(), '[CONSOLE]', 'Cheat CON-02', 1)");
                 stmt.PExecute(GetSession()->GetAccountId(), uint32(PUNISHMENT_BAN));
 
                 if (!GetSession()->IsAccountFlagged(ACC_SPECIAL_LOG))
                     GetSession()->AddAccountFlag(ACC_SPECIAL_LOG);
 
-                AccountsDatabase.CommitTransaction();
+                LoginDatabase.CommitTransaction();
                 GetSession()->KickPlayer();
 
                 continue;
@@ -16639,7 +16639,7 @@ void Player::_SaveInventory()
         {
             case ITEM_NEW:
             {
-                SqlStatement stmt = RealmDataDatabase.CreateStatement(insertCharInv, "INSERT INTO character_inventory (guid, bag, slot, item, item_template) VALUES (?, ?, ?, ?, ?)");
+                SqlStatement stmt = CharacterDatabase.CreateStatement(insertCharInv, "INSERT INTO character_inventory (guid, bag, slot, item, item_template) VALUES (?, ?, ?, ?, ?)");
                 stmt.addUInt32(lowGuid);
                 stmt.addUInt32(bag_guid);
                 stmt.addUInt32(item->GetSlot());
@@ -16650,7 +16650,7 @@ void Player::_SaveInventory()
             }
             case ITEM_CHANGED:
             {
-                SqlStatement stmt = RealmDataDatabase.CreateStatement(updateCharInv, "UPDATE character_inventory SET guid = ?, bag = ?, slot = ?, item_template = ? WHERE item = ?");
+                SqlStatement stmt = CharacterDatabase.CreateStatement(updateCharInv, "UPDATE character_inventory SET guid = ?, bag = ?, slot = ?, item_template = ? WHERE item = ?");
                 stmt.addUInt32(lowGuid);
                 stmt.addUInt32(bag_guid);
                 stmt.addUInt32(item->GetSlot());
@@ -16661,7 +16661,7 @@ void Player::_SaveInventory()
             }
             case ITEM_REMOVED:
             {
-                SqlStatement stmt = RealmDataDatabase.CreateStatement(deleteCharInvByItem, "DELETE FROM character_inventory WHERE item = ?");
+                SqlStatement stmt = CharacterDatabase.CreateStatement(deleteCharInvByItem, "DELETE FROM character_inventory WHERE item = ?");
                 stmt.PExecute(item->GetGUIDLow());
                 break;
             }
@@ -16688,7 +16688,7 @@ void Player::_SaveMail()
         Mail *m = (*itr);
         if (m->state == MAIL_STATE_CHANGED)
         {
-            SqlStatement stmt = RealmDataDatabase.CreateStatement(updateMail, "UPDATE mail SET itemTextId = ?, has_items = ?, expire_time = ?, deliver_time = ?, money = ?, cod = ?, checked = ? WHERE id = ?");
+            SqlStatement stmt = CharacterDatabase.CreateStatement(updateMail, "UPDATE mail SET itemTextId = ?, has_items = ?, expire_time = ?, deliver_time = ?, money = ?, cod = ?, checked = ? WHERE id = ?");
             stmt.addUInt32(m->itemTextId);
             stmt.addBool(m->HasItems() ? true : false);
             stmt.addUInt64(uint64(m->expire_time));
@@ -16703,7 +16703,7 @@ void Player::_SaveMail()
             {
                 for (std::vector<uint32>::iterator itr2 = m->removedItems.begin(); itr2 != m->removedItems.end(); ++itr2)
                 {
-                    stmt = RealmDataDatabase.CreateStatement(deleteMailItemsByGuid, "DELETE FROM mail_items WHERE item_guid = ?");
+                    stmt = CharacterDatabase.CreateStatement(deleteMailItemsByGuid, "DELETE FROM mail_items WHERE item_guid = ?");
                     stmt.PExecute(*itr2);
                 }
                 m->removedItems.clear();
@@ -16712,24 +16712,24 @@ void Player::_SaveMail()
         }
         else if (m->state == MAIL_STATE_DELETED)
         {
-            SqlStatement stmt = RealmDataDatabase.CreateStatement(deleteMail, "DELETE FROM mail WHERE id = ?");
+            SqlStatement stmt = CharacterDatabase.CreateStatement(deleteMail, "DELETE FROM mail WHERE id = ?");
             stmt.PExecute(m->messageID);
 
-            stmt = RealmDataDatabase.CreateStatement(deleteMailItemsById, "DELETE FROM mail_items WHERE mail_id = ?");
+            stmt = CharacterDatabase.CreateStatement(deleteMailItemsById, "DELETE FROM mail_items WHERE mail_id = ?");
             stmt.PExecute(m->messageID);
 
             if (m->HasItems())
             {
                 for (std::vector<MailItemInfo>::iterator itr2 = m->items.begin(); itr2 != m->items.end(); ++itr2)
                 {
-                    stmt = RealmDataDatabase.CreateStatement(deleteItemInstance, "DELETE FROM item_instance WHERE guid = ?");
+                    stmt = CharacterDatabase.CreateStatement(deleteItemInstance, "DELETE FROM item_instance WHERE guid = ?");
                     stmt.PExecute(itr2->item_guid);
                 }
             }
 
             if (m->itemTextId)
             {
-                stmt = RealmDataDatabase.CreateStatement(deleteItemText, "DELETE FROM item_text WHERE id = ?");
+                stmt = CharacterDatabase.CreateStatement(deleteItemText, "DELETE FROM item_text WHERE id = ?");
                 stmt.PExecute(m->itemTextId);
             }
         }
@@ -16763,7 +16763,7 @@ void Player::_SaveQuestStatus()
         {
             case QUEST_NEW:
             {
-                SqlStatement stmt = RealmDataDatabase.CreateStatement(insertQuestStatus, "INSERT INTO character_queststatus (guid, quest, status, rewarded, explored, timer, mobcount1, mobcount2, mobcount3, mobcount4, itemcount1, itemcount2, itemcount3, itemcount4) "
+                SqlStatement stmt = CharacterDatabase.CreateStatement(insertQuestStatus, "INSERT INTO character_queststatus (guid, quest, status, rewarded, explored, timer, mobcount1, mobcount2, mobcount3, mobcount4, itemcount1, itemcount2, itemcount3, itemcount4) "
                     "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
 
                 stmt.addUInt32(GetGUIDLow());
@@ -16786,7 +16786,7 @@ void Player::_SaveQuestStatus()
             }
             case QUEST_CHANGED:
             {
-                SqlStatement stmt = RealmDataDatabase.CreateStatement(updateQuestStatus, "UPDATE character_queststatus SET status = ?, rewarded = ?, explored = ?, timer = ?, mobcount1 = ?, mobcount2 = ?, mobcount3 = ?, mobcount4 = ?, itemcount1 = ?, itemcount2 = ?, itemcount3 = ?, itemcount4 = ? WHERE guid = ? AND quest = ?");
+                SqlStatement stmt = CharacterDatabase.CreateStatement(updateQuestStatus, "UPDATE character_queststatus SET status = ?, rewarded = ?, explored = ?, timer = ?, mobcount1 = ?, mobcount2 = ?, mobcount3 = ?, mobcount4 = ?, itemcount1 = ?, itemcount2 = ?, itemcount3 = ?, itemcount4 = ? WHERE guid = ? AND quest = ?");
                 stmt.addUInt8(i->second.m_status);
                 stmt.addBool(i->second.m_rewarded);
                 stmt.addBool(i->second.m_explored);
@@ -16825,14 +16825,14 @@ void Player::_SaveDailyQuestStatus()
     static SqlStatementID deleteDailies;
     static SqlStatementID insertDaily;
 
-    SqlStatement stmt = RealmDataDatabase.CreateStatement(deleteDailies, "DELETE FROM character_queststatus_daily WHERE guid = ?");
+    SqlStatement stmt = CharacterDatabase.CreateStatement(deleteDailies, "DELETE FROM character_queststatus_daily WHERE guid = ?");
     stmt.PExecute(GetGUIDLow());
 
     for (uint32 quest_daily_idx = 0; quest_daily_idx < sWorld.getConfig(CONFIG_DAILY_MAX_PER_DAY); ++quest_daily_idx)
     {
         if (GetUInt32Value(PLAYER_FIELD_DAILY_QUESTS_1+quest_daily_idx))
         {
-            stmt = RealmDataDatabase.CreateStatement(insertDaily, "INSERT INTO character_queststatus_daily (guid, quest, time) VALUES (?, ?, ?)");
+            stmt = CharacterDatabase.CreateStatement(insertDaily, "INSERT INTO character_queststatus_daily (guid, quest, time) VALUES (?, ?, ?)");
             stmt.addUInt32(GetGUIDLow());
             stmt.addUInt32(GetUInt32Value(PLAYER_FIELD_DAILY_QUESTS_1+quest_daily_idx));
             stmt.addUInt64(uint64(m_lastDailyQuestTime));
@@ -16852,13 +16852,13 @@ void Player::_SaveSpells()
 
         if (itr->second.state == PLAYERSPELL_REMOVED || itr->second.state == PLAYERSPELL_CHANGED)
         {
-            SqlStatement stmt = RealmDataDatabase.CreateStatement(deleteSpell, "DELETE FROM character_spell WHERE guid = ? and spell = ?");
+            SqlStatement stmt = CharacterDatabase.CreateStatement(deleteSpell, "DELETE FROM character_spell WHERE guid = ? and spell = ?");
             stmt.PExecute(GetGUIDLow(), itr->first);
         }
 
         if (itr->second.state == PLAYERSPELL_NEW || itr->second.state == PLAYERSPELL_CHANGED)
         {
-            SqlStatement stmt = RealmDataDatabase.CreateStatement(insertSpell, "INSERT INTO character_spell (guid, spell, slot, active, disabled) VALUES (?, ?, ?, ?, ?)");
+            SqlStatement stmt = CharacterDatabase.CreateStatement(insertSpell, "INSERT INTO character_spell (guid, spell, slot, active, disabled) VALUES (?, ?, ?, ?, ?)");
             stmt.addUInt32(GetGUIDLow());
             stmt.addUInt32(itr->first);
             stmt.addUInt32(itr->second.slotId);
@@ -16884,13 +16884,13 @@ void Player::_SaveTutorials()
 
     uint32 Rows=0;
     // it's better than rebuilding indexes multiple times
-    QueryResult* result = RealmDataDatabase.PQuery("SELECT count(*) AS r FROM character_tutorial WHERE account = '%u' AND realmid = '%u'", GetSession()->GetAccountId(), realmID);
+    QueryResult* result = CharacterDatabase.PQuery("SELECT count(*) AS r FROM character_tutorial WHERE account = '%u' AND realmid = '%u'", GetSession()->GetAccountId(), realmID);
     if (result)
         Rows = result->Fetch()[0].GetUInt32();
 
     if (Rows)
     {
-        SqlStatement stmt = RealmDataDatabase.CreateStatement(updateTutorial, "UPDATE character_tutorial SET tut0 = ?, tut1 = ?, tut2 = ? , tut3 = ?, tut4 = ?, tut5 = ?, tut6 = ?, tut7 = ? WHERE account = ? AND realmid = ?");
+        SqlStatement stmt = CharacterDatabase.CreateStatement(updateTutorial, "UPDATE character_tutorial SET tut0 = ?, tut1 = ?, tut2 = ? , tut3 = ?, tut4 = ?, tut5 = ?, tut6 = ?, tut7 = ? WHERE account = ? AND realmid = ?");
         stmt.addUInt32(m_Tutorials[0]);
         stmt.addUInt32(m_Tutorials[1]);
         stmt.addUInt32(m_Tutorials[2]);
@@ -16905,7 +16905,7 @@ void Player::_SaveTutorials()
     }
     else
     {
-        SqlStatement stmt = RealmDataDatabase.CreateStatement(insertTutorial, "INSERT INTO character_tutorial (account, realmid, tut0, tut1, tut2, tut3, tut4, tut5, tut6, tut7) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+        SqlStatement stmt = CharacterDatabase.CreateStatement(insertTutorial, "INSERT INTO character_tutorial (account, realmid, tut0, tut1, tut2, tut3, tut4, tut5, tut6, tut7) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
         stmt.addUInt32(GetSession()->GetAccountId());
         stmt.addUInt32(realmID);
         stmt.addUInt32(m_Tutorials[0]);
@@ -16924,7 +16924,7 @@ void Player::_SaveTutorials()
 
 void Player::outDebugValues() const
 {
-    if (!sLog.IsOutDebug())                                  // optimize disabled debug output
+    if (1)                                  // optimize disabled debug output
         return;
 
     sLog.outDebug("HP is: \t\t\t%u\t\tMP is: \t\t\t%u",GetMaxHealth(), GetMaxPower(POWER_MANA));
@@ -16948,7 +16948,7 @@ void Player::outDebugValues() const
 void Player::UpdateSpeakTime()
 {
     // ignore chat spam protection for GMs in any mode
-    if (GetSession()->HasPermissions(PERM_GMT))
+    if (GetSession()->HasPermissions(SEC_GAMEMASTER))
         return;
 
     time_t current = time (NULL);
@@ -17001,7 +17001,7 @@ void Player::SendAttackSwingNotInRange()
 void Player::SavePositionInDB(uint32 mapid, float x,float y,float z,float o,uint32 zone,uint64 guid)
 {
     static SqlStatementID updatePosition;
-    SqlStatement stmt = RealmDataDatabase.CreateStatement(updatePosition, "UPDATE characters SET position_x = ?, position_y = ?, position_z = ?, "
+    SqlStatement stmt = CharacterDatabase.CreateStatement(updatePosition, "UPDATE characters SET position_x = ?, position_y = ?, position_z = ?, "
                                                             "orientation = ?, map = ?, zone = ?, trans_x = '0', trans_y = '0', trans_z = '0', transguid = '0', taxi_path = '' WHERE guid = ?");
 
     stmt.addFloat(x);
@@ -17017,7 +17017,7 @@ void Player::SavePositionInDB(uint32 mapid, float x,float y,float z,float o,uint
 void Player::SaveDataFieldToDB()
 {
     static SqlStatementID updateCharData;
-    SqlStatement stmt = RealmDataDatabase.CreateStatement(updateCharData, "UPDATE characters SET data = ?  WHERE guid = ?");
+    SqlStatement stmt = CharacterDatabase.CreateStatement(updateCharData, "UPDATE characters SET data = ?  WHERE guid = ?");
     stmt.addString(GetUInt32ValuesString());
     stmt.addUInt32(GetGUIDLow());
     stmt.Execute();
@@ -17032,7 +17032,7 @@ bool Player::SaveValuesArrayInDB(Tokens const& tokens, uint64 guid)
     for (int i = 0; i < cnt; ++i)
         ss << tokens[i] << " ";
 
-    SqlStatement stmt = RealmDataDatabase.CreateStatement(updateCharData, "UPDATE characters SET data = ?  WHERE guid = ?");
+    SqlStatement stmt = CharacterDatabase.CreateStatement(updateCharData, "UPDATE characters SET data = ?  WHERE guid = ?");
     stmt.addString(ss);
     stmt.addUInt32(GUID_LOPART(guid));
 
@@ -17272,7 +17272,7 @@ void Player::RemovePet(Pet* pet, PetSaveMode mode, bool returnreagent, bool isDy
 
     // Remove auras off unsummoned pet when owner dies
     if (isDying && !pet && GetTemporaryUnsummonedPetNumber())
-        RealmDataDatabase.PExecute("DELETE FROM pet_aura WHERE guid = '%u'", GetTemporaryUnsummonedPetNumber());
+        CharacterDatabase.PExecute("DELETE FROM pet_aura WHERE guid = '%u'", GetTemporaryUnsummonedPetNumber());
 
     if (returnreagent && (pet || m_temporaryUnsummonedPetNumber) && !InBattleGround())
     {
@@ -17418,7 +17418,7 @@ void Player::Uncharm()
 
     if (GetCharmGUID())
     {
-        sLog.outLog(LOG_DEFAULT, "ERROR: CRASH ALARM! Player %s is not able to uncharm unit (Entry: %u, Type: %u)", GetName(), charm->GetEntry(), charm->GetTypeId());
+        sLog.outError( "ERROR: CRASH ALARM! Player %s is not able to uncharm unit (Entry: %u, Type: %u)", GetName(), charm->GetEntry(), charm->GetTypeId());
     }
 }
 
@@ -17486,10 +17486,10 @@ void Player::Whisper(const std::string& text, uint32 language,uint64 receiver)
     if (language != LANG_ADDON)
     {
         if (rPlayer->GetSession()->IsAccountFlagged(ACC_WHISPER_LOG))
-            sLog.outWhisp(rPlayer->GetSession()->GetAccountId(), "[%s | %u] FROM: %u (%s) : %s ", rPlayer->GetName(), rPlayer->GetGUID(), GetGUID(), GetName(), tmpText.c_str());
+            sLog.out(LOG_CHAR,"[%u | %s | %u] FROM: %u (%s) : %s ", rPlayer->GetSession()->GetAccountId(), rPlayer->GetName(), rPlayer->GetGUID(), GetGUID(), GetName(), tmpText.c_str());
 
         if (GetSession()->IsAccountFlagged(ACC_WHISPER_LOG))
-            sLog.outWhisp(GetSession()->GetAccountId(), "[%s | %u] TO: %u (%s) : %s", GetName(), GetGUID(), rPlayer->GetGUID(), rPlayer->GetName(), tmpText.c_str());
+            sLog.out(LOG_CHAR, "[%u | %s | %u] TO: %u (%s) : %s", GetSession()->GetAccountId(), GetName(), GetGUID(), rPlayer->GetGUID(), rPlayer->GetName(), tmpText.c_str());
     }
 
     if (!isAcceptWhispers() && !isGameMaster() && !rPlayer->isGameMaster())
@@ -17583,7 +17583,7 @@ void Player::PossessSpellInitialize()
 
     if (!charmInfo)
     {
-        sLog.outLog(LOG_DEFAULT, "ERROR: Player::PossessSpellInitialize(): charm (" UI64FMTD ") has no charminfo!", charm->GetGUID());
+        sLog.outError( "ERROR: Player::PossessSpellInitialize(): charm (" UI64FMTD ") has no charminfo!", charm->GetGUID());
         return;
     }
 
@@ -17619,7 +17619,7 @@ void Player::CharmSpellInitialize()
     CharmInfo *charmInfo = charm->GetCharmInfo();
     if (!charmInfo)
     {
-        sLog.outLog(LOG_DEFAULT, "ERROR: Player::CharmSpellInitialize(): the player's charm (" UI64FMTD ") has no charminfo!", charm->GetGUID());
+        sLog.outError( "ERROR: Player::CharmSpellInitialize(): the player's charm (" UI64FMTD ") has no charminfo!", charm->GetGUID());
         return;
     }
 
@@ -17826,11 +17826,11 @@ void Player::SendProficiency(uint8 pr1, uint32 pr2)
 
 void Player::RemovePetitionsAndSigns(uint64 guid, uint32 type)
 {
-    QueryResult* result = QueryResult*(NULL);
+    QueryResult* result = nullptr;
     if (type==10)
-        result = RealmDataDatabase.PQuery("SELECT ownerguid,petitionguid FROM petition_sign WHERE playerguid = '%u'", GUID_LOPART(guid));
+        result = CharacterDatabase.PQuery("SELECT ownerguid,petitionguid FROM petition_sign WHERE playerguid = '%u'", GUID_LOPART(guid));
     else
-        result = RealmDataDatabase.PQuery("SELECT ownerguid,petitionguid FROM petition_sign WHERE playerguid = '%u' AND type = '%u'", GUID_LOPART(guid), type);
+        result = CharacterDatabase.PQuery("SELECT ownerguid,petitionguid FROM petition_sign WHERE playerguid = '%u' AND type = '%u'", GUID_LOPART(guid), type);
     if (result)
     {
         do                                                  // this part effectively does nothing, since the deletion / modification only takes place _after_ the PetitionQuery. Though I don't know if the result remains intact if I execute the delete query beforehand.
@@ -17847,23 +17847,23 @@ void Player::RemovePetitionsAndSigns(uint64 guid, uint32 type)
         } while (result->NextRow());
 
         if (type==10)
-            RealmDataDatabase.PExecute("DELETE FROM petition_sign WHERE playerguid = '%u'", GUID_LOPART(guid));
+            CharacterDatabase.PExecute("DELETE FROM petition_sign WHERE playerguid = '%u'", GUID_LOPART(guid));
         else
-            RealmDataDatabase.PExecute("DELETE FROM petition_sign WHERE playerguid = '%u' AND type = '%u'", GUID_LOPART(guid), type);
+            CharacterDatabase.PExecute("DELETE FROM petition_sign WHERE playerguid = '%u' AND type = '%u'", GUID_LOPART(guid), type);
     }
 
-    RealmDataDatabase.BeginTransaction();
+    CharacterDatabase.BeginTransaction();
     if (type == 10)
     {
-        RealmDataDatabase.PExecute("DELETE FROM petition WHERE ownerguid = '%u'", GUID_LOPART(guid));
-        RealmDataDatabase.PExecute("DELETE FROM petition_sign WHERE ownerguid = '%u'", GUID_LOPART(guid));
+        CharacterDatabase.PExecute("DELETE FROM petition WHERE ownerguid = '%u'", GUID_LOPART(guid));
+        CharacterDatabase.PExecute("DELETE FROM petition_sign WHERE ownerguid = '%u'", GUID_LOPART(guid));
     }
     else
     {
-        RealmDataDatabase.PExecute("DELETE FROM petition WHERE ownerguid = '%u' AND type = '%u'", GUID_LOPART(guid), type);
-        RealmDataDatabase.PExecute("DELETE FROM petition_sign WHERE ownerguid = '%u' AND type = '%u'", GUID_LOPART(guid), type);
+        CharacterDatabase.PExecute("DELETE FROM petition WHERE ownerguid = '%u' AND type = '%u'", GUID_LOPART(guid), type);
+        CharacterDatabase.PExecute("DELETE FROM petition_sign WHERE ownerguid = '%u' AND type = '%u'", GUID_LOPART(guid), type);
     }
-    RealmDataDatabase.CommitTransaction();
+    CharacterDatabase.CommitTransaction();
 }
 
 void Player::SetRestBonus (float rest_bonus_new)
@@ -18242,7 +18242,7 @@ bool Player::BuyItemFromVendor(uint64 vendorguid, uint32 item, uint8 count, uint
         ItemExtendedCostEntry const* iece = sItemExtendedCostStore.LookupEntry(crItem->ExtendedCost);
         if (!iece)
         {
-            sLog.outLog(LOG_DEFAULT, "ERROR: Item %u have wrong ExtendedCost field value %u", pProto->ItemId, crItem->ExtendedCost);
+            sLog.outError( "ERROR: Item %u have wrong ExtendedCost field value %u", pProto->ItemId, crItem->ExtendedCost);
             return false;
         }
 
@@ -18920,7 +18920,7 @@ bool Player::IsVisibleGloballyfor (Player* u) const
         return true;
 
     // GMs are visible for higher gms (or players are visible for gms)
-    if (u->GetSession()->HasPermissions(PERM_GMT_HDEV))
+    if (u->GetSession()->HasPermissions(SEC_DEVELOPPER))
         return GetSession()->GetPermissions() <= u->GetSession()->GetPermissions();
 
     // non faction visibility non-breakable for non-GMs
@@ -19326,7 +19326,7 @@ void Player::resetSpells()
     if (HasAtLoginFlag(AT_LOGIN_RESET_SPELLS))
     {
         m_atLoginFlags = m_atLoginFlags & ~AT_LOGIN_RESET_SPELLS;
-        RealmDataDatabase.PExecute("UPDATE characters SET at_login = at_login & ~ %u WHERE guid ='%u'", uint32(AT_LOGIN_RESET_SPELLS), GetGUIDLow());
+        CharacterDatabase.PExecute("UPDATE characters SET at_login = at_login & ~ %u WHERE guid ='%u'", uint32(AT_LOGIN_RESET_SPELLS), GetGUIDLow());
     }
 
     // make full copy of map (spells removed and marked as deleted at another spell remove
@@ -19776,7 +19776,7 @@ void Player::AutoUnequipOffhandIfNeed()
     }
     else
     {
-        sLog.outLog(LOG_DEFAULT, "ERROR: Player::EquipItem: Can's store offhand item at 2hand item equip for player (GUID: %u).",GetGUIDLow());
+        sLog.outError( "ERROR: Player::EquipItem: Can's store offhand item at 2hand item equip for player (GUID: %u).",GetGUIDLow());
     }
 }
 
@@ -19823,7 +19823,7 @@ bool Player::HasItemFitToSpellReqirements(SpellEntry const* spellInfo, Item cons
             break;
         }
         default:
-            sLog.outLog(LOG_DEFAULT, "ERROR: HasItemFitToSpellReqirements: Not handled spell requirement for item class %u",spellInfo->EquippedItemClass);
+            sLog.outError( "ERROR: HasItemFitToSpellReqirements: Not handled spell requirement for item class %u",spellInfo->EquippedItemClass);
             break;
     }
 
@@ -19896,7 +19896,7 @@ uint32 Player::GetResurrectionSpellId()
                 case 20765: spell_id = 20761; break;        // rank 5
                 case 27239: spell_id = 27240; break;        // rank 6
                 default:
-                    sLog.outLog(LOG_DEFAULT, "ERROR: Unhandled spell %%u: S.Resurrection",(*itr)->GetId());
+                    sLog.outError( "ERROR: Unhandled spell %%u: S.Resurrection",(*itr)->GetId());
                     continue;
             }
 
@@ -20458,7 +20458,7 @@ void Player::LFGSet(uint8 slot, uint32 entry, uint32 type)
         return;
 
     // don't add GM to lfg list
-    if (GetSession()->HasPermissions(PERM_GMT))
+    if (GetSession()->HasPermissions(SEC_GAMEMASTER))
         return;
 
     LfgContainerType::accessor a;
@@ -20517,7 +20517,7 @@ void Player::LFGSet(uint8 slot, uint32 entry, uint32 type)
 void Player::LFMSet(uint32 entry, uint32 type)
 {
     // don't add GM to lfm list
-    if (GetSession()->HasPermissions(PERM_GMT))
+    if (GetSession()->HasPermissions(SEC_GAMEMASTER))
         return;
 
     // don't add to lfm list if still in lfg
@@ -21170,7 +21170,7 @@ void Player::LoadAccountLinkedState()
     m_referredAccounts = AccountMgr::GetRAFAccounts(GetSession()->GetAccountId(), true);
 
     if (m_referredAccounts.size() > sWorld.getConfig(CONFIG_UINT32_RAF_MAXREFERERS))
-        sLog.outLog(LOG_DEFAULT, "Player:RAF:Warning: loaded %u referred accounts instead of %u for player %u", m_referredAccounts.size(), sWorld.getConfig(CONFIG_UINT32_RAF_MAXREFERERS), GetObjectGuid().GetCounter());
+        sLog.outError( "Player:RAF:Warning: loaded %u referred accounts instead of %u for player %u", m_referredAccounts.size(), sWorld.getConfig(CONFIG_UINT32_RAF_MAXREFERERS), GetObjectGuid().GetCounter());
     else
         DEBUG_LOG("Player:RAF: loaded %u referred accounts for player %u", m_referredAccounts.size(), GetObjectGuid().GetCounter());
 
@@ -21178,7 +21178,7 @@ void Player::LoadAccountLinkedState()
     m_referalAccounts = AccountMgr::GetRAFAccounts(GetSession()->GetAccountId(), false);
 
     if (m_referalAccounts.size() > sWorld.getConfig(CONFIG_UINT32_RAF_MAXREFERALS))
-        sLog.outLog(LOG_DEFAULT, "Player:RAF:Warning: loaded %u referal accounts instead of %u for player %u", m_referalAccounts.size(), sWorld.getConfig(CONFIG_UINT32_RAF_MAXREFERALS), GetObjectGuid().GetCounter());
+        sLog.outError( "Player:RAF:Warning: loaded %u referal accounts instead of %u for player %u", m_referalAccounts.size(), sWorld.getConfig(CONFIG_UINT32_RAF_MAXREFERALS), GetObjectGuid().GetCounter());
     else
         DEBUG_LOG("Player:RAF: loaded %u referal accounts for player %u", m_referalAccounts.size(), GetObjectGuid().GetCounter());
 }
@@ -21221,28 +21221,28 @@ void Player::ChangeRace(uint8 new_race)
         {28481,29743,29744,28481,29745,29746,29747}
     };
 
-    sLog.outLog(LOG_RACE_CHANGE,"[%u] Starting race change for player %s from %u to %u",GetGUIDLow(),GetName(),getRace(),new_race);
+    sLog.out(LOG_CHAR,"[%u] Starting race change for player %s from %u to %u",GetGUIDLow(),GetName(),getRace(),new_race);
     Races old_race = Races(getRace());
 
     if (bool((1 << new_race) & 0x89A) != bool((1 << old_race) & 0x89A))
     {
-        sLog.outLog(LOG_RACE_CHANGE,"[%u] Invalid race change, trans-faction NYI",GetGUIDLow());
+        sLog.out(LOG_CHAR,"[%u] Invalid race change, trans-faction NYI",GetGUIDLow());
         return;
     }
 
     const PlayerInfo* new_info = sObjectMgr.GetPlayerInfo(new_race,getClass());
     if (!new_info)
     {
-        sLog.outLog(LOG_RACE_CHANGE,"[%u] Invalid race/class pair: %u / %u",GetGUIDLow(),new_race,getClass());
+        sLog.out(LOG_CHAR,"[%u] Invalid race/class pair: %u / %u",GetGUIDLow(),new_race,getClass());
         return;
     }
 
-    QueryResult* result = GameDataDatabase.PQuery(
+    QueryResult* result = WorldDatabase.PQuery(
         "SELECT skin1,skin2,skin3 FROM race_change_skins WHERE race = %u AND gender = %u",new_race,getGender());
 
     if (!result)
     {
-        sLog.outLog(LOG_RACE_CHANGE,"[%u] skins not found (race %u gender %u)",GetGUIDLow(),new_race,getGender());
+        sLog.out(LOG_CHAR,"[%u] skins not found (race %u gender %u)",GetGUIDLow(),new_race,getGender());
         return;
     }
     SetUInt32Value(PLAYER_BYTES,result->Fetch()[urand(0,2)].GetUInt32()); //face, hair, skin and hair color
@@ -21263,7 +21263,7 @@ void Player::ChangeRace(uint8 new_race)
     SetUInt32Value(UNIT_FIELD_BYTES_0, unitbytes0);
 
     //spells
-    result = GameDataDatabase.PQuery("SELECT spell FROM race_change_spells WHERE race = %u AND class = %u",old_race,getClass());
+    result = WorldDatabase.PQuery("SELECT spell FROM race_change_spells WHERE race = %u AND class = %u",old_race,getClass());
     Field* fields;
     if (result)
     {
@@ -21290,7 +21290,7 @@ void Player::ChangeRace(uint8 new_race)
         removeSpell(44041);
     }
 
-    result = GameDataDatabase.PQuery("SELECT spell FROM race_change_spells WHERE race = %u AND class = %u",new_race,getClass());
+    result = WorldDatabase.PQuery("SELECT spell FROM race_change_spells WHERE race = %u AND class = %u",new_race,getClass());
     if (result)
     {
         do
@@ -21304,7 +21304,7 @@ void Player::ChangeRace(uint8 new_race)
     //reps
     setFaction(Player::getFactionForRace(new_race));
     if (!GetReputationMgr().SwitchReputation(CapitalForRace[old_race],CapitalForRace[new_race]))
-        sLog.outLog(LOG_RACE_CHANGE,"[%u] Problem encountered while changing reputation",GetGUIDLow());
+        sLog.out(LOG_CHAR,"[%u] Problem encountered while changing reputation",GetGUIDLow());
 
     //Mounts
     for (uint8 type = 0;type<7;type++){
@@ -21356,7 +21356,7 @@ void Player::ChangeRace(uint8 new_race)
             }
         }
     }
-    sLog.outLog(LOG_RACE_CHANGE,"[%u] Race change for player %s succesful",GetGUIDLow(),GetName());
+    sLog.out(LOG_CHAR,"[%u] Race change for player %s succesful",GetGUIDLow(),GetName());
 }
 
 void Player::SetCanWhisperToGM(bool on)

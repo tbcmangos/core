@@ -382,7 +382,7 @@ enum
     NPC_BUTTRESS_SPAWNER            = 22260,
 
     MAX_BUTTRESS                    = 4,
-    TIME_TOTAL                      = MINUTE*10*IN_MILISECONDS,
+    TIME_TOTAL                      = MINUTE*10*IN_MILLISECONDS,
 
     SPELL_SUMMONED                  = 7741,
     SPELL_DEMONIAC_VISITATION       = 38708,

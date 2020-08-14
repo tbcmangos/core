@@ -59,7 +59,7 @@ void LoadSkillExtraItemTable()
     SkillExtraItemStore.clear();                            // need for reload
 
     //                                                       0        1                       2                       3
-    QueryResult* result = GameDataDatabase.Query("SELECT spellId, requiredSpecialization, additionalCreateChance, additionalMaxNum FROM skill_extra_item_template");
+    QueryResult* result = WorldDatabase.Query("SELECT spellId, requiredSpecialization, additionalCreateChance, additionalMaxNum FROM skill_extra_item_template");
 
     if (result)
     {
@@ -74,28 +74,28 @@ void LoadSkillExtraItemTable()
 
             if (!sSpellStore.LookupEntry(spellId))
             {
-                sLog.outLog(LOG_DEFAULT, "ERROR: Skill specialization %u has non-existent spell id in `skill_extra_item_template`!", spellId);
+                sLog.outError( "ERROR: Skill specialization %u has non-existent spell id in `skill_extra_item_template`!", spellId);
                 continue;
             }
 
             uint32 requiredSpecialization = fields[1].GetUInt32();
             if (!sSpellStore.LookupEntry(requiredSpecialization))
             {
-                sLog.outLog(LOG_DEFAULT, "ERROR: Skill specialization %u have not existed required specialization spell id %u in `skill_extra_item_template`!", spellId,requiredSpecialization);
+                sLog.outError( "ERROR: Skill specialization %u have not existed required specialization spell id %u in `skill_extra_item_template`!", spellId,requiredSpecialization);
                 continue;
             }
 
             float additionalCreateChance = fields[2].GetFloat();
             if (additionalCreateChance <= 0.0f)
             {
-                sLog.outLog(LOG_DEFAULT, "ERROR: Skill specialization %u has too low additional create chance in `skill_extra_item_template`!", spellId);
+                sLog.outError( "ERROR: Skill specialization %u has too low additional create chance in `skill_extra_item_template`!", spellId);
                 continue;
             }
 
             uint8 additionalMaxNum = fields[3].GetUInt8();
             if (!additionalMaxNum)
             {
-                sLog.outLog(LOG_DEFAULT, "ERROR: Skill specialization %u has 0 max number of extra items in `skill_extra_item_template`!", spellId);
+                sLog.outError( "ERROR: Skill specialization %u has 0 max number of extra items in `skill_extra_item_template`!", spellId);
                 continue;
             }
 

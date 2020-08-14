@@ -64,7 +64,7 @@ struct instance_naxxramas : public ScriptedInstance
         m_feugenGUID = 0;
         deadHorsemans = 0;
 
-        screemTimer = urand(3*MINUTE*IN_MILISECONDS, 5*MINUTE*IN_MILISECONDS);
+        screemTimer = urand(3*MINUTE*IN_MILLISECONDS, 5*MINUTE*IN_MILLISECONDS);
     }
 
     bool IsEncounterInProgress() const
@@ -378,7 +378,7 @@ struct instance_naxxramas : public ScriptedInstance
                         player->SendPlaySound(sound, true);
             }
 
-            screemTimer = urand(3*MINUTE*IN_MILISECONDS, 5*MINUTE*IN_MILISECONDS);
+            screemTimer = urand(3*MINUTE*IN_MILLISECONDS, 5*MINUTE*IN_MILLISECONDS);
         }
     }
 };

@@ -93,7 +93,7 @@ InstanceSave* InstanceSaveManager::AddInstanceSave(uint32 mapId, uint32 instance
     const MapEntry* entry = sMapStore.LookupEntry(mapId);
     if (!entry || instanceId == 0)
     {
-        sLog.outLog(LOG_DEFAULT, "ERROR: InstanceSaveManager::AddInstanceSave: mapid = %d, instanceid = %d!", mapId, instanceId);
+        sLog.outError( "ERROR: InstanceSaveManager::AddInstanceSave: mapid = %d, instanceid = %d!", mapId, instanceId);
         return NULL;
     }
 
@@ -129,12 +129,12 @@ InstanceSave *InstanceSaveManager::GetInstanceSave(uint32 InstanceId)
 
 void InstanceSaveManager::DeleteInstanceFromDB(uint32 instanceid)
 {
-    RealmDataDatabase.BeginTransaction();
-    RealmDataDatabase.PExecute("DELETE FROM instance WHERE id = '%u'", instanceid);
-    RealmDataDatabase.PExecute("DELETE FROM group_saved_loot WHERE instanceId='%u'", instanceid);
-    RealmDataDatabase.PExecute("DELETE FROM character_instance WHERE instance = '%u'", instanceid);
-    RealmDataDatabase.PExecute("DELETE FROM group_instance WHERE instance = '%u'", instanceid);
-    RealmDataDatabase.CommitTransaction();
+    CharacterDatabase.BeginTransaction();
+    CharacterDatabase.PExecute("DELETE FROM instance WHERE id = '%u'", instanceid);
+    CharacterDatabase.PExecute("DELETE FROM group_saved_loot WHERE instanceId='%u'", instanceid);
+    CharacterDatabase.PExecute("DELETE FROM character_instance WHERE instance = '%u'", instanceid);
+    CharacterDatabase.PExecute("DELETE FROM group_instance WHERE instance = '%u'", instanceid);
+    CharacterDatabase.CommitTransaction();
     // respawn times should be deleted only when the map gets unloaded
 }
 
@@ -145,7 +145,7 @@ void InstanceSaveManager::RemoveInstanceSave(uint32 InstanceId)
     {
         // save the resettime for normal instances only when they get unloaded
         if (time_t resettime = itr->second->GetResetTimeForDB())
-            RealmDataDatabase.PExecute("UPDATE instance SET resettime = '" UI64FMTD "' WHERE id = '%u'", (uint64)resettime, InstanceId);
+            CharacterDatabase.PExecute("UPDATE instance SET resettime = '" UI64FMTD "' WHERE id = '%u'", (uint64)resettime, InstanceId);
 
         InstanceSave *temp = itr->second;
         m_instanceSaveById.erase(itr);
@@ -182,13 +182,13 @@ void InstanceSave::SaveToDB()
         {
             data = iData->GetSaveData();
             if (!data.empty())
-                RealmDataDatabase.escape_string(data);
+                CharacterDatabase.escape_string(data);
         }
     }
 
     static SqlStatementID insertInstance;
 
-    SqlStatement stmt = RealmDataDatabase.CreateStatement(insertInstance, "INSERT INTO instance VALUES (?, ?, ?, ?, ?)");
+    SqlStatement stmt = CharacterDatabase.CreateStatement(insertInstance, "INSERT INTO instance VALUES (?, ?, ?, ?, ?)");
     stmt.addUInt32(m_instanceid);
     stmt.addUInt32(GetMapId());
     stmt.addUInt64(uint64(GetResetTimeForDB()));
@@ -281,23 +281,23 @@ void InstanceSaveManager::CleanupInstances()
     // load reset times and clean expired instances
     sInstanceSaveManager.LoadResetTimes();
 
-    RealmDataDatabase.BeginTransaction();
+    CharacterDatabase.BeginTransaction();
     // clean character/group - instance binds with invalid group/characters
-    _DelHelper(RealmDataDatabase, "character_instance.guid, instance", "character_instance", "LEFT JOIN characters ON character_instance.guid = characters.guid WHERE characters.guid IS NULL");
-    _DelHelper(RealmDataDatabase, "group_instance.leaderGuid, instance", "group_instance", "LEFT JOIN characters ON group_instance.leaderGuid = characters.guid LEFT JOIN groups ON group_instance.leaderGuid = groups.leaderGuid WHERE characters.guid IS NULL OR groups.leaderGuid IS NULL");
+    _DelHelper(CharacterDatabase, "character_instance.guid, instance", "character_instance", "LEFT JOIN characters ON character_instance.guid = characters.guid WHERE characters.guid IS NULL");
+    _DelHelper(CharacterDatabase, "group_instance.leaderGuid, instance", "group_instance", "LEFT JOIN characters ON group_instance.leaderGuid = characters.guid LEFT JOIN groups ON group_instance.leaderGuid = groups.leaderGuid WHERE characters.guid IS NULL OR groups.leaderGuid IS NULL");
 
     // clean instances that do not have any players or groups bound to them
-    _DelHelper(RealmDataDatabase, "id, map, difficulty", "instance", "LEFT JOIN character_instance ON character_instance.instance = id LEFT JOIN group_instance ON group_instance.instance = id WHERE character_instance.instance IS NULL AND group_instance.instance IS NULL");
+    _DelHelper(CharacterDatabase, "id, map, difficulty", "instance", "LEFT JOIN character_instance ON character_instance.instance = id LEFT JOIN group_instance ON group_instance.instance = id WHERE character_instance.instance IS NULL AND group_instance.instance IS NULL");
 
     // clean invalid instance references in other tables
-    _DelHelper(RealmDataDatabase, "character_instance.guid, instance", "character_instance", "LEFT JOIN instance ON character_instance.instance = instance.id WHERE instance.id IS NULL");
-    _DelHelper(RealmDataDatabase, "group_instance.leaderGuid, instance", "group_instance", "LEFT JOIN instance ON group_instance.instance = instance.id WHERE instance.id IS NULL");
+    _DelHelper(CharacterDatabase, "character_instance.guid, instance", "character_instance", "LEFT JOIN instance ON character_instance.instance = instance.id WHERE instance.id IS NULL");
+    _DelHelper(CharacterDatabase, "group_instance.leaderGuid, instance", "group_instance", "LEFT JOIN instance ON group_instance.instance = instance.id WHERE instance.id IS NULL");
 
     // clean creature/gameobject respawn times
-    RealmDataDatabase.DirectExecute("DELETE FROM creature_respawn WHERE NOT EXISTS (SELECT id FROM instance WHERE instance.id = creature_respawn.instance)");
-    RealmDataDatabase.DirectExecute("DELETE FROM gameobject_respawn WHERE NOT EXISTS (SELECT id FROM instance WHERE instance.id = gameobject_respawn.instance)");
+    CharacterDatabase.DirectExecute("DELETE FROM creature_respawn WHERE NOT EXISTS (SELECT id FROM instance WHERE instance.id = creature_respawn.instance)");
+    CharacterDatabase.DirectExecute("DELETE FROM gameobject_respawn WHERE NOT EXISTS (SELECT id FROM instance WHERE instance.id = gameobject_respawn.instance)");
 
-    RealmDataDatabase.CommitTransaction();
+    CharacterDatabase.CommitTransaction();
     bar.step();
     sLog.outString();
     sLog.outString(">> Instances cleaned up.");
@@ -314,7 +314,7 @@ void InstanceSaveManager::PackInstances()
     // all valid ids are in the instance table
     // any associations to ids not in this table are assumed to be
     // cleaned already in CleanupInstances
-    QueryResult* result = RealmDataDatabase.Query("SELECT id FROM instance");
+    QueryResult* result = CharacterDatabase.Query("SELECT id FROM instance");
     if (result)
     {
         do
@@ -335,16 +335,16 @@ void InstanceSaveManager::PackInstances()
         if (*i != InstanceNumber)
         {
             // remap instance id
-            RealmDataDatabase.BeginTransaction();
-            RealmDataDatabase.PExecute("UPDATE creature_respawn SET instance = '%u' WHERE instance = '%u'", InstanceNumber, *i);
-            RealmDataDatabase.PExecute("UPDATE gameobject_respawn SET instance = '%u' WHERE instance = '%u'", InstanceNumber, *i);
-            RealmDataDatabase.PExecute("UPDATE corpse SET instance = '%u' WHERE instance = '%u'", InstanceNumber, *i);
-            RealmDataDatabase.PExecute("UPDATE character_instance SET instance = '%u' WHERE instance = '%u'", InstanceNumber, *i);
-            RealmDataDatabase.PExecute("UPDATE instance SET id = '%u' WHERE id = '%u'", InstanceNumber, *i);
-            RealmDataDatabase.PExecute("UPDATE group_instance SET instance = '%u' WHERE instance = '%u'", InstanceNumber, *i);
-            RealmDataDatabase.PExecute("UPDATE group_saved_loot SET instanceId = '%u' WHERE instanceId = '%u'", InstanceNumber, *i);
-            RealmDataDatabase.PExecute("UPDATE characters SET instance_id = '%u' WHERE instance_id = '%u'", InstanceNumber, *i);
-            RealmDataDatabase.CommitTransaction();
+            CharacterDatabase.BeginTransaction();
+            CharacterDatabase.PExecute("UPDATE creature_respawn SET instance = '%u' WHERE instance = '%u'", InstanceNumber, *i);
+            CharacterDatabase.PExecute("UPDATE gameobject_respawn SET instance = '%u' WHERE instance = '%u'", InstanceNumber, *i);
+            CharacterDatabase.PExecute("UPDATE corpse SET instance = '%u' WHERE instance = '%u'", InstanceNumber, *i);
+            CharacterDatabase.PExecute("UPDATE character_instance SET instance = '%u' WHERE instance = '%u'", InstanceNumber, *i);
+            CharacterDatabase.PExecute("UPDATE instance SET id = '%u' WHERE id = '%u'", InstanceNumber, *i);
+            CharacterDatabase.PExecute("UPDATE group_instance SET instance = '%u' WHERE instance = '%u'", InstanceNumber, *i);
+            CharacterDatabase.PExecute("UPDATE group_saved_loot SET instanceId = '%u' WHERE instanceId = '%u'", InstanceNumber, *i);
+            CharacterDatabase.PExecute("UPDATE characters SET instance_id = '%u' WHERE instance_id = '%u'", InstanceNumber, *i);
+            CharacterDatabase.CommitTransaction();
         }
 
         ++InstanceNumber;
@@ -367,7 +367,7 @@ void InstanceSaveManager::LoadResetTimes()
     // resettime = 0 in the DB for raid/heroic instances so those are skipped
     typedef std::map<uint32, std::pair<uint32, uint64> > ResetTimeMapType;
     ResetTimeMapType InstResetTime;
-    QueryResult* result = RealmDataDatabase.Query("SELECT id, map, resettime FROM instance WHERE resettime > 0");
+    QueryResult* result = CharacterDatabase.Query("SELECT id, map, resettime FROM instance WHERE resettime > 0");
     if (result)
     {
         do
@@ -382,7 +382,7 @@ void InstanceSaveManager::LoadResetTimes()
         while (result->NextRow());
 
         // update reset time for normal instances with the max creature respawn time + X hours
-        result = RealmDataDatabase.Query("SELECT MAX(respawntime), instance FROM creature_respawn WHERE instance > 0 GROUP BY instance");
+        result = CharacterDatabase.Query("SELECT MAX(respawntime), instance FROM creature_respawn WHERE instance > 0 GROUP BY instance");
         if (result)
         {
             do
@@ -393,7 +393,7 @@ void InstanceSaveManager::LoadResetTimes()
                 ResetTimeMapType::iterator itr = InstResetTime.find(instance);
                 if (itr != InstResetTime.end() && itr->second.second != resettime)
                 {
-                    RealmDataDatabase.DirectPExecute("UPDATE instance SET resettime = '" UI64FMTD "' WHERE id = '%u'", resettime, instance);
+                    CharacterDatabase.DirectPExecute("UPDATE instance SET resettime = '" UI64FMTD "' WHERE id = '%u'", resettime, instance);
                     itr->second.second = resettime;
                 }
             }
@@ -409,7 +409,7 @@ void InstanceSaveManager::LoadResetTimes()
     // load the global respawn times for raid/heroic instances
     uint32 diff = sWorld.getConfig(CONFIG_INSTANCE_RESET_TIME_HOUR) * HOUR;
     m_resetTimeByMapId.resize(sMapStore.GetNumRows()+1);
-    result = RealmDataDatabase.Query("SELECT mapid, resettime FROM instance_reset");
+    result = CharacterDatabase.Query("SELECT mapid, resettime FROM instance_reset");
     if (result)
     {
         do
@@ -418,8 +418,8 @@ void InstanceSaveManager::LoadResetTimes()
             uint32 mapid = fields[0].GetUInt32();
             if (!ObjectMgr::GetInstanceTemplate(mapid))
             {
-                sLog.outLog(LOG_DEFAULT, "ERROR: InstanceSaveManager::LoadResetTimes: invalid mapid %u in instance_reset!", mapid);
-                RealmDataDatabase.DirectPExecute("DELETE FROM instance_reset WHERE mapid = '%u'", mapid);
+                sLog.outError( "ERROR: InstanceSaveManager::LoadResetTimes: invalid mapid %u in instance_reset!", mapid);
+                CharacterDatabase.DirectPExecute("DELETE FROM instance_reset WHERE mapid = '%u'", mapid);
                 continue;
             }
 
@@ -427,7 +427,7 @@ void InstanceSaveManager::LoadResetTimes()
             uint64 oldresettime = fields[1].GetUInt64();
             uint64 newresettime = (oldresettime / DAY) * DAY + diff;
             if (oldresettime != newresettime)
-                RealmDataDatabase.DirectPExecute("UPDATE instance_reset SET resettime = '" UI64FMTD "' WHERE mapid = '%u'", newresettime, mapid);
+                CharacterDatabase.DirectPExecute("UPDATE instance_reset SET resettime = '" UI64FMTD "' WHERE mapid = '%u'", newresettime, mapid);
 
             m_resetTimeByMapId[mapid] = newresettime;
         } while (result->NextRow());
@@ -435,7 +435,7 @@ void InstanceSaveManager::LoadResetTimes()
 
     // clean expired instances, references to them will be deleted in CleanupInstances
     // must be done before calculating new reset times
-    _DelHelper(RealmDataDatabase, "id, map, difficulty", "instance", "LEFT JOIN instance_reset ON mapid = map WHERE (instance.resettime < '" UI64FMTD "' AND instance.resettime > '0') OR (NOT instance_reset.resettime IS NULL AND instance_reset.resettime < '" UI64FMTD "')",  (uint64)now, (uint64)now);
+    _DelHelper(CharacterDatabase, "id, map, difficulty", "instance", "LEFT JOIN instance_reset ON mapid = map WHERE (instance.resettime < '" UI64FMTD "' AND instance.resettime > '0') OR (NOT instance_reset.resettime IS NULL AND instance_reset.resettime < '" UI64FMTD "')",  (uint64)now, (uint64)now);
 
     // calculate new global reset times for expired instances and those that have never been reset yet
     // add the global reset times to the priority queue
@@ -455,7 +455,7 @@ void InstanceSaveManager::LoadResetTimes()
         {
             // initialize the reset time
             t = today + period + diff;
-            RealmDataDatabase.DirectPExecute("INSERT INTO instance_reset VALUES ('%u','" UI64FMTD "')", i, (uint64)t);
+            CharacterDatabase.DirectPExecute("INSERT INTO instance_reset VALUES ('%u','" UI64FMTD "')", i, (uint64)t);
         }
 
         if (t < now)
@@ -464,7 +464,7 @@ void InstanceSaveManager::LoadResetTimes()
             // calculate the next reset time
             t = (t / DAY) * DAY;
             t += ((today - t) / period + 1) * period + diff;
-            RealmDataDatabase.DirectPExecute("UPDATE instance_reset SET resettime = '" UI64FMTD "' WHERE mapid = '%u'", (uint64)t, i);
+            CharacterDatabase.DirectPExecute("UPDATE instance_reset SET resettime = '" UI64FMTD "' WHERE mapid = '%u'", (uint64)t, i);
         }
 
         m_resetTimeByMapId[temp->map] = t;
@@ -495,7 +495,7 @@ void InstanceSaveManager::ScheduleReset(bool add, time_t time, InstResetEvent ev
             for (itr = m_resetTimeQueue.begin(); itr != m_resetTimeQueue.end(); ++itr)
                 if (itr->second == event) { m_resetTimeQueue.erase(itr); return; }
             if (itr == m_resetTimeQueue.end())
-                sLog.outLog(LOG_DEFAULT, "ERROR: InstanceSaveManager::ScheduleReset: cannot cancel the reset, the event(%d,%d,%d) was not found!", event.type, event.mapid, event.instanceId);
+                sLog.outError( "ERROR: InstanceSaveManager::ScheduleReset: cannot cancel the reset, the event(%d,%d,%d) was not found!", event.type, event.mapid, event.instanceId);
         }
     }
 }
@@ -551,7 +551,7 @@ void InstanceSaveManager::_ResetSave(InstanceSaveHashMap::iterator &itr)
         group->UnbindInstance(itr->second->GetMapId(), itr->second->GetDifficulty(), true);
     }
 
-    RealmDataDatabase.PExecute("DELETE FROM group_saved_loot WHERE instanceid = '%u'", itr->second->GetInstanceId());
+    CharacterDatabase.PExecute("DELETE FROM group_saved_loot WHERE instanceid = '%u'", itr->second->GetInstanceId());
 
     delete itr->second;
     itr->second = nullptr;
@@ -574,7 +574,7 @@ void InstanceSaveManager::_ResetInstance(uint32 mapid, uint32 instanceId)
     {
         const MapEntry *mapEntry = sMapStore.LookupEntry(mapid);
         if (mapEntry->IsRaid())
-            sLog.outLog(LOG_DEFAULT, "ERROR: Called _ResetInstance for mapid: %u, canreset: %B", mapid, itr->second->CanReset());
+            sLog.outError( "ERROR: Called _ResetInstance for mapid: %u, canreset: %B", mapid, itr->second->CanReset());
 
         _ResetSave(itr);
     }
@@ -604,7 +604,7 @@ void InstanceSaveManager::_ResetOrWarnAll(uint32 mapid, bool warn, uint32 timeLe
         InstanceTemplate const* temp = sObjectMgr.GetInstanceTemplate(mapid);
         if (!temp || !temp->reset_delay)
         {
-            sLog.outLog(LOG_DEFAULT, "ERROR: InstanceSaveManager::ResetOrWarnAll: no instance template or reset delay for map %d", mapid);
+            sLog.outError( "ERROR: InstanceSaveManager::ResetOrWarnAll: no instance template or reset delay for map %d", mapid);
             return;
         }
 
@@ -618,18 +618,18 @@ void InstanceSaveManager::_ResetOrWarnAll(uint32 mapid, bool warn, uint32 timeLe
         }
 
         // delete them from the DB, even if not loaded
-        RealmDataDatabase.BeginTransaction();
-        RealmDataDatabase.PExecute("DELETE FROM character_instance USING character_instance LEFT JOIN instance ON character_instance.instance = id WHERE map = '%u'", mapid);
-        RealmDataDatabase.PExecute("DELETE FROM group_instance USING group_instance LEFT JOIN instance ON group_instance.instance = id WHERE map = '%u'", mapid);
-        RealmDataDatabase.PExecute("DELETE FROM instance WHERE map = '%u'", mapid);
-        RealmDataDatabase.CommitTransaction();
+        CharacterDatabase.BeginTransaction();
+        CharacterDatabase.PExecute("DELETE FROM character_instance USING character_instance LEFT JOIN instance ON character_instance.instance = id WHERE map = '%u'", mapid);
+        CharacterDatabase.PExecute("DELETE FROM group_instance USING group_instance LEFT JOIN instance ON group_instance.instance = id WHERE map = '%u'", mapid);
+        CharacterDatabase.PExecute("DELETE FROM instance WHERE map = '%u'", mapid);
+        CharacterDatabase.CommitTransaction();
 
         // calculate the next reset time
         uint32 diff = sWorld.getConfig(CONFIG_INSTANCE_RESET_TIME_HOUR) * HOUR;
         uint32 period = temp->reset_delay * DAY;
         uint64 next_reset = ((now + timeLeft + MINUTE) / DAY * DAY) + period + diff;
         // update it in the DB
-        RealmDataDatabase.PExecute("UPDATE instance_reset SET resettime = '" UI64FMTD "' WHERE mapid = '%d'", next_reset, mapid);
+        CharacterDatabase.PExecute("UPDATE instance_reset SET resettime = '" UI64FMTD "' WHERE mapid = '%d'", next_reset, mapid);
 
         // schedule next reset.
         m_resetTimeByMapId[mapid] = (time_t) next_reset;

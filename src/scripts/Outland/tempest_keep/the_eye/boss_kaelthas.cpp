@@ -908,7 +908,7 @@ struct boss_kaelthasAI : public ScriptedAI
                         Weapon = m_creature->SummonCreature(((uint32)KaelthasWeapons[i][0]),KaelthasWeapons[i][1],KaelthasWeapons[i][2],KaelthasWeapons[i][3],0,TEMPSUMMON_TIMED_OR_DEAD_DESPAWN, 60000);
 
                         if (!Weapon)
-                            error_log("STSCR: Kael'thas weapon %i could not be spawned", i);
+                            sLog.outError("STSCR: Kael'thas weapon %i could not be spawned", i);
                         else
                         {
                             Weapon->setFaction(m_creature->getFaction());
@@ -942,7 +942,7 @@ struct boss_kaelthasAI : public ScriptedAI
                     {
                         Advisor = Unit::GetCreature((*m_creature), AdvisorGuid[i]);
                         if (!Advisor)
-                            error_log("TSCR: Kael'Thas Advisor %u does not exist. Possibly despawned? Incorrectly Killed?", i);
+                            sLog.outError("TSCR: Kael'Thas Advisor %u does not exist. Possibly despawned? Incorrectly Killed?", i);
                         else
                             ((advisorbase_ai*)Advisor->AI())->Revive();
                     }

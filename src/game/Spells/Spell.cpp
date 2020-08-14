@@ -1039,7 +1039,7 @@ void Spell::DoAllEffectOnTarget(TargetInfo *target)
                 case 25251: BTAura = 25252; break;
                 case 30335: BTAura = 30339; break;
                 default:
-                    sLog.outLog(LOG_DEFAULT, "ERROR: Spell::EffectSchoolDMG: Spell %u not handled in BTAura",GetSpellEntry()->Id);
+                    sLog.outError( "ERROR: Spell::EffectSchoolDMG: Spell %u not handled in BTAura",GetSpellEntry()->Id);
                     break;
             }
             if (BTAura)
@@ -1439,7 +1439,7 @@ void Spell::SearchAreaTarget(std::list<Unit*> &TagUnitMap, float radius, const u
             Unit *target = m_targets.getUnitTarget();
             if (!target)
             {
-                sLog.outLog(LOG_DEFAULT, "ERROR: SPELL: cannot find unit target for spell ID %u\n", GetSpellEntry()->Id);
+                sLog.outError( "ERROR: SPELL: cannot find unit target for spell ID %u\n", GetSpellEntry()->Id);
                 return;
             }
             x = target->GetPositionX();
@@ -1483,7 +1483,7 @@ void Spell::SearchAreaTarget(std::list<Unit*> &TagUnitMap, float radius, const u
             break;
         }
         default:
-            sLog.outLog(LOG_DEFAULT, "ERROR: WTF ? Oo Wrong spell script target type for this function: %i (shouldbe %i or %i)", spellScriptTargetType, SPELL_TARGET_TYPE_CREATURE, SPELL_TARGET_TYPE_DEAD);
+            sLog.outError( "ERROR: WTF ? Oo Wrong spell script target type for this function: %i (shouldbe %i or %i)", spellScriptTargetType, SPELL_TARGET_TYPE_CREATURE, SPELL_TARGET_TYPE_DEAD);
             break;
     }
     TagUnitMap.remove_if(MaNGOS::ObjectIsTotemCheck(true)); // totems should not be affected by AoE spells (check if no exceptions?)
@@ -1511,7 +1511,7 @@ void Spell::SearchAreaTarget(std::list<GameObject*> &goList, float radius, const
             GameObject *target = m_targets.getGOTarget();
             if (!target)
             {
-                sLog.outLog(LOG_DEFAULT, "ERROR: SPELL: cannot find unit target for spell ID %u\n", GetSpellEntry()->Id);
+                sLog.outError( "ERROR: SPELL: cannot find unit target for spell ID %u\n", GetSpellEntry()->Id);
                 return;
             }
             x = target->GetPositionX();
@@ -1539,7 +1539,7 @@ void Spell::SearchAreaTarget(std::list<GameObject*> &goList, float radius, const
             break;
         }
         default:
-            sLog.outLog(LOG_DEFAULT, "ERROR: WTF ? Oo Wrong spell script target type for this function: %i (should be %i)", spellScriptTargetType, SPELL_TARGET_TYPE_GAMEOBJECT);
+            sLog.outError( "ERROR: WTF ? Oo Wrong spell script target type for this function: %i (should be %i)", spellScriptTargetType, SPELL_TARGET_TYPE_GAMEOBJECT);
             break;
     }
 }
@@ -1554,7 +1554,7 @@ WorldObject* Spell::SearchNearbyTarget(float range, SpellTargets TargetType)
             SpellScriptTarget::const_iterator upper = sSpellMgr.GetEndSpellScriptTarget(GetSpellEntry()->Id);
             if (lower == upper)
             {
-                sLog.outLog(LOG_DB_ERR, "Spell (ID: %u) (caster Entry: %u) does not have record in `spell_script_target`", GetSpellEntry()->Id, m_caster->GetEntry());
+                sLog.outErrorDb( "Spell (ID: %u) (caster Entry: %u) does not have record in `spell_script_target`", GetSpellEntry()->Id, m_caster->GetEntry());
                 if (SpellMgr::IsPositiveSpell(GetSpellEntry()->Id))
                     return SearchNearbyTarget(range, SPELL_TARGETS_ALLY);
                 else
@@ -1703,7 +1703,7 @@ void Spell::SetTargetMap(uint32 i, uint32 cur)
             Unit *target = m_targets.getUnitTarget();
             if (!target)
             {
-                sLog.outLog(LOG_DEFAULT, "ERROR: SPELL: no unit target for spell ID %u", GetSpellEntry()->Id);
+                sLog.outError( "ERROR: SPELL: no unit target for spell ID %u", GetSpellEntry()->Id);
                 break;
             }
 
@@ -1837,7 +1837,7 @@ void Spell::SetTargetMap(uint32 i, uint32 cur)
             Unit *target = m_targets.getUnitTarget();
             if (!target)
             {
-                sLog.outLog(LOG_DEFAULT, "ERROR: SPELL: no unit target for spell ID %u\n", GetSpellEntry()->Id);
+                sLog.outError( "ERROR: SPELL: no unit target for spell ID %u\n", GetSpellEntry()->Id);
                 break;
             }
 
@@ -1880,7 +1880,7 @@ void Spell::SetTargetMap(uint32 i, uint32 cur)
         {
             if (!m_targets.HasDst())
             {
-                sLog.outLog(LOG_DEFAULT, "ERROR: SPELL: no destination for spell ID %u\n", GetSpellEntry()->Id);
+                sLog.outError( "ERROR: SPELL: no destination for spell ID %u\n", GetSpellEntry()->Id);
                 break;
             }
 
@@ -1932,7 +1932,7 @@ void Spell::SetTargetMap(uint32 i, uint32 cur)
                             m_targets.setDestination(st->target_X, st->target_Y, st->target_Z);
                     }
                     else
-                        sLog.outLog(LOG_DEFAULT, "ERROR: SPELL: unknown target coordinates for spell ID %u\n", GetSpellEntry()->Id);
+                        sLog.outError( "ERROR: SPELL: unknown target coordinates for spell ID %u\n", GetSpellEntry()->Id);
                     break;
                 case TARGET_DST_HOME:
                     if (m_caster->GetTypeId() == TYPEID_PLAYER)
@@ -1967,13 +1967,13 @@ void Spell::SetTargetMap(uint32 i, uint32 cur)
                     if (Unit* target = m_originalCaster->m_currentSpells[CURRENT_CHANNELED_SPELL]->m_targets.getUnitTarget())
                         AddUnitTarget(target, i);
                     else
-                        sLog.outLog(LOG_DEFAULT, "ERROR: SPELL: cannot find channel spell target for spell ID %u", GetSpellEntry()->Id);
+                        sLog.outError( "ERROR: SPELL: cannot find channel spell target for spell ID %u", GetSpellEntry()->Id);
                     break;
                 case TARGET_DEST_CHANNEL:
                     if (m_originalCaster->m_currentSpells[CURRENT_CHANNELED_SPELL]->m_targets.HasDst())
                         m_targets = m_originalCaster->m_currentSpells[CURRENT_CHANNELED_SPELL]->m_targets;
                     else
-                        sLog.outLog(LOG_DEFAULT, "ERROR: SPELL: cannot find channel spell destination for spell ID %u", GetSpellEntry()->Id);
+                        sLog.outError( "ERROR: SPELL: cannot find channel spell destination for spell ID %u", GetSpellEntry()->Id);
                     break;
             }
             break;
@@ -1994,7 +1994,7 @@ void Spell::SetTargetMap(uint32 i, uint32 cur)
                         AddItemTarget(m_targets.getItemTarget(), i);
                     break;
                 default:
-                    sLog.outLog(LOG_DEFAULT, "ERROR: Unhandled spell target %u", cur);
+                    sLog.outError( "ERROR: Unhandled spell target %u", cur);
                     break;
             }
             break;
@@ -2006,7 +2006,7 @@ void Spell::SetTargetMap(uint32 i, uint32 cur)
         Unit *target = m_targets.getUnitTarget();
         if (!target)
         {
-            sLog.outLog(LOG_DEFAULT, "ERROR: SPELL: no chain unit target for spell ID %u", GetSpellEntry()->Id);
+            sLog.outError( "ERROR: SPELL: no chain unit target for spell ID %u", GetSpellEntry()->Id);
             return;
         }
 
@@ -2094,7 +2094,7 @@ void Spell::SetTargetMap(uint32 i, uint32 cur)
                 radius = SpellMgr::GetSpellRadius(GetSpellEntry(), i, SpellMgr::IsPositiveSpell(GetSpellEntry()->Id));
                 if (lower == upper)
                 {
-                    sLog.outLog(LOG_DB_ERR, "Spell (ID: %u) (caster Entry: %u) does not have record in `spell_script_target`", GetSpellEntry()->Id, m_caster->GetEntry());
+                    sLog.outErrorDb( "Spell (ID: %u) (caster Entry: %u) does not have record in `spell_script_target`", GetSpellEntry()->Id, m_caster->GetEntry());
 
                     if (SpellMgr::IsPositiveEffect(GetSpellEntry()->Id, i))
                         SearchAreaTarget(unitList, radius, pushType, SPELL_TARGETS_ALLY);
@@ -3516,7 +3516,7 @@ void Spell::TakeCastItem()
     {
         // This code is to avoid a crash
         // I'm not sure, if this is really an error, but I guess every item needs a prototype
-        sLog.outLog(LOG_DEFAULT, "ERROR: Cast item has no item prototype highId=%d, lowId=%d",m_CastItem->GetGUIDHigh(), m_CastItem->GetGUIDLow());
+        sLog.outError( "ERROR: Cast item has no item prototype highId=%d, lowId=%d",m_CastItem->GetGUIDHigh(), m_CastItem->GetGUIDLow());
         return;
     }
 
@@ -3604,7 +3604,7 @@ void Spell::TakePower()
 
     if (GetSpellEntry()->powerType >= MAX_POWERS)
     {
-        sLog.outLog(LOG_DEFAULT, "ERROR: Spell::TakePower: Unknown power type '%d'", GetSpellEntry()->powerType);
+        sLog.outError( "ERROR: Spell::TakePower: Unknown power type '%d'", GetSpellEntry()->powerType);
         return;
     }
 
@@ -4913,7 +4913,7 @@ SpellCastResult Spell::CheckPower()
     // Check valid power type
     if (GetSpellEntry()->powerType >= MAX_POWERS)
     {
-        sLog.outLog(LOG_DEFAULT, "ERROR: Spell::CheckMana: Unknown power type '%d'", GetSpellEntry()->powerType);
+        sLog.outError( "ERROR: Spell::CheckMana: Unknown power type '%d'", GetSpellEntry()->powerType);
         return SPELL_FAILED_UNKNOWN;
     }
     // Check power amount
@@ -5668,7 +5668,7 @@ SpellEvent::~SpellEvent()
     }
     else
     {
-        sLog.outLog(LOG_DEFAULT, "ERROR: ~SpellEvent: %s %u tried to delete non-deletable spell %u. Was not deleted, causes memory leak.",
+        sLog.outError( "ERROR: ~SpellEvent: %s %u tried to delete non-deletable spell %u. Was not deleted, causes memory leak.",
             (m_Spell->GetCaster()->GetTypeId()==TYPEID_PLAYER?"Player":"Creature"), m_Spell->GetCaster()->GetGUIDLow(),m_Spell->GetSpellEntry()->Id);
     }
 }

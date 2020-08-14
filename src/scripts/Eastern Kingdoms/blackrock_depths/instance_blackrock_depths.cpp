@@ -160,7 +160,7 @@ struct instance_blackrock_depths : public ScriptedInstance
             }
         }
 
-        debug_log("TSCR: Instance Blackrock Depths: GetPlayerInMap, but PlayerList is empty!");
+        sLog.outDebug("TSCR: Instance Blackrock Depths: GetPlayerInMap, but PlayerList is empty!");
         return NULL;
     }
 
@@ -219,11 +219,11 @@ struct instance_blackrock_depths : public ScriptedInstance
 
         if (!player)
         {
-            debug_log("TSCR: Instance Blackrock Depths: SetData (Type: %u Data %u) cannot find any player.", type, data);
+            sLog.outDebug("TSCR: Instance Blackrock Depths: SetData (Type: %u Data %u) cannot find any player.", type, data);
             return;
         }
 
-        debug_log("TSCR: Instance Blackrock Depths: SetData update (Type: %u Data %u)", type, data);
+        sLog.outDebug("TSCR: Instance Blackrock Depths: SetData update (Type: %u Data %u)", type, data);
 
         switch(type)
         {

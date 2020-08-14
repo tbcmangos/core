@@ -123,7 +123,7 @@ struct instance_blood_furnace : public ScriptedInstance
             }
         }
 
-        debug_log("TSCR: Instance Blood Furnace: GetPlayerInMap, but PlayerList is empty!");
+        sLog.outDebug("TSCR: Instance Blood Furnace: GetPlayerInMap, but PlayerList is empty!");
         return NULL;
     }
 
@@ -133,7 +133,7 @@ struct instance_blood_furnace : public ScriptedInstance
 
         if (!player || !guid)
         {
-            debug_log("TSCR: Blood Furnace: HandleGameObject fail");
+            sLog.outDebug("TSCR: Blood Furnace: HandleGameObject fail");
             return;
         }
 

@@ -1143,7 +1143,7 @@ bool HookMgr::OnPacketSend(WorldSession* session, WorldPacket& packet)
                 continue;
             WorldPacket* data = sEluna->CHECKOBJ<WorldPacket>(sEluna->L, i, false);
             if (data)
-                packet = *data;
+                packet = std::move(*data);
             if (!sEluna->CHECKOBJ<bool>(sEluna->L, i, true))
                 result = false;
         }
@@ -1160,7 +1160,7 @@ bool HookMgr::OnPacketSend(WorldSession* session, WorldPacket& packet)
                 continue;
             WorldPacket* data = sEluna->CHECKOBJ<WorldPacket>(sEluna->L, i, false);
             if (data)
-                packet = *data;
+                packet = std::move(*data);
             if (!sEluna->CHECKOBJ<bool>(sEluna->L, i, true))
                 result = false;
         }
@@ -1186,7 +1186,7 @@ bool HookMgr::OnPacketReceive(WorldSession* session, WorldPacket& packet)
                 continue;
             WorldPacket* data = sEluna->CHECKOBJ<WorldPacket>(sEluna->L, i, false);
             if (data)
-                packet = *data;
+                packet = std::move(*data);
             if (!sEluna->CHECKOBJ<bool>(sEluna->L, i, true))
                 result = false;
         }
@@ -1203,7 +1203,7 @@ bool HookMgr::OnPacketReceive(WorldSession* session, WorldPacket& packet)
                 continue;
             WorldPacket* data = sEluna->CHECKOBJ<WorldPacket>(sEluna->L, i, false);
             if (data)
-                packet = *data;
+                packet = std::move(*data);
             if (!sEluna->CHECKOBJ<bool>(sEluna->L, i, true))
                 result = false;
         }

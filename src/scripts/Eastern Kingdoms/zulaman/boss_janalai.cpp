@@ -259,7 +259,7 @@ struct boss_janalaiAI : public ScriptedAI
             Cell::VisitGridObjects(me, searcher, 100);
         }
 
-        //error_log("Eggs %d at middle", templist.size());
+        //sLog.outError("Eggs %d at middle", templist.size());
         if(!templist.size())
             return false;
 
@@ -550,7 +550,7 @@ struct mob_amanishi_hatcherAI : public ScriptedAI
             Cell::VisitGridObjects(me, searcher, 50);
         }
 
-        //error_log("Eggs %d at %d", templist.size(), side);
+        //sLog.outError("Eggs %d at %d", templist.size(), side);
 
         for(std::list<Creature*>::iterator i = templist.begin(); i != templist.end() && num > 0; ++i)
         {

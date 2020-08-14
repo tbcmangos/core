@@ -842,7 +842,7 @@ bool ChatHandler::HandleAccountSetPermissionsCommand(const char* args)
         gm = atoi(arg1);
 
         // Check for invalid specified GM level.
-        if (!(gm & PERM_ALL))
+        if (!(gm & SEC_CONSOLE))
         {
             SendSysMessage(LANG_BAD_VALUE);
             SetSentErrorMessage(true);
@@ -864,7 +864,7 @@ bool ChatHandler::HandleAccountSetPermissionsCommand(const char* args)
         else
             PSendSysMessage(LANG_YOURS_SECURITY_CHANGED, m_session->GetPlayer()->GetName(), gm);
 
-        AccountsDatabase.PExecute("UPDATE account_permissions SET permission_mask = '%u' WHERE account_id = '%u' AND realm_id = '%u'", gm, targetAccountId, realmID);
+        LoginDatabase.PExecute("UPDATE account_permissions SET permission_mask = '%u' WHERE account_id = '%u' AND realm_id = '%u'", gm, targetAccountId, realmID);
         return true;
     }
     else
@@ -884,7 +884,7 @@ bool ChatHandler::HandleAccountSetPermissionsCommand(const char* args)
 
         // Check for invalid specified GM level.
         gm = atoi(arg2);
-        if (!(gm & PERM_ALL))
+        if (!(gm & SEC_CONSOLE))
         {
             SendSysMessage(LANG_BAD_VALUE);
             SetSentErrorMessage(true);
@@ -893,7 +893,7 @@ bool ChatHandler::HandleAccountSetPermissionsCommand(const char* args)
 
         targetAccountId = AccountMgr::GetId(arg1);
         /// m_session==NULL only for console
-        uint32 plSecurity = m_session ? m_session->GetPermissions() : PERM_CONSOLE;
+        uint32 plSecurity = m_session ? m_session->GetPermissions() : SEC_CONSOLE;
 
         /// can set security level only for target with less security and to less security that we have
         /// This is also reject self apply in fact
@@ -906,7 +906,7 @@ bool ChatHandler::HandleAccountSetPermissionsCommand(const char* args)
         }
 
         PSendSysMessage(LANG_YOU_CHANGE_SECURITY, targetAccountName.c_str(), gm);
-        AccountsDatabase.PExecute("UPDATE account_permissions SET permission_mask = '%u' WHERE account_id = '%u' AND realm_id = '%u'", gm, targetAccountId, realmID);
+        LoginDatabase.PExecute("UPDATE account_permissions SET permission_mask = '%u' WHERE account_id = '%u' AND realm_id = '%u'", gm, targetAccountId, realmID);
         return true;
     }
 }
@@ -944,7 +944,7 @@ bool ChatHandler::HandleAccountSetPasswordCommand(const char* args)
     uint32 targetPermissions = AccountMgr::GetPermissions(targetAccountId);
 
     /// m_session==NULL only for console
-    uint32 plPermiossions = m_session ? m_session->GetPermissions() : PERM_CONSOLE;
+    uint32 plPermiossions = m_session ? m_session->GetPermissions() : SEC_CONSOLE;
 
     /// can set password only for target with less security
     /// This is also reject self apply in fact
@@ -2031,8 +2031,8 @@ bool ChatHandler::HandleAddItemCommand(const char* args)
         if (citemName && citemName[0])
         {
             std::string itemName = citemName+1;
-            GameDataDatabase.escape_string(itemName);
-            QueryResult* result = GameDataDatabase.PQuery("SELECT entry FROM item_template WHERE name = '%s'", itemName.c_str());
+            WorldDatabase.escape_string(itemName);
+            QueryResult* result = WorldDatabase.PQuery("SELECT entry FROM item_template WHERE name = '%s'", itemName.c_str());
             if (!result)
             {
                 PSendSysMessage(LANG_COMMAND_COULDNOTFIND, citemName+1);
@@ -2226,11 +2226,11 @@ bool ChatHandler::HandleListItemCommand(const char* args)
 
     // inventory case
     uint32 inv_count = 0;
-    result=RealmDataDatabase.PQuery("SELECT COUNT(item_template) FROM character_inventory WHERE item_template='%u'",item_id);
+    result=CharacterDatabase.PQuery("SELECT COUNT(item_template) FROM character_inventory WHERE item_template='%u'",item_id);
     if (result)
         inv_count = (*result)[0].GetUInt32();
 
-    result=RealmDataDatabase.PQuery(
+    result=CharacterDatabase.PQuery(
     //          0        1             2             3        4                  5
         "SELECT ci.item, cibag.slot AS bag, ci.slot, ci.guid, characters.account,characters.name "
         "FROM character_inventory AS ci LEFT JOIN character_inventory AS cibag ON (cibag.item=ci.bag),characters "
@@ -2273,13 +2273,13 @@ bool ChatHandler::HandleListItemCommand(const char* args)
 
     // mail case
     uint32 mail_count = 0;
-    result=RealmDataDatabase.PQuery("SELECT COUNT(item_template) FROM mail_items WHERE item_template='%u'", item_id);
+    result=CharacterDatabase.PQuery("SELECT COUNT(item_template) FROM mail_items WHERE item_template='%u'", item_id);
     if (result)
         mail_count = (*result)[0].GetUInt32();
 
     if (count > 0)
     {
-        result=RealmDataDatabase.PQuery(
+        result=CharacterDatabase.PQuery(
         //          0                     1            2              3               4            5               6
             "SELECT mail_items.item_guid, mail.sender, mail.receiver, char_s.account, char_s.name, char_r.account, char_r.name "
             "FROM mail,mail_items,characters as char_s,characters as char_r "
@@ -2287,7 +2287,7 @@ bool ChatHandler::HandleListItemCommand(const char* args)
             item_id,uint32(count));
     }
     else
-        result = QueryResult*(NULL);
+        result = nullptr;
 
     if (result)
     {
@@ -2318,20 +2318,20 @@ bool ChatHandler::HandleListItemCommand(const char* args)
 
     // auction case
     uint32 auc_count = 0;
-    result = RealmDataDatabase.PQuery("SELECT COUNT(item_template) FROM auctionhouse WHERE item_template='%u'",item_id);
+    result = CharacterDatabase.PQuery("SELECT COUNT(item_template) FROM auctionhouse WHERE item_template='%u'",item_id);
     if (result)
         auc_count = (*result)[0].GetUInt32();
 
     if (count > 0)
     {
-        result=RealmDataDatabase.PQuery(
+        result=CharacterDatabase.PQuery(
         //           0                      1                       2                   3
             "SELECT  auctionhouse.itemguid, auctionhouse.itemowner, characters.account, characters.name "
             "FROM auctionhouse,characters WHERE auctionhouse.item_template='%u' AND characters.guid = auctionhouse.itemowner LIMIT %u",
             item_id,uint32(count));
     }
     else
-        result = QueryResult*(NULL);
+        result = nullptr;
 
     if (result)
     {
@@ -2351,11 +2351,11 @@ bool ChatHandler::HandleListItemCommand(const char* args)
 
     // guild bank case
     uint32 guild_count = 0;
-    result=RealmDataDatabase.PQuery("SELECT COUNT(item_entry) FROM guild_bank_item WHERE item_entry='%u'",item_id);
+    result=CharacterDatabase.PQuery("SELECT COUNT(item_entry) FROM guild_bank_item WHERE item_entry='%u'",item_id);
     if (result)
         guild_count = (*result)[0].GetUInt32();
 
-    result=RealmDataDatabase.PQuery(
+    result=CharacterDatabase.PQuery(
         //      0             1           2
         "SELECT gi.item_guid, gi.guildid, guild.name "
         "FROM guild_bank_item AS gi, guild WHERE gi.item_entry='%u' AND gi.guildid = guild.guildid LIMIT %u ",
@@ -2430,18 +2430,18 @@ bool ChatHandler::HandleListObjectCommand(const char* args)
     QueryResult* result;
 
     uint32 obj_count = 0;
-    result=GameDataDatabase.PQuery("SELECT COUNT(guid) FROM gameobject WHERE id='%u'",go_id);
+    result=WorldDatabase.PQuery("SELECT COUNT(guid) FROM gameobject WHERE id='%u'",go_id);
     if (result)
         obj_count = (*result)[0].GetUInt32();
 
     if (m_session)
     {
         Player* pl = m_session->GetPlayer();
-        result = GameDataDatabase.PQuery("SELECT guid, position_x, position_y, position_z, map, (POW(position_x - '%f', 2) + POW(position_y - '%f', 2) + POW(position_z - '%f', 2)) AS order_ FROM gameobject WHERE id = '%u' ORDER BY order_ ASC LIMIT %u",
+        result = WorldDatabase.PQuery("SELECT guid, position_x, position_y, position_z, map, (POW(position_x - '%f', 2) + POW(position_y - '%f', 2) + POW(position_z - '%f', 2)) AS order_ FROM gameobject WHERE id = '%u' ORDER BY order_ ASC LIMIT %u",
             pl->GetPositionX(), pl->GetPositionY(), pl->GetPositionZ(),go_id,uint32(count));
     }
     else
-        result = GameDataDatabase.PQuery("SELECT guid, position_x, position_y, position_z, map FROM gameobject WHERE id = '%u' LIMIT %u",
+        result = WorldDatabase.PQuery("SELECT guid, position_x, position_y, position_z, map FROM gameobject WHERE id = '%u' LIMIT %u",
             go_id,uint32(count));
 
     if (result)
@@ -2472,7 +2472,7 @@ bool ChatHandler::HandleGameObjectNearCommand(const char* args)
     uint32 count = 0;
 
     Player* pl = m_session->GetPlayer();
-    QueryResult* result = GameDataDatabase.PQuery("SELECT guid, id, position_x, position_y, position_z, map, "
+    QueryResult* result = WorldDatabase.PQuery("SELECT guid, id, position_x, position_y, position_z, map, "
         "(POW(position_x - '%f', 2) + POW(position_y - '%f', 2) + POW(position_z - '%f', 2)) AS order_ "
         "FROM gameobject WHERE map='%u' AND (POW(position_x - '%f', 2) + POW(position_y - '%f', 2) + POW(position_z - '%f', 2)) <= '%f' ORDER BY order_",
         pl->GetPositionX(), pl->GetPositionY(), pl->GetPositionZ(),
@@ -2578,18 +2578,18 @@ bool ChatHandler::HandleListCreatureCommand(const char* args)
     QueryResult* result;
 
     uint32 cr_count = 0;
-    result=GameDataDatabase.PQuery("SELECT COUNT(guid) FROM creature WHERE id='%u'",cr_id);
+    result=WorldDatabase.PQuery("SELECT COUNT(guid) FROM creature WHERE id='%u'",cr_id);
     if (result)
         cr_count = (*result)[0].GetUInt32();
 
     if (m_session)
     {
         Player* pl = m_session->GetPlayer();
-        result = GameDataDatabase.PQuery("SELECT guid, position_x, position_y, position_z, map, (POW(position_x - '%f', 2) + POW(position_y - '%f', 2) + POW(position_z - '%f', 2)) AS order_ FROM creature WHERE id = '%u' ORDER BY order_ ASC LIMIT %u",
+        result = WorldDatabase.PQuery("SELECT guid, position_x, position_y, position_z, map, (POW(position_x - '%f', 2) + POW(position_y - '%f', 2) + POW(position_z - '%f', 2)) AS order_ FROM creature WHERE id = '%u' ORDER BY order_ ASC LIMIT %u",
             pl->GetPositionX(), pl->GetPositionY(), pl->GetPositionZ(), cr_id,uint32(count));
     }
     else
-        result = GameDataDatabase.PQuery("SELECT guid, position_x, position_y, position_z, map FROM creature WHERE id = '%u' LIMIT %u",
+        result = WorldDatabase.PQuery("SELECT guid, position_x, position_y, position_z, map FROM creature WHERE id = '%u' LIMIT %u",
             cr_id,uint32(count));
 
     if (result)
@@ -4032,7 +4032,7 @@ bool ChatHandler::HandleLevelUpCommand(const char* args)
     else
     {
         // update level and XP at level, all other will be updated at loading
-        RealmDataDatabase.PExecute("UPDATE characters SET level = '%u', xp = 0 WHERE guid = '%u'", newlevel, chr_guid);
+        CharacterDatabase.PExecute("UPDATE characters SET level = '%u', xp = 0 WHERE guid = '%u'", newlevel, chr_guid);
     }
 
     if (m_session->GetPlayer() != chr)                       // including chr==NULL
@@ -4533,7 +4533,7 @@ static bool HandleResetStatsOrLevelHelper(Player* player)
     ChrClassesEntry const* cEntry = sChrClassesStore.LookupEntry(player->getClass());
     if (!cEntry)
     {
-        sLog.outLog(LOG_DEFAULT, "ERROR: Class %u not found in DBC (Wrong DBC files?)",player->getClass());
+        sLog.outError( "ERROR: Class %u not found in DBC (Wrong DBC files?)",player->getClass());
         return false;
     }
 
@@ -4548,7 +4548,7 @@ static bool HandleResetStatsOrLevelHelper(Player* player)
         unitfield = 0x0000EE00;
     else
     {
-        sLog.outLog(LOG_DEFAULT, "ERROR: Invalid default powertype %u for player (class %u)",powertype,player->getClass());
+        sLog.outError( "ERROR: Invalid default powertype %u for player (class %u)",powertype,player->getClass());
         return false;
     }
 
@@ -4717,7 +4717,7 @@ bool ChatHandler::HandleResetSpellsCommand(const char * args)
     }
     else
     {
-        RealmDataDatabase.PExecute("UPDATE characters SET at_login = at_login | '%u' WHERE guid = '%u'",uint32(AT_LOGIN_RESET_SPELLS), GUID_LOPART(playerGUID));
+        CharacterDatabase.PExecute("UPDATE characters SET at_login = at_login | '%u' WHERE guid = '%u'",uint32(AT_LOGIN_RESET_SPELLS), GUID_LOPART(playerGUID));
         PSendSysMessage(LANG_RESET_SPELLS_OFFLINE,pName);
     }
 
@@ -4764,7 +4764,7 @@ bool ChatHandler::HandleResetTalentsCommand(const char * args)
     }
     else
     {
-        RealmDataDatabase.PExecute("UPDATE characters SET at_login = at_login | '%u' WHERE guid = '%u'",uint32(AT_LOGIN_RESET_TALENTS), GUID_LOPART(playerGUID));
+        CharacterDatabase.PExecute("UPDATE characters SET at_login = at_login | '%u' WHERE guid = '%u'",uint32(AT_LOGIN_RESET_TALENTS), GUID_LOPART(playerGUID));
         PSendSysMessage(LANG_RESET_TALENTS_OFFLINE,pName);
     }
 
@@ -4798,7 +4798,7 @@ bool ChatHandler::HandleResetAllCommand(const char * args)
         return false;
     }
 
-    RealmDataDatabase.PExecute("UPDATE characters SET at_login = at_login | '%u' WHERE (at_login & '%u') = '0'",atLogin,atLogin);
+    CharacterDatabase.PExecute("UPDATE characters SET at_login = at_login | '%u' WHERE (at_login & '%u') = '0'",atLogin,atLogin);
 
     ACE_GUARD_RETURN(ACE_Thread_Mutex, guard, *HashMapHolder<Player>::GetLock(), true);
     HashMapHolder<Player>::MapType const& plist = sObjectAccessor.GetPlayers();
@@ -5372,7 +5372,7 @@ bool ChatHandler::HandleBanInfoCharacterCommand(const char* args)
 
 bool ChatHandler::HandleBanInfoHelper(uint32 accountid, char const* accountname)
 {
-    QueryResult* result = AccountsDatabase.PQuery("SELECT FROM_UNIXTIME(punishment_date), expiration_date-punishment_date, expiration_date, reason, punished_by, active "
+    QueryResult* result = LoginDatabase.PQuery("SELECT FROM_UNIXTIME(punishment_date), expiration_date-punishment_date, expiration_date, reason, punished_by, active "
                                                         "FROM account_punishment "
                                                         "WHERE punishment_type_id = '%u' AND account_id = '%u' "
                                                         "ORDER BY punishment_date ASC", PUNISHMENT_BAN, accountid);
@@ -5420,8 +5420,8 @@ bool ChatHandler::HandleBanInfoIPCommand(const char* args)
 
     std::string IP = cIP;
 
-    AccountsDatabase.escape_string(IP);
-    QueryResult* result = AccountsDatabase.PQuery("SELECT ip, FROM_UNIXTIME(punishment_date), FROM_UNIXTIME(expiration_date), expiration_date-UNIX_TIMESTAMP(), ban_reason, punished_by, expiration_date-punishment_date FROM ip_banned WHERE ip = '%s'", IP.c_str());
+    LoginDatabase.escape_string(IP);
+    QueryResult* result = LoginDatabase.PQuery("SELECT ip, FROM_UNIXTIME(punishment_date), FROM_UNIXTIME(expiration_date), expiration_date-UNIX_TIMESTAMP(), ban_reason, punished_by, expiration_date-punishment_date FROM ip_banned WHERE ip = '%s'", IP.c_str());
     if (!result)
     {
         PSendSysMessage(LANG_BANINFO_NOIP);
@@ -5447,8 +5447,8 @@ bool ChatHandler::HandleBanInfoEmailCommand(const char* args)
 
     std::string email = cEmail;
 
-    AccountsDatabase.escape_string(email);
-    QueryResult* result = AccountsDatabase.PQuery("SELECT email, FROM_UNIXTIME(punishment_date), ban_reason, punished_by FROM email_banned WHERE email = '%s'", email.c_str());
+    LoginDatabase.escape_string(email);
+    QueryResult* result = LoginDatabase.PQuery("SELECT email, FROM_UNIXTIME(punishment_date), ban_reason, punished_by FROM email_banned WHERE email = '%s'", email.c_str());
     if (!result)
     {
         PSendSysMessage(LANG_BANINFO_NOEMAIL);
@@ -5468,8 +5468,8 @@ bool ChatHandler::HandleBanListCharacterCommand(const char* args)
         return false;
 
     std::string filter = cFilter;
-    AccountsDatabase.escape_string(filter);
-    QueryResult* result = RealmDataDatabase.PQuery("SELECT account FROM characters WHERE name LIKE '%%%s%%'", filter.c_str());
+    LoginDatabase.escape_string(filter);
+    QueryResult* result = CharacterDatabase.PQuery("SELECT account FROM characters WHERE name LIKE '%%%s%%'", filter.c_str());
     if (!result)
     {
         PSendSysMessage(LANG_BANLIST_NOCHARACTER);
@@ -5483,16 +5483,16 @@ bool ChatHandler::HandleBanListAccountCommand(const char* args)
 {
     char* cFilter = strtok((char*)args, " ");
     std::string filter = cFilter ? cFilter : "";
-    AccountsDatabase.escape_string(filter);
+    LoginDatabase.escape_string(filter);
 
     QueryResult* result;
 
     if (filter.empty())
-        result = AccountsDatabase.PQuery("SELECT account.account_id, username "
+        result = LoginDatabase.PQuery("SELECT account.account_id, username "
                                         "FROM account JOIN account_punishment ON account.account_id = account_punishment.account_id "
                                         "WHERE punishment_type_id = '%u' AND active = 1 GROUP BY account.account_id", PUNISHMENT_BAN);
     else
-        result = AccountsDatabase.PQuery("SELECT account.account_id, username "
+        result = LoginDatabase.PQuery("SELECT account.account_id, username "
                                         "FROM account JOIN account_punishment ON account.account_id = account_punishment.account_id "
                                         "WHERE punishment_type_id = '%u' AND active = 1 AND "
                                         "username LIKE '%%%s%%' GROUP BY account.account_id", PUNISHMENT_BAN, filter.c_str());
@@ -5519,7 +5519,7 @@ bool ChatHandler::HandleBanListHelper(QueryResult* result)
             Field* fields = result->Fetch();
             uint32 accountid = fields[0].GetUInt32();
 
-            QueryResult* banresult = AccountsDatabase.PQuery("SELECT account.username "
+            QueryResult* banresult = LoginDatabase.PQuery("SELECT account.username "
                                                                     "FROM account JOIN account_punishment ON account.account_id = account_punishment.account_id "
                                                                     "WHERE account.account_id = '%u' AND punishment_type_id = '%u'", accountid, PUNISHMENT_BAN);
             if (banresult)
@@ -5552,7 +5552,7 @@ bool ChatHandler::HandleBanListHelper(QueryResult* result)
                 AccountMgr::GetName (account_id,account_name);
 
             // No SQL injection. id is uint32.
-            QueryResult* banInfo = AccountsDatabase.PQuery("SELECT punishment_date, expiration_date, punished_by, reason "
+            QueryResult* banInfo = LoginDatabase.PQuery("SELECT punishment_date, expiration_date, punished_by, reason "
                                                                 "FROM account_punishment "
                                                                 "WHERE account_id = '%u' AND punishment_type_id = '%u' "
                                                                 "ORDER BY expiration_date", account_id, PUNISHMENT_BAN);
@@ -5595,16 +5595,16 @@ bool ChatHandler::HandleBanListIPCommand(const char* args)
 {
     char* cFilter = strtok((char*)args, " ");
     std::string filter = cFilter ? cFilter : "";
-    AccountsDatabase.escape_string(filter);
+    LoginDatabase.escape_string(filter);
 
     QueryResult* result;
 
     if (filter.empty())
-        result = AccountsDatabase.Query("SELECT ip, punishment_date, expiration_date, punished_by, ban_reason FROM ip_banned"
+        result = LoginDatabase.Query("SELECT ip, punishment_date, expiration_date, punished_by, ban_reason FROM ip_banned"
             " WHERE (punishment_date = expiration_date OR expiration_date > UNIX_TIMESTAMP())"
             " ORDER BY expiration_date");
     else
-        result = AccountsDatabase.PQuery("SELECT ip, punishment_date, expiration_date, punished_by, ban_reason FROM ip_banned"
+        result = LoginDatabase.PQuery("SELECT ip, punishment_date, expiration_date, punished_by, ban_reason FROM ip_banned"
             " WHERE (punishment_date = expiration_date OR expiration_date > UNIX_TIMESTAMP()) AND ip LIKE '%%%s%%'"
             " ORDER BY expiration_date", filter.c_str());
 
@@ -5664,18 +5664,18 @@ bool ChatHandler::HandleBanListEmailCommand(const char* args)
 {
     char* cFilter = strtok((char*)args, " ");
     std::string filter = cFilter ? cFilter : "";
-    AccountsDatabase.escape_string(filter);
+    LoginDatabase.escape_string(filter);
 
     QueryResult* result;
 
     if (filter.empty())
     {
-        result = AccountsDatabase.Query ("SELECT email, punishment_date, punished_by, ban_reason FROM email_banned"
+        result = LoginDatabase.Query ("SELECT email, punishment_date, punished_by, ban_reason FROM email_banned"
             " ORDER BY bandate ASC");
     }
     else
     {
-        result = AccountsDatabase.PQuery("SELECT email, punishment_date, punished_by, ban_reason FROM email_banned"
+        result = LoginDatabase.PQuery("SELECT email, punishment_date, punished_by, ban_reason FROM email_banned"
             " WHERE email LIKE CONCAT('%', '%s', '%')"
             " ORDER BY bandate ASC" , filter.c_str());
     }
@@ -5881,7 +5881,7 @@ bool ChatHandler::HandlePLimitCommand(const char *args)
         sWorld.SetPlayerLimit(val);
 
         // kick all low security level players
-        if (!sWorld.GetMinimumPermissionMask() & PERM_PLAYER)
+        if (!sWorld.GetMinimumPermissionMask() & SEC_PLAYER)
             sWorld.KickAllWithoutPermissions(sWorld.GetMinimumPermissionMask());
     }
 
@@ -6414,7 +6414,7 @@ bool ChatHandler::HandleInstanceResetEncountersCommand(const char* args)
 bool ChatHandler::HandleGMListFullCommand(const char* /*args*/)
 {
     ///- Get the accounts with GM Level >0
-    QueryResult* result = AccountsDatabase.PQuery("SELECT username, permission_mask FROM account JOIN account_permission WHERE permission_mask & '%u' AND realm_id = '%u'", PERM_GMT_DEV, realmID);
+    QueryResult* result = LoginDatabase.PQuery("SELECT username, permission_mask FROM account JOIN account_permission WHERE permission_mask & '%u' AND realm_id = '%u'", SEC_DEVELOPPER, realmID);
     if (result)
     {
         SendSysMessage(LANG_GMLIST);
@@ -6492,7 +6492,7 @@ bool ChatHandler::HandleAccountSetAddonCommand(const char* args)
         return false;
 
     // No SQL injection
-    AccountsDatabase.PExecute("UPDATE account SET expansion_id = '%u' WHERE account_id = '%u'", lev, account_id);
+    LoginDatabase.PExecute("UPDATE account SET expansion_id = '%u' WHERE account_id = '%u'", lev, account_id);
     PSendSysMessage(LANG_ACCOUNT_SETADDON, account_name.c_str(), account_id, lev);
     return true;
 }
@@ -6994,7 +6994,7 @@ bool ChatHandler::HandleUnFreezeCommand(const char *args)
         if (TargetName)
         {
             //check for offline players
-            QueryResult* result = RealmDataDatabase.PQuery("SELECT characters.guid FROM `characters` WHERE characters.name = '%s'",name.c_str());
+            QueryResult* result = CharacterDatabase.PQuery("SELECT characters.guid FROM `characters` WHERE characters.name = '%s'",name.c_str());
             if (!result)
             {
                 SendSysMessage(LANG_COMMAND_FREEZE_WRONG);
@@ -7003,7 +7003,7 @@ bool ChatHandler::HandleUnFreezeCommand(const char *args)
             //if player found: delete his freeze aura
             Field *fields=result->Fetch();
             uint64 pguid = fields[0].GetUInt64();
-            RealmDataDatabase.PQuery("DELETE FROM `character_aura` WHERE character_aura.spell = 9454 AND character_aura.guid = '%u'",pguid);
+            CharacterDatabase.PQuery("DELETE FROM `character_aura` WHERE character_aura.spell = 9454 AND character_aura.guid = '%u'",pguid);
             PSendSysMessage(LANG_COMMAND_UNFREEZE,name.c_str());
             return true;
         }
@@ -7020,7 +7020,7 @@ bool ChatHandler::HandleUnFreezeCommand(const char *args)
 bool ChatHandler::HandleListFreezeCommand(const char* /*args*/)
 {
     //Get names from DB
-    QueryResult* result = RealmDataDatabase.PQuery("SELECT characters.name FROM `characters` LEFT JOIN `character_aura` ON (characters.guid = character_aura.guid) WHERE character_aura.spell = 9454");
+    QueryResult* result = CharacterDatabase.PQuery("SELECT characters.name FROM `characters` LEFT JOIN `character_aura` ON (characters.guid = character_aura.guid) WHERE character_aura.spell = 9454");
     if (!result)
     {
         SendSysMessage(LANG_COMMAND_NO_FROZEN_PLAYERS);

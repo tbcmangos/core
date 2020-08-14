@@ -222,7 +222,7 @@ void WorldSession::HandleMovementOpcodes(WorldPacket & recv_data)
     /*----------------*/
     if (recv_data.size() != recv_data.rpos())
     {
-        sLog.outLog(LOG_DEFAULT, "ERROR: MovementHandler: player %s (guid %d, account %u) sent a packet (opcode %u) that is %u bytes larger than it should be. Kicked as cheater.", _player->GetName(), _player->GetGUIDLow(), _player->GetSession()->GetAccountId(), recv_data.GetOpcode(), recv_data.size() - recv_data.rpos());
+        sLog.outError( "ERROR: MovementHandler: player %s (guid %d, account %u) sent a packet (opcode %u) that is %u bytes larger than it should be. Kicked as cheater.", _player->GetName(), _player->GetGUIDLow(), _player->GetSession()->GetAccountId(), recv_data.GetOpcode(), recv_data.size() - recv_data.rpos());
         KickPlayer();
         return;
     }
@@ -258,7 +258,7 @@ void WorldSession::HandleMoverRelocation(MovementInfo& movementInfo)
 
     if (Player *plMover = mover->ToPlayer())
     {
-        if (sWorld.getConfig(CONFIG_ENABLE_PASSIVE_ANTICHEAT) && !plMover->hasUnitState(UNIT_STAT_LOST_CONTROL | UNIT_STAT_NOT_MOVE) && !plMover->GetSession()->HasPermissions(PERM_GMT_DEV) && plMover->m_AC_timer == 0)
+        if (sWorld.getConfig(CONFIG_ENABLE_PASSIVE_ANTICHEAT) && !plMover->hasUnitState(UNIT_STAT_LOST_CONTROL | UNIT_STAT_NOT_MOVE) && !plMover->GetSession()->HasPermissions(SEC_DEVELOPPER) && plMover->m_AC_timer == 0)
             sWorld.m_ac.execute(new ACRequest(plMover, plMover->m_movementInfo, movementInfo));
 
         if (movementInfo.HasMovementFlag(MOVEFLAG_ONTRANSPORT))
@@ -336,7 +336,7 @@ void WorldSession::HandleForceSpeedChangeAck(WorldPacket &recv_data)
         case CMSG_FORCE_FLIGHT_SPEED_CHANGE_ACK:        move_type = MOVE_FLIGHT;        force_move_type = MOVE_FLIGHT;      break;
         case CMSG_FORCE_FLIGHT_BACK_SPEED_CHANGE_ACK:   move_type = MOVE_FLIGHT_BACK;   force_move_type = MOVE_FLIGHT_BACK; break;
         default:
-            sLog.outLog(LOG_DEFAULT, "ERROR: WorldSession::HandleForceSpeedChangeAck: Unknown move type opcode: %u", opcode);
+            sLog.outError( "ERROR: WorldSession::HandleForceSpeedChangeAck: Unknown move type opcode: %u", opcode);
             return;
     }
 
@@ -353,13 +353,13 @@ void WorldSession::HandleForceSpeedChangeAck(WorldPacket &recv_data)
     {
         if (_player->GetSpeed(move_type) > newspeed)         // must be greater - just correct
         {
-            sLog.outLog(LOG_DEFAULT, "ERROR: %sSpeedChange player %s is NOT correct (must be %f instead %f), force set to correct value",
+            sLog.outError( "ERROR: %sSpeedChange player %s is NOT correct (must be %f instead %f), force set to correct value",
                 move_type_name[move_type], _player->GetName(), _player->GetSpeed(move_type), newspeed);
             _player->SetSpeed(move_type,_player->GetSpeedRate(move_type),true);
         }
         else                                                // must be lesser - cheating
         {
-            sLog.outLog(LOG_DEFAULT, "ERROR: Player %s from account id %u kicked for incorrect speed (must be %f instead %f)",
+            sLog.outError( "ERROR: Player %s from account id %u kicked for incorrect speed (must be %f instead %f)",
                 _player->GetName(),_player->GetSession()->GetAccountId(),_player->GetSpeed(move_type), newspeed);
             _player->GetSession()->KickPlayer();
         }

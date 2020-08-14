@@ -133,7 +133,7 @@ void WorldSession::HandleUseItemOpcode(WorldPacket& recvPacket)
             SpellEntry const *spellInfo = sSpellStore.LookupEntry(spellData.SpellId);
             if (!spellInfo)
             {
-                sLog.outLog(LOG_DEFAULT, "ERROR: Item (Entry: %u) in have wrong spell id %u, ignoring ",proto->ItemId, spellData.SpellId);
+                sLog.outError( "ERROR: Item (Entry: %u) in have wrong spell id %u, ignoring ",proto->ItemId, spellData.SpellId);
                 continue;
             }
 
@@ -159,7 +159,7 @@ void WorldSession::HandleUseItemOpcode(WorldPacket& recvPacket)
             SpellEntry const *spellInfo = sSpellStore.LookupEntry(SPELL_ID_GENERIC_LEARN);
             if (!spellInfo)
             {
-                sLog.outLog(LOG_DEFAULT, "ERROR: Item (Entry: %u) in have wrong spell id %u, ignoring ",proto->ItemId, SPELL_ID_GENERIC_LEARN);
+                sLog.outError( "ERROR: Item (Entry: %u) in have wrong spell id %u, ignoring ",proto->ItemId, SPELL_ID_GENERIC_LEARN);
                 pUser->SendEquipError(EQUIP_ERR_NONE,pItem,NULL);
                 return;
             }
@@ -190,7 +190,7 @@ void WorldSession::HandleUseItemOpcode(WorldPacket& recvPacket)
             SpellEntry const *spellInfo = sSpellStore.LookupEntry(spellData.SpellId);
             if (!spellInfo)
             {
-                sLog.outLog(LOG_DEFAULT, "ERROR: Item (Entry: %u) in have wrong spell id %u, ignoring ",proto->ItemId, spellData.SpellId);
+                sLog.outError( "ERROR: Item (Entry: %u) in have wrong spell id %u, ignoring ",proto->ItemId, spellData.SpellId);
                 continue;
             }
 
@@ -250,7 +250,7 @@ void WorldSession::HandleOpenItemOpcode(WorldPacket& recvPacket)
         if (!lockInfo)
         {
             pUser->SendEquipError(EQUIP_ERR_ITEM_LOCKED, pItem, NULL);
-            sLog.outLog(LOG_DEFAULT, "ERROR: WORLD::OpenItem: item [guid = %u] has an unknown lockId: %u!", pItem->GetGUIDLow() , lockId);
+            sLog.outError( "ERROR: WORLD::OpenItem: item [guid = %u] has an unknown lockId: %u!", pItem->GetGUIDLow() , lockId);
             return;
         }
 
@@ -264,7 +264,7 @@ void WorldSession::HandleOpenItemOpcode(WorldPacket& recvPacket)
 
     if (pItem->HasFlag(ITEM_FIELD_FLAGS, ITEM_FLAGS_WRAPPED))// wrapped?
     {
-        QueryResult* result = RealmDataDatabase.PQuery("SELECT entry, flags FROM character_gifts WHERE item_guid = '%u'", pItem->GetGUIDLow());
+        QueryResult* result = CharacterDatabase.PQuery("SELECT entry, flags FROM character_gifts WHERE item_guid = '%u'", pItem->GetGUIDLow());
         if (result)
         {
             Field *fields = result->Fetch();
@@ -278,11 +278,11 @@ void WorldSession::HandleOpenItemOpcode(WorldPacket& recvPacket)
         }
         else
         {
-            sLog.outLog(LOG_DEFAULT, "ERROR: Wrapped item %u don't have record in character_gifts table and will deleted", pItem->GetGUIDLow());
+            sLog.outError( "ERROR: Wrapped item %u don't have record in character_gifts table and will deleted", pItem->GetGUIDLow());
             pUser->DestroyItem(pItem->GetBagSlot(), pItem->GetSlot(), true);
             return;
         }
-        RealmDataDatabase.PExecute("DELETE FROM character_gifts WHERE item_guid = '%u'", pItem->GetGUIDLow());
+        CharacterDatabase.PExecute("DELETE FROM character_gifts WHERE item_guid = '%u'", pItem->GetGUIDLow());
     }
     else
         pUser->SendLoot(pItem->GetGUID(),LOOT_CORPSE);
@@ -325,7 +325,7 @@ void WorldSession::HandleCastSpellOpcode(WorldPacket& recvPacket)
 
     if (!spellInfo)
     {
-        sLog.outLog(LOG_DEFAULT, "ERROR: WORLD: unknown spell id %u", spellId);
+        sLog.outError( "ERROR: WORLD: unknown spell id %u", spellId);
         return;
     }
 
@@ -432,7 +432,7 @@ void WorldSession::HandlePetCancelAuraOpcode(WorldPacket& recvPacket)
     SpellEntry const *spellInfo = sSpellStore.LookupEntry(spellId);
     if (!spellInfo)
     {
-        sLog.outLog(LOG_DEFAULT, "ERROR: WORLD: unknown PET spell id %u", spellId);
+        sLog.outError( "ERROR: WORLD: unknown PET spell id %u", spellId);
         return;
     }
 
@@ -440,13 +440,13 @@ void WorldSession::HandlePetCancelAuraOpcode(WorldPacket& recvPacket)
 
     if (!pet)
     {
-        sLog.outLog(LOG_DEFAULT, "ERROR: Pet %u not exist.", uint32(GUID_LOPART(guid)));
+        sLog.outError( "ERROR: Pet %u not exist.", uint32(GUID_LOPART(guid)));
         return;
     }
 
     if (pet != GetPlayer()->GetPet() && pet != GetPlayer()->GetCharm())
     {
-        sLog.outLog(LOG_DEFAULT, "ERROR: HandlePetCancelAura.Pet %u isn't pet of player %s", uint32(GUID_LOPART(guid)),GetPlayer()->GetName());
+        sLog.outError( "ERROR: HandlePetCancelAura.Pet %u isn't pet of player %s", uint32(GUID_LOPART(guid)),GetPlayer()->GetName());
         return;
     }
 

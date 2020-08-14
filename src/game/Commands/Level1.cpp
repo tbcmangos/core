@@ -183,7 +183,7 @@ bool ChatHandler::HandleGuildAnnounceCommand(const char *args)
             PSendSysMessage("Your message has been queued and will be displayed soon. Please wait %s before sending another one.", secsToTimeString(sWorld.getConfig(CONFIG_GUILD_ANN_COOLDOWN)).c_str());
 
             sGuildMgr.SaveGuildAnnCooldown(gId);
-            sLog.outLog(LOG_GUILD_ANN, "Player %s (" UI64FMTD ") - guild: %s (%u) append guild announce: %s", m_session->GetPlayer()->GetName(), m_session->GetPlayer()->GetGUID(), pGuild->GetName().c_str(), gId, msg.c_str());
+            sLog.out(LOG_CHAR, "Player %s (" UI64FMTD ") - guild: %s (%u) append guild announce: %s", m_session->GetPlayer()->GetName(), m_session->GetPlayer()->GetGUID(), pGuild->GetName().c_str(), gId, msg.c_str());
             sWorld.QueueGuildAnnounce(gId, m_session->GetPlayer()->GetTeam(), msg);
             return true;
         }
@@ -678,7 +678,7 @@ bool ChatHandler::HandleGMTicketAssignToCommand(const char* args)
     uint64 tarGUID = sObjectMgr.GetPlayerGUIDByName(targm.c_str());
     uint64 accid = sObjectMgr.GetPlayerAccountIdByGUID(tarGUID);
 
-    if (!tarGUID || !AccountMgr::HasPermissions(accid, PERM_GMT))
+    if (!tarGUID || !AccountMgr::HasPermissions(accid, SEC_GAMEMASTER))
     {
         SendSysMessage(LANG_COMMAND_TICKETASSIGNERROR_A);
         return true;
@@ -2500,8 +2500,8 @@ bool ChatHandler::HandleWhispersCommand(const char* args)
     Player* target = sObjectAccessor.GetPlayerByName(firstpart);
     if (!target)
     {
-        GameDataDatabase.escape_string(firstpart);
-        QueryResult* result = RealmDataDatabase.PQuery("SELECT guid FROM characters WHERE name = '%s' ",firstpart.c_str());
+        WorldDatabase.escape_string(firstpart);
+        QueryResult* result = CharacterDatabase.PQuery("SELECT guid FROM characters WHERE name = '%s' ",firstpart.c_str());
         if (!result)
         {
             SendSysMessage(LANG_PLAYER_NOT_FOUND);
@@ -2521,7 +2521,7 @@ bool ChatHandler::HandleWhispersCommand(const char* args)
                 ChatHandler(target).SendSysMessage(LANG_YOU_CAN_WHISPER_TO_GM_ON);
         }
         else
-            RealmDataDatabase.PExecute("UPDATE characters SET extra_flags = extra_flags | %u WHERE guid ='%u'", uint32(PLAYER_EXTRA_CAN_WHISP_TO_GM), targetguid);
+            CharacterDatabase.PExecute("UPDATE characters SET extra_flags = extra_flags | %u WHERE guid ='%u'", uint32(PLAYER_EXTRA_CAN_WHISP_TO_GM), targetguid);
         SendGlobalGMSysMessage(LANG_COMMAND_CAN_WHISPER_GM_ON, firstpart.c_str());
         return true;
     }
@@ -2534,7 +2534,7 @@ bool ChatHandler::HandleWhispersCommand(const char* args)
                 ChatHandler(target).SendSysMessage(LANG_YOU_CAN_WHISPER_TO_GM_OFF);
         }
         else
-            RealmDataDatabase.PExecute("UPDATE characters SET extra_flags = extra_flags & ~ %u WHERE guid ='%u'", uint32(PLAYER_EXTRA_CAN_WHISP_TO_GM), targetguid);
+            CharacterDatabase.PExecute("UPDATE characters SET extra_flags = extra_flags & ~ %u WHERE guid ='%u'", uint32(PLAYER_EXTRA_CAN_WHISP_TO_GM), targetguid);
         SendGlobalGMSysMessage(LANG_COMMAND_CAN_WHISPER_GM_OFF, firstpart.c_str());
         return true;
     }

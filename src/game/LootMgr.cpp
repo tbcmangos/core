@@ -99,7 +99,7 @@ void LootStore::LoadLootTable()
     sLog.outString("%s :", GetName());
 
     //                                                        0      1     2                    3        4              5         6              7                 8
-    QueryResult* result = GameDataDatabase.PQuery("SELECT entry, item, ChanceOrQuestChance, groupid, mincountOrRef, maxcount, lootcondition, condition_value1, condition_value2 FROM %s",GetName());
+    QueryResult* result = WorldDatabase.PQuery("SELECT entry, item, ChanceOrQuestChance, groupid, mincountOrRef, maxcount, lootcondition, condition_value1, condition_value2 FROM %s",GetName());
 
     if (result)
     {
@@ -122,7 +122,7 @@ void LootStore::LoadLootTable()
 
             if (!PlayerCondition::IsValid(condition,cond_value1, cond_value2))
             {
-                sLog.outLog(LOG_DB_ERR, "... in table '%s' entry %u item %u", GetName(), entry, item);
+                sLog.outErrorDb( "... in table '%s' entry %u item %u", GetName(), entry, item);
                 continue;                                   // error already printed to log/console.
             }
 
@@ -163,7 +163,7 @@ void LootStore::LoadLootTable()
     else
     {
         sLog.outString();
-        sLog.outLog(LOG_DB_ERR, ">> Loaded 0 loot definitions. DB table `%s` is empty.",GetName());
+        sLog.outErrorDb( ">> Loaded 0 loot definitions. DB table `%s` is empty.",GetName());
     }
 }
 
@@ -215,12 +215,12 @@ void LootStore::ReportUnusedIds(LootIdSet const& ids_set) const
 {
     // all still listed ids isn't referenced
     for (LootIdSet::const_iterator itr = ids_set.begin(); itr != ids_set.end(); ++itr)
-        sLog.outLog(LOG_DB_ERR, "Table '%s' entry %d isn't %s and not referenced from loot, and then useless.", GetName(), *itr,GetEntryName());
+        sLog.outErrorDb( "Table '%s' entry %d isn't %s and not referenced from loot, and then useless.", GetName(), *itr,GetEntryName());
 }
 
 void LootStore::ReportNotExistedId(uint32 id) const
 {
-    sLog.outLog(LOG_DB_ERR, "Table '%s' entry %d (%s) not exist but used as loot id in DB.", GetName(), id,GetEntryName());
+    sLog.outErrorDb( "Table '%s' entry %d (%s) not exist but used as loot id in DB.", GetName(), id,GetEntryName());
 }
 
 //
@@ -249,7 +249,7 @@ bool LootStoreItem::IsValid(LootStore const& store, uint32 entry) const
 {
     if (mincountOrRef == 0)
     {
-        sLog.outLog(LOG_DB_ERR, "Table '%s' entry %d item %d: wrong mincountOrRef (%d) - skipped", store.GetName(), entry, itemid, mincountOrRef);
+        sLog.outErrorDb( "Table '%s' entry %d item %d: wrong mincountOrRef (%d) - skipped", store.GetName(), entry, itemid, mincountOrRef);
         return false;
     }
 
@@ -258,19 +258,19 @@ bool LootStoreItem::IsValid(LootStore const& store, uint32 entry) const
         ItemPrototype const *proto = ObjectMgr::GetItemPrototype(itemid);
         if (!proto)
         {
-            sLog.outLog(LOG_DB_ERR, "Table '%s' entry %d item %d: item entry not listed in `item_template` - skipped", store.GetName(), entry, itemid);
+            sLog.outErrorDb( "Table '%s' entry %d item %d: item entry not listed in `item_template` - skipped", store.GetName(), entry, itemid);
             return false;
         }
 
         if (chance == 0 && group == 0)                      // Zero chance is allowed for grouped entries only
         {
-            sLog.outLog(LOG_DB_ERR, "Table '%s' entry %d item %d: equal-chanced grouped entry, but group not defined - skipped", store.GetName(), entry, itemid);
+            sLog.outErrorDb( "Table '%s' entry %d item %d: equal-chanced grouped entry, but group not defined - skipped", store.GetName(), entry, itemid);
             return false;
         }
 
         if (chance != 0 && chance < 0.000001f)             // loot with low chance
         {
-            sLog.outLog(LOG_DB_ERR, "Table '%s' entry %d item %d: low chance (%f) - skipped",
+            sLog.outErrorDb( "Table '%s' entry %d item %d: low chance (%f) - skipped",
                 store.GetName(), entry, itemid, chance);
             return false;
         }
@@ -278,10 +278,10 @@ bool LootStoreItem::IsValid(LootStore const& store, uint32 entry) const
     else                                                    // mincountOrRef < 0
     {
         if (needs_quest)
-            sLog.outLog(LOG_DB_ERR, "Table '%s' entry %d item %d: quest chance will be treated as non-quest chance", store.GetName(), entry, itemid);
+            sLog.outErrorDb( "Table '%s' entry %d item %d: quest chance will be treated as non-quest chance", store.GetName(), entry, itemid);
         else if (chance == 0)                              // no chance for the reference
         {
-            sLog.outLog(LOG_DB_ERR, "Table '%s' entry %d item %d: zero chance is specified for a reference, skipped", store.GetName(), entry, itemid);
+            sLog.outErrorDb( "Table '%s' entry %d item %d: zero chance is specified for a reference, skipped", store.GetName(), entry, itemid);
             return false;
         }
     }
@@ -419,7 +419,7 @@ void Loot::FillLootFromDB(Creature *pCreature, Player* pLootOwner)
 {
     clear();
 
-    QueryResult* result = RealmDataDatabase.PQuery("SELECT itemId, itemCount, playerGuids FROM group_saved_loot WHERE creatureId='%u' AND instanceId='%u'", pCreature->GetEntry(), pCreature->GetInstanceId());
+    QueryResult* result = CharacterDatabase.PQuery("SELECT itemId, itemCount, playerGuids FROM group_saved_loot WHERE creatureId='%u' AND instanceId='%u'", pCreature->GetEntry(), pCreature->GetInstanceId());
     if (result)
     {
         m_creatureGUID = pCreature->GetGUID();
@@ -491,7 +491,7 @@ void Loot::FillLootFromDB(Creature *pCreature, Player* pLootOwner)
         //set variable to true even if we don't load anything so new loot won't be generated
         m_lootLoadedFromDB = true;
 
-        sLog.outLog(LOG_BOSS, ss.str().c_str());
+        sLog.out(LOG_LOOTS, ss.str().c_str());
 
         // make body visible to loot
         pCreature->setDeathState(JUST_DIED);
@@ -520,15 +520,15 @@ void Loot::removeItemFromSavedLoot(LootItem *item)
     {
         // log only for raids
         if (pMap->IsRaid())
-            sLog.outLog(LOG_BOSS, "Loot::removeItemFromSavedLoot: pCreature not found !! guid: %u, instanceid: %u) ", m_creatureGUID, pMap->GetInstanceId());
+            sLog.out(LOG_LOOTS, "Loot::removeItemFromSavedLoot: pCreature not found !! guid: %u, instanceid: %u) ", m_creatureGUID, pMap->GetInstanceId());
         return;
     }
 
-    QueryResult* result = RealmDataDatabase.PQuery("SELECT itemCount FROM group_saved_loot WHERE itemId='%u' AND instanceId='%u' AND creatureId='%u'", item->itemid, pMap->GetInstanceId(), pCreature->GetEntry());
+    QueryResult* result = CharacterDatabase.PQuery("SELECT itemCount FROM group_saved_loot WHERE itemId='%u' AND instanceId='%u' AND creatureId='%u'", item->itemid, pMap->GetInstanceId(), pCreature->GetEntry());
     if (!result)
     {
         if (pMap->IsRaid())
-            sLog.outLog(LOG_BOSS, "Loot::removeItemFromSavedLoot: result empty !! SQL: SELECT itemCount FROM group_saved_loot WHERE itemId='%u' AND instanceId='%u' AND creatureId='%u'", item->itemid, pMap->GetInstanceId(), pCreature->GetEntry());
+            sLog.out(LOG_LOOTS, "Loot::removeItemFromSavedLoot: result empty !! SQL: SELECT itemCount FROM group_saved_loot WHERE itemId='%u' AND instanceId='%u' AND creatureId='%u'", item->itemid, pMap->GetInstanceId(), pCreature->GetEntry());
         return;
     }
 
@@ -544,12 +544,12 @@ void Loot::removeItemFromSavedLoot(LootItem *item)
     if (count > 1)
     {
         count--;
-        SqlStatement stmt = RealmDataDatabase.CreateStatement(updateItemCount, "UPDATE group_saved_loot SET itemCount=? WHERE instanceId=? AND itemId=? AND creatureId=?");
+        SqlStatement stmt = CharacterDatabase.CreateStatement(updateItemCount, "UPDATE group_saved_loot SET itemCount=? WHERE instanceId=? AND itemId=? AND creatureId=?");
         stmt.PExecute(count, pCreature->GetInstanceId(), item->itemid, pCreature->GetEntry());
     }
     else
     {
-        SqlStatement stmt = RealmDataDatabase.CreateStatement(deleteItem, "DELETE FROM group_saved_loot WHERE instanceId=? AND itemId=? AND creatureId=?");
+        SqlStatement stmt = CharacterDatabase.CreateStatement(deleteItem, "DELETE FROM group_saved_loot WHERE instanceId=? AND itemId=? AND creatureId=?");
         stmt.PExecute(pCreature->GetInstanceId(), item->itemid, pCreature->GetEntry());
     }
     //CharacterDatabase.CommitTransaction();
@@ -562,7 +562,7 @@ void Loot::RemoveSavedLootFromDB(Creature * pCreature)
 
     static SqlStatementID deleteCreatureLoot;
     
-    SqlStatement stmt = RealmDataDatabase.CreateStatement(deleteCreatureLoot, "DELETE FROM group_saved_loot WHERE creatureId=? AND instanceId=?");
+    SqlStatement stmt = CharacterDatabase.CreateStatement(deleteCreatureLoot, "DELETE FROM group_saved_loot WHERE creatureId=? AND instanceId=?");
     stmt.PExecute(pCreature->GetEntry(), pCreature->GetInstanceId());
 }
 
@@ -578,7 +578,7 @@ void Loot::RemoveSavedLootFromDB()
     Creature *pCreature = pMap->GetCreatureOrPet(m_creatureGUID);
     if (!pCreature)
     {
-        //sLog.outLog(LOG_BOSS, "Loot::saveLootToDB: pCreature not found !!: player %s(%u)", owner->GetName(),owner->GetGUIDLow());
+        //sLog.out(LOG_LOOTS, "Loot::saveLootToDB: pCreature not found !!: player %s(%u)", owner->GetName(),owner->GetGUIDLow());
         return;
     }
 
@@ -597,12 +597,12 @@ void Loot::saveLootToDB(Player *owner)
     Creature *pCreature = pMap->GetCreatureOrPet(m_creatureGUID);
     if (!pCreature)
     {
-        sLog.outLog(LOG_BOSS, "Loot::saveLootToDB: pCreature not found !!: player %s(%u)", owner->GetName(),owner->GetGUIDLow());
+        sLog.out(LOG_LOOTS, "Loot::saveLootToDB: pCreature not found !!: player %s(%u)", owner->GetName(),owner->GetGUIDLow());
         return;
     }
 
     std::map<uint32, uint32> item_count;
-    RealmDataDatabase.BeginTransaction();
+    CharacterDatabase.BeginTransaction();
 
     static SqlStatementID updateItemCount;
     static SqlStatementID insertItem;
@@ -637,12 +637,12 @@ void Loot::saveLootToDB(Player *owner)
             uint32 count = item_count[item->itemid];
             if (count > 1)
             {
-                SqlStatement stmt = RealmDataDatabase.CreateStatement(updateItemCount, "UPDATE group_saved_loot SET itemCount=? WHERE itemId=? AND instanceId=?");
+                SqlStatement stmt = CharacterDatabase.CreateStatement(updateItemCount, "UPDATE group_saved_loot SET itemCount=? WHERE itemId=? AND instanceId=?");
                 stmt.PExecute(count, item->itemid, pCreature->GetInstanceId());
             }
             else
             {
-                SqlStatement stmt = RealmDataDatabase.CreateStatement(insertItem, "INSERT INTO group_saved_loot VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
+                SqlStatement stmt = CharacterDatabase.CreateStatement(insertItem, "INSERT INTO group_saved_loot VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
                 stmt.addUInt32(pCreature->GetEntry());
                 stmt.addUInt32(pCreature->GetInstanceId());
                 stmt.addUInt32(item->itemid);
@@ -658,8 +658,8 @@ void Loot::saveLootToDB(Player *owner)
         }
     }
 
-    sLog.outLog(LOG_BOSS, ss.str().c_str());
-    RealmDataDatabase.CommitTransaction();
+    sLog.out(LOG_LOOTS, ss.str().c_str());
+    CharacterDatabase.CommitTransaction();
 }
 
 // Calls processor of corresponding LootTemplate (which handles everything including references)
@@ -669,7 +669,7 @@ void Loot::FillLoot(uint32 loot_id, LootStore const& store, Player* loot_owner, 
 
     if (!tab)
     {
-        sLog.outLog(LOG_DB_ERR, "Table '%s' loot id #%u used but it doesn't have records.",store.GetName(),loot_id);
+        sLog.outErrorDb( "Table '%s' loot id #%u used but it doesn't have records.",store.GetName(),loot_id);
         return;
     }
 
@@ -887,7 +887,7 @@ void Loot::setItemLooted(LootItem *pLootItem, Player* looter)
         return;
     removeItemFromSavedLoot(pLootItem);
     if(looter && m_creatureGUID)
-        sLog.outLog(LOG_BOSS,"Map: %u ID: %u ; Item [%u] looted by %s (%u)",
+        sLog.out(LOG_LOOTS,"Map: %u ID: %u ; Item [%u] looted by %s (%u)",
         m_mapID.nMapId,m_mapID.nInstanceId,pLootItem->itemid,looter->GetName(),looter->GetGUIDLow());
 }
 
@@ -1232,12 +1232,12 @@ void LootTemplate::LootGroup::Verify(LootStore const& lootstore, uint32 id, uint
     float chance = RawTotalChance();
     if (chance > 101.0f)                                    // TODO: replace with 100% when DBs will be ready
     {
-        sLog.outLog(LOG_DB_ERR, "Table '%s' entry %u group %d has total chance > 100%% (%f)", lootstore.GetName(), id, group_id, chance);
+        sLog.outErrorDb( "Table '%s' entry %u group %d has total chance > 100%% (%f)", lootstore.GetName(), id, group_id, chance);
     }
 
     if (chance >= 100.0f && !EqualChanced.empty())
     {
-        sLog.outLog(LOG_DB_ERR, "Table '%s' entry %u group %d has items with chance=0%% but group total chance >= 100%% (%f)", lootstore.GetName(), id, group_id, chance);
+        sLog.outErrorDb( "Table '%s' entry %u group %d has items with chance=0%% but group total chance >= 100%% (%f)", lootstore.GetName(), id, group_id, chance);
     }
 }
 

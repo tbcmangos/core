@@ -34,7 +34,7 @@ class GridState
         {
             if (i_Magic != MAGIC_TESTVAL)
             {
-                sLog.outLog(LOG_DEFAULT, "ERROR: !!! GridState: Magic value gone !!!");
+                sLog.outError( "ERROR: !!! GridState: Magic value gone !!!");
                 return false;
             }
             return true;

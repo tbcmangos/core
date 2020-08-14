@@ -285,7 +285,7 @@ void WorldSession::HandleAuctionSellItem(WorldPacket & recv_data)
     // do not allow to sell already auctioned items
     if (sAuctionMgr.GetAItem(itemGuid.GetCounter()))
     {
-        sLog.outLog(LOG_DEFAULT, "ERROR: AuctionError, Player %s (guid: %u) is sending %s, but item is already in another auction", pl->GetName(), pl->GetGUIDLow(), itemGuid.GetString().c_str());
+        sLog.outError( "ERROR: AuctionError, Player %s (guid: %u) is sending %s, but item is already in another auction", pl->GetName(), pl->GetGUIDLow(), itemGuid.GetString().c_str());
         SendAuctionCommandResult(NULL, AUCTION_STARTED, AUCTION_ERR_INVENTORY, EQUIP_ERR_ITEM_NOT_FOUND);
         return;
     }
@@ -323,7 +323,7 @@ void WorldSession::HandleAuctionSellItem(WorldPacket & recv_data)
         return;
     }
 
-    if (HasPermissions(PERM_GMT) && sWorld.getConfig(CONFIG_GM_LOG_TRADE))
+    if (HasPermissions(SEC_GAMEMASTER) && sWorld.getConfig(CONFIG_GM_LOG_TRADE))
     {
         sLog.outCommand(GetAccountId(),"GM %s (Account: %u) create auction: %s (Entry: %u Count: %u)",
             GetPlayerName(), GetAccountId(), it->GetProto()->Name1, it->GetEntry(), it->GetCount());
@@ -331,12 +331,12 @@ void WorldSession::HandleAuctionSellItem(WorldPacket & recv_data)
 
     if (_player->GetSession()->IsAccountFlagged(ACC_SPECIAL_LOG))
     {
-        sLog.outLog(LOG_SPECIAL, "Player %s (Account: %u) create auction: %s (Entry: %u Count: %u)",
+        sLog.out(LOG_CHAR, "Player %s (Account: %u) create auction: %s (Entry: %u Count: %u)",
             GetPlayerName(), GetAccountId(), it->GetProto()->Name1, it->GetEntry(), it->GetCount());
     }
 /*  else
     {
-        sLog.outLog(LOG_AUCTION, "Player %s (Account: %u) create auction: %s (Entry: %u Count: %u)",
+        sLog.out(LOG_CHAR,"Player %s (Account: %u) create auction: %s (Entry: %u Count: %u)",
             GetPlayerName(),GetAccountId(),it->GetProto()->Name1,it->GetEntry(),it->GetCount());
     }
 */
@@ -458,14 +458,14 @@ void WorldSession::HandleAuctionRemoveItem(WorldPacket & recv_data)
     if (!auction || auction->owner != pl->GetGUIDLow())
     {
         SendAuctionCommandResult(NULL, AUCTION_REMOVED, AUCTION_ERR_DATABASE);
-        sLog.outLog(LOG_DEFAULT, "ERROR: CHEATER : %u, he tried to cancel auction (id: %u) of another player, or auction is NULL", pl->GetGUIDLow(), auctionId);
+        sLog.outError( "ERROR: CHEATER : %u, he tried to cancel auction (id: %u) of another player, or auction is NULL", pl->GetGUIDLow(), auctionId);
         return;
     }
 
     Item *pItem = sAuctionMgr.GetAItem(auction->itemGuidLow);
     if (!pItem)
     {
-        sLog.outLog(LOG_DEFAULT, "ERROR: Auction id: %u has nonexistent item (item guid : %u)!!!", auction->Id, auction->itemGuidLow);
+        sLog.outError( "ERROR: Auction id: %u has nonexistent item (item guid : %u)!!!", auction->Id, auction->itemGuidLow);
         SendAuctionCommandResult(NULL, AUCTION_REMOVED, AUCTION_ERR_INVENTORY, EQUIP_ERR_ITEM_NOT_FOUND);
         return;
     }
@@ -494,10 +494,10 @@ void WorldSession::HandleAuctionRemoveItem(WorldPacket & recv_data)
     // inform player, that auction is removed
     SendAuctionCommandResult(auction, AUCTION_REMOVED, AUCTION_OK);
     // Now remove the auction
-    RealmDataDatabase.BeginTransaction();
+    CharacterDatabase.BeginTransaction();
     auction->DeleteFromDB();
     pl->SaveInventoryAndGoldToDB();
-    RealmDataDatabase.CommitTransaction();
+    CharacterDatabase.CommitTransaction();
     sAuctionMgr.RemoveAItem(auction->itemGuidLow);
     auctionHouse->RemoveAuction(auction->Id);
     
@@ -521,7 +521,7 @@ void WorldSession::HandleAuctionListBidderItems(WorldPacket & recv_data)
     recv_data >> outbiddedCount;
     if (recv_data.size() != (16 + outbiddedCount * 4))
     {
-        sLog.outLog(LOG_DEFAULT, "ERROR: Client sent bad opcode!!! with count: %u and size : %u (must be: %u)", outbiddedCount, (uint32)recv_data.size(), (16 + outbiddedCount * 4));
+        sLog.outError( "ERROR: Client sent bad opcode!!! with count: %u and size : %u (must be: %u)", outbiddedCount, (uint32)recv_data.size(), (16 + outbiddedCount * 4));
         outbiddedCount = 0;
     }
 

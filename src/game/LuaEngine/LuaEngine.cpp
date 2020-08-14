@@ -18,7 +18,7 @@ bool StartEluna()
 {
     if (!sWorld.getConfig(CONFIG_ELUNA_ENABLED))
     {
-        sLog.outLog(LOG_DEFAULT,"[Eluna]: LuaEngine is Disabled. (If you want to use it please enable in config)");
+        sLog.out(LOG_CHAR,"[Eluna]: LuaEngine is Disabled. (If you want to use it please enable in config)");
         return false;
     }
 
@@ -28,7 +28,7 @@ bool StartEluna()
     {
         restart = true;
         sHookMgr->OnEngineRestart();
-        sLog.outLog(LOG_DEFAULT,"[Eluna]: Restarting Lua Engine");
+        sLog.out(LOG_CHAR,"[Eluna]: Restarting Lua Engine");
 
         // Unregisters and stops all timed events
         sEluna->m_EventMgr.RemoveEvents();
@@ -57,12 +57,12 @@ bool StartEluna()
     // Check config file for eluna is enabled or disabled
     if (!sWorld.getConfig(CONFIG_ELUNA_ENABLED))
     {
-        sLog.outLog(LOG_DEFAULT,"[Eluna]: LuaEngine is Disabled. (If you want to use it please set config in 'mangosd.conf')");
+        sLog.out(LOG_CHAR,"[Eluna]: LuaEngine is Disabled. (If you want to use it please set config in 'mangosd.conf')");
         return false;
     }
 
     sEluna->L = luaL_newstate();
-    sLog.outLog(LOG_DEFAULT,"[Eluna]: Lua Engine loaded.");
+    sLog.out(LOG_CHAR,"[Eluna]: Lua Engine loaded.");
 
     LoadedScripts loadedScripts;
     sEluna->LoadDirectory("lua_scripts", &loadedScripts);
@@ -79,7 +79,7 @@ bool StartEluna()
         strcpy(filename, itr->c_str());
         if (luaL_loadfile(sEluna->L, filename) != 0)
         {
-            sLog.outLog(LOG_DEFAULT,"[Eluna]: Error loading file `%s`.", itr->c_str());
+            sLog.out(LOG_CHAR,"[Eluna]: Error loading file `%s`.", itr->c_str());
             sEluna->report(sEluna->L);
         }
         else
@@ -87,7 +87,7 @@ bool StartEluna()
             int err = lua_ppcall(sEluna->L, 0, 0, 0);
             if (err != 0 && err == LUA_ERRRUN)
             {
-                sLog.outLog(LOG_DEFAULT,"[Eluna]: Error loading file `%s`.", itr->c_str());
+                sLog.out(LOG_CHAR,"[Eluna]: Error loading file `%s`.", itr->c_str());
                 sEluna->report(sEluna->L);
             }
         }
@@ -123,7 +123,7 @@ bool StartEluna()
     }
     */
 
-    sLog.outLog(LOG_DEFAULT, "[Eluna]: Loaded %u Lua scripts..", count);
+    sLog.outError( "[Eluna]: Loaded %u Lua scripts..", count);
     return true;
 }
 
@@ -142,7 +142,7 @@ void Eluna::LoadDirectory(char* Dirname, LoadedScripts* lscr)
     hFile = FindFirstFile(SearchName, &FindData);
     if (hFile == INVALID_HANDLE_VALUE)
     {
-        sLog.outLog(LOG_DEFAULT,"[Eluna]: Error No `lua_scripts` directory found! Creating a 'lua_scripts' directory.");
+        sLog.out(LOG_CHAR,"[Eluna]: Error No `lua_scripts` directory found! Creating a 'lua_scripts' directory.");
         CreateDirectory("lua_scripts", NULL);
         return;
     }
@@ -203,7 +203,7 @@ void Eluna::LoadDirectory(char* Dirname, LoadedScripts* lscr)
         if (stat(_path, &attributes) == -1)
         {
             error = true;
-            sLog.outLog(LOG_DEFAULT,"[Eluna]: Error opening `%s`", _path);
+            sLog.out(LOG_CHAR,"[Eluna]: Error opening `%s`", _path);
         }
         else
             error = false;
@@ -228,7 +228,7 @@ void Eluna::report(lua_State* L)
     while (msg)
     {
         lua_pop(L, -1);
-        sLog.outLog(LOG_DEFAULT,"%s", msg);
+        sLog.out(LOG_CHAR,"%s", msg);
         msg = lua_tostring(L, -1);
     }
 }

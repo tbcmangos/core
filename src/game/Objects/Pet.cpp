@@ -132,18 +132,18 @@ bool Pet::LoadPetFromDB(Unit* owner, uint32 petentry, uint32 petnumber, bool cur
 
     if (petnumber)
         // known petnumber entry                  0   1      2      3        4      5    6           7              8        9           10    11    12       13         14       15            16      17              18        19                 20                 21              22
-        result = RealmDataDatabase.PQuery("SELECT id, entry, owner, modelid, level, exp, Reactstate, loyaltypoints, loyalty, trainpoint, slot, name, renamed, curhealth, curmana, curhappiness, abdata, TeachSpelldata, savetime, resettalents_cost, resettalents_time, CreatedBySpell, PetType FROM character_pet WHERE owner = '%u' AND id = '%u'",ownerid, petnumber);
+        result = CharacterDatabase.PQuery("SELECT id, entry, owner, modelid, level, exp, Reactstate, loyaltypoints, loyalty, trainpoint, slot, name, renamed, curhealth, curmana, curhappiness, abdata, TeachSpelldata, savetime, resettalents_cost, resettalents_time, CreatedBySpell, PetType FROM character_pet WHERE owner = '%u' AND id = '%u'",ownerid, petnumber);
     else if (current)
         // current pet (slot 0)                   0   1      2      3        4      5    6           7              8        9           10    11    12       13         14       15            16      17              18        19                 20                 21              22
-        result = RealmDataDatabase.PQuery("SELECT id, entry, owner, modelid, level, exp, Reactstate, loyaltypoints, loyalty, trainpoint, slot, name, renamed, curhealth, curmana, curhappiness, abdata, TeachSpelldata, savetime, resettalents_cost, resettalents_time, CreatedBySpell, PetType FROM character_pet WHERE owner = '%u' AND slot = '0'",ownerid);
+        result = CharacterDatabase.PQuery("SELECT id, entry, owner, modelid, level, exp, Reactstate, loyaltypoints, loyalty, trainpoint, slot, name, renamed, curhealth, curmana, curhappiness, abdata, TeachSpelldata, savetime, resettalents_cost, resettalents_time, CreatedBySpell, PetType FROM character_pet WHERE owner = '%u' AND slot = '0'",ownerid);
     else if (petentry)
         // known petentry entry (unique for summoned pet, but non unique for hunter pet (only from current or not stabled pets)
         //                                        0   1      2      3        4      5    6           7              8        9           10    11    12       13         14       15            16      17              18        19                 20                 21              22
-        result = RealmDataDatabase.PQuery("SELECT id, entry, owner, modelid, level, exp, Reactstate, loyaltypoints, loyalty, trainpoint, slot, name, renamed, curhealth, curmana, curhappiness, abdata, TeachSpelldata, savetime, resettalents_cost, resettalents_time, CreatedBySpell, PetType FROM character_pet WHERE owner = '%u' AND entry = '%u' AND (slot = '0' OR slot = '3') ",ownerid, petentry);
+        result = CharacterDatabase.PQuery("SELECT id, entry, owner, modelid, level, exp, Reactstate, loyaltypoints, loyalty, trainpoint, slot, name, renamed, curhealth, curmana, curhappiness, abdata, TeachSpelldata, savetime, resettalents_cost, resettalents_time, CreatedBySpell, PetType FROM character_pet WHERE owner = '%u' AND entry = '%u' AND (slot = '0' OR slot = '3') ",ownerid, petentry);
     else
         // any current or other non-stabled pet (for hunter "call pet")
         //                                        0   1      2      3        4      5    6           7              8        9           10    11    12       13         14       15            16      17              18        19                 20                 21              22
-        result = RealmDataDatabase.PQuery("SELECT id, entry, owner, modelid, level, exp, Reactstate, loyaltypoints, loyalty, trainpoint, slot, name, renamed, curhealth, curmana, curhappiness, abdata, TeachSpelldata, savetime, resettalents_cost, resettalents_time, CreatedBySpell, PetType FROM character_pet WHERE owner = '%u' AND (slot = '0' OR slot = '3') ",ownerid);
+        result = CharacterDatabase.PQuery("SELECT id, entry, owner, modelid, level, exp, Reactstate, loyaltypoints, loyalty, trainpoint, slot, name, renamed, curhealth, curmana, curhappiness, abdata, TeachSpelldata, savetime, resettalents_cost, resettalents_time, CreatedBySpell, PetType FROM character_pet WHERE owner = '%u' AND (slot = '0' OR slot = '3') ",ownerid);
 
     if (!result)
         return false;
@@ -180,7 +180,7 @@ bool Pet::LoadPetFromDB(Unit* owner, uint32 petentry, uint32 petnumber, bool cur
 
     if (!IsPositionValid())
     {
-        sLog.outLog(LOG_DEFAULT, "ERROR: Pet (guidlow %d, entry %d) not loaded. Suggested coordinates isn't valid (X: %f Y: %f)",
+        sLog.outError( "ERROR: Pet (guidlow %d, entry %d) not loaded. Suggested coordinates isn't valid (X: %f Y: %f)",
             GetGUIDLow(), GetEntry(), GetPositionX(), GetPositionY());
         return false;
     }
@@ -236,7 +236,7 @@ bool Pet::LoadPetFromDB(Unit* owner, uint32 petentry, uint32 petnumber, bool cur
             setPowerType(POWER_FOCUS);
             break;
         default:
-            sLog.outLog(LOG_DEFAULT, "ERROR: Pet have incorrect type (%u) for pet loading.",getPetType());
+            sLog.outError( "ERROR: Pet have incorrect type (%u) for pet loading.",getPetType());
     }
     InitStatsForLevel(petlevel);
     SetUInt32Value(UNIT_FIELD_PET_NAME_TIMESTAMP, time(NULL));
@@ -252,10 +252,10 @@ bool Pet::LoadPetFromDB(Unit* owner, uint32 petentry, uint32 petnumber, bool cur
     // set current pet as current
     if (fields[10].GetUInt32() != 0)
     {
-        RealmDataDatabase.BeginTransaction();
-        RealmDataDatabase.PExecute("UPDATE character_pet SET slot = '3' WHERE owner = '%u' AND slot = '0' AND id <> '%u'",ownerid, m_charmInfo->GetPetNumber());
-        RealmDataDatabase.PExecute("UPDATE character_pet SET slot = '0' WHERE owner = '%u' AND id = '%u'",ownerid, m_charmInfo->GetPetNumber());
-        RealmDataDatabase.CommitTransaction();
+        CharacterDatabase.BeginTransaction();
+        CharacterDatabase.PExecute("UPDATE character_pet SET slot = '3' WHERE owner = '%u' AND slot = '0' AND id <> '%u'",ownerid, m_charmInfo->GetPetNumber());
+        CharacterDatabase.PExecute("UPDATE character_pet SET slot = '0' WHERE owner = '%u' AND id = '%u'",ownerid, m_charmInfo->GetPetNumber());
+        CharacterDatabase.CommitTransaction();
     }
 
     if (!is_temporary_summoned)
@@ -348,7 +348,7 @@ bool Pet::LoadPetFromDB(Unit* owner, uint32 petentry, uint32 petnumber, bool cur
 
     if (owner->GetTypeId() == TYPEID_PLAYER && getPetType() == HUNTER_PET)
     {
-        result = RealmDataDatabase.PQuery("SELECT genitive, dative, accusative, instrumental, prepositional FROM character_pet_declinedname WHERE owner = '%u' AND id = '%u'", owner->GetGUIDLow(), GetCharmInfo()->GetPetNumber());
+        result = CharacterDatabase.PQuery("SELECT genitive, dative, accusative, instrumental, prepositional FROM character_pet_declinedname WHERE owner = '%u' AND id = '%u'", owner->GetGUIDLow(), GetCharmInfo()->GetPetNumber());
 
         if (result)
         {
@@ -398,7 +398,7 @@ void Pet::SavePetToDB(PetSaveMode mode)
     }
 
     //save pet's data as one single transaction
-    RealmDataDatabase.BeginTransaction();
+    CharacterDatabase.BeginTransaction();
     _SaveSpells();
     _SaveSpellCooldowns();
     _SaveAuras();
@@ -416,17 +416,17 @@ void Pet::SavePetToDB(PetSaveMode mode)
 
             uint32 owner = GUID_LOPART(GetOwnerGUID());
             std::string name = m_name;
-            RealmDataDatabase.escape_string(name);
+            CharacterDatabase.escape_string(name);
             // remove current data
-            RealmDataDatabase.PExecute("DELETE FROM character_pet WHERE owner = '%u' AND id = '%u'", owner,m_charmInfo->GetPetNumber());
+            CharacterDatabase.PExecute("DELETE FROM character_pet WHERE owner = '%u' AND id = '%u'", owner,m_charmInfo->GetPetNumber());
 
             // prevent duplicate using slot (except PET_SAVE_NOT_IN_SLOT)
             if (mode!=PET_SAVE_NOT_IN_SLOT)
-                RealmDataDatabase.PExecute("UPDATE character_pet SET slot = 3 WHERE owner = '%u' AND slot = '%u'", owner, uint32(mode));
+                CharacterDatabase.PExecute("UPDATE character_pet SET slot = 3 WHERE owner = '%u' AND slot = '%u'", owner, uint32(mode));
 
             // prevent existence another hunter pet in PET_SAVE_AS_CURRENT and PET_SAVE_NOT_IN_SLOT
             if (getPetType()==HUNTER_PET && (mode==PET_SAVE_AS_CURRENT||mode==PET_SAVE_NOT_IN_SLOT))
-                RealmDataDatabase.PExecute("DELETE FROM character_pet WHERE owner = '%u' AND (slot = '0' OR slot = '3')", owner);
+                CharacterDatabase.PExecute("DELETE FROM character_pet WHERE owner = '%u' AND (slot = '0' OR slot = '3')", owner);
             // save pet
             std::ostringstream ss;
             ss  << "INSERT INTO character_pet (id, entry,  owner, modelid, level, exp, Reactstate, loyaltypoints, loyalty, trainpoint, slot, name, renamed, curhealth, curmana, curhappiness, abdata,TeachSpelldata,savetime,resettalents_cost,resettalents_time,CreatedBySpell,PetType) "
@@ -468,7 +468,7 @@ void Pet::SavePetToDB(PetSaveMode mode)
                 << GetUInt32Value(UNIT_CREATED_BY_SPELL) << ", "
                 << uint32(getPetType()) << ")";
 
-            RealmDataDatabase.Execute(ss.str().c_str());
+            CharacterDatabase.Execute(ss.str().c_str());
             break;
         }
         case PET_SAVE_AS_DELETED:
@@ -478,24 +478,24 @@ void Pet::SavePetToDB(PetSaveMode mode)
             break;
         }
         default:
-            sLog.outLog(LOG_DEFAULT, "ERROR: Unknown pet save/remove mode: %d",mode);
+            sLog.outError( "ERROR: Unknown pet save/remove mode: %d",mode);
     }
-    RealmDataDatabase.CommitTransaction();
+    CharacterDatabase.CommitTransaction();
 }
 
 void Pet::DeleteFromDB(uint32 guidlow, bool separate_transaction)
 {
     if (separate_transaction)
-        RealmDataDatabase.BeginTransaction();
+        CharacterDatabase.BeginTransaction();
 
-    RealmDataDatabase.PExecute("DELETE FROM character_pet WHERE id = '%u'", guidlow);
-    RealmDataDatabase.PExecute("DELETE FROM character_pet_declinedname WHERE id = '%u'", guidlow);
-    RealmDataDatabase.PExecute("DELETE FROM pet_aura WHERE guid = '%u'", guidlow);
-    RealmDataDatabase.PExecute("DELETE FROM pet_spell WHERE guid = '%u'", guidlow);
-    RealmDataDatabase.PExecute("DELETE FROM pet_spell_cooldown WHERE guid = '%u'", guidlow);
+    CharacterDatabase.PExecute("DELETE FROM character_pet WHERE id = '%u'", guidlow);
+    CharacterDatabase.PExecute("DELETE FROM character_pet_declinedname WHERE id = '%u'", guidlow);
+    CharacterDatabase.PExecute("DELETE FROM pet_aura WHERE guid = '%u'", guidlow);
+    CharacterDatabase.PExecute("DELETE FROM pet_spell WHERE guid = '%u'", guidlow);
+    CharacterDatabase.PExecute("DELETE FROM pet_spell_cooldown WHERE guid = '%u'", guidlow);
 
     if (separate_transaction)
-        RealmDataDatabase.CommitTransaction();
+        CharacterDatabase.CommitTransaction();
 }
 
 void Pet::setDeathState(DeathState s)                       // overwrite virtual Creature::setDeathState and Unit::setDeathState
@@ -943,7 +943,7 @@ bool Pet::CreateBaseAtCreature(Creature* creature)
 {
     if (!creature)
     {
-        sLog.outLog(LOG_DEFAULT, "ERROR: CRITICAL ERROR: NULL pointer parsed into CreateBaseAtCreature()");
+        sLog.outError( "ERROR: CRITICAL ERROR: NULL pointer parsed into CreateBaseAtCreature()");
         return false;
     }
     uint32 guid=sObjectMgr.GenerateLowGuid(HIGHGUID_PET);
@@ -960,7 +960,7 @@ bool Pet::CreateBaseAtCreature(Creature* creature)
 
     if (!IsPositionValid())
     {
-        sLog.outLog(LOG_DEFAULT, "ERROR: Pet (guidlow %d, entry %d) not created base at creature. Suggested coordinates isn't valid (X: %f Y: %f)",
+        sLog.outError( "ERROR: Pet (guidlow %d, entry %d) not created base at creature. Suggested coordinates isn't valid (X: %f Y: %f)",
             GetGUIDLow(), GetEntry(), GetPositionX(), GetPositionY());
         return false;
     }
@@ -968,7 +968,7 @@ bool Pet::CreateBaseAtCreature(Creature* creature)
     CreatureInfo const *cinfo = GetCreatureInfo();
     if (!cinfo)
     {
-        sLog.outLog(LOG_DEFAULT, "ERROR: CreateBaseAtCreature() failed, creatureInfo is missing!");
+        sLog.outError( "ERROR: CreateBaseAtCreature() failed, creatureInfo is missing!");
         return false;
     }
 
@@ -1016,7 +1016,7 @@ bool Pet::InitStatsForLevel(uint32 petlevel)
     Unit* owner = GetOwner();
     if (!owner)
     {
-        sLog.outLog(LOG_DEFAULT, "ERROR: attempt to summon pet (Entry %u) without owner! Attempt terminated.", cinfo->Entry);
+        sLog.outError( "ERROR: attempt to summon pet (Entry %u) without owner! Attempt terminated.", cinfo->Entry);
         return false;
     }
 
@@ -1116,7 +1116,7 @@ bool Pet::InitStatsForLevel(uint32 petlevel)
             }
             else                                            // not exist in DB, use some default fake data
             {
-                sLog.outLog(LOG_DB_ERR, "Summoned pet (Entry: %u) not have pet stats data in DB",cinfo->Entry);
+                sLog.outErrorDb( "Summoned pet (Entry: %u) not have pet stats data in DB",cinfo->Entry);
 
                 // remove elite bonuses included in DB values
                 SetCreateHealth(uint32(((float(cinfo->maxhealth) / cinfo->maxlevel) / (1 + 2 * cinfo->rank)) * petlevel));
@@ -1156,7 +1156,7 @@ bool Pet::InitStatsForLevel(uint32 petlevel)
             }
             else                                            // not exist in DB, use some default fake data
             {
-                sLog.outLog(LOG_DB_ERR, "Hunter pet levelstats missing in DB");
+                sLog.outErrorDb( "Hunter pet levelstats missing in DB");
 
                 // remove elite bonuses included in DB values
                 SetCreateHealth(uint32(((float(cinfo->maxhealth) / cinfo->maxlevel) / (1 + 2 * cinfo->rank)) * petlevel));
@@ -1225,7 +1225,7 @@ bool Pet::InitStatsForLevel(uint32 petlevel)
         default:
             SetCreateHealth(urand(cinfo->minhealth, cinfo->maxhealth));
             SetCreateMana(urand(cinfo->minmana, cinfo->maxmana));
-            //sLog.outLog(LOG_DEFAULT, "ERROR: Pet have incorrect type (%u) for levelup.", getPetType());
+            //sLog.outError( "ERROR: Pet have incorrect type (%u) for levelup.", getPetType());
             break;
     }
 
@@ -1280,7 +1280,7 @@ void Pet::_LoadSpellCooldowns()
     m_CreatureSpellCooldowns.clear();
     m_CreatureCategoryCooldowns.clear();
 
-    QueryResult* result = RealmDataDatabase.PQuery("SELECT spell,time FROM pet_spell_cooldown WHERE guid = '%u'",m_charmInfo->GetPetNumber());
+    QueryResult* result = CharacterDatabase.PQuery("SELECT spell,time FROM pet_spell_cooldown WHERE guid = '%u'",m_charmInfo->GetPetNumber());
 
     if (result)
     {
@@ -1299,7 +1299,7 @@ void Pet::_LoadSpellCooldowns()
 
             if (!sSpellStore.LookupEntry(spell_id))
             {
-                sLog.outLog(LOG_DEFAULT, "ERROR: Pet %u have unknown spell %u in `pet_spell_cooldown`, skipping.",m_charmInfo->GetPetNumber(),spell_id);
+                sLog.outError( "ERROR: Pet %u have unknown spell %u in `pet_spell_cooldown`, skipping.",m_charmInfo->GetPetNumber(),spell_id);
                 continue;
             }
 
@@ -1329,7 +1329,7 @@ void Pet::_SaveSpellCooldowns()
     if (getPetType() == SUMMON_PET) //don't save cooldowns for temp pets, thats senseless
         return;
 
-    RealmDataDatabase.PExecute("DELETE FROM pet_spell_cooldown WHERE guid = '%u'", m_charmInfo->GetPetNumber());
+    CharacterDatabase.PExecute("DELETE FROM pet_spell_cooldown WHERE guid = '%u'", m_charmInfo->GetPetNumber());
 
     time_t curTime = time(NULL);
 
@@ -1340,7 +1340,7 @@ void Pet::_SaveSpellCooldowns()
             m_CreatureSpellCooldowns.erase(itr++);
         else
         {
-            RealmDataDatabase.PExecute("INSERT INTO pet_spell_cooldown (guid,spell,time) VALUES ('%u', '%u', '" UI64FMTD "')", m_charmInfo->GetPetNumber(), itr->first, uint64(itr->second));
+            CharacterDatabase.PExecute("INSERT INTO pet_spell_cooldown (guid,spell,time) VALUES ('%u', '%u', '" UI64FMTD "')", m_charmInfo->GetPetNumber(), itr->first, uint64(itr->second));
             ++itr;
         }
     }
@@ -1348,7 +1348,7 @@ void Pet::_SaveSpellCooldowns()
 
 void Pet::_LoadSpells()
 {
-    QueryResult* result = RealmDataDatabase.PQuery("SELECT spell,slot,active FROM pet_spell WHERE guid = '%u'",m_charmInfo->GetPetNumber());
+    QueryResult* result = CharacterDatabase.PQuery("SELECT spell,slot,active FROM pet_spell WHERE guid = '%u'",m_charmInfo->GetPetNumber());
 
     if (result)
     {
@@ -1369,9 +1369,9 @@ void Pet::_SaveSpells()
         ++next;
         if (itr->second->type == PETSPELL_FAMILY) continue; // prevent saving family passives to DB
         if (itr->second->state == PETSPELL_REMOVED || itr->second->state == PETSPELL_CHANGED)
-            RealmDataDatabase.PExecute("DELETE FROM pet_spell WHERE guid = '%u' and spell = '%u'", m_charmInfo->GetPetNumber(), itr->first);
+            CharacterDatabase.PExecute("DELETE FROM pet_spell WHERE guid = '%u' and spell = '%u'", m_charmInfo->GetPetNumber(), itr->first);
         if (itr->second->state == PETSPELL_NEW || itr->second->state == PETSPELL_CHANGED)
-            RealmDataDatabase.PExecute("INSERT INTO pet_spell (guid,spell,slot,active) VALUES ('%u', '%u', '%u','%u')", m_charmInfo->GetPetNumber(), itr->first, itr->second->slotId,itr->second->active);
+            CharacterDatabase.PExecute("INSERT INTO pet_spell (guid,spell,slot,active) VALUES ('%u', '%u', '%u','%u')", m_charmInfo->GetPetNumber(), itr->first, itr->second->slotId,itr->second->active);
 
         if (itr->second->state == PETSPELL_REMOVED)
             _removeSpell(itr->first);
@@ -1390,7 +1390,7 @@ void Pet::_LoadAuras(uint32 timediff)
     for (int i = UNIT_FIELD_AURA; i <= UNIT_FIELD_AURASTATE; ++i)
         SetUInt32Value(i, 0);
 
-    QueryResult* result = RealmDataDatabase.PQuery("SELECT caster_guid,spell,effect_index,stackcount,amount,maxduration,remaintime,remaincharges FROM pet_aura WHERE guid = '%u'",m_charmInfo->GetPetNumber());
+    QueryResult* result = CharacterDatabase.PQuery("SELECT caster_guid,spell,effect_index,stackcount,amount,maxduration,remaintime,remaincharges FROM pet_aura WHERE guid = '%u'",m_charmInfo->GetPetNumber());
 
     if (result)
     {
@@ -1409,23 +1409,23 @@ void Pet::_LoadAuras(uint32 timediff)
             SpellEntry const* spellproto = sSpellStore.LookupEntry(spellid);
             if (!spellproto)
             {
-                sLog.outLog(LOG_DEFAULT, "ERROR: Unknown aura (spellid %u, effindex %u), ignore.",spellid,effindex);
+                sLog.outError( "ERROR: Unknown aura (spellid %u, effindex %u), ignore.",spellid,effindex);
                 continue;
             }
 
             if (effindex >= 3)
             {
-                sLog.outLog(LOG_DEFAULT, "ERROR: Invalid effect index (spellid %u, effindex %u), ignore.",spellid,effindex);
+                sLog.outError( "ERROR: Invalid effect index (spellid %u, effindex %u), ignore.",spellid,effindex);
                 continue;
             }
 
             // negative effects should continue counting down after logout
             if (remaintime != -1 && !SpellMgr::IsPositiveEffect(spellid, effindex))
             {
-                if (remaintime/IN_MILISECONDS <= int32(timediff))
+                if (remaintime/IN_MILLISECONDS <= int32(timediff))
                     continue;
 
-                remaintime -= timediff*IN_MILISECONDS;
+                remaintime -= timediff*IN_MILLISECONDS;
             }
 
             // prevent wrong values of remaincharges
@@ -1457,7 +1457,7 @@ void Pet::_LoadAuras(uint32 timediff)
 
 void Pet::_SaveAuras()
 {
-    RealmDataDatabase.PExecute("DELETE FROM pet_aura WHERE guid = '%u'", m_charmInfo->GetPetNumber());
+    CharacterDatabase.PExecute("DELETE FROM pet_aura WHERE guid = '%u'", m_charmInfo->GetPetNumber());
 
     AuraMap const& auras = GetAuras();
 
@@ -1490,7 +1490,7 @@ void Pet::_SaveAuras()
 
                     if (i == 3)
                     {
-                        RealmDataDatabase.PExecute("INSERT INTO pet_aura (guid,caster_guid,spell,effect_index,stackcount,amount,maxduration,remaintime,remaincharges) "
+                        CharacterDatabase.PExecute("INSERT INTO pet_aura (guid,caster_guid,spell,effect_index,stackcount,amount,maxduration,remaintime,remaincharges) "
                             "VALUES ('%u', '" UI64FMTD "', '%u', '%u', '%u', '%d', '%d', '%d', '%d')",
                             m_charmInfo->GetPetNumber(), itr2->second->GetCasterGUID(),(uint32)itr2->second->GetId(), (uint32)itr2->second->GetEffIndex(), (uint32)itr2->second->GetStackAmount(), itr2->second->GetModifier()->m_amount,int(itr2->second->GetAuraMaxDuration()),int(itr2->second->GetAuraDuration()),int(itr2->second->m_procCharges));
                     }
@@ -1518,11 +1518,11 @@ bool Pet::addSpell(uint16 spell_id, uint16 active, PetSpellState state, uint16 s
         // do pet spell book cleanup
         if (state == PETSPELL_UNCHANGED)                     // spell load case
         {
-            sLog.outLog(LOG_DEFAULT, "ERROR: Pet::addSpell: Non-existed in SpellStore spell #%u request, deleting for all pets in `pet_spell`.",spell_id);
-            RealmDataDatabase.PExecute("DELETE FROM pet_spell WHERE spell = '%u'",spell_id);
+            sLog.outError( "ERROR: Pet::addSpell: Non-existed in SpellStore spell #%u request, deleting for all pets in `pet_spell`.",spell_id);
+            CharacterDatabase.PExecute("DELETE FROM pet_spell WHERE spell = '%u'",spell_id);
         }
         else
-            sLog.outLog(LOG_DEFAULT, "ERROR: Pet::addSpell: Non-existed in SpellStore spell #%u request.",spell_id);
+            sLog.outError( "ERROR: Pet::addSpell: Non-existed in SpellStore spell #%u request.",spell_id);
 
         return false;
     }
@@ -1990,7 +1990,7 @@ bool Pet::IsRightSpellIdForPet(uint32 spellid)
         case CREATURE_FAMILY_NETHER_RAY: RightSkillId = SKILL_PET_NETHER_RAY; break;
         case CREATURE_FAMILY_SERPENT: RightSkillId = SKILL_PET_SERPENT; break;
         default:
-            sLog.outLog(LOG_DEFAULT, "ERROR: Unhandled case for IsRightSkillIdForPet for creaturefamily %u", cinfo->family);
+            sLog.outError( "ERROR: Unhandled case for IsRightSkillIdForPet for creaturefamily %u", cinfo->family);
             break;
     }
 

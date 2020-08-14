@@ -118,7 +118,7 @@ struct instance_shadow_labyrinth : public ScriptedInstance
     {
         if (!guid)
         {
-            debug_log("TSCR: Shadow Labyrinth: HandleGameObject fail");
+            sLog.outDebug("TSCR: Shadow Labyrinth: HandleGameObject fail");
             return;
         }
 

@@ -99,7 +99,7 @@ m_sessionDbcLocale(sWorld.GetAvailableDbcLocale(locale)), m_sessionDbLocaleIndex
 _logoutTime(0), m_inQueue(false), m_playerLoading(false), m_playerLogout(false), m_playerSave(false), m_playerRecentlyLogout(false), m_latency(0), m_clientTimeDelay(0),
 m_accFlags(accFlags), m_Warden(NULL)
 {
-    _mailSendTimer.Reset(5*IN_MILISECONDS);
+    _mailSendTimer.Reset(5*IN_MILLISECONDS);
 
     _kickTimer.Reset(sWorld.getConfig(CONFIG_SESSION_UPDATE_IDLE_KICK));
 
@@ -109,7 +109,7 @@ m_accFlags(accFlags), m_Warden(NULL)
         sock->AddReference();
 
         static SqlStatementID updateAccOnline;
-        SqlStatement stmt = AccountsDatabase.CreateStatement(updateAccOnline, "UPDATE account SET online = 1 WHERE account_id = ?");
+        SqlStatement stmt = LoginDatabase.CreateStatement(updateAccOnline, "UPDATE account SET online = 1 WHERE account_id = ?");
         stmt.PExecute(GetAccountId());
 
         // create copy of base map :P
@@ -142,16 +142,16 @@ WorldSession::~WorldSession()
     static SqlStatementID updateAccountOnline;
     static SqlStatementID updateCharactersOnline;
 
-    SqlStatement stmt = AccountsDatabase.CreateStatement(updateAccountOnline, "UPDATE account SET online = 0 WHERE account_id = ?");
+    SqlStatement stmt = LoginDatabase.CreateStatement(updateAccountOnline, "UPDATE account SET online = 0 WHERE account_id = ?");
     stmt.PExecute(GetAccountId());
 
-    stmt = RealmDataDatabase.CreateStatement(updateCharactersOnline, "UPDATE characters SET online = 0 WHERE account = ?");
+    stmt = CharacterDatabase.CreateStatement(updateCharactersOnline, "UPDATE characters SET online = 0 WHERE account = ?");
     stmt.PExecute(GetAccountId());
 }
 
 void WorldSession::SizeError(WorldPacket const& packet, uint32 size) const
 {
-    sLog.outLog(LOG_DEFAULT, "ERROR: Client (account %u) send packet %s (%u) with size %u but expected %u (attempt crash server?), skipped",
+    sLog.outError( "ERROR: Client (account %u) send packet %s (%u) with size %u but expected %u (attempt crash server?), skipped",
         GetAccountId(),LookupOpcodeName(packet.GetOpcode()),packet.GetOpcode(),packet.size(),size);
 }
 
@@ -164,7 +164,7 @@ char const* WorldSession::GetPlayerName() const
 void WorldSession::SaveOpcodesDisableFlags()
 {
     static SqlStatementID saveOpcodesDisabled;
-    SqlStatement stmt = AccountsDatabase.CreateStatement(saveOpcodesDisabled, "UPDATE account SET opcodes_disabled = ? WHERE account_id = ?");
+    SqlStatement stmt = LoginDatabase.CreateStatement(saveOpcodesDisabled, "UPDATE account SET opcodes_disabled = ? WHERE account_id = ?");
     stmt.PExecute(m_opcodesDisabled, GetAccountId());
 }
 
@@ -183,7 +183,7 @@ void WorldSession::RemoveOpcodeDisableFlag(uint16 flag)
 void WorldSession::SaveAccountFlags(uint32 accountId, uint64 flags)
 {
     SqlStatementID saveAccountFlags;
-    SqlStatement stmt = AccountsDatabase.CreateStatement(saveAccountFlags, "UPDATE account SET account_flags = ? WHERE account_id = ?");
+    SqlStatement stmt = LoginDatabase.CreateStatement(saveAccountFlags, "UPDATE account SET account_flags = ? WHERE account_id = ?");
     stmt.PExecute(flags, accountId);
 }
 
@@ -287,7 +287,7 @@ void WorldSession::ProcessPacket(WorldPacket* packet)
 
     if (packet->GetOpcode() >= NUM_MSG_TYPES)
     {
-        sLog.outLog(LOG_DEFAULT, "ERROR: SESSION: received non-existed opcode %s (0x%.4X)",
+        sLog.outError( "ERROR: SESSION: received non-existed opcode %s (0x%.4X)",
             LookupOpcodeName(packet->GetOpcode()),
             packet->GetOpcode());
     }
@@ -305,7 +305,7 @@ void WorldSession::ProcessPacket(WorldPacket* packet)
                 }
                 else if (_player->IsInWorld())
                     (this->*opHandle.handler)(*packet);
-                else if (_player->HasTeleportTimerPassed(_player->GetSession()->HasPermissions(PERM_GMT_DEV)?10000 : 60000))
+                else if (_player->HasTeleportTimerPassed(_player->GetSession()->HasPermissions(SEC_DEVELOPPER)?10000 : 60000))
                     //player should not be in game yet but sends opcodes, 60 sec lag is hard to belive, unstuck him
                 {
                     HandleMoveWorldportAckOpcode();
@@ -337,7 +337,7 @@ void WorldSession::ProcessPacket(WorldPacket* packet)
                 break;
             case STATUS_NEVER:
                 if (packet->GetOpcode() != CMSG_MOVE_NOT_ACTIVE_MOVER)
-                    sLog.outLog(LOG_DEFAULT, "ERROR: SESSION: received not allowed opcode %s (0x%.4X)",
+                    sLog.outError( "ERROR: SESSION: received not allowed opcode %s (0x%.4X)",
                         LookupOpcodeName(packet->GetOpcode()),
                         packet->GetOpcode());
                 break;
@@ -369,7 +369,7 @@ bool WorldSession::Update(uint32 diff, PacketFilter& updater)
             if (_mailSendTimer.Passed())
             {
                 SendExternalMails();
-                _mailSendTimer.Reset(sWorld.getConfig(CONFIG_EXTERNAL_MAIL_INTERVAL)*MINUTE*IN_MILISECONDS);
+                _mailSendTimer.Reset(sWorld.getConfig(CONFIG_EXTERNAL_MAIL_INTERVAL)*MINUTE*IN_MILLISECONDS);
             }
         }
 
@@ -399,7 +399,7 @@ bool WorldSession::Update(uint32 diff, PacketFilter& updater)
     }
     catch (...)
     {
-        sLog.outLog(LOG_SPECIAL, "WPE NOOB: packet doesn't contains required data, %s(%u), acc: %u", GetPlayer()->GetName(), GetPlayer()->GetGUIDLow(), GetAccountId());
+        sLog.out(LOG_CHAR, "WPE NOOB: packet doesn't contains required data, %s(%u), acc: %u", GetPlayer()->GetName(), GetPlayer()->GetGUIDLow(), GetAccountId());
         KickPlayer();
     }
 
@@ -418,18 +418,18 @@ bool WorldSession::Update(uint32 diff, PacketFilter& updater)
             overtime = true;
     }
 
-    if (overtime && !HasPermissions(PERM_GMT))
+    if (overtime && !HasPermissions(SEC_GAMEMASTER))
     {
         switch (sWorld.getConfig(CONFIG_SESSION_UPDATE_OVERTIME_METHOD))
         {
             case OVERTIME_IPBAN:
-                AccountsDatabase.PExecute("INSERT INTO ip_banned VALUES ('%s', UNIX_TIMESTAMP(), UNIX_TIMESTAMP(), 'CONSOLE', 'bye bye', '1')", GetRemoteAddress().c_str());
+                LoginDatabase.PExecute("INSERT INTO ip_banned VALUES ('%s', UNIX_TIMESTAMP(), UNIX_TIMESTAMP(), 'CONSOLE', 'bye bye', '1')", GetRemoteAddress().c_str());
             case OVERTIME_ACCBAN:
-                AccountsDatabase.PExecute("INSERT INTO account_punishment VALUES ('%u', '%u', UNIX_TIMESTAMP(), UNIX_TIMESTAMP(), 'CONSOLE', 'bye bye', '1')", GetAccountId(), PUNISHMENT_BAN);
+                LoginDatabase.PExecute("INSERT INTO account_punishment VALUES ('%u', '%u', UNIX_TIMESTAMP(), UNIX_TIMESTAMP(), 'CONSOLE', 'bye bye', '1')", GetAccountId(), PUNISHMENT_BAN);
             case OVERTIME_KICK:
                 KickPlayer();
             case OVERTIME_LOG:
-                sLog.outLog(LOG_DEFAULT, "ERROR: %s: session for account %u was too long", __FUNCTION__, GetAccountId());
+                sLog.outError( "ERROR: %s: session for account %u was too long", __FUNCTION__, GetAccountId());
             default:
                 break;
         }
@@ -437,7 +437,7 @@ bool WorldSession::Update(uint32 diff, PacketFilter& updater)
 
     bool logverbose = false;
     if (verbose == 1) // log only if overtime
-        if (overtime && !HasPermissions(PERM_GMT) && sWorld.getConfig(CONFIG_SESSION_UPDATE_OVERTIME_METHOD) >= OVERTIME_LOG)
+        if (overtime && !HasPermissions(SEC_GAMEMASTER) && sWorld.getConfig(CONFIG_SESSION_UPDATE_OVERTIME_METHOD) >= OVERTIME_LOG)
             logverbose = true;
 
     if (verbose == 2) // log if session update is logged as slow
@@ -457,7 +457,7 @@ bool WorldSession::Update(uint32 diff, PacketFilter& updater)
             overtimeText << "  " << (*itr).opcode << " (" << (*itr).diff << ")\n";
 
         overtimeText << "#################################################";
-        sLog.outLog(LOG_SESSION_DIFF, overtimeText.str().c_str());
+        sLog.out(LOG_PERFORMANCE,  overtimeText.str().c_str());
     }
 
     //check if we are safe to proceed with logout
@@ -506,7 +506,7 @@ void WorldSession::LogoutPlayer(bool Save)
 
         ///- used by eluna
         sHookMgr->OnLogout(_player);
-        sLog.outLog(LOG_CHAR, "Account: %u Character:[%s] (guid:%u) Logged out.",
+        sLog.out(LOG_CHAR, "Account: %u Character:[%s] (guid:%u) Logged out.",
             GetAccountId(),_player->GetName(),_player->GetGUIDLow());
 
         ///- If the player just died before logging out, make him appear as a ghost
@@ -666,7 +666,7 @@ void WorldSession::LogoutPlayer(bool Save)
         ///- Since each account can only have one online character at any given time, ensure all characters for active account are marked as offline
         //No SQL injection as AccountId is uint32
         static SqlStatementID updateCharacterOnline;
-        SqlStatement stmt = RealmDataDatabase.CreateStatement(updateCharacterOnline, "UPDATE characters SET online = 0 WHERE account = ?");
+        SqlStatement stmt = CharacterDatabase.CreateStatement(updateCharacterOnline, "UPDATE characters SET online = 0 WHERE account = ?");
         stmt.PExecute(GetAccountId());
 
         sLog.outDebug("SESSION: Sent SMSG_LOGOUT_COMPLETE Message");
@@ -753,21 +753,21 @@ void WorldSession::Handle_NULL(WorldPacket& recvPacket)
 
 void WorldSession::Handle_EarlyProccess(WorldPacket& recvPacket)
 {
-    sLog.outLog(LOG_DEFAULT, "ERROR: SESSION: received opcode %s (0x%.4X) that must be processed in WorldSocket::OnRead",
+    sLog.outError( "ERROR: SESSION: received opcode %s (0x%.4X) that must be processed in WorldSocket::OnRead",
         LookupOpcodeName(recvPacket.GetOpcode()),
         recvPacket.GetOpcode());
 }
 
 void WorldSession::Handle_ServerSide(WorldPacket& recvPacket)
 {
-    sLog.outLog(LOG_DEFAULT, "ERROR: SESSION: received server-side opcode %s (0x%.4X)",
+    sLog.outError( "ERROR: SESSION: received server-side opcode %s (0x%.4X)",
         LookupOpcodeName(recvPacket.GetOpcode()),
         recvPacket.GetOpcode());
 }
 
 void WorldSession::Handle_Deprecated(WorldPacket& recvPacket)
 {
-    sLog.outLog(LOG_DEFAULT, "ERROR: SESSION: received deprecated opcode %s (0x%.4X)",
+    sLog.outError( "ERROR: SESSION: received deprecated opcode %s (0x%.4X)",
         LookupOpcodeName(recvPacket.GetOpcode()),
         recvPacket.GetOpcode());
 }
@@ -798,13 +798,13 @@ void WorldSession::InitWarden(BigNumber *K, uint8& OperatingSystem)
             break;
         case CLIENT_OS_OSX:
 //            m_Warden = new WardenMac();
-            sLog.outLog(LOG_WARDEN, "Client %u got OSX client operating system (%i)", GetAccountId(), OperatingSystem);
+            sLog.outWarden( "Client %u got OSX client operating system (%i)", GetAccountId(), OperatingSystem);
             break;
         case CLIENT_OS_CHAT:
             m_Warden = new WardenChat();
             break;
         default:
-            sLog.outLog(LOG_WARDEN, "Client %u got unsupported operating system (%i)", GetAccountId(), OperatingSystem);
+            sLog.outWarden( "Client %u got unsupported operating system (%i)", GetAccountId(), OperatingSystem);
             if (sWorld.getConfig(CONFIG_WARDEN_KICK))
                 KickPlayer();
             return;
@@ -832,7 +832,7 @@ uint32 WorldSession::RecordSessionTimeDiff(const char *text, ...)
         va_start(ap, text);
         vsnprintf(str,256,text, ap);
         va_end(ap);
-        sLog.outLog(LOG_SESSION_DIFF, "Session Difftime %s: %u.", str, diff);
+        sLog.out(LOG_PERFORMANCE,  "Session Difftime %s: %u.", str, diff);
     }
 
     m_currentSessionTime = thisTime;

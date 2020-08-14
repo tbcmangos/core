@@ -41,7 +41,7 @@ class WDBThreadStartReq1 : public ACE_Method_Request
         WDBThreadStartReq1() {}
         virtual int call(void)
         {
-            GameDataDatabase.ThreadStart();
+            WorldDatabase.ThreadStart();
             return 0;
         }
 };
@@ -52,7 +52,7 @@ class WDBThreadEndReq1 : public ACE_Method_Request
         WDBThreadEndReq1() {}
         virtual int call(void)
         {
-            GameDataDatabase.ThreadEnd();
+            WorldDatabase.ThreadEnd();
             return 0;
         }
 };
@@ -182,7 +182,7 @@ void MapUpdater::FreezeDetect()
         {
             if ((WorldTimer::getMSTime() - itr->second.GetUpdateTime()) > freezeDetectTime)
             {
-                sLog.outLog(LOG_CRASH, "MapUpdater::FreezeDetect thread " I64FMT " possible freezed (is update map %u instance %u). Killing.",itr->first, itr->second.GetId(), itr->second.GetInstanceId());
+                sLog.outError(  "MapUpdater::FreezeDetect thread " I64FMT " possible freezed (is update map %u instance %u). Killing.",itr->first, itr->second.GetId(), itr->second.GetInstanceId());
                 DEBUG_LOG("MapUpdater::FreezeDetect thread " I64FMT " possible freezed (is update map %u instance %u). Killing.",itr->first, itr->second.GetId(), itr->second.GetInstanceId());
 
                 if (Map *brokenMap = sMapMgr.FindMap(itr->second.GetId(), itr->second.GetInstanceId()))

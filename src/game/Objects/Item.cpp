@@ -35,7 +35,7 @@ void AddItemsSetItem(Player*player,Item *item)
 
     if (!set)
     {
-        sLog.outLog(LOG_DB_ERR, "Item set %u for item (id %u) not found, mods not applied.",setid,proto->ItemId);
+        sLog.outErrorDb( "Item set %u for item (id %u) not found, mods not applied.",setid,proto->ItemId);
         return;
     }
 
@@ -96,7 +96,7 @@ void AddItemsSetItem(Player*player,Item *item)
                 SpellEntry const *spellInfo = sSpellStore.LookupEntry(set->spells[x]);
                 if (!spellInfo)
                 {
-                    sLog.outLog(LOG_DEFAULT, "ERROR: WORLD: unknown spell id %u in items set %u effects", set->spells[x],setid);
+                    sLog.outError( "ERROR: WORLD: unknown spell id %u in items set %u effects", set->spells[x],setid);
                     break;
                 }
 
@@ -117,7 +117,7 @@ void RemoveItemsSetItem(Player*player,ItemPrototype const *proto)
 
     if (!set)
     {
-        sLog.outLog(LOG_DB_ERR, "Item set #%u for item #%u not found, mods not removed.",setid,proto->ItemId);
+        sLog.outErrorDb( "Item set #%u for item #%u not found, mods not removed.",setid,proto->ItemId);
         return;
     }
 
@@ -322,10 +322,10 @@ void Item::SaveToDB()
             static SqlStatementID deleteItem;
             static SqlStatementID saveItem;
 
-            SqlStatement stmt = RealmDataDatabase.CreateStatement(deleteItem, "DELETE FROM item_instance WHERE guid = ?");
+            SqlStatement stmt = CharacterDatabase.CreateStatement(deleteItem, "DELETE FROM item_instance WHERE guid = ?");
             stmt.PExecute(guid);
 
-            stmt = RealmDataDatabase.CreateStatement(saveItem, "INSERT INTO item_instance (guid, owner_guid, data) VALUES (?, ?, ?)");
+            stmt = CharacterDatabase.CreateStatement(saveItem, "INSERT INTO item_instance (guid, owner_guid, data) VALUES (?, ?, ?)");
 
             std::ostringstream ss;
             for (uint16 i = 0; i < m_valuesCount; i++)
@@ -339,7 +339,7 @@ void Item::SaveToDB()
             static SqlStatementID updateItem;
             static SqlStatementID updateGift;
 
-            SqlStatement stmt = RealmDataDatabase.CreateStatement(updateItem, "UPDATE item_instance SET data = ?,  owner_guid = ? WHERE guid = ?");
+            SqlStatement stmt = CharacterDatabase.CreateStatement(updateItem, "UPDATE item_instance SET data = ?,  owner_guid = ? WHERE guid = ?");
 
             std::ostringstream ss;
             for (uint16 i = 0; i < m_valuesCount; i++)
@@ -349,7 +349,7 @@ void Item::SaveToDB()
 
             if (HasFlag(ITEM_FIELD_FLAGS, ITEM_FLAGS_WRAPPED))
             {
-                stmt = RealmDataDatabase.CreateStatement(updateGift, "UPDATE character_gifts SET guid = ? WHERE item_guid = ?");
+                stmt = CharacterDatabase.CreateStatement(updateGift, "UPDATE character_gifts SET guid = ? WHERE item_guid = ?");
                 stmt.PExecute(GUID_LOPART(GetOwnerGUID()), GetGUIDLow());
             }
         }
@@ -360,18 +360,18 @@ void Item::SaveToDB()
             static SqlStatementID deleteItemText;
             static SqlStatementID deleteGift;
 
-            SqlStatement stmt = RealmDataDatabase.CreateStatement(deleteItem, "DELETE FROM item_instance WHERE guid = ?");
+            SqlStatement stmt = CharacterDatabase.CreateStatement(deleteItem, "DELETE FROM item_instance WHERE guid = ?");
             stmt.PExecute(guid);
 
             if (GetUInt32Value(ITEM_FIELD_ITEM_TEXT_ID) > 0)
             {
-                stmt = RealmDataDatabase.CreateStatement(deleteItemText, "DELETE FROM item_text WHERE id = ?");
+                stmt = CharacterDatabase.CreateStatement(deleteItemText, "DELETE FROM item_text WHERE id = ?");
                 stmt.PExecute(GetUInt32Value(ITEM_FIELD_ITEM_TEXT_ID));
             }
 
             if (HasFlag(ITEM_FIELD_FLAGS, ITEM_FLAGS_WRAPPED))
             {
-                stmt = RealmDataDatabase.CreateStatement(deleteGift, "DELETE FROM character_gifts WHERE item_guid = ?");
+                stmt = CharacterDatabase.CreateStatement(deleteGift, "DELETE FROM character_gifts WHERE item_guid = ?");
                 stmt.PExecute(GetGUIDLow());
             }
 
@@ -391,11 +391,11 @@ bool Item::LoadFromDB(uint32 guid, uint64 owner_guid, QueryResult* result)
     Object::_Create(guid, 0, HIGHGUID_ITEM);
 
     if (!result)
-        result = RealmDataDatabase.PQuery("SELECT data FROM item_instance WHERE guid = '%u'", guid);
+        result = CharacterDatabase.PQuery("SELECT data FROM item_instance WHERE guid = '%u'", guid);
 
     if (!result)
     {
-        sLog.outLog(LOG_DEFAULT, "ERROR: Item (GUID: %u owner: %u) not found in table `item_instance`, can't load. ",guid,GUID_LOPART(owner_guid));
+        sLog.outError( "ERROR: Item (GUID: %u owner: %u) not found in table `item_instance`, can't load. ",guid,GUID_LOPART(owner_guid));
         return false;
     }
 
@@ -403,7 +403,7 @@ bool Item::LoadFromDB(uint32 guid, uint64 owner_guid, QueryResult* result)
 
     if (!LoadValues(fields[0].GetString()))
     {
-        sLog.outLog(LOG_DEFAULT, "ERROR: Item #%d have broken data in `data` field. Can't be loaded.",guid);
+        sLog.outError( "ERROR: Item #%d have broken data in `data` field. Can't be loaded.",guid);
         return false;
     }
 
@@ -457,7 +457,7 @@ bool Item::LoadFromDB(uint32 guid, uint64 owner_guid, QueryResult* result)
             ss << GetUInt32Value(i) << " ";
         ss << "', owner_guid = '" << GUID_LOPART(GetOwnerGUID()) << "' WHERE guid = '" << guid << "'";
 
-        RealmDataDatabase.Execute(ss.str().c_str());
+        CharacterDatabase.Execute(ss.str().c_str());
     }
 
     return true;
@@ -465,12 +465,12 @@ bool Item::LoadFromDB(uint32 guid, uint64 owner_guid, QueryResult* result)
 
 void Item::DeleteFromDB()
 {
-    RealmDataDatabase.PExecute("DELETE FROM item_instance WHERE guid = '%u'",GetGUIDLow());
+    CharacterDatabase.PExecute("DELETE FROM item_instance WHERE guid = '%u'",GetGUIDLow());
 }
 
 void Item::DeleteFromInventoryDB()
 {
-    RealmDataDatabase.PExecute("DELETE FROM character_inventory WHERE item = '%u'",GetGUIDLow());
+    CharacterDatabase.PExecute("DELETE FROM character_inventory WHERE item = '%u'",GetGUIDLow());
 }
 
 ItemPrototype const *Item::GetProto() const
@@ -574,7 +574,7 @@ int32 Item::GenerateItemRandomPropertyId(uint32 item_id)
     // item can have not null only one from field values
     if ((itemProto->RandomProperty) && (itemProto->RandomSuffix))
     {
-        sLog.outLog(LOG_DB_ERR, "Item template %u have RandomProperty==%u and RandomSuffix==%u, but must have one from field =0",itemProto->ItemId,itemProto->RandomProperty,itemProto->RandomSuffix);
+        sLog.outErrorDb( "Item template %u have RandomProperty==%u and RandomSuffix==%u, but must have one from field =0",itemProto->ItemId,itemProto->RandomProperty,itemProto->RandomSuffix);
         return 0;
     }
 
@@ -585,7 +585,7 @@ int32 Item::GenerateItemRandomPropertyId(uint32 item_id)
         ItemRandomPropertiesEntry const *random_id = sItemRandomPropertiesStore.LookupEntry(randomPropId);
         if (!random_id)
         {
-            sLog.outLog(LOG_DB_ERR, "Enchantment id #%u used but it doesn't have records in 'ItemRandomProperties.dbc'",randomPropId);
+            sLog.outErrorDb( "Enchantment id #%u used but it doesn't have records in 'ItemRandomProperties.dbc'",randomPropId);
             return 0;
         }
 
@@ -598,7 +598,7 @@ int32 Item::GenerateItemRandomPropertyId(uint32 item_id)
         ItemRandomSuffixEntry const *random_id = sItemRandomSuffixStore.LookupEntry(randomPropId);
         if (!random_id)
         {
-            sLog.outLog(LOG_DB_ERR, "Enchantment id #%u used but it doesn't have records in sItemRandomSuffixStore.",randomPropId);
+            sLog.outErrorDb( "Enchantment id #%u used but it doesn't have records in sItemRandomSuffixStore.",randomPropId);
             return 0;
         }
 

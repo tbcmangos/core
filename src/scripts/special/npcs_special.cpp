@@ -616,7 +616,7 @@ void npc_doctorAI::UpdateAI(const uint32 diff)
                 patientEntry = HordeSoldierId[rand()%3];
                 break;
             default:
-                error_log("TSCR: Invalid entry for Triage doctor. Please check your database");
+                sLog.outError("TSCR: Invalid entry for Triage doctor. Please check your database");
                 return;
             }
 
@@ -3252,7 +3252,7 @@ struct npc_instakill_guardianAI : public Scripted_NoMovementAI
             sWorld.SendGMText(LANG_INSTA_KILL_GUARDIAN,
                 player->GetName(),player->GetGUIDLow(),
                 float(player->GetPositionX()),float(player->GetPositionY()),float(player->GetPositionZ()),player->GetMapId());
-            sLog.outLog(LOG_CHEAT,"Player %s (%u) killed by instakill guardian, position X: %f Y: %f Z: %f Map: %u",
+            sLog.out(LOG_CHAR,"Player %s (%u) killed by instakill guardian, position X: %f Y: %f Z: %f Map: %u",
                 player->GetName(),player->GetGUIDLow(),
                 float(player->GetPositionX()),float(player->GetPositionY()),float(player->GetPositionZ()),player->GetMapId());
             who->Kill(player);

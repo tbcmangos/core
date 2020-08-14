@@ -91,7 +91,7 @@ Object::~Object()
         if (IsInWorld())
         {
             ///- Do NOT call RemoveFromWorld here, if the object is a player it will crash
-            sLog.outLog(LOG_DEFAULT, "ERROR: Object::~Object - guid=" UI64FMTD ", typeid=%d deleted but still in world!!", GetGUID(), GetTypeId());
+            sLog.outError( "ERROR: Object::~Object - guid=" UI64FMTD ", typeid=%d deleted but still in world!!", GetGUID(), GetTypeId());
             ASSERT(false);
         }
 
@@ -699,7 +699,7 @@ void Object::SetByteValue(uint16 index, uint8 offset, uint8 value)
 
     if (offset > 4)
     {
-        sLog.outLog(LOG_DEFAULT, "ERROR: Object::SetByteValue: wrong offset %u", offset);
+        sLog.outError( "ERROR: Object::SetByteValue: wrong offset %u", offset);
         return;
     }
 
@@ -725,7 +725,7 @@ void Object::SetUInt16Value(uint16 index, uint8 offset, uint16 value)
 
     if (offset > 2)
     {
-        sLog.outLog(LOG_DEFAULT, "ERROR: Object::SetUInt16Value: wrong offset %u", offset);
+        sLog.outError( "ERROR: Object::SetUInt16Value: wrong offset %u", offset);
         return;
     }
 
@@ -841,7 +841,7 @@ void Object::SetByteFlag(uint16 index, uint8 offset, uint8 newFlag)
 
     if (offset > 4)
     {
-        sLog.outLog(LOG_DEFAULT, "ERROR: Object::SetByteFlag: wrong offset %u", offset);
+        sLog.outError( "ERROR: Object::SetByteFlag: wrong offset %u", offset);
         return;
     }
 
@@ -866,7 +866,7 @@ void Object::RemoveByteFlag(uint16 index, uint8 offset, uint8 oldFlag)
 
     if (offset > 4)
     {
-        sLog.outLog(LOG_DEFAULT, "ERROR: Object::RemoveByteFlag: wrong offset %u", offset);
+        sLog.outError( "ERROR: Object::RemoveByteFlag: wrong offset %u", offset);
         return;
     }
 
@@ -887,7 +887,7 @@ void Object::RemoveByteFlag(uint16 index, uint8 offset, uint8 oldFlag)
 
 bool Object::PrintIndexError(uint32 index, bool set) const
 {
-    sLog.outLog(LOG_DEFAULT, "ERROR: Attempt %s non-existed value field: %u (count: %u) for object typeid: %u type mask: %u",(set ? "set value to" : "get value from"),index,m_valuesCount,GetTypeId(),m_objectType);
+    sLog.outError( "ERROR: Attempt %s non-existed value field: %u (count: %u) for object typeid: %u type mask: %u",(set ? "set value to" : "get value from"),index,m_valuesCount,GetTypeId(),m_objectType);
 
     // assert must fail after function call
     return false;
@@ -1638,7 +1638,7 @@ Pet* Player::SummonPet(uint32 entry, float x, float y, float z, float ang, PetTy
     uint32 pet_number = sObjectMgr.GeneratePetNumber();
     if (!pet->Create(sObjectMgr.GenerateLowGuid(HIGHGUID_PET), map, entry, pet_number))
     {
-        sLog.outLog(LOG_DEFAULT, "ERROR: no such creature entry %u", entry);
+        sLog.outError( "ERROR: no such creature entry %u", entry);
         delete pet;
         return NULL;
     }
@@ -1647,7 +1647,7 @@ Pet* Player::SummonPet(uint32 entry, float x, float y, float z, float ang, PetTy
 
     if (!pet->IsPositionValid())
     {
-        sLog.outLog(LOG_DEFAULT, "ERROR: Pet (guidlow %d, entry %d) not summoned. Suggested coordinates isn't valid (X: %f Y: %f)",pet->GetGUIDLow(),pet->GetEntry(),pet->GetPositionX(),pet->GetPositionY());
+        sLog.outError( "ERROR: Pet (guidlow %d, entry %d) not summoned. Suggested coordinates isn't valid (X: %f Y: %f)",pet->GetGUIDLow(),pet->GetEntry(),pet->GetPositionX(),pet->GetPositionY());
         delete pet;
         return NULL;
     }
@@ -1722,7 +1722,7 @@ GameObject* WorldObject::SummonGameObject(uint32 entry, float x, float y, float 
     GameObjectInfo const* goinfo = ObjectMgr::GetGameObjectInfo(entry);
     if (!goinfo)
     {
-        sLog.outLog(LOG_DB_ERR, "Gameobject template %u not found in database!", entry);
+        sLog.outErrorDb( "Gameobject template %u not found in database!", entry);
         return NULL;
     }
     Map *map = GetMap();

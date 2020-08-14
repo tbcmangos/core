@@ -64,7 +64,7 @@
 #include "CreatureGroups.h"
 #include "Transports.h"
 #include "CreatureEventAIMgr.h"
-#include "WardenDataStorage.h"
+#include "WardenMgr.h"
 #include "WorldEventProcessor.h"
 #include "LuaEngine/HookMgr.h"
 //#include "Timer.h"
@@ -102,7 +102,7 @@ void MapUpdateDiffInfo::PrintCumulativeMapUpdateDiff()
         {
             uint32 diff = itr->second[i].value();
             if (diff >= sWorld.getConfig(CONFIG_MIN_LOG_UPDATE))
-                sLog.outLog(LOG_DIFF, "Map[%u] diff for: %i - %u", itr->first, i, diff);
+                sLog.out(LOG_PERFORMANCE, "Map[%u] diff for: %i - %u", itr->first, i, diff);
         }
     }
     ClearDiffInfo();
@@ -112,7 +112,7 @@ void MapUpdateDiffInfo::PrintCumulativeMapUpdateDiff()
 World::World()
 {
     m_playerLimit = 0;
-    m_requiredPermissionMask = PERM_PLAYER;
+    m_requiredPermissionMask = SEC_PLAYER;
     m_allowMovement = true;
     m_ShutdownMask = 0;
     m_ShutdownTimer = 0;
@@ -282,7 +282,7 @@ void World::AddSession_ (WorldSession* s)
     if (decrease_session)
         --Sessions;
 
-    if (m_playerLimit > 0 && Sessions >= m_playerLimit && !s->HasPermissions(PERM_GMT_HDEV))
+    if (m_playerLimit > 0 && Sessions >= m_playerLimit && !s->HasPermissions(SEC_DEVELOPPER))
     {
         if (!sObjectMgr.IsUnqueuedAccount(s->GetAccountId()) && !HasRecentlyDisconnected(s))
         {
@@ -309,7 +309,7 @@ void World::AddSession_ (WorldSession* s)
         float popu = GetActiveSessionCount (); //updated number of users on the server
         popu /= m_playerLimit;
         popu *= 2;
-        AccountsDatabase.PExecute ("UPDATE realms SET population = '%f' WHERE realm_id = '%u'", popu, realmID);
+        LoginDatabase.PExecute ("UPDATE realms SET population = '%f' WHERE realm_id = '%u'", popu, realmID);
         sLog.outDetail ("Server Population (%f).", popu);
     }
 }
@@ -471,7 +471,7 @@ void World::LoadConfigSettings(bool reload)
 {
     if (reload && !sConfig.Reload())
     {
-        sLog.outLog(LOG_DEFAULT, "ERROR: World settings reload fail: can't read settings from %s.",sConfig.GetFilename().c_str());
+        sLog.outError( "ERROR: World settings reload fail: can't read settings from %s.",sConfig.GetFilename().c_str());
         return;
     }
 
@@ -482,7 +482,7 @@ void World::LoadConfigSettings(bool reload)
     if (reload)
     {
         if (dataPath!=m_dataPath)
-            sLog.outLog(LOG_DEFAULT, "ERROR: DataDir option can't be changed at .conf file reload, using current value (%s).",m_dataPath.c_str());
+            sLog.outError( "ERROR: DataDir option can't be changed at .conf file reload, using current value (%s).",m_dataPath.c_str());
     }
     else
     {
@@ -511,7 +511,7 @@ void World::LoadConfigSettings(bool reload)
     loadConfig(CONFIG_SESSION_UPDATE_MAX_TIME, "SessionUpdate.MaxTime", 1000);
     loadConfig(CONFIG_SESSION_UPDATE_OVERTIME_METHOD, "SessionUpdate.Method", 3);
     loadConfig(CONFIG_SESSION_UPDATE_VERBOSE_LOG, "SessionUpdate.VerboseLog", 0);
-    loadConfig(CONFIG_SESSION_UPDATE_IDLE_KICK, "SessionUpdate.IdleKickTimer", 15*MINUTE*IN_MILISECONDS);
+    loadConfig(CONFIG_SESSION_UPDATE_IDLE_KICK, "SessionUpdate.IdleKickTimer", 15*MINUTE*IN_MILLISECONDS);
     loadConfig(CONFIG_SESSION_UPDATE_MIN_LOG_DIFF, "SessionUpdate.MinLogDiff", 25);
     loadConfig(CONFIG_INTERVAL_LOG_UPDATE, "RecordUpdateTimeDiffInterval", 60000);
     loadConfig(CONFIG_MIN_LOG_UPDATE, "MinRecordUpdateTimeDiff", 10);
@@ -647,12 +647,12 @@ void World::LoadConfigSettings(bool reload)
     loadConfig(CONFIG_GM_LOG_TRADE, "GM.LogTrade", false);
     loadConfig(CONFIG_ALLOW_GM_GROUP, "GM.AllowInvite", false);
     loadConfig(CONFIG_ALLOW_GM_FRIEND, "GM.AllowFriend", false);
-    loadConfig(CONFIG_GM_TRUSTED_LEVEL, "GM.TrustedLevel", PERM_HIGH_GMT);
+    loadConfig(CONFIG_GM_TRUSTED_LEVEL, "GM.TrustedLevel", SEC_BASIC_ADMIN);
 
-    loadConfig(CONFIG_COMMAND_LOG_PERMISSION, "CommandLogPermission", PERM_GMT_DEV);
-    loadConfig(CONFIG_INSTANT_LOGOUT, "InstantLogout", PERM_GMT_DEV);
-    loadConfig(CONFIG_MIN_GM_TEXT_LVL, "MinGMTextLevel", PERM_GMT_HDEV);
-    loadConfig(CONFIG_DISABLE_BREATHING, "DisableWaterBreath", PERM_CONSOLE);
+    loadConfig(CONFIG_COMMAND_LOG_PERMISSION, "CommandLogPermission", SEC_DEVELOPPER);
+    loadConfig(CONFIG_INSTANT_LOGOUT, "InstantLogout", SEC_DEVELOPPER);
+    loadConfig(CONFIG_MIN_GM_TEXT_LVL, "MinGMTextLevel", SEC_DEVELOPPER);
+    loadConfig(CONFIG_DISABLE_BREATHING, "DisableWaterBreath", SEC_CONSOLE);
     loadConfig(CONFIG_HIDE_GAMEMASTER_ACCOUNTS, "HideGameMasterAccounts", true);
 
     // Server rates
@@ -790,7 +790,7 @@ void World::LoadConfigSettings(bool reload)
     loadConfig(CONFIG_BATTLEGROUND_ANNOUNCE_START, "BattleGround.AnnounceStart", 0);
     loadConfig(CONFIG_BATTLEGROUND_CAST_DESERTER, "Battleground.CastDeserter", true);
     loadConfig(CONFIG_BATTLEGROUND_INVITATION_TYPE, "Battleground.InvitationType", 1);
-    loadConfig(CONFIG_BATTLEGROUND_PREMADE_GROUP_WAIT_FOR_MATCH, "BattleGround.PremadeGroupWaitForMatch", 10 * MINUTE * IN_MILISECONDS);
+    loadConfig(CONFIG_BATTLEGROUND_PREMADE_GROUP_WAIT_FOR_MATCH, "BattleGround.PremadeGroupWaitForMatch", 10 * MINUTE * IN_MILLISECONDS);
     loadConfig(CONFIG_BATTLEGROUND_PREMATURE_FINISH_TIMER, "BattleGround.PrematureFinishTimer", 0);
     loadConfig(CONFIG_PREMATURE_BG_REWARD, "Battleground.PrematureReward", true);
     loadConfig(CONFIG_BATTLEGROUND_QUEUE_INFO, "BattleGround.QueueInfo", 0);
@@ -851,7 +851,7 @@ void World::LoadConfigSettings(bool reload)
     loadConfig(CONFIG_WARDEN_MEM_CHECK_MAX, "Warden.MemCheckMax",3);
     loadConfig(CONFIG_WARDEN_RANDOM_CHECK_MAX, "Warden.RandomCheckMax",5);
     loadConfig(CONFIG_ENABLE_PASSIVE_ANTICHEAT, "AntiCheat.Enable", 1); 
-    loadConfig(CONFIG_ANTICHEAT_CUMULATIVE_DELAY, "AntiCheat.CumulativeDelay",5* IN_MILISECONDS);
+    loadConfig(CONFIG_ANTICHEAT_CUMULATIVE_DELAY, "AntiCheat.CumulativeDelay",5* IN_MILLISECONDS);
     loadConfig(CONFIG_ANTICHEAT_SPEEDHACK_TOLERANCE, "AntiCheat.SpeedhackTolerance",1.00f);
 
     // RaF
@@ -874,26 +874,26 @@ void World::LoadConfigSettings(bool reload)
     if (reload)
     {
         if (sConfig.GetIntDefault("WorldServerPort", DEFAULT_WORLDSERVER_PORT) != m_configs[CONFIG_PORT_WORLD])
-            sLog.outLog(LOG_DEFAULT, "ERROR: WorldServerPort option can't be changed at .conf file reload, using current value (%u).",m_configs[CONFIG_PORT_WORLD]);
+            sLog.outError( "ERROR: WorldServerPort option can't be changed at .conf file reload, using current value (%u).",m_configs[CONFIG_PORT_WORLD]);
 
         // Performance settings
         if (sConfig.GetIntDefault("SocketSelectTime", DEFAULT_SOCKET_SELECT_TIME) != m_configs[CONFIG_SOCKET_SELECTTIME])
-            sLog.outLog(LOG_DEFAULT, "ERROR: SocketSelectTime option can't be changed at .conf file reload, using current value (%u).",m_configs[CONFIG_SOCKET_SELECTTIME]);
+            sLog.outError( "ERROR: SocketSelectTime option can't be changed at .conf file reload, using current value (%u).",m_configs[CONFIG_SOCKET_SELECTTIME]);
         sMapMgr.SetGridCleanUpDelay(m_configs[CONFIG_INTERVAL_GRIDCLEAN]);
         m_timers[WUPDATE_UPTIME].SetInterval(m_configs[CONFIG_UPTIME_UPDATE]*MINUTE*1000);
         m_timers[WUPDATE_UPTIME].Reset();
 
         // Server settings
         if (sConfig.GetIntDefault("GameType", 0) != m_configs[CONFIG_GAME_TYPE])
-            sLog.outLog(LOG_DEFAULT, "ERROR: GameType option can't be changed at .conf file reload, using current value (%u).",m_configs[CONFIG_GAME_TYPE]);
+            sLog.outError( "ERROR: GameType option can't be changed at .conf file reload, using current value (%u).",m_configs[CONFIG_GAME_TYPE]);
         if (sConfig.GetIntDefault("RealmZone", REALM_ZONE_DEVELOPMENT) != m_configs[CONFIG_REALM_ZONE])
-            sLog.outLog(LOG_DEFAULT, "ERROR: RealmZone option can't be changed at .conf file reload, using current value (%u).",m_configs[CONFIG_REALM_ZONE]);
+            sLog.outError( "ERROR: RealmZone option can't be changed at .conf file reload, using current value (%u).",m_configs[CONFIG_REALM_ZONE]);
         if ( sConfig.GetIntDefault("Expansion",1) != m_configs[CONFIG_EXPANSION])
-            sLog.outLog(LOG_DEFAULT, "ERROR: Expansion option can't be changed at .conf file reload, using current value (%u).",m_configs[CONFIG_EXPANSION]);
+            sLog.outError( "ERROR: Expansion option can't be changed at .conf file reload, using current value (%u).",m_configs[CONFIG_EXPANSION]);
         
         // Server customization basic
         if (sConfig.GetIntDefault("MaxPlayerLevel", 70) != m_configs[CONFIG_MAX_PLAYER_LEVEL])
-            sLog.outLog(LOG_DEFAULT, "ERROR: MaxPlayerLevel option can't be changed at config reload, using current value (%u).",m_configs[CONFIG_MAX_PLAYER_LEVEL]);
+            sLog.outError( "ERROR: MaxPlayerLevel option can't be changed at config reload, using current value (%u).",m_configs[CONFIG_MAX_PLAYER_LEVEL]);
 
     }
     // === Not-reload only section ===
@@ -912,7 +912,7 @@ void World::LoadConfigSettings(bool reload)
         loadConfig(CONFIG_MAX_PLAYER_LEVEL, "MaxPlayerLevel", 70);
         if (m_configs[CONFIG_MAX_PLAYER_LEVEL] > MAX_LEVEL)
         {
-            sLog.outLog(LOG_DEFAULT, "ERROR: MaxPlayerLevel (%i) must be in range 1..%u. Set to %u.",m_configs[CONFIG_MAX_PLAYER_LEVEL],MAX_LEVEL,MAX_LEVEL);
+            sLog.outError( "ERROR: MaxPlayerLevel (%i) must be in range 1..%u. Set to %u.",m_configs[CONFIG_MAX_PLAYER_LEVEL],MAX_LEVEL,MAX_LEVEL);
             m_configs[CONFIG_MAX_PLAYER_LEVEL] = MAX_LEVEL;
         }
     }
@@ -922,73 +922,73 @@ void World::LoadConfigSettings(bool reload)
     loadConfig(CONFIG_COMPRESSION, "Compression", 1);
     if (m_configs[CONFIG_COMPRESSION] < 1 || m_configs[CONFIG_COMPRESSION] > 9)
     {
-        sLog.outLog(LOG_DEFAULT, "ERROR: Compression level (%i) must be in range 1..9. Using default compression level (1).",m_configs[CONFIG_COMPRESSION]);
+        sLog.outError( "ERROR: Compression level (%i) must be in range 1..9. Using default compression level (1).",m_configs[CONFIG_COMPRESSION]);
         m_configs[CONFIG_COMPRESSION] = 1;
     }
         
     loadConfig(CONFIG_MAX_OVERSPEED_PINGS, "MaxOverspeedPings",2);
     if (m_configs[CONFIG_MAX_OVERSPEED_PINGS] != 0 && m_configs[CONFIG_MAX_OVERSPEED_PINGS] < 2)
     {
-        sLog.outLog(LOG_DEFAULT, "ERROR: MaxOverspeedPings (%i) must be in range 2..infinity (or 0 to disable check. Set to 2.",m_configs[CONFIG_MAX_OVERSPEED_PINGS]);
+        sLog.outError( "ERROR: MaxOverspeedPings (%i) must be in range 2..infinity (or 0 to disable check. Set to 2.",m_configs[CONFIG_MAX_OVERSPEED_PINGS]);
         m_configs[CONFIG_MAX_OVERSPEED_PINGS] = 2;
     }
 
     loadConfig(CONFIG_INTERVAL_GRIDCLEAN, "GridCleanUpDelay", 300000);
     if (m_configs[CONFIG_INTERVAL_GRIDCLEAN] < MIN_GRID_DELAY)
     {
-        sLog.outLog(LOG_DEFAULT, "ERROR: GridCleanUpDelay (%i) must be greater %u. Use this minimal value.",m_configs[CONFIG_INTERVAL_GRIDCLEAN],MIN_GRID_DELAY);
+        sLog.outError( "ERROR: GridCleanUpDelay (%i) must be greater %u. Use this minimal value.",m_configs[CONFIG_INTERVAL_GRIDCLEAN],MIN_GRID_DELAY);
         m_configs[CONFIG_INTERVAL_GRIDCLEAN] = MIN_GRID_DELAY;
     }
 
     loadConfig(CONFIG_INTERVAL_MAPUPDATE, "MapUpdateInterval", 100);
     if (m_configs[CONFIG_INTERVAL_MAPUPDATE] < MIN_MAP_UPDATE_DELAY)
     {
-        sLog.outLog(LOG_DEFAULT, "ERROR: MapUpdateInterval (%i) must be greater %u. Use this minimal value.",m_configs[CONFIG_INTERVAL_MAPUPDATE],MIN_MAP_UPDATE_DELAY);
+        sLog.outError( "ERROR: MapUpdateInterval (%i) must be greater %u. Use this minimal value.",m_configs[CONFIG_INTERVAL_MAPUPDATE],MIN_MAP_UPDATE_DELAY);
         m_configs[CONFIG_INTERVAL_MAPUPDATE] = MIN_MAP_UPDATE_DELAY;
     }
 
     loadConfig(CONFIG_UPTIME_UPDATE, "UpdateUptimeInterval", 10);
     if (m_configs[CONFIG_UPTIME_UPDATE]<=0)
     {
-        sLog.outLog(LOG_DEFAULT, "ERROR: UpdateUptimeInterval (%i) must be > 0, set to default 10.",m_configs[CONFIG_UPTIME_UPDATE]);
+        sLog.outError( "ERROR: UpdateUptimeInterval (%i) must be > 0, set to default 10.",m_configs[CONFIG_UPTIME_UPDATE]);
         m_configs[CONFIG_UPTIME_UPDATE] = 10;
     }
     // Server settings    
     loadConfig(CONFIG_CHARACTERS_PER_REALM, "CharactersPerRealm", 10);
     if (m_configs[CONFIG_CHARACTERS_PER_REALM] < 1 || m_configs[CONFIG_CHARACTERS_PER_REALM] > 10)
     {
-        sLog.outLog(LOG_DEFAULT, "ERROR: CharactersPerRealm (%i) must be in range 1..10. Set to 10.",m_configs[CONFIG_CHARACTERS_PER_REALM]);
+        sLog.outError( "ERROR: CharactersPerRealm (%i) must be in range 1..10. Set to 10.",m_configs[CONFIG_CHARACTERS_PER_REALM]);
         m_configs[CONFIG_CHARACTERS_PER_REALM] = 10;
     }
 
     loadConfig(CONFIG_CHARACTERS_PER_ACCOUNT, "CharactersPerAccount", 50);
     if (m_configs[CONFIG_CHARACTERS_PER_ACCOUNT] < m_configs[CONFIG_CHARACTERS_PER_REALM])
     {
-        sLog.outLog(LOG_DEFAULT, "ERROR: CharactersPerAccount (%i) can't be less than CharactersPerRealm (%i).",m_configs[CONFIG_CHARACTERS_PER_ACCOUNT],m_configs[CONFIG_CHARACTERS_PER_REALM]);
+        sLog.outError( "ERROR: CharactersPerAccount (%i) can't be less than CharactersPerRealm (%i).",m_configs[CONFIG_CHARACTERS_PER_ACCOUNT],m_configs[CONFIG_CHARACTERS_PER_REALM]);
         m_configs[CONFIG_CHARACTERS_PER_ACCOUNT] = m_configs[CONFIG_CHARACTERS_PER_REALM];
     }
     // Server customization basic
     loadConfig(CONFIG_START_PLAYER_LEVEL, "StartPlayerLevel", 1);
     if (m_configs[CONFIG_START_PLAYER_LEVEL] < 1)
     {
-        sLog.outLog(LOG_DEFAULT, "ERROR: StartPlayerLevel (%i) must be in range 1..MaxPlayerLevel(%u). Set to 1.",m_configs[CONFIG_START_PLAYER_LEVEL],m_configs[CONFIG_MAX_PLAYER_LEVEL]);
+        sLog.outError( "ERROR: StartPlayerLevel (%i) must be in range 1..MaxPlayerLevel(%u). Set to 1.",m_configs[CONFIG_START_PLAYER_LEVEL],m_configs[CONFIG_MAX_PLAYER_LEVEL]);
         m_configs[CONFIG_START_PLAYER_LEVEL] = 1;
     }
     else if (m_configs[CONFIG_START_PLAYER_LEVEL] > m_configs[CONFIG_MAX_PLAYER_LEVEL])
     {
-        sLog.outLog(LOG_DEFAULT, "ERROR: StartPlayerLevel (%i) must be in range 1..MaxPlayerLevel(%u). Set to %u.",m_configs[CONFIG_START_PLAYER_LEVEL],m_configs[CONFIG_MAX_PLAYER_LEVEL],m_configs[CONFIG_MAX_PLAYER_LEVEL]);
+        sLog.outError( "ERROR: StartPlayerLevel (%i) must be in range 1..MaxPlayerLevel(%u). Set to %u.",m_configs[CONFIG_START_PLAYER_LEVEL],m_configs[CONFIG_MAX_PLAYER_LEVEL],m_configs[CONFIG_MAX_PLAYER_LEVEL]);
         m_configs[CONFIG_START_PLAYER_LEVEL] = m_configs[CONFIG_MAX_PLAYER_LEVEL];
     }
 
     loadConfig(CONFIG_START_PLAYER_MONEY,"StartPlayerMoney", 0);
     if (m_configs[CONFIG_START_PLAYER_MONEY] < 0)
     {
-        sLog.outLog(LOG_DEFAULT, "ERROR: StartPlayerMoney (%i) must be in range 0..%u. Set to %u.",m_configs[CONFIG_START_PLAYER_MONEY],MAX_MONEY_AMOUNT,0);
+        sLog.outError( "ERROR: StartPlayerMoney (%i) must be in range 0..%u. Set to %u.",m_configs[CONFIG_START_PLAYER_MONEY],MAX_MONEY_AMOUNT,0);
         m_configs[CONFIG_START_PLAYER_MONEY] = 0;
     }
     else if (m_configs[CONFIG_START_PLAYER_MONEY] > MAX_MONEY_AMOUNT)
     {
-        sLog.outLog(LOG_DEFAULT, "ERROR: StartPlayerMoney (%i) must be in range 0..%u. Set to %u.",
+        sLog.outError( "ERROR: StartPlayerMoney (%i) must be in range 0..%u. Set to %u.",
             m_configs[CONFIG_START_PLAYER_MONEY],MAX_MONEY_AMOUNT,MAX_MONEY_AMOUNT);
         m_configs[CONFIG_START_PLAYER_MONEY] = MAX_MONEY_AMOUNT;
     }
@@ -996,20 +996,20 @@ void World::LoadConfigSettings(bool reload)
     loadConfig(CONFIG_MAX_HONOR_POINTS, "MaxHonorPoints", 75000);
     if (m_configs[CONFIG_MAX_HONOR_POINTS] < 0)
     {
-        sLog.outLog(LOG_DEFAULT, "ERROR: MaxHonorPoints (%i) can't be negative. Set to 0.",m_configs[CONFIG_MAX_HONOR_POINTS]);
+        sLog.outError( "ERROR: MaxHonorPoints (%i) can't be negative. Set to 0.",m_configs[CONFIG_MAX_HONOR_POINTS]);
         m_configs[CONFIG_MAX_HONOR_POINTS] = 0;
     }
 
     loadConfig(CONFIG_START_HONOR_POINTS, "StartHonorPoints", 0);
     if (m_configs[CONFIG_START_HONOR_POINTS] < 0)
     {
-        sLog.outLog(LOG_DEFAULT, "ERROR: StartHonorPoints (%i) must be in range 0..MaxHonorPoints(%u). Set to %u.",
+        sLog.outError( "ERROR: StartHonorPoints (%i) must be in range 0..MaxHonorPoints(%u). Set to %u.",
             m_configs[CONFIG_START_HONOR_POINTS],m_configs[CONFIG_MAX_HONOR_POINTS],0);
         m_configs[CONFIG_START_HONOR_POINTS] = 0;
     }
     else if (m_configs[CONFIG_START_HONOR_POINTS] > m_configs[CONFIG_MAX_HONOR_POINTS])
     {
-        sLog.outLog(LOG_DEFAULT, "ERROR: StartHonorPoints (%i) must be in range 0..MaxHonorPoints(%u). Set to %u.",
+        sLog.outError( "ERROR: StartHonorPoints (%i) must be in range 0..MaxHonorPoints(%u). Set to %u.",
             m_configs[CONFIG_START_HONOR_POINTS],m_configs[CONFIG_MAX_HONOR_POINTS],m_configs[CONFIG_MAX_HONOR_POINTS]);
         m_configs[CONFIG_START_HONOR_POINTS] = m_configs[CONFIG_MAX_HONOR_POINTS];
     }
@@ -1017,20 +1017,20 @@ void World::LoadConfigSettings(bool reload)
     loadConfig(CONFIG_MAX_ARENA_POINTS, "MaxArenaPoints", 5000);
     if (m_configs[CONFIG_MAX_ARENA_POINTS] < 0)
     {
-        sLog.outLog(LOG_DEFAULT, "ERROR: MaxArenaPoints (%i) can't be negative. Set to 0.",m_configs[CONFIG_MAX_ARENA_POINTS]);
+        sLog.outError( "ERROR: MaxArenaPoints (%i) can't be negative. Set to 0.",m_configs[CONFIG_MAX_ARENA_POINTS]);
         m_configs[CONFIG_MAX_ARENA_POINTS] = 0;
     }
 
     loadConfig(CONFIG_START_ARENA_POINTS, "StartArenaPoints", 0);
     if (m_configs[CONFIG_START_ARENA_POINTS] < 0)
     {
-        sLog.outLog(LOG_DEFAULT, "ERROR: StartArenaPoints (%i) must be in range 0..MaxArenaPoints(%u). Set to %u.",
+        sLog.outError( "ERROR: StartArenaPoints (%i) must be in range 0..MaxArenaPoints(%u). Set to %u.",
             m_configs[CONFIG_START_ARENA_POINTS],m_configs[CONFIG_MAX_ARENA_POINTS],0);
         m_configs[CONFIG_START_ARENA_POINTS] = 0;
     }
     else if (m_configs[CONFIG_START_ARENA_POINTS] > m_configs[CONFIG_MAX_ARENA_POINTS])
     {
-        sLog.outLog(LOG_DEFAULT, "ERROR: StartArenaPoints (%i) must be in range 0..MaxArenaPoints(%u). Set to %u.",
+        sLog.outError( "ERROR: StartArenaPoints (%i) must be in range 0..MaxArenaPoints(%u). Set to %u.",
             m_configs[CONFIG_START_ARENA_POINTS],m_configs[CONFIG_MAX_ARENA_POINTS],m_configs[CONFIG_MAX_ARENA_POINTS]);
         m_configs[CONFIG_START_ARENA_POINTS] = m_configs[CONFIG_MAX_ARENA_POINTS];
     }
@@ -1039,14 +1039,14 @@ void World::LoadConfigSettings(bool reload)
     loadConfig(CONFIG_MIN_PETITION_SIGNS, "MinPetitionSigns", 9);
     if (m_configs[CONFIG_MIN_PETITION_SIGNS] > 9)
     {
-        sLog.outLog(LOG_DEFAULT, "ERROR: MinPetitionSigns (%i) must be in range 0..9. Set to 9.",m_configs[CONFIG_MIN_PETITION_SIGNS]);
+        sLog.outError( "ERROR: MinPetitionSigns (%i) must be in range 0..9. Set to 9.",m_configs[CONFIG_MIN_PETITION_SIGNS]);
         m_configs[CONFIG_MIN_PETITION_SIGNS] = 9;
     }
 
     loadConfig(CONFIG_SKIP_CINEMATICS, "SkipCinematics", 0);
     if (m_configs[CONFIG_SKIP_CINEMATICS] < 0 || m_configs[CONFIG_SKIP_CINEMATICS] > 2)
     {
-        sLog.outLog(LOG_DEFAULT, "ERROR: SkipCinematics (%i) must be in range 0..2. Set to 0.",m_configs[CONFIG_SKIP_CINEMATICS]);
+        sLog.outError( "ERROR: SkipCinematics (%i) must be in range 0..2. Set to 0.",m_configs[CONFIG_SKIP_CINEMATICS]);
         m_configs[CONFIG_SKIP_CINEMATICS] = 0;
     }
 
@@ -1054,13 +1054,13 @@ void World::LoadConfigSettings(bool reload)
     loadConfig(CONFIG_START_GM_LEVEL, "GM.StartLevel", 1);
     if (m_configs[CONFIG_START_GM_LEVEL] < m_configs[CONFIG_START_PLAYER_LEVEL])
     {
-        sLog.outLog(LOG_DEFAULT, "ERROR: GM.StartLevel (%i) must be in range StartPlayerLevel(%u)..%u. Set to %u.",
+        sLog.outError( "ERROR: GM.StartLevel (%i) must be in range StartPlayerLevel(%u)..%u. Set to %u.",
             m_configs[CONFIG_START_GM_LEVEL],m_configs[CONFIG_START_PLAYER_LEVEL], MAX_LEVEL, m_configs[CONFIG_START_PLAYER_LEVEL]);
         m_configs[CONFIG_START_GM_LEVEL] = m_configs[CONFIG_START_PLAYER_LEVEL];
     }
     else if (m_configs[CONFIG_START_GM_LEVEL] > MAX_LEVEL)
     {
-        sLog.outLog(LOG_DEFAULT, "ERROR: GM.StartLevel (%i) must be in range 1..%u. Set to %u.", m_configs[CONFIG_START_GM_LEVEL], MAX_LEVEL, MAX_LEVEL);
+        sLog.outError( "ERROR: GM.StartLevel (%i) must be in range 1..%u. Set to %u.", m_configs[CONFIG_START_GM_LEVEL], MAX_LEVEL, MAX_LEVEL);
         m_configs[CONFIG_START_GM_LEVEL] = MAX_LEVEL;
     }
 
@@ -1068,7 +1068,7 @@ void World::LoadConfigSettings(bool reload)
     m_VisibleObjectGreyDistance = sConfig.GetIntDefault("Visibility.Distance.Grey.Object", 10);
     if (m_VisibleObjectGreyDistance >  MAX_VISIBILITY_DISTANCE)
     {
-        sLog.outLog(LOG_DEFAULT, "ERROR: Visibility.Distance.Grey.Object can't be greater %f",MAX_VISIBILITY_DISTANCE);
+        sLog.outError( "ERROR: Visibility.Distance.Grey.Object can't be greater %f",MAX_VISIBILITY_DISTANCE);
         m_VisibleObjectGreyDistance = MAX_VISIBILITY_DISTANCE;
     }
 
@@ -1099,7 +1099,7 @@ void World::SetInitialWorldSettings()
         ||m_configs[CONFIG_EXPANSION] && (
         !MapManager::ExistMapAndVMap(530,10349.6f,-6357.29f) || !MapManager::ExistMapAndVMap(530,-3961.64f,-13931.2f)))
     {
-        sLog.outLog(LOG_DEFAULT, "ERROR: Correct *.map files not found in path '%smaps' or *.vmap/*vmdir files in '%svmaps'. Please place *.map/*.vmap/*.vmdir files in appropriate directories or correct the DataDir value in the .conf file.",m_dataPath.c_str(),m_dataPath.c_str());
+        sLog.outError( "ERROR: Correct *.map files not found in path '%smaps' or *.vmap/*vmdir files in '%svmaps'. Please place *.map/*.vmap/*.vmdir files in appropriate directories or correct the DataDir value in the .conf file.",m_dataPath.c_str(),m_dataPath.c_str());
         exit(1);
     }
 
@@ -1115,10 +1115,10 @@ void World::SetInitialWorldSettings()
     // not send custom type REALM_FFA_PVP to realm list
     uint32 server_type = IsFFAPvPRealm() ? REALM_TYPE_PVP : getConfig(CONFIG_GAME_TYPE);
     uint32 realm_zone = getConfig(CONFIG_REALM_ZONE);
-    AccountsDatabase.PExecute("UPDATE realms SET icon = %u, timezone = %u WHERE realm_id = '%u'", server_type, realm_zone, realmID);
+    LoginDatabase.PExecute("UPDATE realms SET icon = %u, timezone = %u WHERE realm_id = '%u'", server_type, realm_zone, realmID);
 
     ///- Remove the bones after a restart
-    RealmDataDatabase.PExecute("DELETE FROM corpse WHERE corpse_type = '0'");
+    CharacterDatabase.PExecute("DELETE FROM corpse WHERE corpse_type = '0'");
 
     ///- Load the DBC files
     sLog.outString("Initialize data stores...");
@@ -1429,7 +1429,7 @@ void World::SetInitialWorldSettings()
     sprintf(isoDate, "%04d-%02d-%02d %02d:%02d:%02d",
         local.tm_year+1900, local.tm_mon+1, local.tm_mday, local.tm_hour, local.tm_min, local.tm_sec);
 
-    RealmDataDatabase.PExecute("INSERT INTO uptime (startstring, starttime, uptime) VALUES('%s', " UI64FMTD ", 0)",
+    CharacterDatabase.PExecute("INSERT INTO uptime (startstring, starttime, uptime) VALUES('%s', " UI64FMTD ", 0)",
         isoDate, uint64(m_startTime));
 
     m_timers[WUPDATE_OBJECTS].SetInterval(0);
@@ -1442,7 +1442,7 @@ void World::SetInitialWorldSettings()
 
     m_timers[WUPDATE_AUTOBROADCAST].SetInterval(getConfig(CONFIG_AUTOBROADCAST_INTERVAL));
     m_timers[WUPDATE_GUILD_ANNOUNCES].SetInterval(getConfig(CONFIG_GUILD_ANN_INTERVAL));
-    m_timers[WUPDATE_DELETECHARS].SetInterval(DAY*IN_MILISECONDS); // check for chars to delete every day
+    m_timers[WUPDATE_DELETECHARS].SetInterval(DAY*IN_MILLISECONDS); // check for chars to delete every day
     m_timers[WUPDATE_OLDMAILS].SetInterval(getConfig(CONFIG_RETURNOLDMAILS_INTERVAL)*1000);
     m_timers[WUPDATE_ACTIVE_BANS].SetInterval(getConfig(CONFIG_ACTIVE_BANS_UPDATE_TIME));
 
@@ -1479,7 +1479,7 @@ void World::SetInitialWorldSettings()
     sOutdoorPvPMgr.InitOutdoorPvP();
 
     sLog.outString("Deleting expired IP bans...");
-    AccountsDatabase.Execute("DELETE FROM ip_banned WHERE expiration_date <= UNIX_TIMESTAMP() AND expiration_date <> punishment_date");
+    LoginDatabase.Execute("DELETE FROM ip_banned WHERE expiration_date <= UNIX_TIMESTAMP() AND expiration_date <> punishment_date");
 
     sLog.outString("Starting objects Pooling system...");
     sPoolMgr.Initialize();
@@ -1513,7 +1513,7 @@ void World::DetectDBCLang()
 
     if (m_lang_confid != 255 && m_lang_confid >= MAX_LOCALE)
     {
-        sLog.outLog(LOG_DEFAULT, "ERROR: Incorrect DBC.Locale! Must be >= 0 and < %d (set to 0)",MAX_LOCALE);
+        sLog.outError( "ERROR: Incorrect DBC.Locale! Must be >= 0 and < %d (set to 0)",MAX_LOCALE);
         m_lang_confid = LOCALE_enUS;
     }
 
@@ -1541,7 +1541,7 @@ void World::DetectDBCLang()
 
     if (default_locale >= MAX_LOCALE)
     {
-        sLog.outLog(LOG_DEFAULT, "ERROR: Unable to determine your DBC Locale! (corrupt DBC?)");
+        sLog.outError( "ERROR: Unable to determine your DBC Locale! (corrupt DBC?)");
         exit(1);
     }
 
@@ -1554,7 +1554,7 @@ void World::LoadAutobroadcasts()
 {
     m_Autobroadcasts.clear();
 
-    QueryResult* result = GameDataDatabase.Query("SELECT text FROM autobroadcast");
+    QueryResult* result = WorldDatabase.Query("SELECT text FROM autobroadcast");
 
     if (!result)
     {
@@ -1597,9 +1597,9 @@ void World::Update(uint32 diff)
 
             m_avgUpdateTime = m_serverUpdateTimeSum/m_serverUpdateTimeCount; // from server start
 
-            sLog.outLog(LOG_DEFAULT, "[Diff]: Update time diff: %u, avg: %u. Players online: %u.", m_curAvgUpdateTime, m_avgUpdateTime, GetActiveSessionCount());
-            sLog.outLog(LOG_DIFF, "Update time diff: %u, avg: %u. Players online: %u.", m_curAvgUpdateTime, m_avgUpdateTime, GetActiveSessionCount());
-            sLog.outLog(LOG_STATUS, "%u %u %u %u %u %u %s %u %u %u %u %u",
+            sLog.outError( "[Diff]: Update time diff: %u, avg: %u. Players online: %u.", m_curAvgUpdateTime, m_avgUpdateTime, GetActiveSessionCount());
+            sLog.out(LOG_PERFORMANCE, "Update time diff: %u, avg: %u. Players online: %u.", m_curAvgUpdateTime, m_avgUpdateTime, GetActiveSessionCount());
+            sLog.out(LOG_PERFORMANCE, "%u %u %u %u %u %u %s %u %u %u %u %u",
                         GetUptime(), GetActiveSessionCount(), GetMaxActiveSessionCount(), GetQueuedSessionCount(), GetMaxQueuedSessionCount(),
                         m_playerLimit, REVISION_HASH, m_curAvgUpdateTime, m_avgUpdateTime, loggedInAlliances.value(), loggedInHordes.value(), sWorld.GetGameTime());
 
@@ -1723,7 +1723,7 @@ void World::Update(uint32 diff)
         uint32 maxClientsNum = sWorld.GetMaxActiveSessionCount();
 
         m_timers[WUPDATE_UPTIME].Reset();
-        RealmDataDatabase.PExecute("UPDATE uptime SET uptime = %d, maxplayers = %d WHERE starttime = " UI64FMTD, tmpDiff, maxClientsNum, uint64(m_startTime));
+        CharacterDatabase.PExecute("UPDATE uptime SET uptime = %d, maxplayers = %d WHERE starttime = " UI64FMTD, tmpDiff, maxClientsNum, uint64(m_startTime));
     }
 
     diffRecorder.ResetDiff();
@@ -1828,7 +1828,7 @@ void World::Update(uint32 diff)
         m_timers[WUPDATE_ACTIVE_BANS].Reset();
 
         static SqlStatementID updateBansStmt;
-        SqlStatement stmt = AccountsDatabase.CreateStatement(updateBansStmt, "UPDATE account_punishment "
+        SqlStatement stmt = LoginDatabase.CreateStatement(updateBansStmt, "UPDATE account_punishment "
             "SET active = 0 WHERE expiration_date <= UNIX_TIMESTAMP() AND expiration_date <> punishment_date "
             "AND punishment_type_id IN (?,?,?)");
         stmt.addUInt8(PUNISHMENT_BAN);
@@ -2263,36 +2263,36 @@ bool World::KickPlayer(const std::string& playerName)
 /// Ban an account or ban an IP address, duration will be parsed using TimeStringToSecs if it is positive, otherwise permban
 BanReturn World::BanAccount(BanMode mode, std::string nameIPOrMail, std::string duration, std::string reason, std::string author)
 {
-    AccountsDatabase.escape_string(nameIPOrMail);
-    AccountsDatabase.escape_string(reason);
+    LoginDatabase.escape_string(nameIPOrMail);
+    LoginDatabase.escape_string(reason);
     std::string safe_author=author;
-    AccountsDatabase.escape_string(safe_author);
+    LoginDatabase.escape_string(safe_author);
 
     uint32 duration_secs = 0;
     if (mode != BAN_EMAIL)
         duration_secs = TimeStringToSecs(duration);
 
-    QueryResult* resultAccounts = QueryResult*(NULL);   //used for kicking
+    QueryResult* resultAccounts = nullptr;   //used for kicking
 
     ///- Update the database with ban information
     switch (mode)
     {
         case BAN_IP:
             //No SQL injection as strings are escaped
-            resultAccounts = AccountsDatabase.PQuery("SELECT account_id FROM account WHERE last_ip = '%s'", nameIPOrMail.c_str());
-            AccountsDatabase.PExecute("INSERT INTO ip_banned VALUES ('%s', UNIX_TIMESTAMP(), UNIX_TIMESTAMP()+%u, '%s', '%s')", nameIPOrMail.c_str(), duration_secs, safe_author.c_str(), reason.c_str());
+            resultAccounts = LoginDatabase.PQuery("SELECT account_id FROM account WHERE last_ip = '%s'", nameIPOrMail.c_str());
+            LoginDatabase.PExecute("INSERT INTO ip_banned VALUES ('%s', UNIX_TIMESTAMP(), UNIX_TIMESTAMP()+%u, '%s', '%s')", nameIPOrMail.c_str(), duration_secs, safe_author.c_str(), reason.c_str());
             break;
         case BAN_ACCOUNT:
             //No SQL injection as string is escaped
-            resultAccounts = AccountsDatabase.PQuery("SELECT account_id FROM account WHERE username = '%s'", nameIPOrMail.c_str());
+            resultAccounts = LoginDatabase.PQuery("SELECT account_id FROM account WHERE username = '%s'", nameIPOrMail.c_str());
             break;
         case BAN_CHARACTER:
             //No SQL injection as string is escaped
-            resultAccounts = RealmDataDatabase.PQuery("SELECT account FROM characters WHERE name = '%s'", nameIPOrMail.c_str());
+            resultAccounts = CharacterDatabase.PQuery("SELECT account FROM characters WHERE name = '%s'", nameIPOrMail.c_str());
             break;
         case BAN_EMAIL:
-            resultAccounts = AccountsDatabase.PQuery("SELECT account_id FROM account WHERE email = '%s'", nameIPOrMail.c_str());
-            AccountsDatabase.PExecute("INSERT INTO email_banned VALUES ('%s', UNIX_TIMESTAMP(), '%s', '%s')", nameIPOrMail.c_str(), safe_author.c_str(), reason.c_str());
+            resultAccounts = LoginDatabase.PQuery("SELECT account_id FROM account WHERE email = '%s'", nameIPOrMail.c_str());
+            LoginDatabase.PExecute("INSERT INTO email_banned VALUES ('%s', UNIX_TIMESTAMP(), '%s', '%s')", nameIPOrMail.c_str(), safe_author.c_str(), reason.c_str());
             break;
         default:
             return BAN_SYNTAX_ERROR;
@@ -2315,9 +2315,9 @@ BanReturn World::BanAccount(BanMode mode, std::string nameIPOrMail, std::string 
     {
         Field* fieldsAccount = resultAccounts->Fetch();
         uint32 account = fieldsAccount[0].GetUInt32();
-        uint32 permissions = PERM_PLAYER;
+        uint32 permissions = SEC_PLAYER;
 
-        QueryResult* resultAccPerm = AccountsDatabase.PQuery("SELECT permission_mask FROM account_permissions WHERE account_id = '%u' AND realm_id = '%u')", account, realmID);
+        QueryResult* resultAccPerm = LoginDatabase.PQuery("SELECT permission_mask FROM account_permissions WHERE account_id = '%u' AND realm_id = '%u')", account, realmID);
         if (resultAccPerm)
         {
             Field* fieldsAccId = resultAccPerm->Fetch();
@@ -2325,13 +2325,13 @@ BanReturn World::BanAccount(BanMode mode, std::string nameIPOrMail, std::string 
                 permissions = fieldsAccId[0].GetUInt32();
         }
 
-        if (permissions & PERM_GMT)
+        if (permissions & SEC_GAMEMASTER)
             continue;
 
         if (mode != BAN_IP && mode != BAN_EMAIL)
         {
             //No SQL injection as strings are escaped
-            AccountsDatabase.PExecute("INSERT INTO account_punishment VALUES ('%u', '%u', UNIX_TIMESTAMP(), UNIX_TIMESTAMP()+%u, '%s', '%s', '1')",
+            LoginDatabase.PExecute("INSERT INTO account_punishment VALUES ('%u', '%u', UNIX_TIMESTAMP(), UNIX_TIMESTAMP()+%u, '%s', '%s', '1')",
                                     account, PUNISHMENT_BAN, duration_secs, safe_author.c_str(), reason.c_str());
         }
 
@@ -2350,12 +2350,12 @@ bool World::RemoveBanAccount(BanMode mode, std::string nameIPOrMail)
     switch (mode)
     {
         case BAN_IP:
-            AccountsDatabase.escape_string(nameIPOrMail);
-            AccountsDatabase.PExecute("DELETE FROM ip_banned WHERE ip = '%s'",nameIPOrMail.c_str());
+            LoginDatabase.escape_string(nameIPOrMail);
+            LoginDatabase.PExecute("DELETE FROM ip_banned WHERE ip = '%s'",nameIPOrMail.c_str());
             break;
         case BAN_EMAIL:
-            AccountsDatabase.escape_string(nameIPOrMail);
-            AccountsDatabase.PExecute("DELETE FROM email_banned WHERE email = '%s'",nameIPOrMail.c_str());
+            LoginDatabase.escape_string(nameIPOrMail);
+            LoginDatabase.PExecute("DELETE FROM email_banned WHERE email = '%s'",nameIPOrMail.c_str());
             break;
         case BAN_ACCOUNT:
         case BAN_CHARACTER:
@@ -2369,7 +2369,7 @@ bool World::RemoveBanAccount(BanMode mode, std::string nameIPOrMail)
                 return false;
 
             //NO SQL injection as account is uint32
-            AccountsDatabase.PExecute("UPDATE account_punishment SET active = '0' WHERE account_id = '%u' AND punishment_type_id = '%u'", account, PUNISHMENT_BAN);
+            LoginDatabase.PExecute("UPDATE account_punishment SET active = '0' WHERE account_id = '%u' AND punishment_type_id = '%u'", account, PUNISHMENT_BAN);
 
             break;
     }
@@ -2515,14 +2515,14 @@ void World::InitResultQueue()
 void World::UpdateResultQueue()
 {
     //process async result queues
-    RealmDataDatabase.ProcessResultQueue();
-    GameDataDatabase.ProcessResultQueue();
-    AccountsDatabase.ProcessResultQueue();
+    CharacterDatabase.ProcessResultQueue();
+    WorldDatabase.ProcessResultQueue();
+    LoginDatabase.ProcessResultQueue();
 }
 
 void World::UpdateRealmCharCount(uint32 accountId)
 {
-    QueryResult* resultCharCount = RealmDataDatabase.PQuery("SELECT COUNT(guid) FROM characters WHERE account = '%u'", accountId);
+    QueryResult* resultCharCount = CharacterDatabase.PQuery("SELECT COUNT(guid) FROM characters WHERE account = '%u'", accountId);
 
     if (!resultCharCount)
         return;
@@ -2530,7 +2530,7 @@ void World::UpdateRealmCharCount(uint32 accountId)
     Field *fields = resultCharCount->Fetch();
 
     static SqlStatementID updateRealmChars;
-    SqlStatement stmt = AccountsDatabase.CreateStatement(updateRealmChars, "UPDATE realm_characters SET characters_count = ? WHERE account_id = ? AND realm_id = ?");
+    SqlStatement stmt = LoginDatabase.CreateStatement(updateRealmChars, "UPDATE realm_characters SET characters_count = ? WHERE account_id = ? AND realm_id = ?");
     stmt.addUInt8(fields[0].GetUInt8());
     stmt.addUInt32(accountId);
     stmt.addUInt32(realmID);
@@ -2541,7 +2541,7 @@ void World::InitDailyQuestResetTime()
 {
     time_t mostRecentQuestTime;
 
-    QueryResult* result = RealmDataDatabase.Query("SELECT MAX(time) FROM character_queststatus_daily");
+    QueryResult* result = CharacterDatabase.Query("SELECT MAX(time) FROM character_queststatus_daily");
     if (result)
     {
         Field *fields = result->Fetch();
@@ -2577,7 +2577,7 @@ void World::InitDailyQuestResetTime()
 
 void World::UpdateRequiredPermissions()
 {
-     QueryResult* result = AccountsDatabase.PQuery("SELECT required_permission_mask from realms WHERE realm_id = '%u'", realmID);
+     QueryResult* result = LoginDatabase.PQuery("SELECT required_permission_mask from realms WHERE realm_id = '%u'", realmID);
      if (result)
      {
         m_requiredPermissionMask = result->Fetch()->GetUInt64();
@@ -2602,9 +2602,9 @@ void World::SelectRandomHeroicDungeonDaily()
             sGameEventMgr.StopEvent(eventId, true);
         }
         if (sWorld.getConfig(CONFIG_DAILY_BLIZZLIKE))
-            GameDataDatabase.PExecute("UPDATE game_event SET occurence = 5184000 WHERE entry = %u", eventId);
+            WorldDatabase.PExecute("UPDATE game_event SET occurence = 5184000 WHERE entry = %u", eventId);
         else{
-            GameDataDatabase.PExecute("UPDATE game_event SET occurence = 1400 WHERE entry = %u", eventId);
+            WorldDatabase.PExecute("UPDATE game_event SET occurence = 1400 WHERE entry = %u", eventId);
             sGameEventMgr.StartEvent(eventId, true);
         }
     }
@@ -2620,7 +2620,7 @@ void World::SelectRandomHeroicDungeonDaily()
     sGameEventMgr.GetEventMap()[random].occurence = 1400;
 
     sGameEventMgr.StartEvent(random, true);
-    GameDataDatabase.PExecute("UPDATE game_event SET occurence = 1400 WHERE entry = %u", random);
+    WorldDatabase.PExecute("UPDATE game_event SET occurence = 1400 WHERE entry = %u", random);
 }
 
 void World::SelectRandomDungeonDaily()
@@ -2640,9 +2640,9 @@ void World::SelectRandomDungeonDaily()
             sGameEventMgr.StopEvent(eventId, true);
         }
         if (sWorld.getConfig(CONFIG_DAILY_BLIZZLIKE))
-            GameDataDatabase.PExecute("UPDATE game_event SET occurence = 5184000 WHERE entry = %u", eventId);
+            WorldDatabase.PExecute("UPDATE game_event SET occurence = 5184000 WHERE entry = %u", eventId);
         else{
-            GameDataDatabase.PExecute("UPDATE game_event SET occurence = 1400 WHERE entry = %u", eventId);
+            WorldDatabase.PExecute("UPDATE game_event SET occurence = 1400 WHERE entry = %u", eventId);
             sGameEventMgr.StartEvent(eventId, true);
         }
     }
@@ -2658,7 +2658,7 @@ void World::SelectRandomDungeonDaily()
     sGameEventMgr.GetEventMap()[random].occurence = 1400;
 
     sGameEventMgr.StartEvent(random, true);
-    GameDataDatabase.PExecute("UPDATE game_event SET occurence = 1400 WHERE entry = %u", random);
+    WorldDatabase.PExecute("UPDATE game_event SET occurence = 1400 WHERE entry = %u", random);
 }
 
 void World::SelectRandomCookingDaily()
@@ -2678,9 +2678,9 @@ void World::SelectRandomCookingDaily()
             sGameEventMgr.StopEvent(eventId, true);
         }
         if (sWorld.getConfig(CONFIG_DAILY_BLIZZLIKE))
-            GameDataDatabase.PExecute("UPDATE game_event SET occurence = 5184000 WHERE entry = %u", eventId);
+            WorldDatabase.PExecute("UPDATE game_event SET occurence = 5184000 WHERE entry = %u", eventId);
         else{
-            GameDataDatabase.PExecute("UPDATE game_event SET occurence = 1400 WHERE entry = %u", eventId);
+            WorldDatabase.PExecute("UPDATE game_event SET occurence = 1400 WHERE entry = %u", eventId);
             sGameEventMgr.StartEvent(eventId, true);
         }
     }
@@ -2696,7 +2696,7 @@ void World::SelectRandomCookingDaily()
     sGameEventMgr.GetEventMap()[random].occurence = 1400;
 
     sGameEventMgr.StartEvent(random, true);
-    GameDataDatabase.PExecute("UPDATE game_event SET occurence = 1400 WHERE entry = %u", random);
+    WorldDatabase.PExecute("UPDATE game_event SET occurence = 1400 WHERE entry = %u", random);
 }
 
 void World::SelectRandomFishingDaily()
@@ -2716,9 +2716,9 @@ void World::SelectRandomFishingDaily()
             sGameEventMgr.StopEvent(eventId, true);
         }
         if (sWorld.getConfig(CONFIG_DAILY_BLIZZLIKE))
-            GameDataDatabase.PExecute("UPDATE game_event SET occurence = 5184000 WHERE entry = %u", eventId);
+            WorldDatabase.PExecute("UPDATE game_event SET occurence = 5184000 WHERE entry = %u", eventId);
         else{
-            GameDataDatabase.PExecute("UPDATE game_event SET occurence = 1400 WHERE entry = %u", eventId);
+            WorldDatabase.PExecute("UPDATE game_event SET occurence = 1400 WHERE entry = %u", eventId);
             sGameEventMgr.StartEvent(eventId, true);
         }
     }
@@ -2734,7 +2734,7 @@ void World::SelectRandomFishingDaily()
     sGameEventMgr.GetEventMap()[random].occurence = 1400;
 
     sGameEventMgr.StartEvent(random, true);
-    GameDataDatabase.PExecute("UPDATE game_event SET occurence = 1400 WHERE entry = %u", random);
+    WorldDatabase.PExecute("UPDATE game_event SET occurence = 1400 WHERE entry = %u", random);
 }
 
 void World::SelectRandomPvPDaily()
@@ -2754,9 +2754,9 @@ void World::SelectRandomPvPDaily()
             sGameEventMgr.StopEvent(eventId);
         }
         if (sWorld.getConfig(CONFIG_DAILY_BLIZZLIKE))
-            GameDataDatabase.PExecute("UPDATE game_event SET occurence = 5184000 WHERE entry = %u", eventId);
+            WorldDatabase.PExecute("UPDATE game_event SET occurence = 5184000 WHERE entry = %u", eventId);
         else{
-            GameDataDatabase.PExecute("UPDATE game_event SET occurence = 1400 WHERE entry = %u", eventId);
+            WorldDatabase.PExecute("UPDATE game_event SET occurence = 1400 WHERE entry = %u", eventId);
             sGameEventMgr.StartEvent(eventId, true);
         }
     }
@@ -2772,14 +2772,14 @@ void World::SelectRandomPvPDaily()
     sGameEventMgr.GetEventMap()[random].occurence = 1400;
 
     sGameEventMgr.StartEvent(random);
-    GameDataDatabase.PExecute("UPDATE game_event SET occurence = 1400 WHERE entry = %u", random);
+    WorldDatabase.PExecute("UPDATE game_event SET occurence = 1400 WHERE entry = %u", random);
 }
 
 void World::ResetDailyQuests()
 {
     sLog.outDetail("Daily quests reset for all characters.");
-    RealmDataDatabase.Execute("DELETE FROM character_queststatus_daily");
-    RealmDataDatabase.Execute("UPDATE character_stats_ro SET dailyarenawins = 0");
+    CharacterDatabase.Execute("DELETE FROM character_queststatus_daily");
+    CharacterDatabase.Execute("UPDATE character_stats_ro SET dailyarenawins = 0");
     for (SessionMap::iterator itr = m_sessions.begin(); itr != m_sessions.end(); ++itr)
         if (itr->second->GetPlayer())
             itr->second->GetPlayer()->ResetDailyQuestStatus();
@@ -2798,16 +2798,16 @@ void World::SetPlayerLimit(int32 limit)
     if(limit >= 0)
     {
         m_playerLimit = limit;
-        m_requiredPermissionMask = PERM_PLAYER;
+        m_requiredPermissionMask = SEC_PLAYER;
         return;
     }
     
     if(limit == -1)
-        m_requiredPermissionMask = PERM_GMT_DEV;
+        m_requiredPermissionMask = SEC_DEVELOPPER;
     if(limit == -2)
-        m_requiredPermissionMask = PERM_HIGH_GMT | PERM_HEAD_DEVELOPER;
+        m_requiredPermissionMask = SEC_BASIC_ADMIN | SEC_DEVELOPPER;
     if(limit == -3)
-        m_requiredPermissionMask = PERM_ADM;
+        m_requiredPermissionMask = SEC_ADMINISTRATOR;
 }
 
 void World::UpdateMaxSessionCounters()
@@ -2818,7 +2818,7 @@ void World::UpdateMaxSessionCounters()
 
 void World::LoadDBVersion()
 {
-    QueryResult* result = GameDataDatabase.Query("SELECT db_version FROM version LIMIT 1");
+    QueryResult* result = WorldDatabase.Query("SELECT db_version FROM version LIMIT 1");
     if (result)
     {
         Field* fields = result->Fetch();
@@ -2836,7 +2836,7 @@ void World::CleanupDeletedChars()
     if (keepDays < 1)
         return;
 
-    QueryResult* result = RealmDataDatabase.PQuery("SELECT char_guid FROM deleted_chars WHERE DATEDIFF(now(), date) >= %u", keepDays);
+    QueryResult* result = CharacterDatabase.PQuery("SELECT char_guid FROM deleted_chars WHERE DATEDIFF(now(), date) >= %u", keepDays);
     if (result)
     {
         do

@@ -178,7 +178,7 @@ void WorldSession::HandleGroupAcceptOpcode(WorldPacket & /*recv_data*/)
 
     if (group->GetLeaderGUID() == GetPlayer()->GetGUID())
     {
-        sLog.outLog(LOG_DEFAULT, "ERROR: HandleGroupAcceptOpcode: player %s(%d) tried to accept an invite to his own group", GetPlayer()->GetName(), GetPlayer()->GetGUIDLow());
+        sLog.outError( "ERROR: HandleGroupAcceptOpcode: player %s(%d) tried to accept an invite to his own group", GetPlayer()->GetName(), GetPlayer()->GetGUIDLow());
         return;
     }
 
@@ -247,7 +247,7 @@ void WorldSession::HandleGroupUninviteGuidOpcode(WorldPacket & recv_data)
     //can't uninvite yourself
     if (guid == GetPlayer()->GetGUID())
     {
-        sLog.outLog(LOG_DEFAULT, "ERROR: WorldSession::HandleGroupUninviteGuidOpcode: leader %s(%d) tried to uninvite himself from the group.", GetPlayer()->GetName(), GetPlayer()->GetGUIDLow());
+        sLog.outError( "ERROR: WorldSession::HandleGroupUninviteGuidOpcode: leader %s(%d) tried to uninvite himself from the group.", GetPlayer()->GetName(), GetPlayer()->GetGUIDLow());
         return;
     }
 
@@ -294,7 +294,7 @@ void WorldSession::HandleGroupUninviteNameOpcode(WorldPacket & recv_data)
     // can't uninvite yourself
     if (GetPlayer()->GetName() == membername)
     {
-        sLog.outLog(LOG_DEFAULT, "ERROR: WorldSession::HandleGroupUninviteNameOpcode: leader %s(%d) tried to uninvite himself from the group.", GetPlayer()->GetName(), GetPlayer()->GetGUIDLow());
+        sLog.outError( "ERROR: WorldSession::HandleGroupUninviteNameOpcode: leader %s(%d) tried to uninvite himself from the group.", GetPlayer()->GetName(), GetPlayer()->GetGUIDLow());
         return;
     }
 
@@ -927,11 +927,11 @@ void WorldSession::HandleGroupPassOnLootOpcode(WorldPacket & recv_data)
     if (!GetPlayer())                                        // needed because STATUS_AUTHED
     {
         if (unkn!=0)
-            sLog.outLog(LOG_DEFAULT, "ERROR: CMSG_GROUP_PASS_ON_LOOT value<>0 for not-loaded character!");
+            sLog.outError( "ERROR: CMSG_GROUP_PASS_ON_LOOT value<>0 for not-loaded character!");
         return;
     }
 
     if (unkn!=0)
-        sLog.outLog(LOG_DEFAULT, "ERROR: CMSG_GROUP_PASS_ON_LOOT: activation not implemented!");
+        sLog.outError( "ERROR: CMSG_GROUP_PASS_ON_LOOT: activation not implemented!");
 }
 
