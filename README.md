@@ -101,9 +101,9 @@ The orignal source has been tested on Ubuntu and compilled with gcc4.8, and with
 This is an eductional project for people to learn stuffs like server/communication/c++/cmake/sql/travis. also enjoy the good tbc memory back in the day.
 my plan for now is to do below at spare time and maybe later fixing some game content and such.
 
-* fix cmake for windows
-* merge script system into core
-* upgrade core to latest compiler
-* attempt to learn the framework and compare with latest mangos/trinity functions
-* interact with travis with multiple build and some more research
-* fix bugs etc..
+* - [x] fix cmake for windows
+* - [x] merge script system into core 
+* - [x] upgrade core to latest compiler 
+* - [ ] attempt to learn the framework and compare with latest mangos/trinity functions
+* - [ ] interact with travis with multiple build and some more research
+* - [ ] fix bugs etc..
