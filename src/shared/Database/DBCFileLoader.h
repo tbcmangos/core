@@ -1,7 +1,8 @@
 /*
- * Copyright (C) 2005-2008 MaNGOS <http://getmangos.com/>
- * Copyright (C) 2008 TrinityCore <http://www.trinitycore.org/>
- * Copyright (C) 2008-2014 Hellground <http://hellground.net/>
+ * Copyright (C) 2005-2011 MaNGOS <http://getmangos.com/>
+ * Copyright (C) 2009-2011 MaNGOSZero <https://github.com/mangos/zero>
+ * Copyright (C) 2011-2016 Nostalrius <https://nostalrius.org>
+ * Copyright (C) 2016-2017 Elysium Project <https://github.com/elysium-project>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -10,32 +11,34 @@
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#ifndef HELLGROUND_DBC_FILE_LOADER_H
-#define HELLGROUND_DBC_FILE_LOADER_H
-
+#ifndef DBC_FILE_LOADER_H
+#define DBC_FILE_LOADER_H
 #include "Platform/Define.h"
 #include "Utilities/ByteConverter.h"
-#include <Log.h>
+#include <cassert>
 
-enum
+enum FieldFormat
 {
-    FT_NA='x',                                              //not used or unknown, 4 byte size
-    FT_NA_BYTE='X',                                         //not used or unknown, byte
-    FT_STRING='s',                                          //char*
-    FT_FLOAT='f',                                           //float
-    FT_INT='i',                                             //uint32
-    FT_BYTE='b',                                            //uint8
-    FT_SORT='d',                                            //sorted by this field, field is not included
-    FT_IND='n',                                             //the same,but parsed to data
-    FT_LOGIC='l'                                            //Logical (boolean)
+    FT_NA = 'x',                                            // ignore/ default, 4 byte size, in Source String means field is ignored, in Dest String means field is filled with default value
+    FT_NA_BYTE = 'X',                                       // ignore/ default, 1 byte size, see above
+    FT_NA_FLOAT = 'F',                                      // ignore/ default,  float size, see above
+    FT_NA_POINTER = 'p',                                    // fill default value into dest, pointer size, Use this only with static data (otherwise mem-leak)
+    FT_STRING = 's',                                        // char*
+    FT_FLOAT = 'f',                                         // float
+    FT_INT = 'i',                                           // uint32
+    FT_BYTE = 'b',                                          // uint8
+    FT_SORT = 'd',                                          // sorted by this field, field is not included
+    FT_IND = 'n',                                           // the same,but parsed to data
+    FT_LOGIC = 'l',                                         // Logical (boolean)
+    FT_64BITINT = 'L'                                       // uint64
 };
 
 class DBCFileLoader
@@ -44,43 +47,43 @@ class DBCFileLoader
         DBCFileLoader();
         ~DBCFileLoader();
 
-        bool Load(const char *filename, const char *fmt);
+        bool Load(char const* filename, char const* fmt);
 
         class Record
         {
             public:
                 float getFloat(size_t field) const
                 {
-                    ASSERT(field < file.fieldCount);
+                    assert(field < file.fieldCount);
                     float val = *reinterpret_cast<float*>(offset+file.GetOffset(field));
                     EndianConvert(val);
                     return val;
                 }
                 uint32 getUInt(size_t field) const
                 {
-                    ASSERT(field < file.fieldCount);
+                    assert(field < file.fieldCount);
                     uint32 val = *reinterpret_cast<uint32*>(offset+file.GetOffset(field));
                     EndianConvert(val);
                     return val;
                 }
                 uint8 getUInt8(size_t field) const
                 {
-                    ASSERT(field < file.fieldCount);
+                    assert(field < file.fieldCount);
                     return *reinterpret_cast<uint8*>(offset+file.GetOffset(field));
                 }
 
-                const char *getString(size_t field) const
+                char const* getString(size_t field) const
                 {
-                    ASSERT(field < file.fieldCount);
+                    assert(field < file.fieldCount);
                     size_t stringOffset = getUInt(field);
-                    ASSERT(stringOffset < file.stringSize);
+                    assert(stringOffset < file.stringSize);
                     return reinterpret_cast<char*>(file.stringTable + stringOffset);
                 }
 
             private:
-                Record(DBCFileLoader &file_, unsigned char *offset_): offset(offset_), file(file_) {}
-                unsigned char *offset;
-                DBCFileLoader &file;
+                Record(DBCFileLoader& file_, unsigned char* offset_): offset(offset_), file(file_) {}
+                unsigned char* offset;
+                DBCFileLoader& file;
 
                 friend class DBCFileLoader;
 
@@ -92,19 +95,19 @@ class DBCFileLoader
 
         uint32 GetNumRows() const { return recordCount;}
         uint32 GetCols() const { return fieldCount; }
-        uint32 GetOffset(size_t id) const { return (fieldsOffset != NULL && id < fieldCount) ? fieldsOffset[id] : 0; }
-        bool IsLoaded() {return (data!=NULL);}
-        char* AutoProduceData(const char* fmt, uint32& count, char**& indexTable);
-        char* AutoProduceStrings(const char* fmt, char* dataTable);
-        static uint32 GetFormatRecordSize(const char * format, int32 * index_pos = NULL);
+        uint32 GetOffset(size_t id) const { return (fieldsOffset != nullptr && id < fieldCount) ? fieldsOffset[id] : 0; }
+        bool IsLoaded() {return (data!=nullptr);}
+        char* AutoProduceData(char const* fmt, uint32& count, char**& indexTable);
+        char* AutoProduceStrings(char const* fmt, char* dataTable);
+        static uint32 GetFormatRecordSize(char const* format, int32* index_pos = nullptr);
     private:
 
         uint32 recordSize;
         uint32 recordCount;
         uint32 fieldCount;
         uint32 stringSize;
-        uint32 *fieldsOffset;
-        unsigned char *data;
-        unsigned char *stringTable;
+        uint32* fieldsOffset;
+        unsigned char* data;
+        unsigned char* stringTable;
 };
 #endif

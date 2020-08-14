@@ -1,6 +1,5 @@
 /*
  * Copyright (C) 2005-2011 MaNGOS <http://getmangos.com/>
- * Copyright (C) 2008-2014 Hellground <http://hellground.net/>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -9,16 +8,16 @@
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#ifndef HELLGROUND_SQLSTORAGE_IMPL_H
-#define HELLGROUND_SQLSTORAGE_IMPL_H
+#ifndef SQLSTORAGE_IMPL_H
+#define SQLSTORAGE_IMPL_H
 
 #include "ProgressBar.h"
 #include "Log.h"
@@ -126,16 +125,16 @@ void SQLStorageLoaderBase<T>::Load(SQLStorage &store)
 {
     uint32 maxi;
     Field *fields;
-    QueryResult* result = GameDataDatabase.PQuery("SELECT MAX(%s) FROM %s", store.entry_field, store.table);
+    QueryResult* result = WorldDatabase.PQuery("SELECT MAX(%s) FROM %s", store.entry_field, store.table);
     if(!result)
     {
-        sLog.outLog(LOG_DEFAULT, "ERROR: Error loading %s table (not exist?)\n", store.table);
+        sLog.outError( "ERROR: Error loading %s table (not exist?)\n", store.table);
         exit(1);                                            // Stop server at loading non exited table or not accessable table
     }
 
     maxi = (*result)[0].GetUInt32()+1;
 
-    result = GameDataDatabase.PQuery("SELECT COUNT(*) FROM %s", store.table);
+    result = WorldDatabase.PQuery("SELECT COUNT(*) FROM %s", store.table);
     if(result)
     {
         fields = result->Fetch();
@@ -144,11 +143,11 @@ void SQLStorageLoaderBase<T>::Load(SQLStorage &store)
     else
         store.RecordCount = 0;
 
-    result = GameDataDatabase.PQuery("SELECT * FROM %s", store.table);
+    result = WorldDatabase.PQuery("SELECT * FROM %s", store.table);
 
     if(!result)
     {
-        sLog.outLog(LOG_DEFAULT, "ERROR: %s table is empty!\n", store.table);
+        sLog.outError( "ERROR: %s table is empty!\n", store.table);
         store.RecordCount = 0;
         return;
     }
@@ -159,7 +158,7 @@ void SQLStorageLoaderBase<T>::Load(SQLStorage &store)
     if(store.iNumFields != result->GetFieldCount())
     {
         store.RecordCount = 0;
-        sLog.outLog(LOG_DEFAULT, "ERROR: Error in %s table, probably sql file format was updated (there should be %d fields in sql).\n", store.table, store.iNumFields);
+        sLog.outError( "ERROR: Error in %s table, probably sql file format was updated (there should be %d fields in sql).\n", store.table, store.iNumFields);
         exit(1);                                            // Stop server at loading broken or non-compatible table.
     }
 

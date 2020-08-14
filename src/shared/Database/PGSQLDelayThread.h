@@ -19,32 +19,15 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#ifndef DO_POSTGRESQL
+#ifndef __PGSQLDELAYTHREAD_H
+#define __PGSQLDELAYTHREAD_H
 
-#if !defined(QUERYRESULTMYSQL_H)
-#define QUERYRESULTMYSQL_H
+#include "Database/SqlDelayThread.h"
 
-#include "Common.h"
-
-#ifdef WIN32
-#include <winsock2.h>
-#endif
-#include <mysql.h>
-
-class QueryResultMysql : public QueryResult
+class PGSQLDelayThread : public SqlDelayThread
 {
     public:
-        QueryResultMysql(MYSQL_RES* result, MYSQL_FIELD* fields, uint64 rowCount, uint32 fieldCount);
-
-        ~QueryResultMysql() override;
-
-        bool NextRow() override;
-
-    private:
-        enum Field::DataTypes ConvertNativeType(enum_field_types mysqlType) const;
-        void EndQuery();
-
-        MYSQL_RES* mResult;
+        PGSQLDelayThread(Database* db) : SqlDelayThread(db) {}
+        void Stop() { SqlDelayThread::Stop(); }
 };
-#endif
-#endif
+#endif                                                      //__PGSQLDELAYTHREAD_H

@@ -1,6 +1,8 @@
 /*
  * Copyright (C) 2005-2011 MaNGOS <http://getmangos.com/>
- * Copyright (C) 2008-2014 Hellground <http://hellground.net/>
+ * Copyright (C) 2009-2011 MaNGOSZero <https://github.com/mangos/zero>
+ * Copyright (C) 2011-2016 Nostalrius <https://nostalrius.org>
+ * Copyright (C) 2016-2017 Elysium Project <https://github.com/elysium-project>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -9,23 +11,25 @@
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#include "DatabaseEnv.h"
-#include "Log.h"
+#ifndef DO_POSTGRESQL
 
-QueryResultMysql::QueryResultMysql(MYSQL_RES *result, MYSQL_FIELD *fields, uint64 rowCount, uint32 fieldCount) :
+#include "DatabaseEnv.h"
+#include "Errors.h"
+
+QueryResultMysql::QueryResultMysql(MYSQL_RES* result, MYSQL_FIELD* fields, uint64 rowCount, uint32 fieldCount) :
     QueryResult(rowCount, fieldCount), mResult(result)
 {
 
     mCurrentRow = new Field[mFieldCount];
-    ASSERT(mCurrentRow);
+    MANGOS_ASSERT(mCurrentRow);
 
     for (uint32 i = 0; i < mFieldCount; i++)
         mCurrentRow[i].SetType(ConvertNativeType(fields[i].type));
@@ -101,3 +105,4 @@ enum Field::DataTypes QueryResultMysql::ConvertNativeType(enum_field_types mysql
             return Field::DB_TYPE_UNKNOWN;
     }
 }
+#endif
