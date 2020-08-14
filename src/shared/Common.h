@@ -1,7 +1,7 @@
 /*
  * Copyright (C) 2005-2009 MaNGOS <http://getmangos.com/>
- * Copyright (C) 2008-2010 TrinityCore <http://www.trinitycore.org/>
- * Copyright (C) 2008-2014 Hellground <http://hellground.net/>
+ *
+ * Copyright (C) 2008-2010 Trinity <http://www.trinitycore.org/>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,8 +18,8 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
  */
 
-#ifndef HELLGROUND_COMMON_H
-#define HELLGROUND_COMMON_H
+#ifndef TRINITYCORE_COMMON_H
+#define TRINITYCORE_COMMON_H
 
 // config.h needs to be included 1st
 // TODO this thingy looks like hack ,but its not, need to
@@ -27,7 +27,7 @@
 #ifdef HAVE_CONFIG_H
 // Remove Some things that we will define
 // This is in case including another config.h
-// before config.h
+// before trinity config.h
 #ifdef PACKAGE
 #undef PACKAGE
 #endif //PACKAGE
@@ -155,7 +155,7 @@
 
 inline float finiteAlways(float f) { return finite(f) ? f : 0.0f; }
 
-#define atol(a) strtoul( a, NULL, 10)
+#define atol(a) strtoul(a, nullptr, 10)
 
 #define STRINGIZE(a) #a
 
@@ -167,32 +167,22 @@ enum TimeConstants
     WEEK   = DAY*7,
     MONTH  = DAY*30,
     YEAR   = MONTH*12,
-    IN_MILISECONDS = 1000
+    IN_MILLISECONDS = 1000
 };
 
-enum AccountPermissionMasks
+enum AccountTypes
 {
-    PERM_PLAYER         = 0x000001, //  1
-    PERM_DEVELOPER      = 0x000002, //  2
-    PERM_HEAD_DEVELOPER = 0x000100, //  256
+    SEC_PLAYER         = 0,
+    SEC_MODERATOR      = 1,
+    SEC_TICKETMASTER   = 2,
+    SEC_GAMEMASTER     = 3,
+    SEC_BASIC_ADMIN    = 4,
 
-    PERM_GM_TRIAL       = 0x000200, //  512
-    PERM_GM_HELPER      = 0x000400, //  1024
+    SEC_DEVELOPPER     = 5,
+    SEC_ADMINISTRATOR  = 6,
 
-    PERM_GM_HEAD        = 0x000800, //  2048
+    SEC_CONSOLE        = 7                                  // must be always last in list, accounts must have less security level always also
 
-    PERM_ADM_NORM       = 0x001000, //  4096
-    PERM_ADM_HEAD       = 0x002000, //  8192
-
-    PERM_CONSOLE        = 0x800000, //  8388608
-
-    PERM_GMT            = PERM_GM_TRIAL | PERM_GM_HELPER | PERM_GM_HEAD | PERM_ADM_NORM | PERM_ADM_HEAD,
-    PERM_ADM            = PERM_ADM_NORM | PERM_ADM_HEAD,
-    PERM_HIGH_GMT       = PERM_ADM | PERM_GM_HEAD,
-    PERM_GMT_HDEV       = PERM_GMT | PERM_HEAD_DEVELOPER,
-    PERM_GMT_DEV        = PERM_GMT | PERM_DEVELOPER | PERM_HEAD_DEVELOPER,
-    PERM_HIGH_DEV       = PERM_HIGH_GMT | PERM_DEVELOPER | PERM_HEAD_DEVELOPER,
-    PERM_ALL            = PERM_PLAYER | PERM_GMT_DEV
 };
 
 enum AccountStates
@@ -205,8 +195,7 @@ enum AccountStates
 enum PunishmentTypes
 {
     PUNISHMENT_MUTE     = 1,
-    PUNISHMENT_BAN      = 2,
-    PUNISHMENT_TROLLMUTE= 3
+    PUNISHMENT_BAN      = 2
 };
 
 enum ClientOSVersion
@@ -261,16 +250,6 @@ inline char * mangos_strdup(const char * source)
     return dest;
 }
 
-enum RunModes
-{
-    MODE_NORMAL             = 0,
-    MODE_SERVICE_STOPPED    = 1,
-    MODE_SERVICE_RUNNING    = 2,
-    MODE_SERVICE_PAUSED     = 3,
-
-    MODE_DAEMON             = 6
-};
-
 // we always use stdlibc++ std::max/std::min, undefine some not C++ standard defines (Win API and some other platforms)
 #ifdef max
 #undef max
@@ -283,6 +262,22 @@ enum RunModes
 #ifndef M_PI
 #define M_PI            3.14159265358979323846
 #endif
+
+#define TRINITY_GUARD(MUTEX, LOCK) \
+	ACE_Guard< MUTEX > TRINITY_GUARD_OBJECT (LOCK); \
+	if (TRINITY_GUARD_OBJECT.locked() == 0) ASSERT(false);
+
+//! For proper implementation of multiple-read, single-write pattern, use
+//! ACE_RW_Mutex as underlying @MUTEX
+# define TRINITY_WRITE_GUARD(MUTEX, LOCK) \
+	ACE_Write_Guard< MUTEX > TRINITY_GUARD_OBJECT (LOCK); \
+	if (TRINITY_GUARD_OBJECT.locked() == 0) ASSERT(false);
+
+//! For proper implementation of multiple-read, single-write pattern, use
+//! ACE_RW_Mutex as underlying @MUTEX
+# define TRINITY_READ_GUARD(MUTEX, LOCK) \
+	ACE_Read_Guard< MUTEX > TRINITY_GUARD_OBJECT (LOCK); \
+	if (TRINITY_GUARD_OBJECT.locked() == 0) ASSERT(false);
 
 // used for creating values for respawn for example
 #define MAKE_PAIR64(l, h)  uint64(uint32(l) | (uint64(h) << 32))
