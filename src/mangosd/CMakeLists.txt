@@ -19,26 +19,24 @@ set(EXECUTABLE_NAME mangosd)
 set (EXECUTABLE_SRCS 
 #	ChatSocket.h
 	CliRunnable.h
-#	MaNGOSsoap.h
+	MaNGOSsoap.h
 	Master.h
-#	RASocket.h
-#	soapH.h
-#	soapStub.h
+	RASocket.h
+	soapH.h
+	soapStub.h
 	WorldRunnable.h
-#	stdsoap2.h
-#	TCSoap.h
 #	ChatSocket.cpp
 	CliRunnable.cpp
 	Main.cpp
-#	MaNGOSsoap.cpp
+	MaNGOSsoap.cpp
 	Master.cpp
-#	RASocket.cpp
-#	soapC.cpp
-#	soapServer.cpp
+	RASocket.cpp
+	soapC.cpp
+	soapServer.cpp
 	WorldRunnable.cpp
-#       stdsoap2.cpp
-#	TCSoap.cpp
+
 )
+
 
 if(WIN32)
   list(APPEND EXECUTABLE_SRCS
@@ -54,6 +52,7 @@ include_directories(
   ${CMAKE_SOURCE_DIR}/dep/include/gsoap
   ${CMAKE_SOURCE_DIR}/dep/include/g3dlite
   ${CMAKE_SOURCE_DIR}/src/framework
+  ${CMAKE_SOURCE_DIR}/src/framework/Network
   ${CMAKE_SOURCE_DIR}/src/game
   ${CMAKE_SOURCE_DIR}/src/game/AI
   ${CMAKE_SOURCE_DIR}/src/game/Anticheat
@@ -80,7 +79,9 @@ include_directories(
   ${CMAKE_SOURCE_DIR}/src/game/Threat
   ${CMAKE_SOURCE_DIR}/src/game/Transports
   ${CMAKE_SOURCE_DIR}/src/game/vmap
-  ${CMAKE_BINARY_DIR}/src/shared
+  ${CMAKE_SOURCE_DIR}/src/shared
+  ${CMAKE_SOURCE_DIR}/src/shared/Auth
+  ${CMAKE_SOURCE_DIR}/src/shared/Config
   ${CMAKE_SOURCE_DIR}/src/shared/Database
   ${CMAKE_SOURCE_DIR}/src/scripts
   ${CMAKE_SOURCE_DIR}/dep/lualib
@@ -121,12 +122,12 @@ if(SCRIPTS)
     ${OPENSSL_LIBRARIES}
     ${ZLIB_LIBRARIES}
     ${TBB_LIBRARIES}
-    
+	
   )
 else()
   target_link_libraries(${EXECUTABLE_NAME}
     game
-    scripts
+    #scripts
     shared
     framework
     g3dlite

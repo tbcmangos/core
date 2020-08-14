@@ -1,7 +1,8 @@
 /*
- * Copyright (C) 2005-2008 MaNGOS <http://getmangos.com/>
- * Copyright (C) 2008 TrinityCore <http://www.trinitycore.org/>
- * Copyright (C) 2008-2014 Hellground <http://hellground.net/>
+ * Copyright (C) 2005-2011 MaNGOS <http://getmangos.com/>
+ * Copyright (C) 2009-2011 MaNGOSZero <https://github.com/mangos/zero>
+ * Copyright (C) 2011-2016 Nostalrius <https://nostalrius.org>
+ * Copyright (C) 2016-2017 Elysium Project <https://github.com/elysium-project>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -10,20 +11,17 @@
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-/// \addtogroup Trinityd Trinity Daemon
+/// \addtogroup mangosd Mangos Daemon
 /// @{
 /// \file
-
-#include "SystemConfig.h"
-#include "revision.h"
 
 #include "Common.h"
 #include "Database/DatabaseEnv.h"
@@ -31,7 +29,11 @@
 #include "ProgressBar.h"
 #include "Log.h"
 #include "Master.h"
-
+#include "SystemConfig.h"
+#include "revision.h"
+#include <openssl/opensslv.h>
+#include <openssl/crypto.h>
+#include <ace/Version.h>
 #include <ace/Get_Opt.h>
 
 #ifdef WIN32
@@ -39,23 +41,21 @@
 char serviceName[] = "mangosd";
 char serviceLongName[] = "MaNGOS world service";
 char serviceDescription[] = "Massive Network Game Object Server";
+/*
+ * -1 - not in service mode
+ *  0 - stopped
+ *  1 - running
+ *  2 - paused
+ */
+int m_ServiceStatus = -1;
 #else
 #include "PosixDaemon.h"
 #endif
 
-/*
- *  0 - not in daemon/service mode
- *  1 - windows service stopped
- *  2 - windows service running
- *  3 - windows service paused
- *  6 - linux daemon
- */
-
-RunModes runMode = MODE_NORMAL;
-
-DatabaseType GameDataDatabase;                              ///< Accessor to the world database
-DatabaseType RealmDataDatabase;                             ///< Accessor to the character database
-DatabaseType AccountsDatabase;                              ///< Accessor to the realm/login database
+DatabaseType WorldDatabase;                                 ///< Accessor to the world database
+DatabaseType CharacterDatabase;                             ///< Accessor to the character database
+DatabaseType LoginDatabase;                                 ///< Accessor to the realm/login database
+DatabaseType LogsDatabase;                                  ///< Accessor to the logs database
 
 uint32 realmID;                                             ///< Id of the realm
 
@@ -63,30 +63,32 @@ uint32 realmID;                                             ///< Id of the realm
 void usage(const char *prog)
 {
     sLog.outString("Usage: \n %s [<options>]\n"
-        "    -v, --version            print version and exit\n\r"
+        "    -v, --version            print version and exist\n\r"
         "    -c config_file           use config_file as configuration file\n\r"
         #ifdef WIN32
         "    Running as service functions:\n\r"
-        "    -s run                run as service\n\r"
+        "    -s run                   run as service\n\r"
         "    -s install               install service\n\r"
         "    -s uninstall             uninstall service\n\r"
+        #else
+        "    Running as daemon functions:\n\r"
+        "    -s run                   run as daemon\n\r"
+        "    -s stop                  stop daemon\n\r"
         #endif
-        , prog);
+        ,prog);
 }
 
-/// Launch the server
+/// Launch the mangos server
 extern int main(int argc, char **argv)
 {
     ///- Command line parsing
-    char const* cfg_file = _HELLGROUND_CORE_CONFIG;
+    char const* cfg_file = _MANGOSD_CONFIG;
 
-    char const *options = ":a:c:s:p:i:";
 
-    char const *process = 0;
-    int process_id = 0;
+    char const *options = ":c:s:";
 
     ACE_Get_Opt cmd_opts(argc, argv, options);
-    cmd_opts.long_option("version", 'v', ACE_Get_Opt::NO_ARG);
+    cmd_opts.long_option("version", 'v');
 
     char serviceDaemonMode = '\0';
 
@@ -99,7 +101,7 @@ extern int main(int argc, char **argv)
                 cfg_file = cmd_opts.opt_arg();
                 break;
             case 'v':
-                printf("%s\n", _FULLVERSION);
+                printf("Core revision: %s\n", _FULLVERSION);
                 return 0;
             case 's':
             {
@@ -118,29 +120,22 @@ extern int main(int argc, char **argv)
 #endif
                 else
                 {
-                    printf("Runtime-Error: -%c unsupported argument %s\n", cmd_opts.opt_opt(), mode);
+                    sLog.outError("Runtime-Error: -%c unsupported argument %s", cmd_opts.opt_opt(), mode);
                     usage(argv[0]);
+                    Log::WaitBeforeContinueIfNeed();
                     return 1;
                 }
                 break;
             }
-            case 'p':
-            {
-                process = cmd_opts.opt_arg();
-                break;
-            }
-            case 'i':
-            {
-                process_id = atoi(cmd_opts.opt_arg());
-                break;
-            }
             case ':':
-                printf("Runtime-Error: -%c option requires an input argument\n", cmd_opts.opt_opt());
+                sLog.outError("Runtime-Error: -%c option requires an input argument", cmd_opts.opt_opt());
                 usage(argv[0]);
+                Log::WaitBeforeContinueIfNeed();
                 return 1;
             default:
-                printf("Runtime-Error: bad format of commandline arguments\n");
+                sLog.outError("Runtime-Error: bad format of commandline arguments");
                 usage(argv[0]);
+                Log::WaitBeforeContinueIfNeed();
                 return 1;
         }
     }
@@ -150,11 +145,11 @@ extern int main(int argc, char **argv)
     {
         case 'i':
             if (WinServiceInstall())
-                printf("Installing service");
+                sLog.outString("Installing service");
             return 1;
         case 'u':
             if (WinServiceUninstall())
-                printf("Uninstalling service");
+                sLog.outString("Uninstalling service");
             return 1;
         case 'r':
             WinServiceRun();
@@ -164,19 +159,16 @@ extern int main(int argc, char **argv)
 
     if (!sConfig.SetSource(cfg_file))
     {
-        printf("Could not find configuration file %s.", cfg_file);
+        sLog.outError("Could not find configuration file %s.", cfg_file);
+        Log::WaitBeforeContinueIfNeed();
         return 1;
     }
-
-    int vmapProcesses = sConfig.GetIntDefault("vmap.clusterProcesses", 1);
-    bool vmapCluster = sConfig.GetBoolDefault("vmap.enableCluster", false);
 
 #ifndef WIN32                                               // posix daemon commands need apply after config read
     switch (serviceDaemonMode)
     {
     case 'r':
-        startDaemon("Core");
-        runMode = MODE_DAEMON;
+        startDaemon();
         break;
     case 's':
         stopDaemon();
@@ -184,9 +176,8 @@ extern int main(int argc, char **argv)
     }
 #endif
 
-    sLog.Initialize();
-    sLog.outString("Core revision: %s [world-daemon]", REVISION_HASH);
-    sLog.outString("<Ctrl-C> to stop.");
+    sLog.outString("Core revision: %s [world-daemon]", _FULLVERSION);
+    sLog.outString( "<Ctrl-C> to stop." );
     sLog.outString("\n\n"
         "MM   MM         MM   MM  MMMMM   MMMM   MMMMM\n"
         "MM   MM         MM   MM MMM MMM MM  MM MMM MMM\n"
@@ -199,24 +190,26 @@ extern int main(int argc, char **argv)
         "MM   MM MM  MMM MM   MM  MMMMMM  MMMM   MMMMM\n"
         "        MM  MMM http://getmangos.com\n"
         "        MMMMMM\n\n");
-    sLog.outString("tMaNGOS : https://github.com/tmangos");
+    sLog.outString("vMaNGOS : https://github.com/vmangos");
     sLog.outString("Using configuration file %s.", cfg_file);
 
-    uint32 confVersion = sConfig.GetIntDefault("ConfVersion", 0);
-    if (confVersion < _HELLGROUND_CORE_CONFVER)
-    {
-        sLog.outLog(LOG_DEFAULT, "ERROR: *********************************************************************************");
-        sLog.outLog(LOG_DEFAULT, "ERROR:  WARNING: Your mangosd.conf version indicates your conf file is out of date!");
-        sLog.outLog(LOG_DEFAULT, "ERROR:           Please check for updates, as your current default values may cause");
-        sLog.outLog(LOG_DEFAULT, "ERROR:           strange behavior.");
-        sLog.outLog(LOG_DEFAULT, "ERROR: *********************************************************************************");
-        clock_t pause = 3000 + clock();
+#define STR(s) #s
+#define XSTR(s) STR(s)
 
-        while (pause > clock()) {}
+    sLog.outInfo("Alloc library: " MANGOS_ALLOC_LIB "");
+    sLog.outInfo("Core Revision: " _FULLVERSION);
+
+    DETAIL_LOG("%s (Library: %s)", OPENSSL_VERSION_TEXT, SSLeay_version(SSLEAY_VERSION));
+    if (SSLeay() < 0x009080bfL )
+    {
+        DETAIL_LOG("WARNING: Outdated version of OpenSSL lib. Logins to server may not work!");
+        DETAIL_LOG("WARNING: Minimal required version [OpenSSL 0.9.8k]");
     }
 
-    BarGoLink::SetOutputState(sConfig.GetBoolDefault("ShowProgressBars", false));
+    DETAIL_LOG("Using ACE: %s", ACE_VERSION);
 
+    ///- Set progress bars show mode
+    BarGoLink::SetOutputState(sConfig.GetBoolDefault("ShowProgressBars", true));
 
     ///- and run the 'Master'
     /// \todo Why do we need this 'Master'? Can't all of this be in the Main as for Realmd?
@@ -225,7 +218,7 @@ extern int main(int argc, char **argv)
     // at sMaster return function exist with codes
     // 0 - normal shutdown
     // 1 - shutdown at error
-    // 2 - restart command used, this code can be used by restarter for restart
+    // 2 - restart command used, this code can be used by restarter for restart mangosd
 }
 
 /// @}
