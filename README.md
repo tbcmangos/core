@@ -39,13 +39,12 @@ my plan for now is to do below at spare time and maybe later fixing some game co
 
 ### notice for windows
 - uncheck ACE_USE_EXTERNAL to compile use dep/acelite
-- uncheck TBB_USE_EXTERNAL to compile use dep/tbb
 - uncheck USE_STD_MALLOC
 - after compile copy libmysql.dll libeay32.dll libssl32.dll tbb.dll tbbmalloc.dll
 
 ### notice for linux
-- install tbb and ace lib, ACE_USE_EXTERNAL TBB_USE_EXTERNAL is on by default
-- however in centos7 it is easier to add -DACE_USE_EXTERNAL=0 to use internal ace
+- install tbb and ace lib
+- in centos7 it is easier to add -DACE_USE_EXTERNAL=0 to use internal ace
 - for ubuntu can just install the libace-dev and use default -DACE_USE_EXTERNAL=1(no need add, it is default on)
 
 tested x86/x64 vs2017 debug and release both works, RelWithDebInfo fails.

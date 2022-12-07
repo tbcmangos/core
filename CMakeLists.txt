@@ -29,7 +29,7 @@ set(CMAKE_MODULE_PATH
 
 option(DEBUG "Debug mode" 0)
 set(SUPPORTED_CLIENT_BUILD "CLIENT_BUILD_2_4_3" CACHE STRING "Client version the core will support")
-option(TBB_USE_EXTERNAL "Use external TBB" 1)
+# option(TBB_USE_EXTERNAL "Use external TBB" 1)
 option(USE_STD_MALLOC "Use standard malloc instead of TBB" 0)
 option(TBB_DEBUG "Use TBB debug librairies" 0)
 option(ACE_USE_EXTERNAL "Use external ACE" 1)
