@@ -41,6 +41,7 @@ my plan for now is to do below at spare time and maybe later fixing some game co
 - uncheck ACE_USE_EXTERNAL to compile use dep/acelite
 - uncheck TBB_USE_EXTERNAL to compile use dep/tbb
 - uncheck USE_STD_MALLOC
+- after compile copy libmysql.dll libeay32.dll libssl32.dll tbb.dll tbbmalloc.dll
 
 ### notice for linux
 - install tbb and ace lib, ACE_USE_EXTERNAL TBB_USE_EXTERNAL is on by default
