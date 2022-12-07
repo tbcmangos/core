@@ -1,0 +1,1 @@
+update item_template set spellppmrate_1 = 3, spellcooldown_1 = 30 where entry = 13953;

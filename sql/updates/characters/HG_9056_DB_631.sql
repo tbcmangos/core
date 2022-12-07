@@ -1,0 +1,1 @@
+ALTER TABLE `character_spell_cooldown` DROP PRIMARY KEY, ADD PRIMARY KEY (`guid`, `spell`, `item`); 

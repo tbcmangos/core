@@ -1,0 +1,1 @@
+UPDATE quest_template SET RewMoneyMaxLevel='114000' WHERE entry='10639';

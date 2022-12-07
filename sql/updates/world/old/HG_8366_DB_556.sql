@@ -1,0 +1,1 @@
+UPDATE `gameobject_template` SET `data2`='1310720' WHERE (`entry`='177673');

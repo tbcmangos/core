@@ -1,0 +1,2 @@
+-- spell 1 is equip spell, spell 3 is empty, no need for cd
+update item_template set spellcooldown_1 = 0, spellcooldown_3 = 0 where entry in (33832,34049,34050,34162,34163,34576,34577,34578,34579,34580,35326,35327);

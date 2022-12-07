@@ -1,0 +1,1 @@
+UPDATE `creature_template` SET `speed` = '0.95' WHERE `entry` = '19949'; 

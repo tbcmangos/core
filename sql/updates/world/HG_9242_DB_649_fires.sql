@@ -1,0 +1,2 @@
+update item_template set spellid_2 = 0, spelltrigger_2 = 0 where entry = 32971;
+insert into spell_scripts values (42144, 0,15,42336,1,0,0,0,0,0),(42322, 0,15,42336,1,0,0,0,0,0),(42349, 0,15,42336,1,0,0,0,0,0);

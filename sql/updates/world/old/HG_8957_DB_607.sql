@@ -1,0 +1,1 @@
+update spell_affect set SpellFamilyMask = 4406678954000 where entry in (15257,15331,15332,15333,15334);

@@ -1,0 +1,1 @@
+update creature_template set ScriptName = 'npc_av_trinket_questgiver' where entry in (13840,13841);

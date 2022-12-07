@@ -1,0 +1,11 @@
+UPDATE `waypoint_data` SET `point` = '0' WHERE `id` = '2111' AND `point` = '1'; 
+UPDATE `waypoint_data` SET `point` = '1' WHERE `id` = '2111' AND `point` = '2'; 
+UPDATE `waypoint_data` SET `point` = '2' WHERE `id` = '2111' AND `point` = '3'; 
+UPDATE `waypoint_data` SET `point` = '3' WHERE `id` = '2111' AND `point` = '4'; 
+UPDATE `waypoint_data` SET `point` = '4' WHERE `id` = '2111' AND `point` = '5'; 
+UPDATE `waypoint_data` SET `point` = '5' WHERE `id` = '2111' AND `point` = '6'; 
+UPDATE `waypoint_data` SET `point` = '6' WHERE `id` = '2111' AND `point` = '7'; 
+UPDATE `waypoint_data` SET `point` = '7' WHERE `id` = '2111' AND `point` = '8'; 
+UPDATE `waypoint_data` SET `point` = '8' WHERE `id` = '2111' AND `point` = '9'; 
+UPDATE `waypoint_data` SET `point` = '9' WHERE `id` = '2111' AND `point` = '10'; 
+UPDATE `waypoint_data` SET `position_x` = '746.506' , `position_y` = '232.543' , `position_z` = '352.996' WHERE `id` = '2109' AND `point` = '18'; 

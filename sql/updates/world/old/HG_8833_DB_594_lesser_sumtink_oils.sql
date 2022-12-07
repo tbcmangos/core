@@ -1,0 +1,1 @@
+UPDATE item_template SET `class` = 0, `subclass` = 8 WHERE entry IN (20746,20747);

@@ -25,6 +25,7 @@
 #include <G3D/Ray.h>
 
 #include "Platform/Define.h"
+#include <memory>
 
 namespace VMAP
 {
@@ -76,10 +77,11 @@ namespace VMAP
         protected:
             G3D::Matrix3 iInvRot;
             float iInvScale;
-            WorldModel* iModel;
+            std::shared_ptr<WorldModel> iModel;
 
         public:
-            WorldModel* getWorldModel() const  { return iModel; }
+            std::shared_ptr<WorldModel> getWorldModel() const  { return iModel; }
+            
             float getScale() const             { return iInvScale; }
             G3D::Matrix3 const& getRot() const { return iInvRot; }
     };

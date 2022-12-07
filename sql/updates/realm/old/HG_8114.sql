@@ -1,0 +1,1 @@
+ALTER TABLE `ip_banned` CHANGE `ban_date` `punishment_date` INT(11) NOT NULL, CHANGE `unban_date` `expiration_date` INT(11) NOT NULL, CHANGE `banned_by` `punished_by` VARCHAR(16) CHARSET utf8 COLLATE utf8_general_ci NOT NULL;

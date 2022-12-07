@@ -27,6 +27,8 @@
 *.opendb
 *.exp
 *.res
+CMakeSettings.json
+/out/
 
 # CLion files
 cmake-build-debug
@@ -60,6 +62,11 @@ callgrind.out.*
 #
 # stgit directories
 patches-*
+
+#
+# Github stuff
+#
+!.github/
 
 #
 # VS binaries output

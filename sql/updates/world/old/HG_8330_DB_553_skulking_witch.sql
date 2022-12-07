@@ -1,0 +1,2 @@
+UPDATE `creature_template` SET `spell1`='36863', `spell2`='0', `spell3`='0', `spell4`='0' WHERE (`entry`='20882');
+UPDATE `creature_ai_scripts` SET `action1_param1`='36887' WHERE (`entryorguid`='20881' AND `action1_param1` = '36897');

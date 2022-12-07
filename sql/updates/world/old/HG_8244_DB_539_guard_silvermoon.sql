@@ -1,0 +1,1 @@
+UPDATE creature_template SET ScriptName='npc_silvermoon_guard' WHERE entry='16222';

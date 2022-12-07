@@ -659,7 +659,7 @@ namespace LuaGlobalFunctions
         switch (sWorld.BanAccount((BanMode)banMode, nameOrIP, duration, reason, whoBanned->GetSession() ? whoBanned->GetName() : ""))
         {
         case BAN_SUCCESS:
-            if (duration > 0)
+            if (atoi(duration) > 0)
                 ChatHandler(whoBanned->GetSession()).PSendSysMessage(LANG_BAN_YOUBANNED, nameOrIP.c_str(), duration, reason);
             else
                 ChatHandler(whoBanned->GetSession()).PSendSysMessage(LANG_BAN_YOUPERMBANNED, nameOrIP.c_str(), reason);
