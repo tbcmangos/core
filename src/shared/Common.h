@@ -72,7 +72,7 @@
 #   pragma warning(disable:4311)                            // 'variable' : pointer truncation from 'type' to 'type'
 #   pragma warning(disable:4355)                            // 'this' : used in base member initializer list
 #   pragma warning(disable:4800)                            // 'type' : forcing value to bool 'true' or 'false' (performance warning)
-#   pragma warning(disable:4522)                            //warning when class has 2 constructors
+#   pragma warning(disable:4522)                            // warning when class has 2 constructors
 #endif                                                      // __SHOW_STUPID_WARNINGS__
 #endif                                                      // __GNUC__
 
@@ -292,11 +292,5 @@ enum RunModes
 #define MAKE_PAIR32(l, h)  uint32(uint16(l) | (uint32(h) << 16))
 #define PAIR32_HIPART(x)   (uint16)((uint32(x) >> 16) & 0x0000FFFF)
 #define PAIR32_LOPART(x)   (uint16)(uint32(x)         & 0x0000FFFF)
-
-#ifdef MAP_UPDATE_DIFF_INFO
-    #define MAP_UPDATE_DIFF(t) t;
-#else
-    #define MAP_UPDATE_DIFF(t)
-#endif
 
 #endif

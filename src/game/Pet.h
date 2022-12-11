@@ -195,6 +195,7 @@ class Pet : public Creature
         void UpdateDamagePhysical(WeaponAttackType attType);
 
         bool canSeeOrDetect(Unit const* u, WorldObject const*, bool detect, bool inVisibleList = false, bool is3dDistance = true) const;
+        bool CanSwim() const { return true; }
 
         bool   CanTakeMoreActiveSpells(uint32 SpellIconID);
         void   ToggleAutocast(uint32 spellid, bool apply);
@@ -208,8 +209,6 @@ class Pet : public Creature
         void CastPetAuras(bool current);
         void CastPetAura(PetAura const* aura);
 
-        void _LoadSpellCooldowns();
-        void _SaveSpellCooldowns();
         void _LoadAuras(uint32 timediff);
         void _SaveAuras();
         void _LoadSpells();

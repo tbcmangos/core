@@ -36,7 +36,7 @@ EndScriptData */
 
 struct instance_gruuls_lair : public ScriptedInstance
 {
-    instance_gruuls_lair(Map *map) : ScriptedInstance(map) {Initialize();};
+    instance_gruuls_lair(Map *map) : ScriptedInstance(map), m_gbk(map) {Initialize();};
 
     uint32 Encounters[ENCOUNTERS];
 
@@ -49,6 +49,7 @@ struct instance_gruuls_lair : public ScriptedInstance
 
     uint64 MaulgarDoor;
     uint64 GruulDoor;
+    GBK_handler m_gbk;
 
     void Initialize()
     {
@@ -158,24 +159,41 @@ struct instance_gruuls_lair : public ScriptedInstance
         switch(type)
         {
             case DATA_MAULGAREVENT:
-                if(data == DONE)
+                if (data == DONE)
+                {
                     HandleGameObject(MaulgarDoor, true);
+                    m_gbk.StopCombat(GBK_HIGH_KING_MAULGAR, true);
+                }
+                else if (data == IN_PROGRESS)
+                    m_gbk.StartCombat(GBK_HIGH_KING_MAULGAR);
+                else if (data == NOT_STARTED)
+                    m_gbk.StopCombat(GBK_HIGH_KING_MAULGAR, false);
 
                 if(Encounters[0] != DONE)
                     Encounters[0] = data;
                 break;
             case DATA_GRUULEVENT:
-                if(data == IN_PROGRESS)
+                if (data == IN_PROGRESS)
+                {
                     HandleGameObject(GruulDoor, false);
-                else
+                    m_gbk.StartCombat(GBK_GRUUL);
+                }
+                else if (data == DONE)
+                {
                     HandleGameObject(GruulDoor, true);
-
+                    m_gbk.StopCombat(GBK_GRUUL, true);
+                }
+                else if (data == NOT_STARTED)
+                {
+                    HandleGameObject(GruulDoor, true);
+                    m_gbk.StopCombat(GBK_GRUUL, false);
+                }
                 if(Encounters[1] != DONE)
                     Encounters[1] = data;
                 break;
         }
 
-        if(data == DONE)
+        if (data == DONE)
             SaveToDB();
     }
 
@@ -217,6 +235,21 @@ struct instance_gruuls_lair : public ScriptedInstance
             if(Encounters[i] == IN_PROGRESS)                // Do not load an encounter as "In Progress" - reset it instead.
                 Encounters[i] = NOT_STARTED;
         OUT_LOAD_INST_DATA_COMPLETE;
+    }
+
+    void OnPlayerDealDamage(Player* plr, uint32 amount)
+    {
+        m_gbk.DamageDone(plr->GetGUIDLow(), amount);
+    }
+
+    void OnPlayerHealDamage(Player* plr, uint32 amount)
+    {
+        m_gbk.HealingDone(plr->GetGUIDLow(), amount);
+    }
+
+    void OnPlayerDeath(Player* plr)
+    {
+        m_gbk.PlayerDied(plr->GetGUIDLow());
     }
 };
 

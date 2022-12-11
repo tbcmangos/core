@@ -123,7 +123,7 @@ struct CharTitlesEntry
     uint32      bit_index;                                  // 36 used in PLAYER_CHOSEN_TITLE and 1<<index in PLAYER__FIELD_KNOWN_TITLES
 };
 
-struct ChatChannelsEntry
+/*struct ChatChannelsEntry
 {
     uint32      ChannelID;                                  // 0
     uint32      flags;                                      // 1
@@ -131,7 +131,7 @@ struct ChatChannelsEntry
                                                             // 19 string flags, unused
     //char*       name[16];                                 // 20-35 unused
                                                             // 36 string flag, unused
-};
+};*/
 
 struct ChrClassesEntry
 {
@@ -861,13 +861,10 @@ struct SpellEntry
         return false;
     }
 
-    private:
-        // prevent creating custom entries (copy data from original in fact)
-        SpellEntry(SpellEntry const&);                      // DON'T must have implementation
 };
 
 typedef std::set<uint32> SpellCategorySet;
-typedef std::map<uint32,SpellCategorySet > SpellCategoryStore;
+typedef std::map<int32, SpellCategorySet > SpellCategoryStore;
 typedef std::set<uint32> PetFamilySpellsSet;
 typedef std::map<uint32,PetFamilySpellsSet > PetFamilySpellsStore;
 

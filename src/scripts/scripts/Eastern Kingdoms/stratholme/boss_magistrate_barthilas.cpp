@@ -44,10 +44,10 @@ struct boss_magistrate_barthilasAI : public ScriptedAI
 
     ScriptedInstance* pInstance;
 
-    uint32 DrainingBlow_Timer;
-    uint32 CrowdPummel_Timer;
-    uint32 MightyBlow_Timer;
-    uint32 FuriousAnger_Timer;
+    int32 DrainingBlow_Timer;
+    int32 CrowdPummel_Timer;
+    int32 MightyBlow_Timer;
+    int32 FuriousAnger_Timer;
     uint32 AngerCount;
 
     void Reset()
@@ -86,36 +86,37 @@ struct boss_magistrate_barthilasAI : public ScriptedAI
         if (!UpdateVictim())
             return;
 
-        if (FuriousAnger_Timer < diff)
+        FuriousAnger_Timer -= diff;
+        if (FuriousAnger_Timer <= diff)
         {
-            FuriousAnger_Timer = 4000;
+            FuriousAnger_Timer += 4000;
             if (AngerCount > 25)
                 return;
 
             ++AngerCount;
             m_creature->CastSpell(m_creature,SPELL_FURIOUS_ANGER,false);
-        }else FuriousAnger_Timer -= diff;
+        }
 
-        //DrainingBlow
-        if (DrainingBlow_Timer < diff)
+        DrainingBlow_Timer -= diff;
+        if (DrainingBlow_Timer <= diff)
         {
             DoCast(m_creature->getVictim(),SPELL_DRAININGBLOW);
-            DrainingBlow_Timer = 15000;
-        }else DrainingBlow_Timer -= diff;
+            DrainingBlow_Timer += 15000;
+        }
 
-        //CrowdPummel
-        if (CrowdPummel_Timer < diff)
+        CrowdPummel_Timer -= diff;
+        if (CrowdPummel_Timer <= diff)
         {
             DoCast(m_creature->getVictim(),SPELL_CROWDPUMMEL);
-            CrowdPummel_Timer = 15000;
-        }else CrowdPummel_Timer -= diff;
+            CrowdPummel_Timer += 15000;
+        }
 
-        //MightyBlow
-        if (MightyBlow_Timer < diff)
+        MightyBlow_Timer -= diff;
+        if (MightyBlow_Timer <= diff)
         {
             DoCast(m_creature->getVictim(),SPELL_MIGHTYBLOW);
-            MightyBlow_Timer = 20000;
-        }else MightyBlow_Timer -= diff;
+            MightyBlow_Timer += 20000;
+        }
 
         DoMeleeAttackIfReady();
     }

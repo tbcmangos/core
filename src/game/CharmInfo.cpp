@@ -21,65 +21,11 @@
 #include "WorldPacket.h"
 #include "Player.h"
 #include "Creature.h"
-#include "CreatureAI.h"
+#include "PetAI.h"
 #include "Spell.h"
 #include "SpellMgr.h"
 
 #include "MovementGenerator.h"
-
-////////////////////////////////////////////////////////////
-// Methods of class GlobalCooldownMgr
-bool CooldownMgr::HasGlobalCooldown(SpellEntry const* spellInfo) const
-{
-    CooldownList::const_iterator itr = m_GlobalCooldowns.find(spellInfo->StartRecoveryCategory);
-    return itr != m_GlobalCooldowns.end() && itr->second.duration && WorldTimer::getMSTimeDiff(itr->second.cast_time, WorldTimer::getMSTime()) < itr->second.duration;
-}
-
-void CooldownMgr::AddGlobalCooldown(SpellEntry const* spellInfo, uint32 gcd)
-{
-    // HACKFIX: find bugged mechanic
-    if (spellInfo->Id == 15473)
-        return;
-
-    m_GlobalCooldowns[spellInfo->StartRecoveryCategory] = Cooldown(gcd, WorldTimer::getMSTime());
-}
-
-void CooldownMgr::CancelGlobalCooldown(SpellEntry const* spellInfo)
-{
-    m_GlobalCooldowns[spellInfo->StartRecoveryCategory].duration = 0;
-}
-
-bool CooldownMgr::HasSpellCategoryCooldown(SpellEntry const* spellInfo) const
-{
-    CooldownList::const_iterator itr = m_CategoryCooldowns.find(spellInfo->Category);
-    return itr != m_CategoryCooldowns.end() && itr->second.duration && WorldTimer::getMSTimeDiff(itr->second.cast_time, WorldTimer::getMSTime()) < itr->second.duration;
-}
-
-void CooldownMgr::AddSpellCategoryCooldown(SpellEntry const* spellInfo, uint32 gcd)
-{
-    m_CategoryCooldowns[spellInfo->Category] = Cooldown(gcd, WorldTimer::getMSTime());
-}
-
-void CooldownMgr::CancelSpellCategoryCooldown(SpellEntry const* spellInfo)
-{
-    m_CategoryCooldowns[spellInfo->Category].duration = 0;
-}
-
-bool CooldownMgr::HasSpellIdCooldown(SpellEntry const* spellInfo) const
-{
-    CooldownList::const_iterator itr = m_SpellCooldowns.find(spellInfo->Id);
-    return itr != m_SpellCooldowns.end() && itr->second.duration && WorldTimer::getMSTimeDiff(itr->second.cast_time, WorldTimer::getMSTime()) < itr->second.duration;
-}
-
-void CooldownMgr::AddSpellIdCooldown(SpellEntry const* spellInfo, uint32 gcd)
-{
-    m_SpellCooldowns[spellInfo->Id] = Cooldown(gcd, WorldTimer::getMSTime());
-}
-
-void CooldownMgr::CancelSpellIdCooldown(SpellEntry const* spellInfo)
-{
-    m_SpellCooldowns[spellInfo->Id].duration = 0;
-}
 
 CharmInfo::CharmInfo(Unit* unit)
 : m_unit(unit), m_CommandState(COMMAND_FOLLOW), m_petnumber(0), m_barInit(false)
@@ -147,47 +93,37 @@ void CharmInfo::InitEmptyActionBar(bool withAttack)
 
 void CharmInfo::InitPossessCreateSpells()
 {
-    uint32 SpiritSpellID[7] =   //Vengeful Spirit's spells
+    switch (m_unit->GetEntry()) // special cases
     {
-        40325,
-        60000,  //to make empty slot
-        40157,
-        40175,
-        40314,
-        60000,  //to make empty slot
-        40322
-    };
-
-    uint32 BlueDrakeID[5] =   //Power of the Blue Flight spells (Kij'jaeden fight)
-    {
-        45862,
-        45856,
-        45860,
-        60000,  //to make empty slot
-        45848
-    };
-
-    if (m_unit->GetEntry() == 23109)     //HACK to allow proper spells for Vengeful Spirit
-    {
-        InitEmptyActionBar(false);
-
-        for (uint32 i = 0; i < 7; ++i)
-        {
-            uint32 spellid = SpiritSpellID[i];
-            AddSpellToActionBar(0, spellid, ACT_CAST);
-        }
+    case 23055: // felguard degrader
+        InitEmptyActionBar();
+        PetActionBar[1].SpellOrAction = 40220;
+        PetActionBar[2].SpellOrAction = 40219;
+        PetActionBar[3].SpellOrAction = 40221;
+        PetActionBar[4].SpellOrAction = 40497;
+        PetActionBar[5].SpellOrAction = 40222;
+        PetActionBar[6].SpellOrAction = 40658;
         return;
-    }
-
-    if (m_unit->GetEntry() == 25653)     //HACK to allow proper spells for the Power of the Blue Flight
-    {
+    case 23109: // vengeful spirit
         InitEmptyActionBar(false);
-
-        for (uint32 i = 0; i < 5; ++i)
-        {
-            uint32 spellid = BlueDrakeID[i];
-            AddSpellToActionBar(0, spellid, ACT_CAST);
-        }
+        PetActionBar[0].SpellOrAction = 40325;
+        PetActionBar[2].SpellOrAction = 40157;
+        PetActionBar[3].SpellOrAction = 40175;
+        PetActionBar[4].SpellOrAction = 40314;
+        PetActionBar[6].SpellOrAction = 40322;
+        return;
+    case 25653: // blue flight
+        InitEmptyActionBar(false);
+        PetActionBar[0].SpellOrAction = 45862;
+        PetActionBar[1].SpellOrAction = 45856;
+        PetActionBar[2].SpellOrAction = 45860;
+        PetActionBar[4].SpellOrAction = 45848;
+        return;
+    case 21909: // arcano scoop
+        InitEmptyActionBar();
+        PetActionBar[5].SpellOrAction = 37919;
+        PetActionBar[6].SpellOrAction = 37918;
+        PetActionBar[3].SpellOrAction = 37851;
         return;
     }
 
@@ -317,7 +253,7 @@ void CharmInfo::HandleStayCommand()
     m_unit->AttackStop();
     m_unit->InterruptNonMeleeSpells(false);
 
-    m_unit->GetMotionMaster()->MoveIdle();
+    m_unit->GetMotionMaster()->StopControlledMovement();
 }
 
 void CharmInfo::HandleFollowCommand()
@@ -331,6 +267,12 @@ void CharmInfo::HandleFollowCommand()
     m_unit->InterruptNonMeleeSpells(false);
 
     m_unit->GetMotionMaster()->MoveFollow(m_unit->GetCharmerOrOwner(), PET_FOLLOW_DIST, PET_FOLLOW_ANGLE);
+
+    if (Creature* pCharm = m_unit->ToCreature())
+    {
+        if (PetAI* petai = dynamic_cast<PetAI*>(pCharm->AI()))
+            petai->clearEnemySet();
+    }
 }
 
 void CharmInfo::HandleAttackCommand(uint64 targetGUID)
@@ -345,7 +287,7 @@ void CharmInfo::HandleAttackCommand(uint64 targetGUID)
     if (!pTarget)
         return;
 
-    if (!m_unit->canAttack(pTarget))
+    if (!m_unit->canAttack(pTarget, true))
          return;
 
     // Not let attack through obstructions
@@ -354,7 +296,12 @@ void CharmInfo::HandleAttackCommand(uint64 targetGUID)
 
     if (Creature* pCharm = m_unit->ToCreature())
     {
-        pCharm->AI()->AttackStart(pTarget);
+        if (PetAI* petai = dynamic_cast<PetAI*>(pCharm->AI()))
+        {
+            petai->ForcedAttackStart(pTarget);
+        }
+        else
+            pCharm->AI()->AttackStart(pTarget);
 
         Pet *pPet = m_unit->ToPet();
         if (pPet && pPet->getPetType() == SUMMON_PET && roll_chance_i(10))
@@ -382,8 +329,10 @@ void CharmInfo::HandleSpellActCommand(uint64 targetGUID, uint32 spellId)
     if (!spellInfo)
         return;
 
+    Player* plCharmer = m_unit->GetCharmerOrOwnerPlayerOrPlayerItself();
     // Global Cooldown, stop cast
-    if (spellInfo->StartRecoveryCategory > 0 && GetCooldownMgr().HasGlobalCooldown(spellInfo))
+    if (plCharmer && spellInfo->StartRecoveryCategory > 0 &&
+        plCharmer->GetCooldownMgr().HasGlobalCooldown(PETS_GCD_CATEGORY))
         return;
 
     for (uint32 i = 0; i < 3;i++)
@@ -414,8 +363,6 @@ void CharmInfo::HandleSpellActCommand(uint64 targetGUID, uint32 spellId)
     if (result == SPELL_CAST_OK)
     {
         Creature* pCreature = m_unit->ToCreature();
-
-        pCreature->AddCreatureSpellCooldown(spellId);
         if (Pet* pPet = m_unit->ToPet())
         {
             pPet->CheckLearning(spellId);
@@ -468,8 +415,6 @@ void CharmInfo::HandleSpellActCommand(uint64 targetGUID, uint32 spellId)
         else
             m_unit->SendPetCastFail(spellId, result);
 
-        if (!m_unit->ToCreature()->HasSpellCooldown(spellId))
-            m_unit->SendPetClearCooldown(spellId);
 
         spell->finish(false);
         delete spell;

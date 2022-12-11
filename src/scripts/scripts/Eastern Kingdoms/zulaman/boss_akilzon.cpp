@@ -54,25 +54,26 @@ enum Akilzon
 
 struct boss_akilzonAI : public ScriptedAI
 {
-    boss_akilzonAI(Creature *c) : ScriptedAI(c)
+    boss_akilzonAI(Creature *c) : ScriptedAI(c), summons(me)
     {
-        pInstance = (c->GetInstanceData());
+        pInstance = c->GetInstanceData();
         m_creature->GetPosition(wLoc);
     }
     ScriptedInstance *pInstance;
 
     std::list<Creature*> BirdsList;
+    SummonList summons;
 
-    uint32 StaticDisruption_Timer;
-    uint32 GustOfWind_Timer;
-    uint32 CallLighting_Timer;
-    uint32 ElectricalStorm_Timer;
-    uint32 SummonEagles_Timer;
-    uint32 Enrage_Timer;
+    Timer StaticDisruption_Timer;
+    Timer GustOfWind_Timer;
+    Timer CallLighting_Timer;
+    Timer ElectricalStorm_Timer;
+    Timer SummonEagles_Timer;
+    Timer Enrage_Timer;
 
     bool isRaining;
 
-    uint32 checkTimer;
+    Timer checkTimer;
     WorldLocation wLoc;
 
     void Reset()
@@ -82,18 +83,25 @@ struct boss_akilzonAI : public ScriptedAI
         if(pInstance && pInstance->GetData(DATA_AKILZONEVENT) != DONE)
             pInstance->SetData(DATA_AKILZONEVENT, NOT_STARTED);
 
-        StaticDisruption_Timer = urand(5000, 10000);
-        GustOfWind_Timer = urand(8000, 15000);
-        CallLighting_Timer = urand(8000, 12000);
-        ElectricalStorm_Timer = 60000;
-        Enrage_Timer = 480000; //8 minutes to enrage
-        SummonEagles_Timer = 99999;
+        StaticDisruption_Timer.Reset(urand(5000, 10000));
+        GustOfWind_Timer.Reset(urand(8000, 15000));
+        CallLighting_Timer.Reset(urand(8000, 12000));
+        ElectricalStorm_Timer.Reset(60000);
+        Enrage_Timer.Reset(480000); //8 minutes to enrage
+        SummonEagles_Timer.Reset(99999);
 
+        summons.DespawnAll();
         BirdsList.clear();
 
         isRaining = false;
 
         SetWeather(WEATHER_STATE_FINE, 0.0f);
+
+        me->ApplySpellImmune(0, IMMUNITY_EFFECT, SPELL_EFFECT_INTERRUPT_CAST, true);
+        me->ApplySpellImmune(0, IMMUNITY_MECHANIC, MECHANIC_STUN, true);
+        me->ApplySpellImmune(0, IMMUNITY_STATE, SPELL_AURA_MOD_FEAR, true);
+        me->ApplySpellImmune(0, IMMUNITY_STATE, SPELL_AURA_MOD_SILENCE, true);
+        me->ApplySpellImmune(0, IMMUNITY_STATE, SPELL_AURA_MOD_STUN, true);
 
         checkTimer = 3000;
     }
@@ -108,9 +116,16 @@ struct boss_akilzonAI : public ScriptedAI
 
     void JustDied(Unit* Killer)
     {
+        summons.DespawnAll();
         DoScriptText(SAY_DEATH, m_creature);
+
         if(pInstance)
             pInstance->SetData(DATA_AKILZONEVENT, DONE);
+    }
+
+    void JustSummoned(Creature* eagle)
+    {
+        summons.Summon(eagle);
     }
 
     void KilledUnit(Unit* victim)
@@ -158,7 +173,7 @@ struct boss_akilzonAI : public ScriptedAI
         if (!UpdateVictim())
             return;
 
-        if (checkTimer < diff)
+        if (checkTimer.Expired(diff))
         {
             if (!m_creature->IsWithinDistInMap(&wLoc, 110.0f))
                 EnterEvadeMode();
@@ -169,37 +184,40 @@ struct boss_akilzonAI : public ScriptedAI
             }
             checkTimer = 1000;
         }
-        else
-            checkTimer -= diff;
 
-        if (Enrage_Timer < diff)
+
+
+
+        if (Enrage_Timer.Expired(diff))
         {
             DoScriptText(SAY_ENRAGE, m_creature);
             m_creature->CastSpell(m_creature, SPELL_BERSERK, true);
             Enrage_Timer = 600000;
         }
-        else
-            Enrage_Timer -= diff;
 
-        if (StaticDisruption_Timer < diff)
+
+
+
+        if (StaticDisruption_Timer.Expired(diff))
         {
-            if(ElectricalStorm_Timer < 3000)
-                StaticDisruption_Timer += 6000;
-
-            Unit* target = SelectUnit(SELECT_TARGET_RANDOM, 0, GetSpellMaxRange(SPELL_STATIC_DISRUPTION), true, m_creature->getVictimGUID());
-            if(!target)
-                target = m_creature->getVictim();
-            AddSpellToCast(target, SPELL_STATIC_DISRUPTION, false, true);
-            StaticDisruption_Timer = urand(7000, 14000);
+            if(ElectricalStorm_Timer.GetTimeLeft() < 3000)
+                StaticDisruption_Timer = 6000;
+            else
+            {
+                Unit* target = SelectUnit(SELECT_TARGET_RANDOM, 0, GetSpellMaxRange(SPELL_STATIC_DISRUPTION), true, m_creature->getVictimGUID());
+                if(!target)
+                    target = m_creature->getVictim();
+                AddSpellToCast(target, SPELL_STATIC_DISRUPTION, false, true);
+                StaticDisruption_Timer = urand(7000, 14000);
+            }
         }
-        else
-            StaticDisruption_Timer -= diff;
 
-        if (GustOfWind_Timer < diff)
+
+        if (GustOfWind_Timer.Expired(diff))
         {
             //we dont want to start a storm with player in the air
-            if(ElectricalStorm_Timer < 8000)
-                GustOfWind_Timer += 18000;
+            if(ElectricalStorm_Timer.GetTimeLeft() < 8000)
+                GustOfWind_Timer = 18000;
             else
             {
                 if(Unit* target = SelectUnit(SELECT_TARGET_RANDOM, 0, GetSpellMaxRange(SPELL_GUST_OF_WIND), true, m_creature->getVictimGUID()))
@@ -207,31 +225,31 @@ struct boss_akilzonAI : public ScriptedAI
                 GustOfWind_Timer = urand(8000, 14000);
             }
         }
-        else
-            GustOfWind_Timer -= diff;
 
-        if (CallLighting_Timer < diff)
+
+
+        if (CallLighting_Timer.Expired(diff))
         {
             AddSpellToCast(m_creature->getVictim(), SPELL_CALL_LIGHTNING);
             CallLighting_Timer = RAND(urand(10000, 15000), urand(30000, 45000));
         }
-        else
-            CallLighting_Timer -= diff;
 
-        if (!isRaining && ElectricalStorm_Timer < urand(8000, 12000))
+
+        if (!isRaining && ElectricalStorm_Timer.GetTimeLeft() < urand(8000, 12000))
         {
             SetWeather(WEATHER_STATE_HEAVY_RAIN, 0.9999f);
             isRaining = true;
         }
 
-        if (isRaining && ElectricalStorm_Timer > 50000)
+        if (isRaining && ElectricalStorm_Timer.GetTimeLeft() > 50000)
         {
             SetWeather(WEATHER_STATE_FINE, 0.0f);
-            SummonEagles_Timer = 13000;
+            SummonEagles_Timer.Reset(13000);
             isRaining = false;
         }
 
-        if (ElectricalStorm_Timer < diff)
+
+        if (ElectricalStorm_Timer.Expired(diff))
         {
             Unit* target = SelectUnit(SELECT_TARGET_RANDOM, 0, GetSpellMaxRange(SPELL_ELECTRICAL_STORM), true);
 
@@ -247,19 +265,18 @@ struct boss_akilzonAI : public ScriptedAI
             m_creature->CastSpell(target, SPELL_ELECTRICAL_STORM, false);
 
             ElectricalStorm_Timer = 60000;
-            StaticDisruption_Timer += 10000;
+            StaticDisruption_Timer.Reset(10000);
         }
-        else
-            ElectricalStorm_Timer -= diff;
 
-        if (SummonEagles_Timer < diff)
+
+
+        if (SummonEagles_Timer.Expired(diff))
         {
             DoScriptText(urand(0,1) ? SAY_SUMMON : SAY_SUMMON_ALT, m_creature);
             DoSummonEagles();
             SummonEagles_Timer = 999999;
         }
-        else
-            SummonEagles_Timer -= diff;
+
 
         DoMeleeAttackIfReady();
         CastNextSpellIfAnyAndReady();
@@ -276,19 +293,19 @@ struct mob_soaring_eagleAI : public ScriptedAI
 
     ScriptedInstance* pInstance;
 
-    uint32 EagleSwoop_Timer;
-    uint32 Return_Timer;
+    Timer EagleSwoop_Timer;
+    Timer Return_Timer;
     bool canMoveRandom;
     bool canCast;
 
     void Reset()
     {
         DoZoneInCombat();
-        EagleSwoop_Timer = urand(2000, 6000);
+        EagleSwoop_Timer.Reset(urand(2000, 6000));
         me->SetWalk(false);
         me->SetLevitate(true);
         me->SetSpeed(MOVE_FLIGHT, 1.5);
-        Return_Timer = 200;
+        Return_Timer.Reset(200);
         canMoveRandom = true;
         canCast = true;
     }
@@ -327,20 +344,17 @@ struct mob_soaring_eagleAI : public ScriptedAI
             return;
 
         if (canMoveRandom)
-        {
-            if (Return_Timer < diff)
+            if (Return_Timer.Expired(diff))
             {
                 DoMoveToRandom();
                 Return_Timer = 800;
             }
-            else
-                Return_Timer -= diff;
-        }
 
         if (!canCast)
             return;
 
-        if (EagleSwoop_Timer < diff)
+
+        if (EagleSwoop_Timer.Expired(diff))
         {
             if (Unit* target = SelectUnit(SELECT_TARGET_RANDOM, 0, 100, true))
             {
@@ -351,8 +365,6 @@ struct mob_soaring_eagleAI : public ScriptedAI
             }
             EagleSwoop_Timer = urand(4000, 6000);
         }
-        else
-            EagleSwoop_Timer -= diff;
     }
 };
 

@@ -38,10 +38,10 @@ struct boss_theravenianAI : public ScriptedAI
 {
     boss_theravenianAI(Creature *c) : ScriptedAI(c) {}
 
-    uint32 Trample_Timer;
-    uint32 Cleave_Timer;
-    uint32 SunderingCleave_Timer;
-    uint32 KnockAway_Timer;
+    int32 Trample_Timer;
+    int32 Cleave_Timer;
+    int32 SunderingCleave_Timer;
+    int32 KnockAway_Timer;
     bool HasYelled;
 
     void Reset()
@@ -75,33 +75,33 @@ struct boss_theravenianAI : public ScriptedAI
         if (!UpdateVictim())
             return;
 
-        //Trample_Timer
-        if (Trample_Timer < diff)
+        Trample_Timer -= diff;
+        if (Trample_Timer <= diff)
         {
             DoCast(m_creature->getVictim(),SPELL_TRAMPLE);
-            Trample_Timer = 10000;
-        }else Trample_Timer -= diff;
+            Trample_Timer += 10000;
+        }
 
-        //Cleave_Timer
-        if (Cleave_Timer < diff)
+        Cleave_Timer -= diff;
+        if (Cleave_Timer <= diff)
         {
             DoCast(m_creature->getVictim(),SPELL_CLEAVE);
-            Cleave_Timer = 7000;
-        }else Cleave_Timer -= diff;
+            Cleave_Timer += 7000;
+        }
 
-        //SunderingCleave_Timer
-        if (SunderingCleave_Timer < diff)
+        SunderingCleave_Timer -= diff;
+        if (SunderingCleave_Timer <= diff)
         {
             DoCast(m_creature->getVictim(),SPELL_SUNDERINCLEAVE);
-            SunderingCleave_Timer = 20000;
-        }else SunderingCleave_Timer -= diff;
+            SunderingCleave_Timer += 20000;
+        }
 
-        //KnockAway_Timer
-        if (KnockAway_Timer < diff)
+        KnockAway_Timer -= diff;
+        if (KnockAway_Timer <= diff)
         {
             DoCast(m_creature->getVictim(),SPELL_KNOCKAWAY);
-            KnockAway_Timer = 12000;
-        }else KnockAway_Timer -= diff;
+            KnockAway_Timer += 12000;
+        }
 
         DoMeleeAttackIfReady();
     }

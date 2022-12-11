@@ -19,10 +19,15 @@
 
 /* ScriptData
 SDName: Boss_Shade_of_Aran
-SD%Complete: 95
-SDComment: Flame wreath missing cast animation, mods won't triggere.
+SD%Complete: 65
+SDComment: Flame wreath missing cast animation, mods won't triggere. Timers have to be rewritten.
+It will be nice to do it with our [Timer]s. 
 SDCategory: Karazhan
-EndScriptData */
+EndScriptData 
+
+
+
+WHAT THE FUCK IS GOING ON WITH THESE TIMERS? O_o*/
 
 #include "precompiled.h"
 #include "../../special/simple_ai.h"
@@ -106,9 +111,9 @@ float shadowOfAranSpawnPoints[2][8] = {
     {-1914.26, -1928.2,  -1933.8,  -1925.05, -1909.7,  -1895.7, -1895.4,  -1899}    // Y coord
 };
 
-struct boss_aranAI : public ScriptedAI
+struct boss_aranAI : public Scripted_NoMovementAI
 {
-    boss_aranAI(Creature *c) : ScriptedAI(c)
+    boss_aranAI(Creature *c) : Scripted_NoMovementAI(c)
     {
         pInstance = (c->GetInstanceData());
         m_creature->GetPosition(wLoc);
@@ -120,27 +125,25 @@ struct boss_aranAI : public ScriptedAI
 
     ScriptedInstance* pInstance;
 
-    uint32 SecondarySpellTimer;
-    uint32 NormalCastTimer;
-    uint32 SuperCastTimer;
-    uint32 BerserkTimer;
+    int32 SecondarySpellTimer;
+    int32 NormalCastTimer;
+    int32 SuperCastTimer;
+    int32 BerserkTimer;
+    Timer DragonbreathTimer;
 
     uint8 LastSuperSpell;
 
-    uint32 ArcaneCooldown;
-    uint32 FireCooldown;
-    uint32 FrostCooldown;
-    uint32 CheckTimer;
-    uint32 PyroblastTimer;
+    int32 CheckTimer;
+    int32 PyroblastTimer;
 
     uint64 shadeOfAranTeleportCreatures[8];
     WorldLocation wLoc;
 
-    uint32 DrinkInturruptTimer;
+    int32 DrinkInturruptTimer;
 
     bool ElementalsSpawned;
     DrinkingState Drinking;
-    uint32 DrinkingDelay;
+    int32 DrinkingDelay;
 
 
 
@@ -155,14 +158,10 @@ struct boss_aranAI : public ScriptedAI
         CheckTimer          = 3000;
         PyroblastTimer      = 0;
         DrinkingDelay       = 0;
+        DragonbreathTimer.Reset(15000);
 
 
         LastSuperSpell = rand()%3;
-
-
-        ArcaneCooldown     = 0;
-        FireCooldown       = 0;
-        FrostCooldown      = 0;
 
         ElementalsSpawned       = false;
         Drinking                = DRINKING_NO_DRINKING;
@@ -211,47 +210,52 @@ struct boss_aranAI : public ScriptedAI
             pInstance->SetData(DATA_SHADEOFARAN_EVENT, IN_PROGRESS);
     }
 
+    void SelectPrimarySpell()
+    {
+        uint32 casting = 0;
+        uint8 mask = 0; // arcane/frost/fire
+        if (!me->isSchoolProhibited(SPELL_SCHOOL_MASK_FIRE))
+            mask |= 0x1;
+        if (!me->isSchoolProhibited(SPELL_SCHOOL_MASK_FROST))
+            mask |= 0x2;
+        if (!me->isSchoolProhibited(SPELL_SCHOOL_MASK_ARCANE))
+            mask |= 0x4;
+        switch (mask)
+        {
+        
+        case 1: casting = SPELL_FIREBALL; break;
+        case 2: casting = SPELL_FROSTBOLT; break;
+        case 4: casting = SPELL_ARCMISSLE; break;
+        case 3: casting = RAND(SPELL_FIREBALL, SPELL_FROSTBOLT); break;
+        case 5: casting = RAND(SPELL_FIREBALL, SPELL_ARCMISSLE); break;
+        case 6: casting = RAND(SPELL_ARCMISSLE, SPELL_FROSTBOLT); break;
+        case 7: casting = RAND(SPELL_ARCMISSLE, SPELL_FROSTBOLT, SPELL_FIREBALL); break;
+        case 0:
+        default: break;
+        }
+        if (casting == 0)
+        {
+            NormalCastTimer = 100;
+            return;
+        }
+        AddSpellToCast(casting, CAST_RANDOM, false, true);
+        NormalCastTimer = (casting == SPELL_ARCMISSLE) ? 6000 : 2000;
+    }
+
     void UpdateAI(const uint32 diff)
     {
         if (!UpdateVictim())
             return;
 
-        //Check_Timer
-        if (CheckTimer < diff)
+        CheckTimer -= diff;
+        if (CheckTimer <= diff)
         {
             if (!m_creature->IsWithinDistInMap(&wLoc, 35.0f))
                 EnterEvadeMode();
             else
                 DoZoneInCombat();
 
-            CheckTimer = 3000;
-        }
-        else
-            CheckTimer -= diff;
-
-        //Cooldowns for casts
-        if (ArcaneCooldown)
-        {
-            if (ArcaneCooldown >= diff)
-                ArcaneCooldown -= diff;
-            else
-                ArcaneCooldown = 0;
-        }
-
-        if (FireCooldown)
-        {
-            if (FireCooldown >= diff)
-                FireCooldown -= diff;
-            else
-                FireCooldown = 0;
-        }
-
-        if (FrostCooldown)
-        {
-            if (FrostCooldown >= diff)
-                FrostCooldown -= diff;
-            else
-                FrostCooldown = 0;
+            CheckTimer += 3000;
         }
 
         if (DrinkingDelay)
@@ -290,35 +294,28 @@ struct boss_aranAI : public ScriptedAI
                 PyroblastTimer -= diff;
         }
 
+        if (DragonbreathTimer.Expired(diff))
+        {
+            AddSpellToCast(SPELL_DRAGONSBREATH, CAST_RANDOM);
+            DragonbreathTimer = urand(15000, 25000);
+        }
+
         if(Drinking == DRINKING_NO_DRINKING)
         {
             //Normal casts
-            if (NormalCastTimer < diff)
+            if (NormalCastTimer <= diff)
             {
                 if (!m_creature->IsNonMeleeSpellCast(false))
                 {
-                    uint32 Spells[3];
-                    uint8 AvailableSpells = 0;
-                    //Check for what spells are not on cooldown
-                    if (!ArcaneCooldown)
-                        Spells[AvailableSpells++] = SPELL_ARCMISSLE;
-
-                    if (!FireCooldown)
-                        Spells[AvailableSpells++] = SPELL_FIREBALL;
-
-                    if (!FrostCooldown)
-                        Spells[AvailableSpells++] = SPELL_FROSTBOLT;
-
-                    //If no available spells wait 1 second and try again
-                    if (AvailableSpells)
-                        AddSpellToCast(Spells[rand() % AvailableSpells], CAST_RANDOM, false, true);
+                    SelectPrimarySpell();
                 }
-                NormalCastTimer = 1000;
+                else
+                    NormalCastTimer = 100;
             }
             else
                 NormalCastTimer -= diff;
 
-            if (SecondarySpellTimer < diff)
+            if (SecondarySpellTimer <= diff)
             {
                 AddSpellToCast(SPELL_AOE_CS, CAST_SELF);
                 SecondarySpellTimer = urand(10000, 40000);
@@ -326,7 +323,8 @@ struct boss_aranAI : public ScriptedAI
             else
                 SecondarySpellTimer -= diff;
 
-            if (SuperCastTimer < diff)
+            SuperCastTimer -= diff;
+            if (SuperCastTimer <= diff)
             {
                 uint8 Available[2];
                 ClearCastQueue();
@@ -357,29 +355,30 @@ struct boss_aranAI : public ScriptedAI
                         AddSpellToCast(SPELL_MASSSLOW, CAST_SELF);
                         AddSpellToCastWithScriptText(SPELL_AEXPLOSION, CAST_SELF, RAND(SAY_EXPLOSION1, SAY_EXPLOSION2));
                         DrinkingDelay = 15000;
+                        DragonbreathTimer.Delay(12000);
                         break;
 
                     case SUPER_FLAME:
                         AddSpellToCastWithScriptText(SPELL_FLAME_WREATH, CAST_SELF, RAND(SAY_FLAMEWREATH1, SAY_FLAMEWREATH2));
                         DrinkingDelay = 25000;
+                        DragonbreathTimer.Delay(25000);
                         break;
 
                     case SUPER_BLIZZARD:
                         AddSpellToCastWithScriptText(SPELL_SUMMON_BLIZZARD, CAST_NULL, RAND(SAY_BLIZZARD1, SAY_BLIZZARD2));
                         DrinkingDelay = 30000;
+                        DragonbreathTimer.Delay(12000);
                         break;
                 }
-
-                SuperCastTimer = urand(35000, 40000);
+                
+                SuperCastTimer += urand(35000, 40000);
             }
-            else
-                SuperCastTimer -= diff;
+            
 
             if (!ElementalsSpawned && HealthBelowPct(40))
             {
                 ElementalsSpawned = true;
                 AddSpellToCast(SPELL_TELEPORT_MIDDLE, CAST_SELF);
-                AddSpellToCast(SPELL_MAGNETIC_PULL, CAST_SELF); 
                 AddSpellToCastWithScriptText(SPELL_ELEMENTAL1, CAST_SELF, SAY_ELEMENTALS);
                 AddSpellToCast(SPELL_ELEMENTAL2, CAST_SELF);
                 AddSpellToCast(SPELL_ELEMENTAL3, CAST_SELF);
@@ -387,7 +386,8 @@ struct boss_aranAI : public ScriptedAI
             }
         }
 
-        if (BerserkTimer < diff)
+        BerserkTimer -= diff;
+        if (BerserkTimer <= diff)
         {
             for (uint32 i = 0; i < 8; i++)
             {
@@ -400,10 +400,9 @@ struct boss_aranAI : public ScriptedAI
             }
             DoScriptText(SAY_TIMEOVER, m_creature);
 
-            BerserkTimer = 60000;
+            BerserkTimer += 60000;
         }
-        else
-            BerserkTimer -= diff;
+        
 
         CastNextSpellIfAnyAndReady();
         if(Drinking == DRINKING_NO_DRINKING)
@@ -460,25 +459,6 @@ struct boss_aranAI : public ScriptedAI
             spellEntry->Effect[2] != SPELL_EFFECT_INTERRUPT_CAST) || !m_creature->IsNonMeleeSpellCast(false))
             return;
 
-        //Normally we would set the cooldown equal to the spell duration
-        //but we do not have access to the DurationStore
-        switch (me->GetCurrentSpellId())
-        {
-            case SPELL_ARCMISSLE:
-                ArcaneCooldown = 5000;
-                m_creature->InterruptNonMeleeSpells(false);
-                break;
-            case SPELL_FIREBALL:
-                FireCooldown = 5000;
-                m_creature->InterruptNonMeleeSpells(false);
-                break;
-            case SPELL_FROSTBOLT:
-                FrostCooldown = 5000;
-                m_creature->InterruptNonMeleeSpells(false);
-                break;
-            default:
-                break;
-        }
     }
 };
 
@@ -486,7 +466,7 @@ struct water_elementalAI : public ScriptedAI
 {
     water_elementalAI(Creature *c) : ScriptedAI(c) {}
 
-    uint32 CastTimer;
+    int32 CastTimer;
 
     void Reset()
     {
@@ -505,14 +485,14 @@ struct water_elementalAI : public ScriptedAI
         if (!UpdateVictim())
             return;
 
-        if (CastTimer < diff)
+        CastTimer -= diff;
+        if (CastTimer <= diff)
         {
             //AddSpellToCast(m_creature->getVictim(), SPELL_WATERBOLT);
             DoCast(m_creature->getVictim(), SPELL_WATERBOLT);
-            CastTimer = 2000 + (rand()%3000);
+            CastTimer += 2000 + (rand()%3000);
         }
-        else
-            CastTimer -= diff;
+        
 
         CheckCasterNoMovementInRange(diff, 45.0);
         CastNextSpellIfAnyAndReady();
@@ -523,7 +503,7 @@ struct shadow_of_aranAI : public ScriptedAI
 {
     shadow_of_aranAI(Creature *c) : ScriptedAI(c) {}
 
-    uint32 CastTimer;
+    int32 CastTimer;
 
     void Reset()
     {
@@ -535,21 +515,21 @@ struct shadow_of_aranAI : public ScriptedAI
         if (!UpdateVictim())
             return;
 
-        if (CastTimer < diff)
+        CastTimer -= diff;
+        if (CastTimer <= diff)
         {
             if (rand()%3)
             {
                 m_creature->CastSpell(m_creature, SPELL_FROSTBOLT_VOLLEY, false);
-                CastTimer = 5000;
+                CastTimer += 5000;
             }
             else
             {
                 m_creature->CastSpell(m_creature, SPELL_AMISSILE_VOLLEY, false);
-                CastTimer = 20000;
+                CastTimer += 20000;
             }
         }
-        else
-            CastTimer -= diff;
+        
     }
 };
 
@@ -560,8 +540,8 @@ struct circular_blizzardAI : public ScriptedAI
         pInstance = c->GetInstanceData();
     }
 
-    uint16 currentWaypoint;
-    uint16 waypointTimer;
+    uint8 currentWaypoint, startWaypoint;
+    Timer waypointTimer;
     WorldLocation wLoc;
     ScriptedInstance *pInstance;
     float blizzardWaypoints[2][8];
@@ -573,36 +553,20 @@ struct circular_blizzardAI : public ScriptedAI
         currentWaypoint = 0;
         waypointTimer = 0;
         SetBlizzardWaypoints();
-    }
-
-    void ChangeBlizzardWaypointsOrder(uint16 change)
-    {
-        float temp[2] = {0, 0};
-        for (int16 i = 0; i < change; i++)
-        {
-            temp[0] = blizzardWaypoints[0][0];
-            temp[1] = blizzardWaypoints[1][0];
-            for (int16 j = 0; j < 7; j++)
-            {
-                blizzardWaypoints[0][j] = blizzardWaypoints[0][j + 1];
-                blizzardWaypoints[1][j] = blizzardWaypoints[1][j + 1];
-            }
-            blizzardWaypoints[0][7] = temp[0];
-            blizzardWaypoints[1][7] = temp[1];
-        }
+        me->SetReactState(REACT_PASSIVE);
     }
 
 
     void SetBlizzardWaypoints()
     {
-        blizzardWaypoints[0][0] = -11154.3;    blizzardWaypoints[1][0] = -1903.3;
-        blizzardWaypoints[0][1] = -11163.6;    blizzardWaypoints[1][1] = -1898.7;
-        blizzardWaypoints[0][2] = -11173.6;    blizzardWaypoints[1][2] = -1901.2;
-        blizzardWaypoints[0][3] = -11178.1;    blizzardWaypoints[1][3] = -1910.4;
-        blizzardWaypoints[0][4] = -11175.4;    blizzardWaypoints[1][4] = -1920.6;
-        blizzardWaypoints[0][5] = -11166.6;    blizzardWaypoints[1][5] = -1925.1;
-        blizzardWaypoints[0][6] = -11156.5;    blizzardWaypoints[1][6] = -1922.8;
-        blizzardWaypoints[0][7] = -11151.8;    blizzardWaypoints[1][7] = -1913.5;
+        blizzardWaypoints[0][0] = -11151.7;    blizzardWaypoints[1][0] = -1901.5;
+        blizzardWaypoints[0][1] = -11164.9;    blizzardWaypoints[1][1] = -1896.5;
+        blizzardWaypoints[0][2] = -11183.2;    blizzardWaypoints[1][2] = -1889.1;
+        blizzardWaypoints[0][3] = -11181.1;    blizzardWaypoints[1][3] = -1907.6;
+        blizzardWaypoints[0][4] = -11178.2;    blizzardWaypoints[1][4] = -1922.7;
+        blizzardWaypoints[0][5] = -11166.8;    blizzardWaypoints[1][5] = -1927.7;
+        blizzardWaypoints[0][6] = -11153.1;    blizzardWaypoints[1][6] = -1926.8;
+        blizzardWaypoints[0][7] = -11148.3;    blizzardWaypoints[1][7] = -1913.5;
     }
 
     void JustDied(Unit* killer){}
@@ -615,17 +579,15 @@ struct circular_blizzardAI : public ScriptedAI
             if(pInstance)
                 AranGUID = pInstance->GetData64(DATA_ARAN);
             me->CastSpell(me, SPELL_CIRCULAR_BLIZZARD, false, 0, 0, AranGUID);
-
-            ChangeBlizzardWaypointsOrder(urand(0, 7));
-
-            wLoc.coord_x = blizzardWaypoints[0][0];
-            wLoc.coord_y = blizzardWaypoints[1][0];
+            startWaypoint = urand(0, 7);
+            wLoc.coord_x = blizzardWaypoints[0][startWaypoint];
+            wLoc.coord_y = blizzardWaypoints[1][startWaypoint];
             wLoc.coord_z = me->GetPositionZ();
 
             DoTeleportTo(wLoc.coord_x, wLoc.coord_y, wLoc.coord_z);
 
             currentWaypoint = 0;
-            waypointTimer = 0;
+            waypointTimer.Reset(1);
             move = true;
         }
     }
@@ -635,7 +597,7 @@ struct circular_blizzardAI : public ScriptedAI
         if (!move)
             return;
 
-        if (waypointTimer < diff)
+        if (waypointTimer.Expired(diff))
         {
             if (currentWaypoint < 7)
                 ++currentWaypoint;
@@ -643,16 +605,16 @@ struct circular_blizzardAI : public ScriptedAI
             {
                 currentWaypoint = 0;
                 move = false;
+                EnterEvadeMode();
+                return;
             }
 
-            wLoc.coord_x = blizzardWaypoints[0][currentWaypoint];
-            wLoc.coord_y = blizzardWaypoints[1][currentWaypoint];
+            wLoc.coord_x = blizzardWaypoints[0][(startWaypoint + currentWaypoint) % 8];
+            wLoc.coord_y = blizzardWaypoints[1][(startWaypoint + currentWaypoint) % 8];
 
             m_creature->GetMotionMaster()->MovePoint(currentWaypoint, wLoc.coord_x, wLoc.coord_y, wLoc.coord_z);
             waypointTimer = 3000;
         }
-        else
-            waypointTimer -= diff;
     }
 };
 

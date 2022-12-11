@@ -41,10 +41,10 @@ struct boss_nerubenkanAI : public ScriptedAI
 
     ScriptedInstance* pInstance;
 
-    uint32 EncasingWebs_Timer;
-    uint32 PierceArmor_Timer;
-   uint32 CryptScarabs_Timer;
-    uint32 RaiseUndeadScarab_Timer;
+    int32 EncasingWebs_Timer;
+    int32 PierceArmor_Timer;
+    int32 CryptScarabs_Timer;
+    int32 RaiseUndeadScarab_Timer;
     int Rand;
     int RandX;
     int RandY;
@@ -96,34 +96,34 @@ struct boss_nerubenkanAI : public ScriptedAI
         if (!UpdateVictim())
             return;
 
-        //EncasingWebs
-        if (EncasingWebs_Timer < diff)
+        EncasingWebs_Timer -= diff;
+        if (EncasingWebs_Timer <= diff)
         {
             DoCast(m_creature->getVictim(),SPELL_ENCASINGWEBS);
-            EncasingWebs_Timer = 30000;
-        }else EncasingWebs_Timer -= diff;
+            EncasingWebs_Timer += 30000;
+        }
 
-        //PierceArmor
-        if (PierceArmor_Timer < diff)
+        PierceArmor_Timer -= diff;
+        if (PierceArmor_Timer <= diff)
         {
             if (rand()%100 < 75)
                 DoCast(m_creature->getVictim(),SPELL_PIERCEARMOR);
-            PierceArmor_Timer = 35000;
-        }else PierceArmor_Timer -= diff;
+            PierceArmor_Timer += 35000;
+        }
 
-        //CryptScarabs_Timer
-        if (CryptScarabs_Timer < diff)
+        CryptScarabs_Timer -= diff;
+        if (CryptScarabs_Timer <= diff)
         {
             DoCast(m_creature->getVictim(),SPELL_CRYPT_SCARABS);
-            CryptScarabs_Timer = 20000;
-        }else CryptScarabs_Timer -= diff;
+            CryptScarabs_Timer += 20000;
+        }
 
-        //RaiseUndeadScarab
-        if (RaiseUndeadScarab_Timer < diff)
+        RaiseUndeadScarab_Timer -= diff;
+        if (RaiseUndeadScarab_Timer <= diff)
         {
             RaiseUndeadScarab(m_creature->getVictim());
-            RaiseUndeadScarab_Timer = 16000;
-        }else RaiseUndeadScarab_Timer -= diff;
+            RaiseUndeadScarab_Timer += 16000;
+        }
 
         DoMeleeAttackIfReady();
     }

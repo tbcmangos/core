@@ -628,7 +628,7 @@ enum SpellEffects
     SPELL_EFFECT_PULL                      = 70,
     SPELL_EFFECT_PICKPOCKET                = 71,
     SPELL_EFFECT_ADD_FARSIGHT              = 72,
-    SPELL_EFFECT_SUMMON_POSSESSED          = 73,
+    SPELL_EFFECT_SUMMON_POSSESSED          = 73, // unused explicitly (only by effect summon, miscvalb = 65)
     SPELL_EFFECT_SUMMON_TOTEM              = 74,
     SPELL_EFFECT_HEAL_MECHANICAL           = 75,
     SPELL_EFFECT_SUMMON_OBJECT_WILD        = 76,
@@ -884,6 +884,19 @@ enum SpellCastResult
     SPELL_FAILED_TARGET_LOCKED_TO_RAID_INSTANCE = 0xA7,
     SPELL_FAILED_UNKNOWN                        = 0xA8,
 
+    SPELL_FAILED_DEBUG_START                    = 0xB0,
+    SPELL_FAILED_INT_LOST_TARGET                = 0xB0,
+    SPELL_FAILED_INT_CASTER_MOVED               = 0xB1,
+    SPELL_FAILED_INT_DESTROY_SPELLEVENT         = 0xB2,
+    SPELL_FAILED_INT_BY_OTHER_CAST              = 0xB3,
+    SPELL_FAILED_INT_CHANNEL_RANGE              = 0xB4,
+    SPELL_FAILED_INT_ABORT_SPELLEVENT           = 0xB5,
+    SPELL_FAILED_INT_SILENCED                   = 0xB7,
+    SPELL_FAILED_INT_AURA_TICK                  = 0xB8,
+    SPELL_FAILED_INT_TRUE_INTERRUPT             = 0xB9,
+    SPELL_FAILED_INT_AURA_REMOVED               = 0xBA,
+    SPELL_FAILED_INT_CASTER_JUMPED              = 0xBB,
+    SPELL_FAILED_DEBUG_END                      = 0xC0,
     SPELL_CAST_OK                               = 0xFF      //custom value, don't must be send to client
 };
 
@@ -2291,14 +2304,15 @@ enum PetDiet
 #define PET_FOLLOW_DIST  1
 #define PET_FOLLOW_ANGLE (M_PI/2)
 
-#define CHAIN_SPELL_JUMP_RADIUS 10
+#define CHAIN_SPELL_JUMP_RADIUS 12.5f
 
 // Max values for Guild & Guild Bank
 #define GUILD_BANK_MAX_TABS         6
 #define GUILD_BANK_MAX_SLOTS        98
 #define GUILD_BANK_MAX_LOGS         24
-#define GUILD_EVENTLOG_MAX_ENTRIES  100
+#define GUILD_EVENTLOG_MAX_ENTRIES  50 // client shows only 99? 
 #define GUILD_MAX_RANKS             10
+#define GUILD_LOGS_MAX_GUID         10000 // if db guids bigger than this renum on guild load
 
 enum AiReaction
 {
@@ -2328,8 +2342,7 @@ enum DiminishingGroup
     DIMINISHING_TRIGGER_ROOT,                               // Immobilizing effects from triggered spells like Frostbite
     DIMINISHING_FEAR,                                       // Non-warlock fears
     DIMINISHING_CHARM,
-    // Mage Specific
-    DIMINISHING_POLYMORPH,
+    DIMINISHING_INCAPACITATE,                               // poly, sap, repentance, gouges
     // Rogue Specific
     DIMINISHING_KIDNEYSHOT,                                 // Kidney Shot is not diminished with Cheap Shot
     // Warlock Specific
@@ -2340,7 +2353,6 @@ enum DiminishingGroup
     DIMINISHING_DISARM,                                     // From 2.3.0
     DIMINISHING_UNSTABLE_AFFLICTION,                        // From 2.3.0
     DIMINISHING_FREEZE,                                     // Hunter's Freezing Trap
-    DIMINISHING_KNOCKOUT,                                   // Also with Sap, all Knockout mechanics are here
     DIMINISHING_BANISH,
     // Other
     // Don't Diminish, but limit duration to 10s
@@ -2375,8 +2387,8 @@ enum SummonType
     SUMMON_TYPE_CRITTER2    = 407,
     SUMMON_TYPE_CRITTER3    = 307,
     SUMMON_TYPE_UNKNOWN5    = 409,
-    SUMMON_TYPE_POSESSED3   = 427,
-    SUMMON_TYPE_POSESSED2   = 428
+    //SUMMON_TYPE_POSESSED3   = 427,  UNUSED
+    //SUMMON_TYPE_POSESSED2   = 428   UNUSED
 };
 
 enum EventId
@@ -2549,6 +2561,90 @@ enum BattleGroundTypeId
 };
 #define MAX_BATTLEGROUND_TYPE_ID 9
 
+enum GBK_Encounters
+{
+    GBK_NONE                    = 0,
+    GBK_MAGTHERIDON             = 1,
+    GBK_HIGH_KING_MAULGAR       = 2,
+    GBK_GRUUL                   = 3,
+    GBK_HYDROSS_THE_UNSTABLE    = 4,
+    GBK_LURKER_BELOW            = 5,
+    GBK_LEOTHERAS_THE_BLIND     = 6,
+    GBK_FATHOMLORD_KARATHRESS   = 7,
+    GBK_MOROGRIM_TIDEWALKER     = 8,
+    GBK_LADY_VASHJ              = 9,
+    GBK_ALAR                    = 10,
+    GBK_HIGH_ASTROMANCER_SOLARIAN = 11,
+    GBK_VOID_REAVER             = 12,
+    GBK_KAELTHAS_SUNSTRIDER     = 13,
+    GBK_RAGE_WINTERCHILL        = 14,
+    GBK_ANETHERON               = 15,
+    GBK_AZGALOR                 = 16,
+    GBK_KAZROGAL                = 17,
+    GBK_ARCHIMONDE              = 18,
+    GBK_HIGH_WARLORD_NAJENTUS   = 19,
+    GBK_SUPREMUS                = 20,
+    GBK_SHADE_OF_AKAMA          = 21,
+    GBK_REQUILARY_OF_SOULS      = 22,
+    GBK_GURTOG_BLOODBOIL        = 23,
+    GBK_TERON_GOREFIEND         = 24,
+    GBK_MOTHER_SHARAZ           = 25,
+    GBK_ILLIDARI_COUNCIL        = 26,
+    GBK_ILLIDAN_STORMRAGE       = 27,
+    GBK_KALECGOS                = 28,
+    GBK_BRUTALLUS               = 29,
+    GBK_FELMYST                 = 30,
+    GBK_HOT_EREDAR_CHICKS       = 31,
+    GBK_MURU                    = 32,
+    GBK_KILJAEDEN               = 33,
+    GBK_TOTAL                   = 34,
+
+    GBK_ANTISPAMINLOGSINATOR    = 50
+};
+
+enum CombatStatsType
+{
+    COMBAT_STATS_MAGIC_RESULT,      // 1
+    COMBAT_STATS_MELEE_RESULT,      // 2
+    COMBAT_STATS_MELEE_ROLL,        // 4
+    COMBAT_STATS_CRIT_CHANCE,       // 8
+    COMBAT_STATS_DISPEL_CHANCE,     // 16
+    COMBAT_STATS_CHANNEL_UPDATE,    // 32
+    COMBAT_STATS_FAILED_CAST,       // 64
+    COMBAT_STATS_WEAPON_SKILL,      // 128
+    COMBAT_STATS_TEST,              // 256
+    COMBAT_STATS_CRASHTEST,         // 512
+    COMBAT_STATS_LOOTING,           // 1024
+    COMBAT_STATS_PROC,              // 2048
+    COMBAT_STATS_AREA_TRIGGER,      // 4096
+    COMBAT_STATS_DAMAGE_CALC,       // 8192
+};
+
+enum CreatureFlagsExtra
+{
+    CREATURE_FLAG_EXTRA_INSTANCE_BIND       = 0x00000001,       // 1 creature kill bind instance with killer and killer's group
+    CREATURE_FLAG_EXTRA_CIVILIAN            = 0x00000002,       // 2 not aggro (ignore faction/reputation hostility)
+    CREATURE_FLAG_EXTRA_NO_PARRY            = 0x00000004,       // 4 creature can't parry
+    CREATURE_FLAG_EXTRA_NO_PARRY_HASTEN     = 0x00000008,       // 8 creature can't counter-attack at parry
+    CREATURE_FLAG_EXTRA_NO_BLOCK            = 0x00000010,       // 16 creature can't block
+    CREATURE_FLAG_EXTRA_NO_CRUSH            = 0x00000020,       // 32 creature can't do crush attacks
+    CREATURE_FLAG_EXTRA_NO_XP_AT_KILL       = 0x00000040,       // 64 creature kill not provide XP
+    CREATURE_FLAG_EXTRA_TRIGGER             = 0x00000080,       // 128 trigger creature
+    CREATURE_FLAG_EXTRA_WORLDEVENT          = 0x00004000,       // 16384 custom flag for world event creatures (left room for merging)
+    CREATURE_FLAG_EXTRA_CHARM_AI            = 0x00008000,       // 32768 use ai when charmed
+    CREATURE_FLAG_EXTRA_NO_TAUNT            = 0x00010000,       // 65536 cannot be taunted
+    CREATURE_FLAG_EXTRA_NO_CRIT             = 0x00020000,       // 131072 creature can't do critical strikes
+    CREATURE_FLAG_EXTRA_NO_BLOCK_ON_ATTACK  = 0x00040000,       // 262144 creature attack's cannot be blocked
+    CREATURE_FLAG_EXTRA_NO_DAMAGE_TAKEN     = 0x00080000,       // 524288
+    CREATURE_FLAG_EXTRA_ALWAYS_WALK         = 0x00100000,       // 1048576
+    CREATURE_FLAG_EXTRA_NO_TARGET           = 0x00200000,       // 2097152 creature won't set UNIT_FIELD_TARGET by self (return in Attack function !)
+    CREATURE_FLAG_EXTRA_HASTE_IMMUNE        = 0x00400000,       // 4194304
+    CREATURE_FLAG_EXTRA_CANT_MISS           = 0x00800000,       // 8388608 creature melee attacks cant miss
+    CREATURE_FLAG_EXTRA_NOT_REGEN_MANA      = 0x01000000,       // 16777216 creature has mana pool, but do not regenerates it when OOC
+    CREATURE_FLAG_EXTRA_NOT_REGEN_HEALTH    = 0x02000000,       // 33554432 rare case that creature should not regen health when OOC
+    CREATURE_FLAG_EXTRA_1PCT_TAUNT_RESIST   = 0x04000000,       // 67108864 creature have only 1% chance to resist taunt like spell
+    CREATURE_FLAG_EXTRA_NO_HEALING_TAKEN    = 0x08000000,       // 134217728
+};
 
 #define CONTACT_DISTANCE            0.5f
 #define INTERACTION_DISTANCE        5.0f

@@ -41,9 +41,7 @@ void FillSpellSummary();
 // -------------------
 void LoadDatabase()
 {
-    pSystemMgr.LoadVersion();
     pSystemMgr.LoadScriptTexts();
-    pSystemMgr.LoadScriptTextsCustom();
     pSystemMgr.LoadScriptWaypoints(); //[TZERO] to implement
 }
 
@@ -85,7 +83,7 @@ void InitScriptLibrary()
     outstring_log("TSCR: Loading C++ scripts");
     BarGoLink bar(1);
     bar.step();
-    outstring_log("");
+    outstring_log();
 
     for(uint16 i = 0; i < MAX_SCRIPTS; ++i)
         m_scripts[i] = NULL;
@@ -263,12 +261,6 @@ void Script::RegisterSelf(bool bReportError)
 
 //********************************
 //*** Functions to be Exported ***
-
-HELLGROUND_DLL_EXPORT
-char const* GetScriptLibraryVersion()
-{
-    return "Default Hellground scripting library";
-}
 
 HELLGROUND_DLL_EXPORT
 bool GossipHello(Player* pPlayer, Creature* pCreature)
@@ -487,7 +479,9 @@ CreatureAI* GetCreatureAI(Creature* pCreature)
     if (!pTempScript || !pTempScript->GetAI)
         return NULL;
 
-    return pTempScript->GetAI(pCreature);
+    CreatureAI* ai = pTempScript->GetAI(pCreature);
+    ai->m_AIName = pCreature->GetScriptName();
+    return ai;
 }
 
 HELLGROUND_DLL_EXPORT
@@ -499,39 +493,6 @@ bool ItemUse(Player* pPlayer, Item* pItem, SpellCastTargets const& targets)
         return false;
 
     return pTempScript->pItemUse(pPlayer, pItem, targets);
-}
-
-HELLGROUND_DLL_EXPORT
-bool EffectDummyCreature(Unit* pCaster, uint32 spellId, uint32 effIndex, Creature* pTarget)
-{
-    Script* pTempScript = m_scripts[pTarget->GetScriptId()];
-
-    if (!pTempScript || !pTempScript->pEffectDummyNPC)
-        return false;
-
-    return pTempScript->pEffectDummyNPC(pCaster, spellId, effIndex, pTarget);
-}
-
-HELLGROUND_DLL_EXPORT
-bool EffectDummyGameObject(Unit* pCaster, uint32 spellId, uint32 effIndex, GameObject* pTarget)
-{
-    Script* pTempScript = m_scripts[pTarget->GetGOInfo()->ScriptId];
-
-    if (!pTempScript || !pTempScript->pEffectDummyGO)
-        return false;
-
-    return pTempScript->pEffectDummyGO(pCaster, spellId, effIndex, pTarget);
-}
-
-HELLGROUND_DLL_EXPORT
-bool EffectDummyItem(Unit* pCaster, uint32 spellId, uint32 effIndex, Item* pTarget)
-{
-    Script* pTempScript = m_scripts[pTarget->GetProto()->ScriptId];
-
-    if (!pTempScript || !pTempScript->pEffectDummyItem)
-        return false;
-
-    return pTempScript->pEffectDummyItem(pCaster, spellId, effIndex, pTarget);
 }
 
 HELLGROUND_DLL_EXPORT

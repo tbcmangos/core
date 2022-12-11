@@ -359,17 +359,20 @@ class BattleGroundEY : public BattleGround
         uint64 m_DroppedFlagGUID;
         uint32 m_FlagCapturedBgObjectType;                  // type that should be despawned when flag is captured
         uint8 m_FlagState;                                  // for checking flag state
-        int32 m_FlagsTimer;
-        int32 m_TowerCapCheckTimer;
+        Timer m_FlagsTimer;
+        Timer m_TowerCapCheckTimer;
 
-        uint32 m_PointOwnedByTeam[EY_POINTS_MAX];
+        uint32 m_PointOwnedByTeam[EY_POINTS_MAX];                                      
         uint8 m_PointState[EY_POINTS_MAX];
         int32 m_PointBarStatus[EY_POINTS_MAX];
         typedef std::vector<uint64> PlayersNearPointType;
         PlayersNearPointType m_PlayersNearPoint[EY_POINTS_MAX + 1];
         uint8 m_CurrentPointPlayersCount[2*EY_POINTS_MAX];
 
-        int32 m_PointAddingTimer;
+        Timer m_PointAddingTimer;
+        Timer uCheckDelayer;
+        Timer uWalkingDead;
+        Player *Exploiter;
 };
 #endif
 

@@ -60,7 +60,7 @@ class SqlConnection
         virtual bool CommitTransaction() { return true; }
         // can't rollback without transaction support
         virtual bool RollbackTransaction() { return true; }
-
+		virtual bool Ping() { return 0; };
         //methods to work with prepared statements
         bool ExecuteStmt(int nIndex, const SqlStmtParameters& id);
 
@@ -210,7 +210,7 @@ class Database
         void ProcessResultQueue();
 
         bool CheckRequiredField(char const* table_name, char const* required_name);
-        uint32 GetPingIntervall() { return m_pingIntervallms; }
+        uint32 GetPingInterval() { return m_pingIntervalms; }
         bool CheckMinLogTime(uint32 time);
 
         //function to ping database connections
@@ -224,7 +224,7 @@ class Database
 
     protected:
         Database() : m_pAsyncConn(NULL), m_pResultQueue(NULL), m_threadBody(NULL), m_delayThread(NULL),
-            m_logSQL(false), m_pingIntervallms(0), m_nQueryConnPoolSize(1), m_bAllowAsyncTransactions(false), m_iStmtIndex(-1)
+            m_logSQL(false), m_pingIntervalms(0), m_nQueryConnPoolSize(1), m_bAllowAsyncTransactions(false), m_iStmtIndex(-1)
         {
             m_nQueryCounter = -1;
             m_enableLogging = false;
@@ -262,7 +262,7 @@ class Database
         typedef ACE_TSS<Database::TransHelper> DBTransHelperTSS;
         Database::DBTransHelperTSS m_TransStorage;
 
-        ///< DB connections
+        /// DB connections
 
         //round-robin connection selection
         SqlConnection * getQueryConnection();
@@ -286,11 +286,11 @@ class Database
         //only one single DB connection for transactions
         SqlConnection * m_pAsyncConn;
 
-        SqlResultQueue *    m_pResultQueue;                  ///< Transaction queues from diff. threads
-        SqlDelayThread *    m_threadBody;                    ///< Pointer to delay sql executer (owned by m_delayThread)
-        ACE_Based::Thread * m_delayThread;                   ///< Pointer to executer thread
+        SqlResultQueue *    m_pResultQueue;                  /// Transaction queues from diff. threads
+        SqlDelayThread *    m_threadBody;                    /// Pointer to delay sql executer (owned by m_delayThread)
+        ACE_Based::Thread * m_delayThread;                   /// Pointer to executer thread
 
-        bool m_bAllowAsyncTransactions;                      ///< flag which specifies if async transactions are enabled
+        bool m_bAllowAsyncTransactions;                      /// flag which specifies if async transactions are enabled
 
         //PREPARED STATEMENT REGISTRY
         typedef ACE_Thread_Mutex LOCK_TYPE;
@@ -299,7 +299,7 @@ class Database
         mutable LOCK_TYPE m_stmtGuard;
         typedef UNORDERED_MAP<std::string, int> PreparedStmtRegistry;
 
-        PreparedStmtRegistry m_stmtRegistry;                 ///< 
+        PreparedStmtRegistry m_stmtRegistry;                 /// 
 
         int m_iStmtIndex;
 
@@ -307,7 +307,7 @@ class Database
 
         bool m_logSQL;
         std::string m_logsDir;
-        uint32 m_pingIntervallms;
+        uint32 m_pingIntervalms;
         uint32 m_minLogTimems;
         bool m_enableLogging;
 };

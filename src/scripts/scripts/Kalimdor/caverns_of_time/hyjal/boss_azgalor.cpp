@@ -56,12 +56,12 @@ struct boss_azgalorAI : public hyjal_trashAI
             TempSpell->EffectRadiusIndex[0] = 12;//100yards instead of 50000?!
     }
 
-    uint32 RainTimer;
-    uint32 DoomTimer;
-    uint32 HowlTimer;
-    uint32 CleaveTimer;
-    uint32 EnrageTimer;
-    uint32 CheckTimer;
+    Timer RainTimer;
+    Timer DoomTimer;
+    Timer HowlTimer;
+    Timer CleaveTimer;
+    Timer EnrageTimer;
+    Timer CheckTimer;
     bool enraged;
 
     bool go;
@@ -70,12 +70,12 @@ struct boss_azgalorAI : public hyjal_trashAI
     void Reset()
     {
         damageTaken = 0;
-        RainTimer = 20000;
-        DoomTimer = 50000;
-        HowlTimer = 30000;
-        CleaveTimer = 10000;
-        EnrageTimer = 600000;
-        CheckTimer = 3000;
+        RainTimer.Reset(20000);
+        DoomTimer.Reset(50000);
+        HowlTimer.Reset(30000);
+        CleaveTimer.Reset(10000);
+        EnrageTimer.Reset(600000);
+        CheckTimer.Reset(3000);
         enraged = false;
 
         if(pInstance && IsEvent)
@@ -129,9 +129,9 @@ struct boss_azgalorAI : public hyjal_trashAI
         }
     }
 
-    void JustDied(Unit *victim)
+    void JustDied(Unit *Killer)
     {
-        hyjal_trashAI::JustDied(victim);
+        hyjal_trashAI::JustDied(Killer);
         if(pInstance && IsEvent)
             pInstance->SetData(DATA_AZGALOREVENT, DONE);
 
@@ -167,16 +167,17 @@ struct boss_azgalorAI : public hyjal_trashAI
         if (!UpdateVictim() )
             return;
 
-        if(CheckTimer < diff)
+        
+        if (CheckTimer.Expired(diff))
         {
             DoZoneInCombat();
             m_creature->SetSpeed(MOVE_RUN, 3.0);
-            CheckTimer = 3000;
+            CheckTimer = 1000;
         }
-        else
-            CheckTimer -= diff;
+        
 
-        if(RainTimer < diff)
+        
+        if (RainTimer.Expired(diff))
         {
             if(Unit *target = SelectUnit(SELECT_TARGET_RANDOM, 0, 40, true))
             {
@@ -184,11 +185,11 @@ struct boss_azgalorAI : public hyjal_trashAI
                 RainTimer = urand(20000, 35000);
             }
         }
-        else
-            RainTimer -= diff;
+        
 
+        
         //only set timer when target exist, cause with exclude defined we return NULL that now can be acceptable spell target
-        if(DoomTimer < diff)
+        if (DoomTimer.Expired(diff))
         {
             if(Unit *target = SelectUnit(SELECT_TARGET_RANDOM, 0, 100, true, m_creature->getVictimGUID()))
             {
@@ -196,18 +197,18 @@ struct boss_azgalorAI : public hyjal_trashAI
                 DoomTimer = urand(45000, 50000);
             }
         }
-        else
-            DoomTimer -= diff;
+        
 
-        if(HowlTimer < diff)
+        
+        if (HowlTimer.Expired(diff))
         {
             DoCast(m_creature, SPELL_HOWL_OF_AZGALOR);
             HowlTimer = 30000;
         }
-        else
-            HowlTimer -= diff;
+        
 
-        if(CleaveTimer < diff)
+
+        if (CleaveTimer.Expired(diff))
         {
             if(Unit *target = m_creature->getVictim())
             {
@@ -215,18 +216,17 @@ struct boss_azgalorAI : public hyjal_trashAI
                 CleaveTimer = urand(10000, 15000);
             }
         }
-        else
-            CleaveTimer -= diff;
+        
 
-        if(EnrageTimer < diff && !enraged)
+        
+        if (!enraged && EnrageTimer.Expired(diff))
         {
             m_creature->InterruptNonMeleeSpells(false);
             DoCast(m_creature, SPELL_BERSERK, true);
             enraged = true;
             EnrageTimer = 600000;
         }
-        else
-            EnrageTimer -= diff;
+        
 
         DoMeleeAttackIfReady();
     }
@@ -248,17 +248,17 @@ struct mob_lesser_doomguardAI : public hyjal_trashAI
         pInstance = (c->GetInstanceData());
     }
 
-    uint32 CrippleTimer;
-    uint32 WarstompTimer;
-    uint32 CheckTimer;
+    Timer CrippleTimer;
+    Timer WarstompTimer;
+    Timer CheckTimer;
 
     ScriptedInstance* pInstance;
 
     void Reset()
     {
-        CrippleTimer = 50000;
-        WarstompTimer = 10000;
-        CheckTimer = 2000;
+        CrippleTimer.Reset(50000);
+        WarstompTimer.Reset(10000);
+        CheckTimer.Reset(2000);
     }
 
     void WaypointReached(uint32){}
@@ -279,7 +279,8 @@ struct mob_lesser_doomguardAI : public hyjal_trashAI
 
     void UpdateAI(const uint32 diff)
     {
-        if(CheckTimer < diff)
+        
+        if (CheckTimer.Expired(diff))
         {
             if(pInstance)
             {
@@ -293,22 +294,21 @@ struct mob_lesser_doomguardAI : public hyjal_trashAI
             }
             CheckTimer = 2000;
         }
-        else
-            CheckTimer -= diff;
+        
 
         //Return since we have no target
         if (!UpdateVictim() )
             return;
 
-        if(WarstompTimer < diff)
+        
+        if (WarstompTimer.Expired(diff))
         {
             DoCast(m_creature, SPELL_WARSTOMP);
             WarstompTimer = urand(10000, 25000);
         }
-        else
-            WarstompTimer -= diff;
+        
 
-        if(CrippleTimer < diff)
+        if (CrippleTimer.Expired(diff))
         {
             if(Unit *target = SelectUnit(SELECT_TARGET_RANDOM,0,100,true))
             {
@@ -316,8 +316,7 @@ struct mob_lesser_doomguardAI : public hyjal_trashAI
                 CrippleTimer = urand(25000, 30000);
             }
         }
-        else
-            CrippleTimer -= diff;
+        
 
         DoMeleeAttackIfReady();
     }

@@ -74,10 +74,15 @@ uint32 WorldTimer::tick()
     m_iPrevTime = m_iTime;
 
     // Get the new one and don't forget to persist current system time in m_SystemTickTime
-    m_iTime = WorldTimer::getMSTime_internal(true);
+    m_iTime = WorldTimer::getMSTime_internal();
 
     // return tick diff
     return getMSTimeDiff(m_iPrevTime, m_iTime);
+}
+
+void WorldTimer::tickTimeRenew()
+{
+    m_iTime = WorldTimer::getMSTime_internal();
 }
 
 uint32 WorldTimer::getMSTime()
@@ -85,7 +90,7 @@ uint32 WorldTimer::getMSTime()
     return getMSTime_internal();
 }
 
-uint32 WorldTimer::getMSTime_internal(bool savetime /*= false*/)
+uint32 WorldTimer::getMSTime_internal()
 {
     // Get current time
     const ACE_Time_Value currTime = ACE_OS::gettimeofday();
@@ -151,6 +156,13 @@ void stripLineInvisibleChars(std::string &str)
         str.erase(wpos,str.size());
 }
 
+std::string msToTimeString(uint32 ms)
+{
+    std::ostringstream ss;
+    ss << secsToTimeString(ms / 1000) << " " << uint32(ms % 1000) << " ms";
+    return ss.str();
+}
+
 std::string secsToTimeString(uint32 timeInSecs, bool shortText, bool hoursOnly)
 {
     uint32 secs    = timeInSecs % MINUTE;
@@ -159,16 +171,36 @@ std::string secsToTimeString(uint32 timeInSecs, bool shortText, bool hoursOnly)
     uint32 days    = timeInSecs / DAY;
 
     std::ostringstream ss;
-    if(days)
-        ss << days << (shortText ? "d" : " Day(s) ");
-    if(hours || hoursOnly)
-        ss << hours << (shortText ? "h" : " Hour(s) ");
+    if (days)
+    {
+        if (days == 1)
+            ss << days << (shortText ? "d" : " day ");
+        else
+            ss << days << (shortText ? "d" : " days ");
+    }
+    if (hours || hoursOnly)
+    {
+        if (hours == 1)
+            ss << hours << (shortText ? "h" : " hour ");
+        else
+            ss << hours << (shortText ? "h" : " hours ");
+    }
     if(!hoursOnly)
     {
-        if(minutes)
-            ss << minutes << (shortText ? "m" : " Minute(s) ");
-        if(secs || (!days && !hours && !minutes) )
-            ss << secs << (shortText ? "s" : " Second(s).");
+        if (minutes)
+        { 
+            if (minutes == 1)
+                ss << minutes << (shortText ? "m" : " minute ");
+            else
+                ss << minutes << (shortText ? "m" : " minutes ");
+        }
+        if (secs || (!days && !hours && !minutes))
+        {
+            if (secs == 1)
+                ss << secs << (shortText ? "s" : " second");
+            else 
+                ss << secs << (shortText ? "s" : " seconds");
+        }
     }
 
     return ss.str();

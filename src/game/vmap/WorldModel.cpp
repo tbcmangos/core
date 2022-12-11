@@ -21,6 +21,7 @@
 #include "WorldModel.h"
 #include "VMapDefinitions.h"
 #include "MapTree.h"
+#include "VMapFactory.h"
 
 using G3D::Vector3;
 using G3D::Ray;
@@ -44,7 +45,7 @@ namespace VMAP
         const Vector3 p(ray.direction().cross(e2));
         const float a = e1.dot(p);
 
-        if (abs(a) < EPS) {
+        if (fabs(a) < EPS) { // don't use abs - on linux on minus numbers it returns 0!
             // Determinant is ill-conditioned; abort early
             return false;
         }
@@ -408,27 +409,38 @@ namespace VMAP
 
     struct WModelRayCallBack
     {
-        WModelRayCallBack(const std::vector<GroupModel> &mod): models(mod.begin()), hit(false) {}
+        WModelRayCallBack(const std::vector<GroupModel> &mod): models(mod.begin()), hit(false), hitID(0){}
         bool operator()(const G3D::Ray& ray, uint32 entry, float& distance, bool pStopAtFirstHit)
         {
             bool result = models[entry].IntersectRay(ray, distance, pStopAtFirstHit);
-            if (result)  hit=true;
+            if (result)
+            {
+                hitID = models[entry].GetWmoID();
+                hit = true;
+            }
             return hit;
         }
         std::vector<GroupModel>::const_iterator models;
-        bool hit;
+        uint32 hitID;
+        bool   hit;
     };
 
     bool WorldModel::IntersectRay(const G3D::Ray &ray, float &distance, bool stopAtFirstHit) const
     {
         // small M2 workaround, maybe better make separate class with virtual intersection funcs
         // in any case, there's no need to use a bound tree if we only have one submodel
+        uint32 hitID = 0;
+        bool   hit = false;
         if (groupModels.size() == 1)
-            return groupModels[0].IntersectRay(ray, distance, stopAtFirstHit);
-
-        WModelRayCallBack isc(groupModels);
-        groupTree.intersectRay(ray, isc, distance, stopAtFirstHit);
-        return isc.hit;
+            hit = groupModels[0].IntersectRay(ray, distance, stopAtFirstHit);
+        else
+        {
+            WModelRayCallBack isc(groupModels);
+            groupTree.intersectRay(ray, isc, distance, stopAtFirstHit);
+            hit = isc.hit;
+            hitID = isc.hitID;
+        }
+        return hit;
     }
 
     class WModelAreaCallback {

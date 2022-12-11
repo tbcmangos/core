@@ -25,19 +25,19 @@ EndScriptData */
 
 #include "precompiled.h"
 
-#define YELL_AGGRO              -2100008
+#define YELL_AGGRO              -1001008
 
-#define YELL_EVADE              -2100009
-#define YELL_RESPAWN1           -2100010
-#define YELL_RESPAWN2           -2100011
+#define YELL_EVADE              -1001009
+#define YELL_RESPAWN1           -1001010
+#define YELL_RESPAWN2           -1001011
 
-#define YELL_RANDOM1            -2100012
-#define YELL_RANDOM2            -2100013
-#define YELL_RANDOM3            -2100014
-#define YELL_RANDOM4            -2100015
-#define YELL_RANDOM5            -2100016
-#define YELL_RANDOM6            -2100017
-#define YELL_RANDOM7            -2100018
+#define YELL_RANDOM1            -1001012
+#define YELL_RANDOM2            -1001013
+#define YELL_RANDOM3            -1001014
+#define YELL_RANDOM4            -1001015
+#define YELL_RANDOM5            -1001016
+#define YELL_RANDOM6            -1001017
+#define YELL_RANDOM7            -1001018
 
 
 #define SPELL_AVATAR            19135
@@ -62,20 +62,20 @@ struct boss_vanndarAI : public ScriptedAI
         m_creature->GetPosition(wLoc);
     }
 
-    uint32 AvatarTimer;
-    uint32 ThunderclapTimer;
-    uint32 StormboltTimer;
-    uint32 YellTimer;
-    uint32 CheckTimer;
+    Timer AvatarTimer;
+    Timer ThunderclapTimer;
+    Timer StormboltTimer;
+    Timer YellTimer;
+    Timer CheckTimer;
     WorldLocation wLoc;
 
     void Reset()
     {
-        AvatarTimer             = 3000;
-        ThunderclapTimer        = 4000;
-        StormboltTimer          = 6000;
-        YellTimer               = urand(20000, 30000); //20 to 30 seconds
-        CheckTimer              = 2000;
+        AvatarTimer.Reset(3000);
+        ThunderclapTimer.Reset(4000);
+        StormboltTimer.Reset(6000);
+        YellTimer.Reset(urand(20000, 30000)); //20 to 30 seconds
+        CheckTimer.Reset(2000);
     }
 
     void EnterCombat(Unit *who)
@@ -126,7 +126,8 @@ struct boss_vanndarAI : public ScriptedAI
         if (!UpdateVictim())
             return;
 
-        if (CheckTimer < diff)
+        
+        if (CheckTimer.Expired(diff))
         {
             if (!m_creature->IsWithinDistInMap(&wLoc, 20.0f))
                 EnterEvadeMode();
@@ -136,42 +137,38 @@ struct boss_vanndarAI : public ScriptedAI
 
             CheckTimer = 2000;
         }
-        else
-            CheckTimer -= diff;
-
-        if (AvatarTimer < diff)
+        
+        
+        if (AvatarTimer.Expired(diff))
         {
             ForceSpellCast(m_creature->getVictim(), SPELL_AVATAR);
             AvatarTimer = urand(15000, 20000);
         }
-        else
-            AvatarTimer -= diff;
-
-        if (ThunderclapTimer < diff)
+        
+          
+            
+        if (ThunderclapTimer.Expired(diff))
         {
             AddSpellToCast(m_creature->getVictim(), SPELL_THUNDERCLAP);
             ThunderclapTimer = urand(5000, 15000);
         }
-        else
-            ThunderclapTimer -= diff;
-
-        if (StormboltTimer < diff)
+            
+        
+        if (StormboltTimer.Expired(diff))
         {
             Unit * victim = SelectUnit(SELECT_TARGET_RANDOM, 1, 30.0f, true);
             if (victim)
                 AddSpellToCast(victim, SPELL_STORMBOLT);
             StormboltTimer = urand(10000, 25000);
         }
-        else
-            StormboltTimer -= diff;
-
-        if (YellTimer < diff)
+        
+        
+        if (YellTimer.Expired(diff))
         {
             DoScriptText(RAND(YELL_RANDOM1, YELL_RANDOM2, YELL_RANDOM3, YELL_RANDOM4, YELL_RANDOM5, YELL_RANDOM6, YELL_RANDOM7), m_creature);
             YellTimer = urand(20000, 30000); //20 to 30 seconds
         }
-        else
-            YellTimer -= diff;
+          
 
         CastNextSpellIfAnyAndReady();
         DoMeleeAttackIfReady();
@@ -194,20 +191,20 @@ struct boss_vanndarOfficerAI : public ScriptedAI
         m_creature->GetPosition(wLoc);
     }
 
-    uint32 chargeTimer;
-    uint32 cleaveTimer;
-    uint32 demoShoutTimer;
-    uint32 whirlwindTimer;
-    uint32 CheckTimer;
+    Timer chargeTimer;
+    Timer cleaveTimer;
+    Timer demoShoutTimer;
+    Timer whirlwindTimer;
+    Timer CheckTimer;
     WorldLocation wLoc;
 
     void Reset()
     {
-        chargeTimer             = urand(7500, 20000);
-        cleaveTimer             = urand(5000, 10000);
-        demoShoutTimer          = urand(2000, 4000);
-        whirlwindTimer          = urand(9000, 13000);
-        CheckTimer              = 2000;
+        chargeTimer.Reset(urand(7500, 20000));
+        cleaveTimer.Reset(urand(5000, 10000));
+        demoShoutTimer.Reset(urand(2000, 4000));
+        whirlwindTimer.Reset(urand(9000, 13000));
+        CheckTimer.Reset(2000);
     }
 
     void EnterCombat(Unit *who)
@@ -255,7 +252,8 @@ struct boss_vanndarOfficerAI : public ScriptedAI
         if (!UpdateVictim())
             return;
 
-        if (CheckTimer < diff)
+        
+        if (CheckTimer.Expired(diff))
         {
             if (!m_creature->IsWithinDistInMap(&wLoc, 20.0f))
                 EnterEvadeMode();
@@ -265,10 +263,8 @@ struct boss_vanndarOfficerAI : public ScriptedAI
 
             CheckTimer = 2000;
         }
-        else
-            CheckTimer -= diff;
-
-        if (chargeTimer < diff)
+        
+        if (chargeTimer.Expired(diff))
         {
             Unit * target = SelectUnit(SELECT_TARGET_RANDOM, 0, 25.0f, true, 0, 8.0f);
 
@@ -277,32 +273,28 @@ struct boss_vanndarOfficerAI : public ScriptedAI
 
             chargeTimer = urand(7500, 20000);
         }
-        else
-            chargeTimer -= diff;
-
-        if (cleaveTimer < diff)
+        
+            
+        if (cleaveTimer.Expired(diff))
         {
             AddSpellToCast(AV_VO_CLEAVE, CAST_TANK);
             cleaveTimer = urand(5000, 10000);
         }
-        else
-            cleaveTimer -= diff;
-
-        if (demoShoutTimer < diff)
+        
+           
+        if (demoShoutTimer.Expired(diff))
         {
             AddSpellToCast(AV_VO_DEMOSHOUT, CAST_NULL);
             demoShoutTimer = urand(14000, 25000);
         }
-        else
-            demoShoutTimer -= diff;
-
-        if (whirlwindTimer < diff)
+        
+        
+        if (whirlwindTimer.Expired(diff))
         {
             AddSpellToCast(AV_VO_WHIRLWIND, CAST_SELF);
             whirlwindTimer = urand(9000, 13000);
         }
-        else
-            whirlwindTimer -= diff;
+        
 
 
         CastNextSpellIfAnyAndReady();

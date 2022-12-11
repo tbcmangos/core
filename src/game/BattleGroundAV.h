@@ -28,7 +28,6 @@ class BattleGround;
 #define LANG_BG_AV_S_MINE_BOSS_CLAIMS   "Snivvle is here! Snivvle claims the Coldtooth Mine!"
 
 #define BG_AV_CAPTIME                    240000  //4:00
-#define BG_AV_SNOWFALL_FIRSTCAP          300000  //5:00 but i also have seen 4:05
 
 #define BG_AV_SCORE_INITIAL_POINTS       600
 #define SEND_MSG_NEAR_LOSE               120
@@ -1575,9 +1574,9 @@ class BattleGroundAV : public BattleGround
 
         uint32 m_Mine_Owner[2];
         uint32 m_Mine_PrevOwner[2]; //only for worldstates needed
-        int32 m_Mine_Timer; //ticks for both teams
-        uint32 m_Mine_Reclaim_Timer[2];
-        uint32 m_CaptainBuffTimer[2];
+        Timer m_Mine_Timer; //ticks for both teams
+        Timer m_Mine_Reclaim_Timer[2];
+        Timer m_CaptainBuffTimer[2];
         bool m_CaptainAlive[2];
 
         uint8 m_MaxLevel; //TODO remove this when battleground-getmaxlevel() returns something usefull

@@ -148,7 +148,7 @@ int Master::Run()
         return 1;
 
     // set server offline (not connectable)
-    AccountsDatabase.DirectPExecute("UPDATE realms SET flags = flags | %u WHERE realm_id = '%u'", REALM_FLAG_OFFLINE, REALM_FLAG_INVALID, realmID);
+    AccountsDatabase.DirectPExecute("UPDATE realms SET flags = flags | %u WHERE realm_id = '%u'", REALM_FLAG_OFFLINE, realmID);
     ///- Initialize the World
     sWorld.SetInitialWorldSettings();
 
@@ -251,7 +251,7 @@ int Master::Run()
     uint32 socketSelecttime = sWorld.getConfig(CONFIG_SOCKET_SELECTTIME);
 
     // maximum counter for next ping
-    uint32 numLoops = (sConfig.GetIntDefault("MaxPingTime", 30) * (MINUTE * 1000000 / socketSelecttime));
+    uint32 numLoops = (sConfig.GetIntDefault("MaxPingTime", 30) * (1000000 / socketSelecttime));
     uint32 loopCounter = 0;
 
     ///- Start up freeze catcher thread
@@ -404,8 +404,6 @@ bool Master::_StartDB()
     ///- Clean the database before starting
     clearOnlineAccounts();
 
-    sWorld.LoadDBVersion();
-
     //sLog.outString("Using %s", sWorld.GetDBVersion());
     return true;
 }
@@ -413,6 +411,13 @@ bool Master::_StartDB()
 /// Clear 'online' status for all accounts with characters in this realm
 void Master::clearOnlineAccounts()
 {
+    //if we use only one realm then we don't have to update for every single account separately
+    if (sWorld.getConfig(CONFIG_FASTBOOT))
+    {
+        AccountsDatabase.Execute("UPDATE account SET online = 0");
+        return;
+    }
+    
     // Cleanup online status for characters hosted at current realm
     QueryResultAutoPtr result = RealmDataDatabase.Query("SELECT DISTINCT account FROM characters WHERE online <> 0");
 
@@ -432,6 +437,7 @@ void Master::clearOnlineAccounts()
     AccountsDatabase.CommitTransaction();
 
     RealmDataDatabase.Execute("UPDATE characters SET online = 0");
+    
 }
 
 /// Handle termination signals
@@ -454,7 +460,7 @@ void Master::_OnSignal(int s)
                     map->SetBroken(true);
 
                 sMapMgr.GetMapUpdater()->unregister_thread(ACE_OS::thr_self());
-                sMapMgr.GetMapUpdater()->update_finished();
+                sMapMgr.GetMapUpdater()->update_finished(mapUpdateInfo->GetId());
             }
             else
             {

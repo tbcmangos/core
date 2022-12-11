@@ -45,13 +45,15 @@ float addPos[9][4] =
 
 enum lurkerSpells
 {
-    SPELL_SPOUT_VISUAL = 37429,
-    SPELL_SPOUT_BREATH = 37431,
-    SPELL_SPOUT_EFFECT = 37433,
-    SPELL_GEYSER       = 37478,
-    SPELL_WHIRL        = 37660,
-    SPELL_WATERBOLT    = 37138,
-    SPELL_SUBMERGE     = 37550,
+    SPELL_SPOUT_VISUAL       = 37429,
+    SPELL_SPOUT_BREATH       = 37431,
+    SPELL_SPOUT_EFFECT       = 37433,
+    SPELL_GEYSER             = 37478,
+    SPELL_WHIRL              = 37660,
+    SPELL_WATERBOLT          = 37138,
+    SPELL_SUBMERGE           = 37550,
+    SPELL_EMERGE             = 20568 // wrong spellid
+
 };
 
 #define SPOUT_WIDTH 1.2f
@@ -60,21 +62,27 @@ enum LurkerEvents
 {
     LURKER_EVENT_SPOUT_EMOTE    = 1,
     LURKER_EVENT_SPOUT          = 2,
-    LURKER_EVENT_WHIRL          = 3,
-    LURKER_EVENT_GEYSER         = 4,
-    LURKER_EVENT_SUBMERGE       = 5,
-    LURKER_EVENT_REEMERGE       = 6
+    LURKER_EVENT_STOP_SPOUT     = 3,
+    LURKER_EVENT_WHIRL          = 4,
+    LURKER_EVENT_GEYSER         = 5,
+    LURKER_EVENT_SUBMERGE       = 6,
+    LURKER_EVENT_REEMERGING     = 7,
+    LURKER_EVENT_REEMERGE       = 8,
+    LURKER_EVENT_SPAWN_ADDS     = 9
 };
 
 struct boss_the_lurker_belowAI : public BossAI
 {
-    boss_the_lurker_belowAI(Creature *c) : BossAI(c, DATA_THELURKERBELOW) { }
+    boss_the_lurker_belowAI(Creature *c) : BossAI(c, DATA_THELURKERBELOW) 
+    {
+        me->AddUnitMovementFlag(MOVEFLAG_SWIMMING);
+        me->SetLevitate(true);
+    }
 
     bool m_rotating;
     bool m_submerged;
-    bool m_emoteDone;
+    bool m_emoting;
 
-    uint32 m_checkTimer;
 
     void Reset()
     {
@@ -84,39 +92,30 @@ struct boss_the_lurker_belowAI : public BossAI
         instance->SetData(DATA_THELURKERBELOWEVENT, NOT_STARTED);
         instance->SetData(DATA_STRANGE_POOL, NOT_STARTED);
 
-        // Do not fall to the ground ;]
-        me->AddUnitMovementFlag(MOVEFLAG_SWIMMING);
-        me->SetLevitate(true);
 
         // Set reactstate to: Defensive
         me->SetReactState(REACT_DEFENSIVE);
         me->SetVisibility(VISIBILITY_OFF);
 
+
         me->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
         me->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_ATTACKABLE_2);
 
-        events.ScheduleEvent(LURKER_EVENT_SPOUT_EMOTE, 42000);
-        events.ScheduleEvent(LURKER_EVENT_WHIRL, 18000);
-        events.ScheduleEvent(LURKER_EVENT_GEYSER, 0);
-        events.ScheduleEvent(LURKER_EVENT_SUBMERGE, 90000);
-
-        // Timers
-        m_checkTimer = 3000;
-
         // Bools
         m_rotating = false;
-        m_submerged = false;
+        m_submerged = true;
+        m_emoting = false;
+        
+        
 
         summons.DespawnAll();
-        me->CastSpell(me, SPELL_SUBMERGE, false);
+        ForceSpellCast(me, SPELL_SUBMERGE, INTERRUPT_AND_CAST_INSTANTLY);
     }
 
     void EnterCombat(Unit *who)
     {
         instance->SetData(DATA_THELURKERBELOWEVENT, IN_PROGRESS);
         me->SetReactState(REACT_AGGRESSIVE);
-
-        AttackStart(who);
     }
 
     void AttackStart(Unit *pWho)
@@ -125,7 +124,7 @@ struct boss_the_lurker_belowAI : public BossAI
             return;
 
         if (m_creature->Attack(pWho, true))
-            DoStartNoMovement(pWho);
+            {} //DoStartNoMovement(pWho);
     }
 
     void MoveInLineOfSight(Unit *pWho)
@@ -139,60 +138,74 @@ struct boss_the_lurker_belowAI : public BossAI
     void JustDied(Unit* Killer)
     {
         instance->SetData(DATA_THELURKERBELOWEVENT, DONE);
+        me->AddUnitMovementFlag(MOVEFLAG_SWIMMING); 
+        me->SetLevitate(true); // just to be sure
+        DoTeleportTo(37.6721f, -417.457f, -21.62f, me->GetOrientation());
     }
+
+    void SpellHitTarget(Unit *target, const SpellEntry *spell)
+    {
+    }
+
 
     void SummonAdds()
     {
         for (uint8 i = 0; i < 9; i++)
-            Creature *pSummon = me->SummonCreature(addPos[i][0], addPos[i][1], addPos[i][2], addPos[i][3], 0, TEMPSUMMON_DEAD_DESPAWN, 2000);
+            me->SummonCreature(addPos[i][0], addPos[i][1], addPos[i][2], addPos[i][3], 0, TEMPSUMMON_DEAD_DESPAWN, 2000);
     }
 
     void MovementInform(uint32 type, uint32 data)
     {
-        // data: 0 = FINALIZE
-        // data: 1 = UPDATE
-        if (type == ROTATE_MOTION_TYPE)
+    }
+
+    bool SelectTarget()
+    {
+        std::list<HostileReference*>& m_threatlist = me->getThreatManager().getThreatList();
+        if (m_threatlist.empty())
+            return false;
+
+        for (std::list<HostileReference*>::iterator itr = m_threatlist.begin(); itr != m_threatlist.end(); ++itr)
         {
-            if (data == 0) //Rotate movegen finalize
+            Unit* pUnit = Unit::GetUnit((*me), (*itr)->getUnitGuid());
+            if (pUnit && pUnit->isAlive())
             {
-                me->RemoveAurasDueToSpell(SPELL_SPOUT_VISUAL);
-                me->SetReactState(REACT_AGGRESSIVE);
-                m_rotating = false;
+                if (me->GetDistance(pUnit) > 1.5f)
+                    (*itr)->setThreat(0.0f);
             }
         }
+        return UpdateVictim();
     }
 
     void DoMeleeAttackIfReady()
     {
-        if (me->hasUnitState(UNIT_STAT_CASTING) || m_submerged || m_rotating)
+        if (!SelectTarget())
+        {
+            EnterEvadeMode();
+            return;
+        }
+
+        if (m_submerged || m_rotating || m_emoting)
             return;
 
-        //Make sure our attack is ready and we aren't currently casting before checking distance
-        if (me->isAttackReady())
+        if (me->GetDistance(me->getVictim()) <= 1.5f)
         {
-            //If we are within range melee the target
-            if (me->IsWithinMeleeRange(me->getVictim()))
-            {
-                me->AttackerStateUpdate(me->getVictim());
-                me->resetAttackTimer();
-            }
-            else
-            {
-                if (Unit *pTarget = SelectUnit(SELECT_TARGET_TOPAGGRO, 0, 5.0f, true))
-                {
-                    me->AttackerStateUpdate(pTarget);
-                    me->resetAttackTimer();
-                }
-                else
-                {
-                    if (Unit *pTarget = SelectUnit(SELECT_TARGET_RANDOM, 0, 100.0f, true, 0, 5.0f))
-                        AddSpellToCast(pTarget, SPELL_WATERBOLT);
-                    else
-                        EnterEvadeMode();
-                }
-            }
+            me->Attack(me->getVictim(), true);
+            UnitAI::DoMeleeAttackIfReady();
+            return;
         }
+        else if (me->isAttackReady())
+        {
+            Unit *pTarget = SelectCastTarget(SPELL_WATERBOLT, CAST_RANDOM);
+            if (!pTarget)
+                return;
+            m_creature->SetSelection(pTarget->GetGUID());
+            m_creature->CastSpell(pTarget, SPELL_WATERBOLT, false);
+            //ForceSpellCast(SPELL_WATERBOLT, CAST_RANDOM, INTERRUPT_AND_CAST_INSTANTLY);
+            me->resetAttackTimer();
+        }
+
     }
+    
 
     void UpdateAI(const uint32 diff)
     {
@@ -201,58 +214,71 @@ struct boss_the_lurker_belowAI : public BossAI
 
         if (me->GetVisibility() == VISIBILITY_OFF)
         {
+            me->SetReactState(REACT_AGGRESSIVE);
             me->SetVisibility(VISIBILITY_ON);
-            me->RemoveAurasDueToSpell(SPELL_SUBMERGE);
-
-            me->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_ATTACKABLE_2);
-            me->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
-
+            events.Reset();
+            events.ScheduleEvent(LURKER_EVENT_REEMERGING, 1000);
             DoZoneInCombat();
+            me->SetIgnoreVictimSelection(true);
         }
-
-        if (!UpdateVictim())
-            return;
-
+        events.Update(diff);
         DoSpecialThings(diff, DO_PULSE_COMBAT);
 
-        events.Update(diff);
+        if (m_rotating)
+            me->SetSelection(0); // another !IMPORTANTE! hack! he sets target on someone who he hits with spell, so this is a hack, very important hack!  also i have no idea what is causing him to target the spout victim when he hits...
+
+
+
         while (uint32 eventId = events.ExecuteEvent())
         {
             switch (eventId)
             {
                 case LURKER_EVENT_SPOUT_EMOTE:
                 {
+                    ClearCastQueue();
                     me->MonsterTextEmote(EMOTE_SPOUT, 0, true);
-                    ForceSpellCast(me, SPELL_SPOUT_BREATH);
+                    float fix = me->GetOrientation();
+                    me->SetSelection(0);
+                    ForceSpellCast(SPELL_SPOUT_BREATH, CAST_NULL, INTERRUPT_AND_CAST_INSTANTLY);
+                    me->SetOrientation(fix);
+                    me->SendHeartBeat(); // send this orientation change to players
+                    m_emoting = true;
+                    me->SetIgnoreVictimSelection(true);
+
+                    events.RescheduleEvent(LURKER_EVENT_WHIRL, 15100); // 100 ms after spout we whirl
+                    events.RescheduleEvent(LURKER_EVENT_GEYSER, urand(15100, 25000));
+
                     events.ScheduleEvent(LURKER_EVENT_SPOUT, 3000);
                     break;
                 }
                 case LURKER_EVENT_SPOUT:
                 {
-                    me->SetReactState(REACT_PASSIVE);
-
-                    me->SetSelection(0);
-                   // me->GetMotionMaster()->MoveRotate(20000, RAND(ROTATE_DIRECTION_LEFT, ROTATE_DIRECTION_RIGHT));
-
-                    ForceSpellCast(me, SPELL_SPOUT_VISUAL, INTERRUPT_AND_CAST_INSTANTLY);
-
+                    m_emoting = false;
                     m_rotating = true;
-
-                    events.DelayEvents(20000, 0);
+                    ForceSpellCast(SPELL_SPOUT_VISUAL, CAST_NULL, INTERRUPT_AND_CAST_INSTANTLY);
+                    me->GetMotionMaster()->MoveRotate(12000, RAND(ROTATE_DIRECTION_LEFT, ROTATE_DIRECTION_RIGHT));
+                    
                     events.ScheduleEvent(LURKER_EVENT_SPOUT_EMOTE, 45000);
-                    events.RescheduleEvent(LURKER_EVENT_WHIRL, 21000);
+                    events.ScheduleEvent(LURKER_EVENT_STOP_SPOUT, 12000);
+                    break;
+                }
+                case LURKER_EVENT_STOP_SPOUT:
+                {
+                    me->RemoveAurasDueToSpell(SPELL_SPOUT_VISUAL);
+                    m_rotating = false;
+                    me->SetIgnoreVictimSelection(false);
                     break;
                 }
                 case LURKER_EVENT_WHIRL:
                 {
-                    AddSpellToCast(me, SPELL_WHIRL);
-                    events.ScheduleEvent(LURKER_EVENT_WHIRL, 17500);
+                    ForceSpellCast(SPELL_WHIRL, CAST_NULL);
+                    events.RescheduleEvent(LURKER_EVENT_WHIRL, 18000);
                     break;
                 }
                 case LURKER_EVENT_GEYSER:
                 {
                     AddSpellToCast(SPELL_GEYSER, CAST_RANDOM);
-                    events.ScheduleEvent(LURKER_EVENT_GEYSER, urand(10000, 30000));
+                    events.ScheduleEvent(LURKER_EVENT_GEYSER, urand(5000, 10000));
                     break;
                 }
                 case LURKER_EVENT_SUBMERGE:
@@ -260,38 +286,55 @@ struct boss_the_lurker_belowAI : public BossAI
                     ForceSpellCast(me, SPELL_SUBMERGE, INTERRUPT_AND_CAST_INSTANTLY);
 
                     me->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
-                    me->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_ATTACKABLE_2);
+                    me->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
+                    me->RemoveAllAuras();
 
-                    SummonAdds();
                     m_submerged = true;
 
-                    events.CancelEvent(LURKER_EVENT_SPOUT_EMOTE);
-                    events.CancelEvent(LURKER_EVENT_SPOUT);
-                    events.CancelEvent(LURKER_EVENT_WHIRL);
-                    events.CancelEvent(LURKER_EVENT_GEYSER);
-                    events.ScheduleEvent(LURKER_EVENT_REEMERGE, 60000);
+                    events.Reset();
+                    events.ScheduleEvent(LURKER_EVENT_SPAWN_ADDS, 5000);
+                    events.ScheduleEvent(LURKER_EVENT_REEMERGING, 55000);
+                    break;
+                }
+                case LURKER_EVENT_SPAWN_ADDS:
+                {
+                    SummonAdds();
+                    break;
+                }
+                case LURKER_EVENT_REEMERGING:
+                {
+                    me->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
+                    me->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
+                    me->RemoveAurasDueToSpell(SPELL_SUBMERGE);
+                    me->UpdateVisibilityAndView();
+                    ForceSpellCast(SPELL_EMERGE, CAST_NULL, INTERRUPT_AND_CAST_INSTANTLY);
+                    me->UpdateVisibilityAndView();
+                    events.Reset();
+                    events.ScheduleEvent(LURKER_EVENT_REEMERGE, 5000);
+                    events.ScheduleEvent(LURKER_EVENT_WHIRL, 5250); // whirl right after reemerging, 250 ms to finish animation and shit
+                    ClearCastQueue(); // prevent casting waterbolt on random target even if someone is close
                     break;
                 }
                 case LURKER_EVENT_REEMERGE:
                 {
-                    me->RemoveAurasDueToSpell(SPELL_SUBMERGE);
-
                     me->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_ATTACKABLE_2);
                     me->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
+                    me->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
 
                     m_submerged = false;
 
-                    events.ScheduleEvent(LURKER_EVENT_SPOUT_EMOTE, 0);
-                    events.ScheduleEvent(LURKER_EVENT_WHIRL, 2000);
-                    events.ScheduleEvent(LURKER_EVENT_GEYSER, urand(5000, 15000));
+                    events.ScheduleEvent(LURKER_EVENT_SPOUT_EMOTE, 45000);;
+                    events.ScheduleEvent(LURKER_EVENT_GEYSER, urand(1000, 10000));
                     events.ScheduleEvent(LURKER_EVENT_SUBMERGE, 90000);
                     break;
                 }
+
             }
         }
 
-        CastNextSpellIfAnyAndReady();
+
         DoMeleeAttackIfReady();
+        CastNextSpellIfAnyAndReady();
     }
 };
 
@@ -305,15 +348,15 @@ struct mob_coilfang_guardianAI : public ScriptedAI
 {
     mob_coilfang_guardianAI(Creature *c) : ScriptedAI(c) { }
 
-    uint32 m_harmstringTimer;
-    uint32 m_arcingTimer;
+    Timer m_harmstringTimer;
+    Timer m_arcingTimer;
 
     void Reset()
     {
         ClearCastQueue();
 
-        m_harmstringTimer = urand(5000, 15000);
-        m_arcingTimer = urand(15000, 20000);
+        m_harmstringTimer.Reset(urand(5000, 15000));
+        m_arcingTimer.Reset(urand(15000, 20000));
     }
 
     void JustRespawned()
@@ -326,21 +369,19 @@ struct mob_coilfang_guardianAI : public ScriptedAI
         if (!UpdateVictim())
             return;
 
-        if (m_harmstringTimer < diff)
+        if (m_harmstringTimer.Expired(diff))
         {
             AddSpellToCast(SPELL_HARMSTRING);
             m_harmstringTimer = 10500;
         }
-        else
-            m_harmstringTimer -= diff;
 
-        if (m_arcingTimer < diff)
+
+        if (m_arcingTimer.Expired(diff))
         {
             AddSpellToCast(SPELL_ARCING_SMASH);
             m_arcingTimer = urand(10000, 20000);
         }
-        else
-            m_arcingTimer -= diff;
+        
 
         CastNextSpellIfAnyAndReady();
         DoMeleeAttackIfReady();
@@ -357,15 +398,15 @@ struct mob_coilfang_ambusherAI : public Scripted_NoMovementAI
 {
     mob_coilfang_ambusherAI(Creature *c) : Scripted_NoMovementAI(c) { }
 
-    uint32 m_spreadTimer;
-    uint32 m_shootTimer;
+    Timer m_spreadTimer;
+    Timer m_shootTimer;
 
     void Reset()
     {
         ClearCastQueue();
 
-        m_spreadTimer = urand(10000, 20000);
-        m_shootTimer = 2000;
+        m_spreadTimer.Reset(urand(10000, 20000));
+        m_shootTimer.Reset(2000);
     }
 
     void JustRespawned()
@@ -378,22 +419,19 @@ struct mob_coilfang_ambusherAI : public Scripted_NoMovementAI
         if (!UpdateVictim())
             return;
 
-        if (m_spreadTimer < diff)
+        if (m_spreadTimer.Expired(diff))
         {
             AddSpellToCast(SPELL_SPREAD_SHOT, CAST_RANDOM);
             m_spreadTimer = urand(10000, 20000);
         }
-        else
-            m_spreadTimer -= diff;
 
-        if (m_shootTimer < diff)
+
+        if (m_shootTimer.Expired(diff))
         {
             AddSpellToCast(SPELL_NORMAL_SHOT, CAST_RANDOM);
             m_shootTimer = 2000;
         }
-        else
-            m_shootTimer -= diff;
-
+        
         CastNextSpellIfAnyAndReady();
         DoMeleeAttackIfReady();
     }

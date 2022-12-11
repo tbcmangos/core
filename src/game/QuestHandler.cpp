@@ -33,7 +33,9 @@
 #include "Group.h"
 #include "BattleGround.h"
 #include "BattleGroundAV.h"
-#include "luaengine/HookMgr.h"
+
+// HACK: only questgiver that should interact only when dead
+#define NPC_GAERIYAN 9299
 
 void WorldSession::HandleQuestgiverStatusQueryOpcode(WorldPacket & recv_data)
 {
@@ -101,7 +103,7 @@ void WorldSession::HandleQuestgiverHelloOpcode(WorldPacket & recv_data)
     }
 
     // remove fake death
-    if (GetPlayer()->hasUnitState(UNIT_STAT_DIED))
+    if (GetPlayer()->HasFlag(UNIT_FIELD_FLAGS_2, UNIT_FLAG2_FEIGN_DEATH))
         GetPlayer()->RemoveSpellsCausingAura(SPELL_AURA_FEIGN_DEATH);
 
     // Stop the npc if moving
@@ -122,7 +124,7 @@ void WorldSession::HandleQuestgiverAcceptQuestOpcode(WorldPacket & recv_data)
     uint32 quest;
     recv_data >> guid >> quest;
 
-    if (!GetPlayer()->isAlive())
+    if (GetPlayer()->isAlive() == (GUID_ENPART(guid) == NPC_GAERIYAN))
         return;
 
     sLog.outDebug("WORLD: Received CMSG_QUESTGIVER_ACCEPT_QUEST npc = %u, quest = %u",uint32(GUID_LOPART(guid)),quest);
@@ -287,7 +289,7 @@ void WorldSession::HandleQuestgiverChooseRewardOpcode(WorldPacket & recv_data)
         return;
     }
 
-    if (!GetPlayer()->isAlive())
+    if (GetPlayer()->isAlive() == (GUID_ENPART(guid) == NPC_GAERIYAN))
         return;
 
     sLog.outDebug("WORLD: Received CMSG_QUESTGIVER_CHOOSE_REWARD npc = %u, quest = %u, reward = %u",uint32(GUID_LOPART(guid)),quest,reward);
@@ -313,18 +315,10 @@ void WorldSession::HandleQuestgiverChooseRewardOpcode(WorldPacket & recv_data)
         {
             _player->RewardQuest(pQuest, reward, pObject);
 
-            switch (pObject->GetTypeId())
+            if (Quest const* nextquest = _player->GetNextQuest(guid, pQuest))
             {
-                case TYPEID_UNIT:
-                    // Send next quest
-                    if (Quest const* nextquest = _player->GetNextQuest(guid ,pQuest))
-                        _player->PlayerTalkClass->SendQuestGiverQuestDetails(nextquest,guid,true);
-                    break;
-                case TYPEID_GAMEOBJECT:
-                    // Send next quest
-                    if (Quest const* nextquest = _player->GetNextQuest(guid ,pQuest))
-                        _player->PlayerTalkClass->SendQuestGiverQuestDetails(nextquest,guid,true);
-                    break;
+                if (_player->CanTakeQuest(nextquest, false))
+                    _player->PlayerTalkClass->SendQuestGiverQuestDetails(nextquest, guid, true);
             }
         }
         else
@@ -340,7 +334,7 @@ void WorldSession::HandleQuestgiverRequestRewardOpcode(WorldPacket & recv_data)
     uint64 guid;
     recv_data >> guid >> quest;
 
-    if (!GetPlayer()->isAlive())
+    if (GetPlayer()->isAlive() == (GUID_ENPART(guid) == NPC_GAERIYAN))
         return;
 
     sLog.outDebug("WORLD: Received CMSG_QUESTGIVER_REQUEST_REWARD npc = %u, quest = %u",uint32(GUID_LOPART(guid)),quest);
@@ -397,9 +391,6 @@ void WorldSession::HandleQuestLogRemoveQuest(WorldPacket& recv_data)
             if (!_player->TakeQuestSourceItem(quest, true))
                 return;                                     // can't un-equip some items, reject quest cancel
 
-            // used by eluna
-            sHookMgr->OnQuestAbandon(_player, quest);
-
             _player->SetQuestStatus(quest, QUEST_STATUS_NONE);
         }
 
@@ -448,7 +439,7 @@ void WorldSession::HandleQuestComplete(WorldPacket& recv_data)
     uint64 guid;
     recv_data >> guid >> quest;
 
-    if (!GetPlayer()->isAlive())
+    if (GetPlayer()->isAlive() == (GUID_ENPART(guid) == NPC_GAERIYAN))
         return;
 
     sLog.outDebug("WORLD: Received CMSG_QUESTGIVER_COMPLETE_QUEST npc = %u, quest = %u",uint32(GUID_LOPART(guid)),quest);

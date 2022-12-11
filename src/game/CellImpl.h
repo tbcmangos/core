@@ -63,7 +63,6 @@ inline void Cell::Visit(const CellPair &standing_cell, TypeContainerVisitor<T, C
 {
     if (standing_cell.x_coord >= TOTAL_NUMBER_OF_CELLS_PER_MAP || standing_cell.y_coord >= TOTAL_NUMBER_OF_CELLS_PER_MAP)
         return;
-
     //no jokes here... Actually placing ASSERT() here was good idea, but
     //we had some problems with DynamicObjects, which pass radius = 0.0f (DB issue?)
     //maybe it is better to just return when radius <= 0.0f?
@@ -80,7 +79,7 @@ inline void Cell::Visit(const CellPair &standing_cell, TypeContainerVisitor<T, C
     //lets calculate object coord offsets from cell borders.
     CellArea area = Cell::CalculateCellArea(x, y, radius);
     //if radius fits inside standing cell
-    if (!area)
+    if (area.low_bound == area.high_bound)
     {
         m.Visit(*this, visitor);
         return;
@@ -192,7 +191,7 @@ inline void Cell::VisitWorldObjects(const WorldObject *center_obj, T &visitor, f
 
     if (dont_load)
         cell.SetNoCreate();
-
+    
     TypeContainerVisitor<T, WorldTypeMapContainer > gnotifier(visitor);
     cell.Visit(p, gnotifier, *center_obj->GetMap(), *center_obj, radius);
 }

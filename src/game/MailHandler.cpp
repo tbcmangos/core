@@ -106,6 +106,12 @@ void WorldSession::HandleSendMail(WorldPacket & recv_data)
         return;
     }
 
+    if (GetPlayer()->getLevel() < sWorld.getConfig(CONFIG_CHAT_MINIMUM_LVL))
+    {
+        GetPlayer()->SendMailResult(0, MAIL_SEND, MAIL_ERR_MAIL_AND_CHAT_SUSPENDED);
+        return;
+    }
+
     // recheck
     CHECK_PACKET_SIZE(recv_data, 8+(receiver.size()+1)+(subject.size()+1)+(body.size()+1)+4+4+1+items_count*(1+8)+4+4+8+1);
 
@@ -341,12 +347,6 @@ void WorldSession::HandleSendMail(WorldPacket & recv_data)
                     GetPlayerName(), GetAccountId(), money, receiver.c_str(), rc_account);
             }
 
-            if (_player->GetSession()->IsAccountFlagged(ACC_SPECIAL_LOG))
-            {
-                sLog.outLog(LOG_SPECIAL, "Player %s (Account: %u) mail money: %u to player: %s (Account: %u)",
-                    GetPlayerName(), GetAccountId(), money, receiver.c_str(), rc_account);
-            }
-
             sLog.outLog(LOG_TRADE, "Player %s (Account: %u) mail money: %u to player: %s (Account: %u)",
                 GetPlayerName(), GetAccountId(), money, receiver.c_str(), rc_account);
         }
@@ -554,7 +554,7 @@ void WorldSession::HandleTakeItem(WorldPacket & recv_data)
     }
 
     Item *it = pl->GetMItem(itemId);
-
+    assert(it);
     ItemPosCountVec dest;
     uint8 msg = _player->CanStoreItem(NULL_BAG, NULL_SLOT, dest, it, false);
     if (msg == EQUIP_ERR_OK)
@@ -685,8 +685,7 @@ void WorldSession::HandleGetMail(WorldPacket & recv_data)
 
     for (PlayerMails::iterator itr = _player->GetmailBegin(); itr != _player->GetmailEnd(); ++itr)
     {
-        // packet send mail count as uint8, prevent overflow
-        if (mailsCount >= 254)
+        if (mailsCount >= 100) // client have problems with many mails
             break;
 
         // skip deleted or not delivered (deliver delay not expired) mails

@@ -140,22 +140,22 @@ void WardenBase::Update()
 
         if (m_WardenDataSent)
         {
-            // 1.5 minutes after send packet
-            if ((m_WardenKickTimer > 90000) && sWorld.getConfig(CONFIG_WARDEN_KICK))
-                    Client->KickPlayer();
-            else
+            // 20 seconds after send packet
+            if ((m_WardenKickTimer >= 60000) && sWorld.getConfig(CONFIG_WARDEN_KICK))           //FIXME: this value seems not to reset after receiving proper response, causing players to disconnect when switching maps
+            {
+                Client->KickPlayer();
+                sLog.outLog(LOG_WARDEN, "Player %u kicked for warden timeout (%u ms).", Client->GetAccountId(),m_WardenKickTimer);
+            }
+            else if (Client->GetPlayer() && Client->GetPlayer()->IsInWorld())
                 m_WardenKickTimer += diff;
         }
-        else if (m_WardenCheckTimer > 0)
+        else if (m_WardenCheckTimer.Expired(diff) && (!Client->GetPlayer() || Client->GetPlayer()->IsInWorld()))
         {
-            if (diff >= m_WardenCheckTimer)
-            {
-                RequestData();
-                m_WardenCheckTimer = urand(m_checkIntervalMin, m_checkIntervalMax);
-            }
-            else
-                m_WardenCheckTimer -= diff;
+            RequestData();
+            m_WardenCheckTimer.Reset(urand(m_checkIntervalMin, m_checkIntervalMax));
         }
+
+        
     }
 }
 
@@ -171,7 +171,7 @@ void WardenBase::EncryptData(uint8 *Buffer, uint32 Len)
 
 void WardenBase::PrintHexArray(const char *Before, const uint8 *Buffer, uint32 Len, bool BreakWithNewline)
 {
-    printf(Before);
+    printf("%s", Before);
     for (uint32 i = 0; i < Len; ++i)
         printf("%02X ", Buffer[i]);
     if (BreakWithNewline)
@@ -234,7 +234,7 @@ void WorldSession::HandleWardenDataOpcode(WorldPacket & recv_data)
             sLog.outLog(LOG_WARDEN, "NYI WARDEN_CMSG_MODULE_FAILED received! account %u", GetAccountId());
             break;
         default:
-            sLog.outLog(LOG_WARDEN, "Got unknown warden opcode %02X of size %u. account %u", Opcode, recv_data.size() - 1, GetAccountId());
+            sLog.outLog(LOG_WARDEN, "Got unknown warden opcode %02X of size %lu. account %u", Opcode, recv_data.size() - 1, GetAccountId());
             break;
     }
 }

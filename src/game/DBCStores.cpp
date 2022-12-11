@@ -59,7 +59,7 @@ DBCStorage <BankBagSlotPricesEntry> sBankBagSlotPricesStore(BankBagSlotPricesEnt
 DBCStorage <BattlemasterListEntry> sBattlemasterListStore(BattlemasterListEntryfmt);
 DBCStorage <CharStartOutfitEntry> sCharStartOutfitStore(CharStartOutfitEntryfmt);
 DBCStorage <CharTitlesEntry> sCharTitlesStore(CharTitlesEntryfmt);
-DBCStorage <ChatChannelsEntry> sChatChannelsStore(ChatChannelsEntryfmt);
+//DBCStorage <ChatChannelsEntry> sChatChannelsStore(ChatChannelsEntryfmt);
 DBCStorage <ChrClassesEntry> sChrClassesStore(ChrClassesEntryfmt);
 DBCStorage <ChrRacesEntry> sChrRacesStore(ChrRacesEntryfmt);
 DBCStorage <CinematicSequencesEntry> sCinematicSequencesStore(CinematicSequencesEntryfmt);
@@ -212,7 +212,7 @@ inline void LoadDBC(uint32& availableDbcLocales, BarGoLink& bar, StoreProblemLis
         if(f)
         {
             char buf[100];
-            snprintf(buf,100," (exist, but have %d fields instead %d) Wrong client version DBC file?",storage.GetFieldCount(),strlen(storage.GetFormat()));
+            snprintf(buf,100," (exist, but have %d fields instead %lu) Wrong client version DBC file?",storage.GetFieldCount(),strlen(storage.GetFormat()));
             errlist.push_back(dbc_filename + buf);
             fclose(f);
         }
@@ -255,7 +255,7 @@ void LoadDBCStores(const std::string& dataPath)
     LoadDBC(availableDbcLocales,bar,bad_dbc_files,sCharStartOutfitStore,     dbcPath,"CharStartOutfit.dbc");
 
     LoadDBC(availableDbcLocales,bar,bad_dbc_files,sCharTitlesStore,          dbcPath,"CharTitles.dbc");
-    LoadDBC(availableDbcLocales,bar,bad_dbc_files,sChatChannelsStore,        dbcPath,"ChatChannels.dbc");
+    //LoadDBC(availableDbcLocales,bar,bad_dbc_files,sChatChannelsStore,        dbcPath,"ChatChannels.dbc");
     LoadDBC(availableDbcLocales,bar,bad_dbc_files,sChrClassesStore,          dbcPath,"ChrClasses.dbc");
     LoadDBC(availableDbcLocales,bar,bad_dbc_files,sChrRacesStore,            dbcPath,"ChrRaces.dbc");
     LoadDBC(availableDbcLocales,bar,bad_dbc_files,sCinematicSequencesStore,  dbcPath,"CinematicSequences.dbc");
@@ -279,6 +279,20 @@ void LoadDBCStores(const std::string& dataPath)
     }
 
     LoadDBC(availableDbcLocales,bar,bad_dbc_files,sFactionTemplateStore,     dbcPath,"FactionTemplate.dbc");
+    for (uint32 i = 0; i < sFactionTemplateStore.GetNumRows(); ++i)
+    {
+        FactionTemplateEntry* fte = (FactionTemplateEntry*)sFactionTemplateStore.LookupEntry(i);
+        if (!fte)
+            continue;
+        switch (fte->ID)
+        {
+        case 1755: case 1756: case 1757: case 1758: case 1759: case 1760:
+            fte->friendlyMask = 1;
+            break;
+        default:
+            break;
+        }
+    }
     LoadDBC(availableDbcLocales,bar,bad_dbc_files,sGameObjectDisplayInfoStore,dbcPath,"GameObjectDisplayInfo.dbc");
     LoadDBC(availableDbcLocales,bar,bad_dbc_files,sGemPropertiesStore,       dbcPath,"GemProperties.dbc");
 
@@ -312,17 +326,27 @@ void LoadDBCStores(const std::string& dataPath)
     LoadDBC(availableDbcLocales,bar,bad_dbc_files,sSkillLineAbilityStore,    dbcPath,"SkillLineAbility.dbc");
     LoadDBC(availableDbcLocales,bar,bad_dbc_files,sSoundEntriesStore,        dbcPath,"SoundEntries.dbc");
     LoadDBC(availableDbcLocales,bar,bad_dbc_files,sSpellStore,               dbcPath,"Spell.dbc");
+#if HELLGROUND_ENDIAN == HELLGROUND_BIGENDIAN
     for(uint32 i = 1; i < sSpellStore.GetNumRows(); ++i)
     {
-        SpellEntry const * spell = sSpellStore.LookupEntry(i);
-        if(spell && spell->Category)
-            sSpellCategoryStore[spell->Category].insert(i);
-
         // DBC not support uint64 fields but SpellEntry have SpellFamilyFlags mapped at 2 uint32 fields
         // uint32 field already converted to bigendian if need, but must be swapped for correct uint64 bigendian view
-        #if HELLGROUND_ENDIAN == HELLGROUND_BIGENDIAN
-        std::swap(*((uint32*)(&spell->SpellFamilyFlags)),*(((uint32*)(&spell->SpellFamilyFlags))+1));
-        #endif
+        std::swap(*((uint32*)(&spell->SpellFamilyFlags)),*(((uint32*)(&spell->SpellFamilyFlags))+1));  
+    }
+#endif
+
+    { // HACK zone
+        static SpellEntry righteousWeaponCoating_customSpell(*sSpellStore.LookupEntry(38299)),
+            blessedWeaponCoating_customSpell(*sSpellStore.LookupEntry(38299)),
+            bonusReputation_customSpell(*sSpellStore.LookupEntry(20599));
+        sSpellStore.SetIndex(45398, "spell.dbc - missing Righteous Weapon Coating", &righteousWeaponCoating_customSpell);
+        sSpellStore.SetIndex(45396, "spell.dbc - missing Blessed Weapon Coating", &blessedWeaponCoating_customSpell);
+        sSpellStore.SetIndex(69, "spell.dbc - custom spell for bonus rep", &bonusReputation_customSpell);
+        righteousWeaponCoating_customSpell.Id = 45398;
+        righteousWeaponCoating_customSpell.EffectTriggerSpell[0] = 45401;
+        blessedWeaponCoating_customSpell.Id = 45396;
+        blessedWeaponCoating_customSpell.EffectTriggerSpell[0] = 45403;
+        bonusReputation_customSpell.EffectBasePoints[0] = 24;
     }
 
     for (uint32 j = 0; j < sSkillLineAbilityStore.GetNumRows(); ++j)
@@ -354,18 +378,36 @@ void LoadDBCStores(const std::string& dataPath)
     LoadDBC(availableDbcLocales,bar,bad_dbc_files,sSpellDurationStore,       dbcPath,"SpellDuration.dbc");
     LoadDBC(availableDbcLocales,bar,bad_dbc_files,sSpellFocusObjectStore,    dbcPath,"SpellFocusObject.dbc");
     LoadDBC(availableDbcLocales,bar,bad_dbc_files,sSpellItemEnchantmentStore,dbcPath,"SpellItemEnchantment.dbc");
-    {//HACK for +12spirit +12hit rating gems, those have wrong values in dbc
+    {
     SpellItemEnchantmentEntry* entry;
     for(uint32 i = 0; i < sSpellItemEnchantmentStore.GetNumRows(); ++i)
     {
         entry = (SpellItemEnchantmentEntry*)sSpellItemEnchantmentStore.LookupEntry(i);
         if(!entry)
             continue;
+        switch (entry->ID)
+        {
+        // flametongue weapon
+        case 3: entry->spellid[0] = 8029; entry->type[0] = ITEM_ENCHANTMENT_TYPE_COMBAT_SPELL; break;
+        case 4: entry->spellid[0] = 8028; entry->type[0] = ITEM_ENCHANTMENT_TYPE_COMBAT_SPELL; break;
+        case 5: entry->spellid[0] = 8026; entry->type[0] = ITEM_ENCHANTMENT_TYPE_COMBAT_SPELL; break;
+        case 523: entry->spellid[0] = 10445; entry->type[0] = ITEM_ENCHANTMENT_TYPE_COMBAT_SPELL; break;
+        case 1665: entry->spellid[0] = 16343; entry->type[0] = ITEM_ENCHANTMENT_TYPE_COMBAT_SPELL; break;
+        case 1666: entry->spellid[0] = 16344; entry->type[0] = ITEM_ENCHANTMENT_TYPE_COMBAT_SPELL; break;
+        case 2634: entry->spellid[0] = 25488; entry->type[0] = ITEM_ENCHANTMENT_TYPE_COMBAT_SPELL; break;
 
-        if (entry->GemID == 33137)
-            entry->amount[0] = 12;
-        else if (entry->GemID == 33142)
-            entry->amount[1] = 12;
+        case 2506: entry->spellid[0] = 7598; break; // elemental sharpening stone
+        case 2543: entry->spellid[0] = 13928; break; // arcanum of rapidity
+        case 2544: entry->spellid[0] = 9398; break; // arcanum of focus
+        case 2545: entry->spellid[0] = 13669; break; // arcanum of protection
+        case 2681: entry->spellid[0] = 14630; break; // savage guard
+        case 2682: entry->spellid[0] = 14550; break; // ice guard
+        case 2683: entry->spellid[0] = 14673; break; // shadow guard
+        case 3214: entry->amount[0] = 12; break; // sparkling falling star
+        case 3219: entry->amount[1] = 12; break; // rigid bladestone
+
+        case 3284: entry->type[2] = ITEM_ENCHANTMENT_TYPE_NONE; break; // steady seaspray emerald, has extra ranged crit in dbc
+        }
     }}
 
     LoadDBC(availableDbcLocales,bar,bad_dbc_files,sSpellItemEnchantmentConditionStore,dbcPath,"SpellItemEnchantmentCondition.dbc");
@@ -547,7 +589,7 @@ void LoadDBCStores(const std::string& dataPath)
         for(std::list<std::string>::iterator i = bad_dbc_files.begin(); i != bad_dbc_files.end(); ++i)
             str += *i + "\n";
 
-        sLog.outLog(LOG_DEFAULT, "ERROR: \nSome required *.dbc files (%u from %d) not found or not compatible:\n%s",bad_dbc_files.size(),DBCFilesCount,str.c_str());
+        sLog.outLog(LOG_DEFAULT, "ERROR: \nSome required *.dbc files (%lu from %d) not found or not compatible:\n%s",bad_dbc_files.size(),DBCFilesCount,str.c_str());
         exit(1);
     }
 
@@ -684,18 +726,6 @@ ContentLevels GetContentLevelsForMapAndZone(uint32 mapid, uint32 zoneId)
         case 1:  return CONTENT_61_70;
         case 2:  return CONTENT_71_80;
     }
-}
-
-ChatChannelsEntry const* GetChannelEntryFor(uint32 channel_id)
-{
-    // not sorted, numbering index from 0
-    for(uint32 i = 0; i < sChatChannelsStore.GetNumRows(); ++i)
-    {
-        ChatChannelsEntry const* ch = sChatChannelsStore.LookupEntry(i);
-        if(ch && ch->ChannelID == channel_id)
-            return ch;
-    }
-    return NULL;
 }
 
 bool IsTotemCategoryCompatiableWith(uint32 itemTotemCategoryId, uint32 requiredTotemCategoryId)

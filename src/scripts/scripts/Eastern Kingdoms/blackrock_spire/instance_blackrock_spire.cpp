@@ -20,9 +20,9 @@
 #include "precompiled.h"
 #include "def_blackrock_spire.h"
 
-#define EMBERSEER_IN    175244
-#define EMBERSEER_OUT   175153
-#define BLACKROCK_ALTAR 175706
+#define EMBERSEER_IN                175244
+#define EMBERSEER_OUT               175153
+#define BLACKROCK_ALTAR             175706
 #define BLACKHAND_INCARCERATOR      10316
 #define PYROGUARD_EMBERSEER         9816
 
@@ -36,7 +36,7 @@ struct instance_blackrock_spire : public ScriptedInstance
     uint64 emberseerOut;
     uint64 pyroguard_emberseerGUID;
 
-    uint32 runesTimer;
+    Timer runesTimer;
     std::set<uint64> emberseerInDoorsGUID;
     std::set<uint64> runesDoorGUID;
     std::set<uint64> runesEmberGUID;
@@ -53,9 +53,8 @@ struct instance_blackrock_spire : public ScriptedInstance
         channelersGUID.clear();
         emberseerOut = 0;
         pyroguard_emberseerGUID = 0;
-        runesTimer = 3000;
+        runesTimer.Reset(3000);
     }
-
 
     void OnObjectCreate (GameObject* go)
     {
@@ -107,7 +106,7 @@ struct instance_blackrock_spire : public ScriptedInstance
             case PYROGUARD_EMBERSEER:
                 pyroguard_emberseerGUID = creature->GetGUID();
                 break;
-            case BLACKHAND_INCARCERATOR:      
+            case BLACKHAND_INCARCERATOR:
                 channelersGUID.insert(creature->GetGUID());
                 break;
             default:
@@ -117,25 +116,20 @@ struct instance_blackrock_spire : public ScriptedInstance
 
     void Update(uint32 diff)
     {
-        if(runesTimer <= diff && GetData(DATA_RUNE_DOOR) == NOT_STARTED)
+        if (GetData(DATA_RUNE_DOOR) == NOT_STARTED && runesTimer.Expired(diff))
         {
             bool runesUsed = false;
-            for(std::set<uint64>::iterator i = runesDoorGUID.begin(); i != runesDoorGUID.end(); ++i)
-            {
-                if (GameObject* rune = instance->GetGameObject(*i))
-                {
-                    if (!(runesUsed = !(rune->GetGoState() == GO_STATE_ACTIVE)))
-                        break;
-                }
-            }
 
-            if(runesUsed) 
-            {
+            for (std::set<uint64>::iterator i = runesDoorGUID.begin(); i != runesDoorGUID.end(); ++i)
+                if (GameObject* rune = instance->GetGameObject(*i))
+                    if (!(runesUsed = (rune->GetGoState() == GO_STATE_ACTIVE)))
+                        break;
+
+            if (runesUsed)
                 SetData(DATA_RUNE_DOOR, DONE);
-            }
-            runesTimer = 3000;
+            else
+                runesTimer = 3000;
         }
-        else runesTimer -= diff;
     }
 
     uint32 GetData(uint32 type)
@@ -161,12 +155,9 @@ struct instance_blackrock_spire : public ScriptedInstance
                     Encounters[0] = data;
 
                 if(data == DONE)
-                {
                     for(std::set<uint64>::iterator i = emberseerInDoorsGUID.begin(); i != emberseerInDoorsGUID.end(); ++i)
-                    {
                         HandleGameObject(*i, true);
-                    }
-                }
+
                 break;
             }
             case DATA_EMBERSEER:
@@ -243,7 +234,7 @@ struct instance_blackrock_spire : public ScriptedInstance
             SaveToDB();
     }
 
-    
+
     std::string GetSaveData()
     {
         OUT_SAVE_INST_DATA;
@@ -281,8 +272,6 @@ struct instance_blackrock_spire : public ScriptedInstance
 
 };
 
-
-
 InstanceData* GetInstanceData_instance_blackrock_spire(Map* map)
 {
     return new instance_blackrock_spire(map);
@@ -296,4 +285,3 @@ void AddSC_instance_blackrock_spire()
     newscript->GetInstanceData = &GetInstanceData_instance_blackrock_spire;
     newscript->RegisterSelf();
 }
-

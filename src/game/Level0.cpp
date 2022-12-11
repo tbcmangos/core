@@ -35,31 +35,48 @@
 #include "Util.h"
 #include "GameEvent.h"
 #include "BattleGroundMgr.h"
+#include "ObjectMgr.h"
+#include "GuildMgr.h"
+#include "Guild.h"
+#include "World.h"
 
 bool ChatHandler::HandleAccountXPToggleCommand(const char* args)
 {
-    if (uint32 account_id = m_session->GetAccountId())
+    if (!m_session)
+        return true;
+
+    if (args)
     {
-        if (WorldSession *session = sWorld.FindSession(account_id))
+        if (strcmp(args, "1") == 0)
         {
-            if (session->IsAccountFlagged(ACC_BLIZZLIKE_RATES))
-            {
-                session->RemoveAccountFlag(ACC_BLIZZLIKE_RATES);
-                PSendSysMessage("Now your rates are serverlike: x2.");
-            }
-            else
-            {
-                session->AddAccountFlag(ACC_BLIZZLIKE_RATES);
-                PSendSysMessage("Now your rates are blizzlike: x1.");
-            }
+            m_session->AddAccountFlag(ACC_BLIZZLIKE_RATES);
+            PSendSysMessage("Now your rates are blizzlike: x1.");
+            PSendSysMessage("You have to RELOG before the command takes effect!");
+            return true;
         }
+        if (strcmp(args, "2") == 0)
+        {
+            m_session->RemoveAccountFlag(ACC_BLIZZLIKE_RATES);
+            PSendSysMessage("Now your rates are serverlike: x%f.", sWorld.getConfig(RATE_XP_KILL));
+            PSendSysMessage("You have to RELOG before the command takes effect!");
+            return true;
+        }
+
+        SendSysMessage("Invalid argument, use '.acc xp 1' or '.acc xp 2' or '.acc xp'");
+        return true;
+    }
+
+    if (m_session->IsAccountFlagged(ACC_BLIZZLIKE_RATES))
+    {
+        m_session->RemoveAccountFlag(ACC_BLIZZLIKE_RATES);
+        PSendSysMessage("Now your rates are serverlike: x%f.",sWorld.getConfig(RATE_XP_KILL));
     }
     else
     {
-        PSendSysMessage("Specified account not found.");
-        SetSentErrorMessage(true);
-        return false;
+        m_session->AddAccountFlag(ACC_BLIZZLIKE_RATES);
+        PSendSysMessage("Now your rates are blizzlike: x1.");
     }
+    PSendSysMessage("You have to RELOG before the command takes effect!");
 
     return true;
 }
@@ -240,6 +257,27 @@ bool ChatHandler::HandleAccountWeatherCommand(const char* args)
     return true;
 }
 
+bool ChatHandler::HandleAccountFreerespecsCommand(const char*)
+{
+    QueryResultAutoPtr result = RealmDataDatabase.PQuery("SELECT expiration_time FROM character_freerespecs WHERE guid = %lu", m_session->GetPlayer()->GetGUID());
+    if (result)
+    {
+        Field* field = result->Fetch();
+        uint32 expiration_time = field[0].GetInt32();
+
+        if (expiration_time > sWorld.GetGameTime())
+        {
+            std::string msg = "Free respecs for this character will end in " + secsToTimeString(expiration_time - (uint32)(sWorld.GetGameTime())) + ".";
+            SendSysMessage(msg.c_str());
+        }
+        return true;
+    }
+    else
+        SendSysMessage("Free respecs for this character are not active.");
+    return false;
+
+}
+
 bool ChatHandler::HandleArenaReadyCommand(const char* args)
 {
     Player* player = m_session->GetPlayer();
@@ -253,10 +291,10 @@ bool ChatHandler::HandleArenaReadyCommand(const char* args)
     if ( bg == nullptr )
         return false;
 
-    bool result = bg->SetPlayerReady(player->GetGUID());
-    if (result)
+    uint8 result = bg->SetPlayerReady(player->GetGUID());
+    if (result != 0)
     {
-        PSendSysMessage("You have been NOT marked as ready due to some problems.");
+        PSendSysMessage("You have been NOT marked as ready due to some (%u) problems.",result);
         return false;
     }
 
@@ -266,24 +304,26 @@ bool ChatHandler::HandleArenaReadyCommand(const char* args)
 
 bool ChatHandler::HandleServerInfoCommand(const char* /*args*/)
 {
-    uint32 activeClientsNum = sWorld.GetActiveSessionCount();
+    uint32 alianceCount = sWorld.GetLoggedInCharsCount(TEAM_ALLIANCE);
+    uint32 hordeCount = sWorld.GetLoggedInCharsCount(TEAM_HORDE);
+    uint32 playerCap = sWorld.GetPlayerAmountLimit();
     uint32 queuedClientsNum = sWorld.GetQueuedSessionCount();
-    uint32 maxActiveClientsNum = sWorld.GetMaxActiveSessionCount();
-    uint32 maxQueuedClientsNum = sWorld.GetMaxQueuedSessionCount();
+    //uint32 maxActiveClientsNum = sWorld.GetMaxActiveSessionCount();
+    //uint32 maxQueuedClientsNum = sWorld.GetMaxQueuedSessionCount();
     std::string str = secsToTimeString(sWorld.GetUptime());
     uint32 updateTime = sWorld.GetUpdateTime();
     std::string str2 = TimeToTimestampStr(sWorld.GetGameTime());
 
-    PSendSysMessage("HellGround.net - rev: %s",_REVISION);
-    PSendSysMessage(LANG_CONNECTED_USERS, activeClientsNum, maxActiveClientsNum, queuedClientsNum, maxQueuedClientsNum);
+    PSendSysMessage("Hellground - rev: %s",_REVISION);
+    PSendSysMessage(LANG_CONNECTED_USERS, alianceCount + hordeCount, playerCap, queuedClientsNum);
     PSendSysMessage(LANG_UPTIME, str.c_str());
     PSendSysMessage("Current time: %s", str2.c_str());
     PSendSysMessage("Update time diff: %u.", updateTime);
 
     if (sWorld.IsShutdowning())
     {
-        PSendSysMessage("");
-        PSendSysMessage("Server will %s in: %s", (sWorld.GetShutdownMask() & SHUTDOWN_MASK_RESTART ? "restart" : "be shutteddown"), secsToTimeString(sWorld.GetShutdownTimer()).c_str());
+        PSendSysMessage(" ");
+        PSendSysMessage("Server will %s in: %s", (sWorld.GetShutdownMask() & SHUTDOWN_MASK_RESTART ? "restart" : "shut down"), secsToTimeString(sWorld.GetShutdownTimer()).c_str());
         PSendSysMessage("Reason: %s.", sWorld.GetShutdownReason());
     }
 
@@ -293,7 +333,7 @@ bool ChatHandler::HandleServerInfoCommand(const char* /*args*/)
 bool ChatHandler::HandleServerEventsCommand(const char*)
 {
     std::string active_events = sGameEventMgr.getActiveEventsString();
-    PSendSysMessage(active_events.c_str());//ChatHandler::FillMessageData(&data, this, CHAT_MSG_SYSTEM, LANG_UNIVERSAL, NULL, GetPlayer()->GetGUID(), active_events, NULL);
+    PSendSysMessage("%s", active_events.c_str());//ChatHandler::FillMessageData(&data, this, CHAT_MSG_SYSTEM, LANG_UNIVERSAL, NULL, GetPlayer()->GetGUID(), active_events, NULL);
     if(sWorld.getConfig(CONFIG_ARENA_DAILY_REQUIREMENT))
     {
         PSendSysMessage("Daily Arenas! Get %u AP for winning %u rated arenas",
@@ -503,5 +543,201 @@ bool ChatHandler::HandleServerPVPCommand(const char* /*args*/)
         PSendSysMessage("Today you won %u rated arenas (%u required for reward)",
             player->m_DailyArenasWon,sWorld.getConfig(CONFIG_ARENA_DAILY_REQUIREMENT));
 
+    return true;
+}
+
+bool ChatHandler::HandleArenaSpectateCommand(const char* args)
+{
+    if (!*args)
+        return false;
+
+    Player* _player = m_session->GetPlayer();
+
+    std::string name = args;
+
+    if (!normalizePlayerName(name))
+    {
+        SendSysMessage(LANG_PLAYER_NOT_FOUND);
+        SetSentErrorMessage(true);
+        return false;
+    }
+
+    Player *target = sObjectMgr.GetPlayer(name.c_str());
+    if (!target)
+    {
+        SendSysMessage(LANG_PLAYER_NOT_FOUND);
+        SetSentErrorMessage(true);
+        return false;
+    }
+    
+    Map* cMap = target->GetMap();
+    if (!cMap || !cMap->IsBattleArena())
+    {
+        SendSysMessage(LANG_SPECTATE_TARGET_NOT_IN_ARENA);
+        SetSentErrorMessage(true);
+        return false;
+    }
+
+    if (_player->isArenaSpectating())
+    {
+        SendSysMessage(LANG_SPECTATE_ALREADY_SPECTATING);
+        SetSentErrorMessage(true);
+        return false;
+    }
+    _player->SetBattleGroundId(target->GetBattleGroundId(), target->GetBattleGroundTypeId());
+    _player->SetBattleGroundEntryPoint(_player->GetMapId(), _player->GetPositionX(), _player->GetPositionY(), _player->GetPositionZ(), _player->GetOrientation());
+    
+    _player->SpectateArena(target->GetMapId());
+    return true;
+
+}
+
+bool ChatHandler::HandleArenaUnspectateCommand(const char* /*args*/)
+{
+    Player* _player = m_session->GetPlayer();
+    if (_player->isArenaSpectating())
+    {
+        _player->UnspectateArena(true);
+        return true;
+    }
+    //else
+    SendSysMessage(LANG_SPECTATE_NOT_SPECTATNING);
+    SetSentErrorMessage(true);
+    return false;
+}
+
+bool ChatHandler::HandleAccountBGMarksCommand(const char* /*args*/)
+{
+    if (m_session->IsAccountFlagged(ACC_RESTRICT_BG_MARKS))
+    {
+        m_session->RemoveAccountFlag(ACC_RESTRICT_BG_MARKS);
+        SendSysMessage("Battleground Marks of Honor restriction has been disabled for this account.");
+    }
+    else
+    {
+        m_session->AddAccountFlag(ACC_RESTRICT_BG_MARKS);
+        SendSysMessage("Battleground Marks of Honor restriction has been enabled for this account.");
+    }
+
+    return true;
+}
+
+bool ChatHandler::HandleGuildAnnounceCommand(const char *args)
+{
+    if (!*args)
+        return false;
+
+    std::string msg = args;
+
+    SetSentErrorMessage(true);
+
+    uint32 gId = m_session->GetPlayer()->GetGuildId();
+    if (!gId)
+    {
+        PSendSysMessage("You need to be in guild to append guild announce.");
+        return false;
+    }
+
+    if (sGuildMgr.GetGuildAnnCooldown(gId) > time(NULL))
+    {
+        PSendSysMessage("Please wait before guild announce cooldown expires in %s", secsToTimeString(uint32(sGuildMgr.GetGuildAnnCooldown(gId) - time(NULL))).c_str());
+        return false;
+    }
+
+    if (msg.size() > sWorld.getConfig(CONFIG_GUILD_ANN_LENGTH))
+    {
+        PSendSysMessage("Your message is to long, limit: %i chars", sWorld.getConfig(CONFIG_GUILD_ANN_LENGTH));
+        return false;
+    }
+
+    Guild * pGuild = sGuildMgr.GetGuildById(gId);
+    if (!pGuild)
+    {
+        PSendSysMessage("Error occured while sending guild announce.");
+        return false;
+    }
+
+    if (pGuild->IsFlagged(GUILD_FLAG_DISABLE_ANN))
+    {
+        PSendSysMessage("Guild announce system has been blocked for your guild.");
+        return false;
+    }
+
+    if (!pGuild->HasRankRight(m_session->GetPlayer()->GetRank(), GR_RIGHT_OFFCHATLISTEN))
+    {
+        PSendSysMessage("Your guild rank is to low to use that command.");
+        return false;
+    }
+
+    if (pGuild->GetMemberSize() < 10)
+    {
+        PSendSysMessage("Your guild is too small, you need at least 10 members to send guild announce.");
+        return false;
+    }
+
+    if (ContainsNotAllowedSigns(msg, true))
+    {
+        PSendSysMessage("Your message contains not allowed symbols, it will not be posted.");
+        return false;
+    }
+
+    PSendSysMessage("Your message has been queued and will be displayed soon. Please wait %s before sending another one.", secsToTimeString(sWorld.getConfig(CONFIG_GUILD_ANN_COOLDOWN)).c_str());
+
+    sGuildMgr.SaveGuildAnnCooldown(gId);
+    sLog.outLog(LOG_GUILD_ANN, "Player %s (" UI64FMTD ") - guild: %s (%u) append guild announce: %s", m_session->GetPlayer()->GetName(), m_session->GetPlayer()->GetGUID(), pGuild->GetName().c_str(), gId, msg.c_str());
+    sWorld.QueueGuildAnnounce(gId, m_session->GetPlayer()->GetTeam(), msg);
+
+    if (!pGuild->IsFlagged(GUILD_FLAG_ADVERT_SET))
+    {
+        RealmDataDatabase.escape_string(msg);
+        RealmDataDatabase.PExecute("UPDATE guild SET ShortAdvert='%s' WHERE guildid='%u'", msg.c_str(), gId);
+    }
+    return true;
+}
+
+bool ChatHandler::HandleGuildAdvertCommand(const char *args)
+{
+    if (!*args)
+        return false;
+
+    std::string msg = args;
+
+    SetSentErrorMessage(true);
+
+    uint32 gId = m_session->GetPlayer()->GetGuildId();
+    if (!gId)
+    {
+        PSendSysMessage("You are not in a guild.");
+        return false;
+    }
+
+    if (msg.size() > 100)
+    {
+        PSendSysMessage("Your message is to long, limit: 100 chars.");
+        return false;
+    }
+
+    Guild * pGuild = sGuildMgr.GetGuildById(gId);
+    if (!pGuild)
+    {
+        PSendSysMessage("You are not in a guild.");
+        return false;
+    }
+
+    if (pGuild->GetLeader() != m_session->GetPlayer()->GetGUID())
+    {
+        PSendSysMessage("You need to be guild master to use this command.");
+        return false;
+    }
+
+    if (pGuild->GetMemberSize() < 50)
+    {
+        PSendSysMessage("Your guild is to small to set up an advert, minimum 50 players.");
+        return false;
+    }
+    sLog.outLog(LOG_GUILD_ANN, "Player %s (" UI64FMTD ") - guild: %s (%u) set guild advert: %s", m_session->GetPlayer()->GetName(), m_session->GetPlayer()->GetGUID(), pGuild->GetName().c_str(), gId, msg.c_str());
+    RealmDataDatabase.escape_string(msg);
+    RealmDataDatabase.PExecute("UPDATE guild SET ShortAdvert='%s' WHERE guildid='%u'", msg.c_str(), gId);
+    pGuild->AddFlag(GUILD_FLAG_ADVERT_SET);
     return true;
 }

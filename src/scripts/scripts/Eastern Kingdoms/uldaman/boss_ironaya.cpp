@@ -37,7 +37,7 @@ struct boss_ironayaAI : public ScriptedAI
 {
     boss_ironayaAI(Creature *c) : ScriptedAI(c) {}
 
-    uint32 Arcing_Timer;
+    int32 Arcing_Timer;
     bool hasCastWstomp;
     bool hasCastKnockaway;
 
@@ -78,12 +78,12 @@ struct boss_ironayaAI : public ScriptedAI
             hasCastKnockaway = true;
         }
 
-        //Arcing_Timer
-        if (Arcing_Timer < diff)
+        Arcing_Timer -= diff;
+        if (Arcing_Timer <= diff)
         {
             DoCast(m_creature,SPELL_ARCINGSMASH);
-            Arcing_Timer = 13000;
-        }else Arcing_Timer -= diff;
+            Arcing_Timer += 13000;
+        }
 
         if (!hasCastWstomp && m_creature->GetHealth()*4 < m_creature->GetMaxHealth())
         {

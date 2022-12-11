@@ -54,7 +54,6 @@ void RandomMovementGenerator<Creature>::Initialize(Creature &creature)
     if (!creature.isAlive())
         return;
 
-    creature.addUnitState(UNIT_STAT_ROAMING);
     _setRandomLocation(creature);
 }
 
@@ -67,14 +66,12 @@ void RandomMovementGenerator<Creature>::Reset(Creature &creature)
 template<>
 void RandomMovementGenerator<Creature>::Interrupt(Creature &creature)
 {
-    creature.clearUnitState(UNIT_STAT_ROAMING);
     creature.SetWalk(false);
 }
 
 template<>
 void RandomMovementGenerator<Creature>::Finalize(Creature &creature)
 {
-    creature.clearUnitState(UNIT_STAT_ROAMING);
     creature.SetWalk(false);
 }
 
@@ -83,8 +80,7 @@ bool RandomMovementGenerator<Creature>::Update(Creature &creature, const uint32 
 {
     if (creature.IsStopped() || static_cast<MovementGenerator*>(this)->_recalculateTravel)
     {
-        i_nextMoveTime.Update(diff);
-        if (i_nextMoveTime.Passed() || static_cast<MovementGenerator*>(this)->_recalculateTravel)
+        if (i_nextMoveTime.Expired(diff) || static_cast<MovementGenerator*>(this)->_recalculateTravel)
             _setRandomLocation(creature);
     }
     return true;

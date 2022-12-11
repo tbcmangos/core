@@ -105,6 +105,19 @@ void WorldSession::HandleGroupInviteOpcode(WorldPacket & recv_data)
         return;
     }
 
+    if (player->InBattleGround()) // bg players have ffa pvp
+    {
+        SendPartyResult(PARTY_OP_INVITE, membername, PARTY_RESULT_ALREADY_IN_GROUP);
+        return;
+    }
+
+    // OK result but not send invite
+    if (player->GetSocial()->HasIgnore(GetPlayer()->GetGUIDLow()))
+    {
+        SendPartyResult(PARTY_OP_INVITE, membername, PARTY_RESULT_TARGET_IGNORE_YOU);
+        return;
+    }
+
     Group *group = GetPlayer()->GetGroup();
     if (group && group->isBGGroup())
         group = GetPlayer()->GetOriginalGroup();
@@ -392,6 +405,8 @@ void WorldSession::HandleLootMethodOpcode(WorldPacket & recv_data)
     group->SetLooterGuid(lootMaster);
     group->SetLootThreshold((ItemQualities)lootThreshold);
     group->SendUpdate();
+    if (group->isRaidGroup() && lootMethod == MASTER_LOOT)
+        sLog.outLog(LOG_BOSS, "Master looter set, leader %s %u looter %u", GetPlayer()->GetName(), GetPlayer()->GetGUID(), lootMaster);
 }
 
 void WorldSession::HandleLootRoll(WorldPacket &recv_data)
@@ -403,19 +418,15 @@ void WorldSession::HandleLootRoll(WorldPacket &recv_data)
 
     uint64 Guid;
     uint32 NumberOfPlayers;
-    uint8  Choise;
+    uint8  Choice;
     recv_data >> Guid;                                      //guid of the item rolled
     recv_data >> NumberOfPlayers;
-    recv_data >> Choise;                                    //0: pass, 1: need, 2: greed
+    recv_data >> Choice;                                    //0: pass, 1: need, 2: greed
 
-    //sLog.outDebug("WORLD RECIEVE CMSG_LOOT_ROLL, From:%u, Numberofplayers:%u, Choise:%u", (uint32)Guid, NumberOfPlayers, Choise);
-
-    Group* group = GetPlayer()->GetGroup();
-    if (!group)
-        return;
+    //sLog.outDebug("WORLD RECIEVE CMSG_LOOT_ROLL, From:%u, Numberofplayers:%u, Choice:%u", (uint32)Guid, NumberOfPlayers, Choice);
 
     // everything's fine, do it
-    group->CountRollVote(GetPlayer()->GetGUID(), Guid, NumberOfPlayers, Choise);
+    sObjectMgr.CountRollVote(GetPlayer()->GetGUID(), Guid, Choice);
 }
 
 void WorldSession::HandleMinimapPingOpcode(WorldPacket& recv_data)
@@ -466,7 +477,13 @@ void WorldSession::HandleRandomRollOpcode(WorldPacket& recv_data)
     data << roll;
     data << GetPlayer()->GetGUID();
     if (GetPlayer()->GetGroup())
+    {
         GetPlayer()->GetGroup()->BroadcastPacket(&data, false);
+        char out[30];
+        sprintf(out, "%u-%u = %u", minimum, maximum, roll);
+        sLog.outChat(GetPlayer()->GetGroup()->isRaidGroup() ? LOG_CHAT_RAID_A : LOG_CHAT_PARTY_A,
+            GetPlayer()->GetTeam(), (std::string("roll") + GetPlayer()->GetName()).c_str(), out);
+    }
     else
         SendPacket(&data);
 }

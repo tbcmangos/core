@@ -53,39 +53,39 @@ struct boss_ambassador_hellmawAI : public ScriptedAI
     boss_ambassador_hellmawAI(Creature *c) : ScriptedAI(c)
     {
         pInstance = (c->GetInstanceData());
-        HeroicMode = me->GetMap()->IsHeroic();
     }
 
     ScriptedInstance* pInstance;
-    bool HeroicMode;
 
-    uint32 EventCheck_Timer;
-    uint32 Banish_Timer;
-    uint32 CorrosiveAcid_Timer;
-    uint32 Fear_Timer;
-    uint32 Enrage_Timer;
-    uint32 OnPath_Delay;
+    Timer EventCheck_Timer;
+    Timer Banish_Timer;
+    Timer CorrosiveAcid_Timer;
+    Timer Fear_Timer;
+    Timer Enrage_Timer;
+    Timer OnPath_Delay;
     bool Intro;
     bool IsBanished;
     bool patrol;
 
     void Reset()
     {
-        EventCheck_Timer = 5000;
-        Banish_Timer = 0;
-        CorrosiveAcid_Timer = 25000;
-        Fear_Timer = 40000;
-        Enrage_Timer = 180000;
+        EventCheck_Timer.Reset(5000);
+        Banish_Timer = 1;
+        CorrosiveAcid_Timer.Reset(25000);
+        Fear_Timer.Reset(40000);
+        Enrage_Timer.Reset(180000);
         Intro = false;
         IsBanished = false;
 
         if (pInstance)
         {
-            if (pInstance->GetData(TYPE_HELLMAW) ==  NOT_STARTED)
+            if (pInstance->GetData(TYPE_HELLMAW) == NOT_STARTED)
             {
-                DoCast(me,SPELL_BANISH, true);
+                DoCast(me, SPELL_BANISH, true);
                 IsBanished = true;
             }
+            else
+                pInstance->SetData(TYPE_HELLMAW, SPECIAL); // not in_progress but also not not_started
         }
     }
 
@@ -98,9 +98,6 @@ struct boss_ambassador_hellmawAI : public ScriptedAI
 
         IsBanished = false;
         Intro = true;
-
-        if (pInstance)
-            pInstance->SetData(TYPE_HELLMAW, IN_PROGRESS);
     }
 
     void EnterCombat(Unit *who)
@@ -113,6 +110,8 @@ struct boss_ambassador_hellmawAI : public ScriptedAI
 
         me->GetMotionMaster()->Clear();
         DoScriptText(RAND(SAY_AGGRO1, SAY_AGGRO2, SAY_AGGRO3), me);
+        if (pInstance)
+            pInstance->SetData(TYPE_HELLMAW, IN_PROGRESS);
     }
 
     void KilledUnit(Unit *victim)
@@ -135,73 +134,65 @@ struct boss_ambassador_hellmawAI : public ScriptedAI
 
         if(IsBanished)
         {
-             if(Banish_Timer < diff)
+            if (Banish_Timer.Expired(diff))
              {
                  DoCast(me,SPELL_BANISH, true);
                  Banish_Timer = 40000;
              }
-             else
-                 Banish_Timer -= diff;
+             
         }
 
         if (!Intro)
         {
-            if (EventCheck_Timer < diff)
+            if (EventCheck_Timer.Expired(diff))
             {
                 if(pInstance->GetData(TYPE_RITUALIST) == DONE)
                 {
-                        OnPath_Delay = 0;
-                        DoIntro();
+                    OnPath_Delay = 0;
+                    DoIntro();
                 }
                 EventCheck_Timer = 5000;
             }
-            else
-                EventCheck_Timer -= diff;
         }
 
-        if (!me->isInCombat() && !IsBanished && !OnPath_Delay)
+        if (!me->isInCombat() && !IsBanished && !OnPath_Delay.GetInterval())
         {
             me->GetMotionMaster()->MovePath(PATH_PATROL, false);
             OnPath_Delay = 55000;
             patrol = false;
         }
 
-        if (!me->isInCombat() && !patrol && OnPath_Delay < diff)
+        if (!me->isInCombat() && !patrol && OnPath_Delay.Expired(diff))
         {
             me->GetMotionMaster()->MovePath(PATH_FINAL, true);
             patrol = true;
         }
-        else
-            OnPath_Delay -= diff;
+        
 
         if (!UpdateVictim() )
             return;
 
-        if (CorrosiveAcid_Timer < diff)
+        if (CorrosiveAcid_Timer.Expired(diff))
         {
             DoCast(me->getVictim(),SPELL_CORROSIVE_ACID);
             CorrosiveAcid_Timer = 25000;
         }
-        else
-            CorrosiveAcid_Timer -= diff;
+        
 
-        if (Fear_Timer < diff)
+        if (Fear_Timer.Expired(diff))
         {
             DoCast(me,SPELL_FEAR);
             Fear_Timer = 25000;
         }
-        else
-            Fear_Timer -= diff;
+
 
         if (HeroicMode)
         {
-            if (Enrage_Timer < diff)
+            if (Enrage_Timer.Expired(diff))
             {
                 DoCast(me,SPELL_ENRAGE);
                 Enrage_Timer = 5*MINUTE*1000;
             }
-            else
-                Enrage_Timer -= diff;
         }
 
         DoMeleeAttackIfReady();

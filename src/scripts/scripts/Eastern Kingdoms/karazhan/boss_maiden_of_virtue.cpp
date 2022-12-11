@@ -51,12 +51,12 @@ struct boss_maiden_of_virtueAI : public ScriptedAI
 
     ScriptedInstance *pInstance;
 
-    uint32 Repentance_Timer;
-    uint32 Holyfire_Timer;
-    uint32 Holywrath_Timer;
-    uint32 Holyground_Timer;
-    uint32 Enrage_Timer;
-    uint32 CheckTimer;
+    Timer Repentance_Timer;
+    Timer Holyfire_Timer;
+    Timer Holywrath_Timer;
+    Timer Holyground_Timer;
+    Timer Enrage_Timer;
+    Timer CheckTimer;
 
     WorldLocation wLoc;
 
@@ -64,12 +64,12 @@ struct boss_maiden_of_virtueAI : public ScriptedAI
 
     void Reset()
     {
-        Repentance_Timer    = 30000+(rand()%15000);
-        Holyfire_Timer      = 8000+(rand()%17000);
-        Holywrath_Timer     = 20000+(rand()%10000);
-        Holyground_Timer    = 3000;
-        Enrage_Timer        = 600000;
-        CheckTimer = 3000;
+        Repentance_Timer.Reset(30000 + (rand() % 15000));
+        Holyfire_Timer.Reset(8000 + (rand() % 17000));
+        Holywrath_Timer.Reset(20000 + (rand() % 10000));
+        Holyground_Timer.Reset(3000);
+        Enrage_Timer.Reset(600000);
+        CheckTimer.Reset(3000);
 
         if(pInstance && pInstance->GetData(DATA_MAIDENOFVIRTUE_EVENT) != DONE)
             pInstance->SetData(DATA_MAIDENOFVIRTUE_EVENT, NOT_STARTED);
@@ -105,7 +105,8 @@ struct boss_maiden_of_virtueAI : public ScriptedAI
         if (!UpdateVictim() )
             return;
 
-        if(CheckTimer < diff)
+        
+        if (CheckTimer.Expired(diff))
         {
             if(!m_creature->IsWithinDistInMap(&wLoc, 30.0f))
                 EnterEvadeMode();
@@ -114,48 +115,44 @@ struct boss_maiden_of_virtueAI : public ScriptedAI
 
             CheckTimer = 3000;
         }
-        else
-            CheckTimer -= diff;
+        
 
-        if(Enrage_Timer < diff && !Enraged)
+        if (!Enraged && Enrage_Timer.Expired(diff))
         {
             DoCast(m_creature, SPELL_BERSERK,true);
             Enraged = true;
         }
-        else
-            Enrage_Timer -=diff;
-
-        if(Holyground_Timer < diff)
+        
+        if (Holyground_Timer.Expired(diff))
         {
             DoCast(m_creature, SPELL_HOLYGROUND, true);     //Triggered so it doesn't interrupt her at all
             Holyground_Timer = 3000;
         }
-        else
-            Holyground_Timer -= diff;
-
-        if (Repentance_Timer < diff)
+        
+        
+        if (Repentance_Timer.Expired(diff))
         {
             DoCast(m_creature->getVictim(),SPELL_REPENTANCE);
 
             DoScriptText(RAND(SAY_REPENTANCE1, SAY_REPENTANCE2), m_creature);
 
             Repentance_Timer = 30000 + rand()%15000;        //A little randomness on that spell
-            Holyfire_Timer += 6000;
+            Holyfire_Timer = 6000;
         }
-        else
-            Repentance_Timer -= diff;
+        
+          
 
-        if(Holyfire_Timer < diff)
+        if (Holyfire_Timer.Expired(diff))
         {
             if (Unit* target = SelectUnit(SELECT_TARGET_RANDOM,0,GetSpellMaxRange(SPELL_HOLYFIRE), true))
                 DoCast(target,SPELL_HOLYFIRE);
 
                 Holyfire_Timer = 8000 + rand()%17000; //Anywhere from 8 to 25 seconds, good luck having several of those in a row!
         }
-        else
-            Holyfire_Timer -= diff;
+        
+           
 
-        if(Holywrath_Timer < diff)
+        if (Holywrath_Timer.Expired(diff))
         {
             if(Unit* target = SelectUnit(SELECT_TARGET_RANDOM,0,GetSpellMaxRange(SPELL_HOLYWRATH), true))
                 DoCast(target,SPELL_HOLYWRATH);
@@ -163,8 +160,7 @@ struct boss_maiden_of_virtueAI : public ScriptedAI
             Holywrath_Timer = 20000+(rand()%10000);     //20-30 secs sounds nice
 
         }
-        else
-            Holywrath_Timer -= diff;
+        
 
         DoMeleeAttackIfReady();
     }

@@ -131,22 +131,23 @@ struct boss_kalecgosAI : public ScriptedAI
 
     ScriptedInstance *instance;
 
-    uint32 ArcaneBuffetTimer;
-    uint32 FrostBreathTimer;
-    uint32 WildMagicTimer;
-    uint32 SpectralBlastTimer;
-    uint32 TailLashTimer;
-    uint32 CheckTimer;
-    uint32 TalkTimer;
+    Timer ArcaneBuffetTimer;
+    Timer FrostBreathTimer;
+    Timer WildMagicTimer;
+    Timer SpectralBlastTimer;
+    Timer TailLashTimer;
+    Timer CheckTimer;
+    Timer TalkTimer;
     uint32 TalkSequence;
-    uint32 ResetTimer;
+    Timer ResetTimer;
     WorldLocation wLoc;
 
     bool isFriendly;
     bool isEnraged;
     bool isBanished;
+    bool TalkingDone;
 
-    TimeTrackerSmall stateCheckTimer;
+    Timer stateCheckTimer;
 
     void Reset()
     {
@@ -156,19 +157,20 @@ struct boss_kalecgosAI : public ScriptedAI
         me->RemoveUnitMovementFlag(MOVEFLAG_ONTRANSPORT);
         me->SetStandState(PLAYER_STATE_SLEEP);
 
-        ArcaneBuffetTimer = 8000;
-        FrostBreathTimer = 15000;
-        WildMagicTimer = 10000;
-        TailLashTimer = 25000;
+        ArcaneBuffetTimer.Reset(8000);
+        FrostBreathTimer.Reset(15000);
+        WildMagicTimer.Reset(10000);
+        TailLashTimer.Reset(25000);
         ResetTimer = 0;
-        SpectralBlastTimer = 20000+(rand()%5000);
-        CheckTimer = 1000;
+        SpectralBlastTimer.Reset(20000 + (rand() % 5000));
+        CheckTimer.Reset(1000);
 
         stateCheckTimer.Reset(2000);
 
         TalkTimer = 0;
         TalkSequence = 0;
         isFriendly = false;
+        TalkingDone = false;
         isEnraged = false;
         isBanished = false;
 
@@ -214,6 +216,7 @@ struct boss_kalecgosAI : public ScriptedAI
         switch (TalkSequence)
         {
         case 1:
+            me->SetStandState(PLAYER_STATE_NONE);
             me->setFaction(35);
             TalkTimer = 8000;
             break;
@@ -242,16 +245,12 @@ struct boss_kalecgosAI : public ScriptedAI
             TalkTimer = 7000;
             break;
         case 6:
-            if (instance)
-            {
-                if (Creature* Sathrovarr = Creature::GetCreature(*me, instance->GetData64(DATA_SATHROVARR)))
-                    Sathrovarr->NearTeleportTo(Sathrovarr->GetPositionX(), Sathrovarr->GetPositionY(), DRAGON_REALM_Z, Sathrovarr->GetOrientation());
-            }
             me->GetMotionMaster()->MovePoint(2, FlyCoord[1][0],FlyCoord[1][1],FlyCoord[1][2]);
             TalkTimer = 20000;
             break;
         case 7:
             me->SetVisibility(VISIBILITY_OFF);
+            TalkingDone = true;
             TalkTimer = 0;
             break;
         default:
@@ -261,7 +260,7 @@ struct boss_kalecgosAI : public ScriptedAI
 
     void MoveInLineOfSight(Unit *who)
     {
-        if (!TalkTimer && !ResetTimer)
+        if (!TalkTimer.GetInterval() && !ResetTimer.GetInterval())
             CreatureAI::MoveInLineOfSight(who);
     }
 
@@ -287,6 +286,9 @@ struct boss_kalecgosAI : public ScriptedAI
                 break;
             case 4:
                 EnterEvadeMode();
+                if (Creature* Sathrovarr = Creature::GetCreature(*me, instance->GetData64(DATA_SATHROVARR)))
+                    Sathrovarr->AI()->EnterEvadeMode();
+                
                 break;
             default:
                 break;
@@ -308,27 +310,28 @@ struct boss_kalecgosAI : public ScriptedAI
 
     void UpdateAI(const uint32 diff)
     {
-        stateCheckTimer.Update(diff);
-        if (stateCheckTimer.Passed())
+        if (TalkingDone)
+            return;
+
+        if (stateCheckTimer.Expired(diff))
         {
-            stateCheckTimer.Reset(2000);
+            stateCheckTimer = 2000;
             if (!EncounterInProgressCheck())
                 return;
         }
 
-        if (ResetTimer)
+        if (ResetTimer.GetInterval())
         {
-            if (ResetTimer <= diff)
+            if (ResetTimer.Expired(diff))
             {
                 ResetTimer = 0;
                 me->setFaction(16);     //aggresive
                 me->SetVisibility(VISIBILITY_ON);
             }
-            else
-                ResetTimer -= diff;
+            
             return;
         }
-        else if (TalkTimer)
+        else if (TalkTimer.GetInterval())
         {
             if (!TalkSequence)
             {
@@ -337,10 +340,11 @@ struct boss_kalecgosAI : public ScriptedAI
                 me->RemoveAllAuras();
                 me->DeleteThreatList();
                 me->CombatStop();
+                ClearCastQueue();
                 TalkSequence++;
             }
 
-            if (TalkTimer <= diff)
+            if (TalkTimer.Expired(diff))
             {
                 if (isFriendly)
                     GoodEnding();
@@ -349,16 +353,13 @@ struct boss_kalecgosAI : public ScriptedAI
 
                 TalkSequence++;
             }
-            else
-                TalkTimer -= diff;
+            
         }
         else
         {
-            if (!UpdateVictim())
-                return;
 
             // be sure to not attack players in spectral realm
-            if (me->getVictim()->HasAura(AURA_SPECTRAL_REALM, 0))
+            if (me->getVictim() && me->getVictim()->HasAura(AURA_SPECTRAL_REALM, 0))
             {
                 // if player in spectral realm is on top of threat list either
                 // he has taunted us or there is no alive player outside spectral realm
@@ -374,16 +375,16 @@ struct boss_kalecgosAI : public ScriptedAI
             }
 
             // if still having victim with aura, drop some threat
-            if (me->getVictim()->HasAura(AURA_SPECTRAL_REALM, 0))
+            if (me->getVictim() && me->getVictim()->HasAura(AURA_SPECTRAL_REALM, 0))
                 me->getThreatManager().modifyThreatPercent(me->getVictim(), -10);
 
+           
             // various checks + interaction with sathrovarr
-            if (CheckTimer < diff)
+            if (CheckTimer.Expired(diff))
             {
                 if (!me->IsWithinDistInMap(&wLoc, 30))
                     EnterEvadeMode();
 
-                DoZoneInCombat();
                 if (instance && instance->GetData(DATA_KALECGOS_PHASE) == PHASE_ENRAGE && !isEnraged)
                 {
                     me->CastSpell(me, SPELL_ENRAGE, true);
@@ -414,6 +415,7 @@ struct boss_kalecgosAI : public ScriptedAI
                             instance->SetData(DATA_KALECGOS_PHASE, PHASE_BANISH);
                     }
                 }
+
                 if (instance->GetData(DATA_KALECGOS_PHASE) == PHASE_KALEC_DEAD)
                 {
                     TalkTimer = 1;
@@ -421,7 +423,7 @@ struct boss_kalecgosAI : public ScriptedAI
                     isFriendly = false;
                     return;
                 }
-                if (instance->GetData(DATA_KALECGOS_EVENT) == DONE)
+                if (instance->GetData(DATA_KALECGOS_EVENT) == DONE && !TalkingDone)
                 {
                     TalkTimer = 1;
                     TalkSequence = 0;
@@ -429,12 +431,20 @@ struct boss_kalecgosAI : public ScriptedAI
                     return;
                 }
                 CheckTimer = 1000;
-            }
-            else
-                CheckTimer -= diff;
 
+                if (me->isInCombat())
+                    DoZoneInCombat();
+            }
+            
+
+
+
+            if (!UpdateVictim())
+                return;
+
+            
             // cast spells
-            if (ArcaneBuffetTimer < diff)
+            if (ArcaneBuffetTimer.Expired(diff))
             {
                 AddSpellToCast(SPELL_ARCANE_BUFFET, CAST_SELF);
                 if (roll_chance_f(20.0))
@@ -442,10 +452,10 @@ struct boss_kalecgosAI : public ScriptedAI
 
                 ArcaneBuffetTimer = 8000;
             }
-            else
-                ArcaneBuffetTimer -= diff;
+            
 
-            if (FrostBreathTimer < diff)
+
+            if (FrostBreathTimer.Expired(diff))
             {
                 if (roll_chance_f(20.0))
                     DoScriptText(RAND(SAY_EVIL_SPELL1, SAY_EVIL_SPELL2), me);
@@ -453,10 +463,10 @@ struct boss_kalecgosAI : public ScriptedAI
                 AddSpellToCast(SPELL_FROST_BREATH, CAST_SELF);
                 FrostBreathTimer = 15000;
             }
-            else
-                FrostBreathTimer -= diff;
+            
 
-            if (TailLashTimer < diff)
+            
+            if (TailLashTimer.Expired(diff))
             {
                 if (roll_chance_f(20.0))
                     DoScriptText(RAND(SAY_EVIL_SPELL1, SAY_EVIL_SPELL2), me);
@@ -464,24 +474,23 @@ struct boss_kalecgosAI : public ScriptedAI
                 AddSpellToCast(SPELL_TAIL_LASH, CAST_SELF);
                 TailLashTimer = 15000;
             }
-            else
-                TailLashTimer -= diff;
+            
 
-            if (WildMagicTimer < diff)
+           
+            if (WildMagicTimer.Expired(diff))
             {
                 AddSpellToCast(WildMagic[rand()%6], CAST_SELF);
                 WildMagicTimer = 20000;
             }
-            else
-                WildMagicTimer -= diff;
+            
 
-            if (SpectralBlastTimer < diff)
+            
+            if (SpectralBlastTimer.Expired(diff))
             {
                 AddSpellToCast(SPELL_SPECTRAL_BLAST, CAST_SELF);
                 SpectralBlastTimer = 20000+(rand()%5000);
             }
-            else
-                SpectralBlastTimer -= diff;
+            
 
             CastNextSpellIfAnyAndReady();
             DoMeleeAttackIfReady();
@@ -499,10 +508,10 @@ struct boss_sathrovarrAI : public ScriptedAI
 
     ScriptedInstance *instance;
 
-    uint32 CorruptionStrikeTimer;
-    uint32 AgonyCurseTimer;
-    uint32 ShadowBoltTimer;
-    uint32 CheckTimer;
+    Timer CorruptionStrikeTimer;
+    Timer AgonyCurseTimer;
+    Timer ShadowBoltTimer;
+    Timer CheckTimer;
 
     uint64 KalecGUID;
     bool isEnraged;
@@ -510,10 +519,10 @@ struct boss_sathrovarrAI : public ScriptedAI
 
     void Reset()
     {
-        ShadowBoltTimer = 7000 + rand()%3 * 1000;
-        AgonyCurseTimer = urand(20000, 35000);
-        CorruptionStrikeTimer = 13000;
-        CheckTimer = 1000;
+        ShadowBoltTimer.Reset(7000 + rand() % 3 * 1000);
+        AgonyCurseTimer.Reset(urand(20000, 35000));
+        CorruptionStrikeTimer.Reset(13000);
+        CheckTimer.Reset(1000);
         isEnraged = false;
         isBanished = false;
         me->setActive(true);
@@ -556,6 +565,8 @@ struct boss_sathrovarrAI : public ScriptedAI
     {
         if (damage >= me->GetHealth() && done_by != me)
             damage = 0;
+        if (!me->GetLootRecipient() && done_by->GetTypeId() == TYPEID_PLAYER)
+            me->SetLootRecipient(done_by);
     }
 
     void KilledUnit(Unit *target)
@@ -602,26 +613,10 @@ struct boss_sathrovarrAI : public ScriptedAI
 
     void UpdateAI(const uint32 diff)
     {
-        if (!UpdateVictim())
-            return;
-
-        // to be tested
-        if ((!me->getVictim()->HasAura(AURA_SPECTRAL_REALM)  || me->getVictim()->GetPositionZ() > -50)  && !(me->getVictim()->GetEntry() == MOB_KALEC))
-            DoModifyThreatPercent(me->getVictim(), -100);
-
-        // be sure to attack only players in spectral realm
-        if (me->getVictim()->HasAura(AURA_SPECTRAL_EXHAUSTION))
-        {
-            me->RemoveSpellsCausingAura(SPELL_AURA_MOD_TAUNT);
-            if (!UpdateVictim())
-                return;
-        }
-
+      
         // interaction with kalecgos
-        if (CheckTimer < diff)
+        if (CheckTimer.Expired(diff))
         {
-            DoZoneInCombat();
-
             // should not leave Inner Veil
             if (me->GetPositionZ() > -60)
                 me->GetMap()->CreatureRelocation(me, me->GetPositionX(), me->GetPositionY(), DEMON_REALM_Z, me->GetOrientation());
@@ -668,14 +663,32 @@ struct boss_sathrovarrAI : public ScriptedAI
                 EnterEvadeMode();
                 return;
             }
+            if (me->isInCombat())
+                DoZoneInCombat();
 
             CheckTimer = 1000;
         }
-        else
-            CheckTimer -= diff;
+        
 
+        // to be tested
+        if (me->getVictim() && (!me->getVictim()->HasAura(AURA_SPECTRAL_REALM)  || me->getVictim()->GetPositionZ() > -50)  && !(me->getVictim()->GetEntry() == MOB_KALEC))
+            DoModifyThreatPercent(me->getVictim(), -100);
+
+        // be sure to attack only players in spectral realm
+        if (me->getVictim() && me->getVictim()->HasAura(AURA_SPECTRAL_EXHAUSTION))
+        {
+            me->RemoveSpellsCausingAura(SPELL_AURA_MOD_TAUNT);
+            if (!UpdateVictim())
+                return;
+        }
+
+        if (!UpdateVictim())
+            return;
+
+
+        
         // cast spells
-        if (ShadowBoltTimer < diff)
+        if (ShadowBoltTimer.Expired(diff))
         {
             Unit* target = SelectUnit(SELECT_TARGET_RANDOM, 0, 40.0f, true);
             if (target)
@@ -686,18 +699,16 @@ struct boss_sathrovarrAI : public ScriptedAI
 
             ShadowBoltTimer = 7000+(rand()%3000);
         }
-        else
-            ShadowBoltTimer -= diff;
+        
 
-        if (AgonyCurseTimer < diff)
+        if (AgonyCurseTimer.Expired(diff))
         {
             AddSpellToCast(SPELL_AGONY_CURSE, CAST_SELF);
             AgonyCurseTimer = 35000;
         }
-        else
-            AgonyCurseTimer -= diff;
+        
 
-        if (CorruptionStrikeTimer < diff)
+        if (CorruptionStrikeTimer.Expired(diff))
         {
             AddSpellToCast(me->getVictim(), SPELL_CORRUPTION_STRIKE);
             if (roll_chance_f(10.0))
@@ -705,8 +716,7 @@ struct boss_sathrovarrAI : public ScriptedAI
 
             CorruptionStrikeTimer = 13000;
         }
-        else
-            CorruptionStrikeTimer -= diff;
+        
 
         CastNextSpellIfAnyAndReady();
         DoMeleeAttackIfReady();
@@ -717,10 +727,10 @@ struct boss_kalecAI : public ScriptedAI
 {
     ScriptedInstance *instance;
 
-    uint32 RevitalizeTimer;
-    uint32 HeroicStrikeTimer;
-    uint32 CheckTimer;
-    uint32 YellTimer;
+    Timer RevitalizeTimer;
+    Timer HeroicStrikeTimer;
+    Timer CheckTimer;
+    Timer YellTimer;
     uint32 YellSequence;
 
     bool isEnraged;
@@ -735,10 +745,10 @@ struct boss_kalecAI : public ScriptedAI
 
     void Reset()
     {
-        RevitalizeTimer = 5000;
-        HeroicStrikeTimer = 3000;
-        CheckTimer = 1000;
-        YellTimer = 10000;
+        RevitalizeTimer.Reset(5000);
+        HeroicStrikeTimer.Reset(3000);
+        CheckTimer.Reset(1000);
+        YellTimer.Reset(10000);
         YellSequence = 0;
         me->setActive(true);
 
@@ -785,7 +795,8 @@ struct boss_kalecAI : public ScriptedAI
         if (!UpdateVictim())
             return;
 
-        if (YellTimer < diff)
+        
+        if (YellTimer.Expired(diff))
         {
             switch(YellSequence)
             {
@@ -812,10 +823,10 @@ struct boss_kalecAI : public ScriptedAI
             }
             YellTimer = 5000;
         }
-        else
-            YellTimer -= diff;
+        
 
-        if (CheckTimer < diff)
+      
+        if (CheckTimer.Expired(diff))
         {
             if (instance && instance->GetData(DATA_KALECGOS_PHASE) == PHASE_ENRAGE)
                 isEnraged = true;
@@ -826,25 +837,23 @@ struct boss_kalecAI : public ScriptedAI
 
             CheckTimer = 1000;
         }
-        else
-            CheckTimer -= diff;
+        
 
-        if (RevitalizeTimer < diff)
+        
+        if (RevitalizeTimer.Expired(diff))
         {
             if (Unit* target = SelectUnitToRevitalize())
                 AddSpellToCast(target, SPELL_REVITALIZE, false, true);
             RevitalizeTimer = 7000;
         }
-        else
-            RevitalizeTimer -= diff;
+        
 
-        if (HeroicStrikeTimer < diff)
+        if (HeroicStrikeTimer.Expired(diff))
         {
             AddSpellToCast(me->getVictim(), SPELL_HEROIC_STRIKE);
             HeroicStrikeTimer = 2000;
         }
-        else
-            HeroicStrikeTimer -= diff;
+        
 
         CastNextSpellIfAnyAndReady();
         DoMeleeAttackIfReady();

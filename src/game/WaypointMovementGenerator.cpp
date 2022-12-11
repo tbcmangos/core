@@ -46,8 +46,6 @@ void WaypointMovementGenerator<Creature>::Initialize(Creature &creature)
     _nextMoveTime.Reset(0);
     creature.StopMoving();
 
-    creature.addUnitState(UNIT_STAT_ROAMING);
-
     _pathFinding = !creature.hasUnitState(UNIT_STAT_IGNORE_PATHFINDING) && creature.GetMap()->WaypointMovementPathfinding();
 
     if (creature.IsFormationLeader())
@@ -61,7 +59,6 @@ void WaypointMovementGenerator<Creature>::Finalize(Creature &creature)
 {
     creature.StopMoving();
 
-    creature.clearUnitState(UNIT_STAT_ROAMING);
     creature.SetWalk(false);
     creature.setActive(false, ACTIVE_BY_WAYPOINT_MOVEMENT);
 }
@@ -129,6 +126,27 @@ bool WaypointMovementGenerator<Creature>::tryToMove(Creature &creature)
         creature.GetFormation()->LeaderMoveTo(node->x, node->y, node->z);
 
     return true;
+}
+
+void WaypointMovementGenerator<Creature>::Reset(Creature& c)
+{
+    c.StopMoving();
+
+    const WaypointData *node = _path->at(_currentNode);
+
+    Movement::MoveSplineInit init(c);
+    init.MoveTo(node->x, node->y, node->z, _pathFinding && node->moveType != M_FLY);
+
+    if (node->moveType == M_FLY)
+        init.SetFly();
+    else
+        init.SetWalk(node->moveType != M_RUN);
+
+    init.Launch();
+
+    //Call for creature group update
+    if (c.IsFormationLeader())
+        c.GetFormation()->LeaderMoveTo(node->x, node->y, node->z);
 }
 
 bool WaypointMovementGenerator<Creature>::Update(Creature &creature, const uint32 &diff)

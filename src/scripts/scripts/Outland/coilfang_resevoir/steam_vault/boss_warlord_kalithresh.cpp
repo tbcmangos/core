@@ -52,11 +52,11 @@ struct boss_warlord_kalithreshAI : public ScriptedAI
 
     ScriptedInstance *pInstance;
 
-    uint32 Reflection_Timer;
-    uint32 Impale_Timer;
-    uint32 Rage_Timer;
+    Timer Reflection_Timer;
+    Timer Impale_Timer;
+    Timer Rage_Timer;
     uint64 CurrentDistiller;
-    uint32 checkTimer;
+    Timer checkTimer;
 
     WorldLocation pos;
 
@@ -64,11 +64,11 @@ struct boss_warlord_kalithreshAI : public ScriptedAI
     {
         ClearCastQueue();
 
-        Reflection_Timer = 10000;
-        Impale_Timer = 7000+rand()%7000;
-        Rage_Timer = 45000;
+        Reflection_Timer.Reset(10000);
+        Impale_Timer.Reset(urand(7000,14000));
+        Rage_Timer.Reset(urand(15000, 25000));
         CurrentDistiller = 0;
-        checkTimer = 3000;
+        checkTimer.Reset(3000);
 
         std::list<Creature*> naga_distillers = FindAllCreaturesWithEntry(17954, 100);
         for(std::list<Creature*>::iterator it = naga_distillers.begin(); it != naga_distillers.end(); it++)
@@ -76,6 +76,7 @@ struct boss_warlord_kalithreshAI : public ScriptedAI
             (*it)->Respawn();
             (*it)->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
             (*it)->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
+            (*it)->GetUnitStateMgr().PushAction(UNIT_ACTION_STUN);
         }
 
         if (pInstance)
@@ -140,8 +141,14 @@ struct boss_warlord_kalithreshAI : public ScriptedAI
 
     void JustDied(Unit* Killer)
     {
-        DoScriptText(SAY_DEATH, me);
+        // suicide all distillers cause combat stop
+        std::list<Creature*> naga_distillers = FindAllCreaturesWithEntry(17954, 100);
+        for(std::list<Creature*>::iterator it = naga_distillers.begin(); it != naga_distillers.end(); it++)
+        {
+            (*it)->Kill(*it);
+        }
 
+        DoScriptText(SAY_DEATH, me);
         if (pInstance)
             pInstance->SetData(TYPE_WARLORD_KALITHRESH, DONE);
     }
@@ -157,7 +164,7 @@ struct boss_warlord_kalithreshAI : public ScriptedAI
         if (!UpdateVictim() )
             return;
 
-        if (checkTimer < diff)
+        if (checkTimer.Expired(diff))
         {
             if (!me->IsWithinDistInMap(&pos, 105.0f))
             {
@@ -166,10 +173,9 @@ struct boss_warlord_kalithreshAI : public ScriptedAI
             }
             checkTimer = 3000;
         }
-        else
-            checkTimer -= diff;
+        
 
-        if (Rage_Timer < diff)
+        if (Rage_Timer.Expired(diff))
         {
             Creature* distiller = GetClosestCreatureWithEntry(me, 17954, 100);
 
@@ -181,24 +187,24 @@ struct boss_warlord_kalithreshAI : public ScriptedAI
                 CurrentDistiller = distiller->GetGUID();
             }
 
-            Rage_Timer = 15000+rand()%15000;
-        }else Rage_Timer -= diff;
+            Rage_Timer = urand(15000,25000);
+        }
 
         //Reflection_Timer
-        if (Reflection_Timer < diff)
+        if (Reflection_Timer.Expired(diff))
         {
             AddSpellToCast(me, SPELL_SPELL_REFLECTION);
-            Reflection_Timer = 15000+rand()%10000;
-        }else Reflection_Timer -= diff;
+            Reflection_Timer = urand(15000,25000);
+        }
 
         //Impale_Timer
-        if (Impale_Timer < diff)
+        if (Impale_Timer.Expired(diff))
         {
             if (Unit* target = SelectUnit(SELECT_TARGET_RANDOM,0))
                 AddSpellToCast(target,SPELL_IMPALE);
 
-            Impale_Timer = 7500+rand()%5000;
-        }else Impale_Timer -= diff;
+            Impale_Timer = urand(7500, 12500);
+        }
 
         CastNextSpellIfAnyAndReady();
         DoMeleeAttackIfReady();

@@ -116,6 +116,13 @@ class Roll : public LootValidatorRef
         Loot *getLoot() { return getTarget(); }
         void targetObjectBuildLink();
 
+        void SendLootStartRoll(uint32 CountDown);
+        void SendLootRoll(const uint64& SourceGuid, const uint64& TargetGuid, uint8 RollNumber, uint8 RollType);
+        void SendLootRollWon(const uint64& SourceGuid, const uint64& TargetGuid, uint8 RollNumber, uint8 RollType);
+        void SendLootAllPassed();
+        void CountTheRoll();
+        bool CountRollVote(const uint64& playerGUID, uint8 Choice);
+
         uint64 itemGUID;
         uint32 itemid;
         int32  itemRandomPropId;
@@ -160,9 +167,6 @@ class HELLGROUND_IMPORT_EXPORT Group
     protected:
         typedef MemberSlotList::iterator member_witerator;
         typedef std::set<Player*> InvitesList;
-
-        typedef std::list<Roll*> Rolls;
-
     public:
         Group();
         ~Group();
@@ -316,30 +320,11 @@ class HELLGROUND_IMPORT_EXPORT Group
         /***                   LOOT SYSTEM                     ***/
         /*********************************************************/
 
-        void SendLootStartRoll(uint32 CountDown, const Roll &r);
-        void SendLootRoll(const uint64& SourceGuid, const uint64& TargetGuid, uint8 RollNumber, uint8 RollType, const Roll &r);
-        void SendLootRollWon(const uint64& SourceGuid, const uint64& TargetGuid, uint8 RollNumber, uint8 RollType, const Roll &r);
-        void SendLootAllPassed(uint32 NumberOfPlayers, const Roll &r);
         void PrepareLootRolls(const uint64& playerGUID, Loot *loot, WorldObject* object);
         void SendMasterLoot(Loot *loot, WorldObject* object);
         void SendRoundRobin(Loot *loot, WorldObject* object);
         bool IsRoundRobinLootType() { return m_lootMethod == GROUP_LOOT || m_lootMethod == NEED_BEFORE_GREED || m_lootMethod == ROUND_ROBIN; }
         bool IsRollLootType() { return m_lootMethod == GROUP_LOOT || m_lootMethod == NEED_BEFORE_GREED; }
-        Rolls::iterator GetRoll(uint64 Guid)
-        {
-            Rolls::iterator iter;
-            for (iter=RollId.begin(); iter != RollId.end(); ++iter)
-            {
-                if ((*iter)->itemGUID == Guid && (*iter)->isValid())
-                {
-                    return iter;
-                }
-            }
-            return RollId.end();
-        }
-        void CountTheRoll(Rolls::iterator roll, uint32 NumberOfPlayers);
-        void CountRollVote(const uint64& playerGUID, const uint64& Guid, uint32 NumberOfPlayers, uint8 Choise);
-        void EndRoll();
 
         void LinkMember(GroupReference *pRef) { m_memberMgr.insertFirst(pRef); }
         void DelinkMember(GroupReference* /*pRef*/) { }
@@ -357,8 +342,6 @@ class HELLGROUND_IMPORT_EXPORT Group
         bool _addMember(const uint64 &guid, const char* name, bool isAssistant, uint8 group);
         bool _removeMember(const uint64 &guid);             // returns true if leader has changed
         void _setLeader(const uint64 &guid);
-
-        void _removeRolls(const uint64 &guid);
 
         bool _setMembersGroup(const uint64 &guid, const uint8 &group);
         bool _setAssistantFlag(const uint64 &guid, const bool &state);
@@ -425,7 +408,6 @@ class HELLGROUND_IMPORT_EXPORT Group
         LootMethod          m_lootMethod;
         ItemQualities       m_lootThreshold;
         uint64              m_looterGuid;
-        Rolls               RollId;
         BoundInstancesMap   m_boundInstances[TOTAL_DIFFICULTIES];
         uint8*              m_subGroupsCounts;
         time_t              m_leaderLogoutTime;

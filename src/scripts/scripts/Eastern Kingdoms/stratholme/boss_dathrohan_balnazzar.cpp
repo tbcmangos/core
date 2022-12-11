@@ -39,7 +39,8 @@ EndScriptData */
 //Balnazzar spells
 #define SPELL_SHADOWSHOCK    20603 //AOE 740-860dmg
 #define SPELL_PSYCHICSCREAM    15398 //One target, might want to make a code selecting random target
-#define SPELL_DEEPSLEEP    24777 //AOE, ten sec
+//#define SPELL_DEEPSLEEP    24777 //AOE, ten sec
+#define SPELL_SLEEP        12098 // one target sleep
 #define SPELL_SHADOWBOLTVOLLEY    20741 //AOE, 255-345dmg
 //#define SPELL_MINDCONTROL    15690 //core support needed
 
@@ -89,16 +90,16 @@ struct boss_dathrohan_balnazzarAI : public ScriptedAI
 {
     boss_dathrohan_balnazzarAI(Creature *c) : ScriptedAI(c) {}
 
-    uint32 CrusadersHammer_Timer;
-    uint32 CrusaderStrike_Timer;
-    uint32 MindBlast_Timer;
-    uint32 HolyStrike_Timer;
-    uint32 Dazed_Timer;
-    uint32 ShadowShock_Timer;
-    uint32 PsychicScream_Timer;
-    uint32 DeepSleep_Timer;
-    uint32 ShadowBoltVolley_Timer;
-    //    uint32 MindControl_Timer;
+    int32 CrusadersHammer_Timer;
+    int32 CrusaderStrike_Timer;
+    int32 MindBlast_Timer;
+    int32 HolyStrike_Timer;
+    int32 Dazed_Timer;
+    int32 ShadowShock_Timer;
+    int32 PsychicScream_Timer;
+    int32 DeepSleep_Timer;
+    int32 ShadowBoltVolley_Timer;
+    //    int32 MindControl_Timer;
     bool Transformed;
 
     void Reset()
@@ -145,8 +146,8 @@ struct boss_dathrohan_balnazzarAI : public ScriptedAI
         //START NOT TRANSFORMED
         if (!Transformed)
         {
-            //CrusadersHammer
-            if (CrusadersHammer_Timer < diff && !m_creature->IsNonMeleeSpellCast(false))
+            CrusadersHammer_Timer -= diff;
+            if (CrusadersHammer_Timer <= diff && !m_creature->IsNonMeleeSpellCast(false))
             {
                 //Cast
                 if (rand()%100 < 75) //50% chance to cast
@@ -154,11 +155,11 @@ struct boss_dathrohan_balnazzarAI : public ScriptedAI
                     DoCast(m_creature->getVictim(),SPELL_CRUSADERSHAMMER);
                 }
                 //15 seconds until we should cast this again
-                CrusadersHammer_Timer = 12000;
-            }else CrusadersHammer_Timer -= diff;
+                CrusadersHammer_Timer += 12000;
+            }
 
-            //CrusaderStrike
-            if (CrusaderStrike_Timer < diff && !m_creature->IsNonMeleeSpellCast(false))
+            CrusaderStrike_Timer -= diff;
+            if (CrusaderStrike_Timer <= diff && !m_creature->IsNonMeleeSpellCast(false))
             {
                 //Cast
                 if (rand()%100 < 60) //50% chance to cast
@@ -166,11 +167,11 @@ struct boss_dathrohan_balnazzarAI : public ScriptedAI
                     DoCast(m_creature->getVictim(),SPELL_CRUSADERSTRIKE);
                 }
                 //15 seconds until we should cast this again
-                CrusaderStrike_Timer = 15000;
-            }else CrusaderStrike_Timer -= diff;
+                CrusaderStrike_Timer += 15000;
+            }
 
-            //MindBlast
-            if (MindBlast_Timer < diff && !m_creature->IsNonMeleeSpellCast(false))
+            MindBlast_Timer -= diff;
+            if (MindBlast_Timer <= diff && !m_creature->IsNonMeleeSpellCast(false))
             {
                 //Cast
                 if (rand()%100 < 70) //70% chance to cast
@@ -178,11 +179,11 @@ struct boss_dathrohan_balnazzarAI : public ScriptedAI
                     DoCast(m_creature->getVictim(),SPELL_MINDBLAST);
                 }
                 //15 seconds until we should cast this again
-                MindBlast_Timer = 10000;
-            }else MindBlast_Timer -= diff;
+                MindBlast_Timer += 10000;
+            }
 
-            //HolyStrike
-            if (HolyStrike_Timer < diff && !m_creature->IsNonMeleeSpellCast(false))
+            HolyStrike_Timer -= diff;
+            if (HolyStrike_Timer <= diff && !m_creature->IsNonMeleeSpellCast(false))
             {
                 //Cast
                 if (rand()%100 < 50) //50% chance to cast
@@ -190,11 +191,11 @@ struct boss_dathrohan_balnazzarAI : public ScriptedAI
                     DoCast(m_creature->getVictim(),SPELL_HOLYSTRIKE);
                 }
                 //15 seconds until we should cast this again
-                HolyStrike_Timer = 15000;
-            }else HolyStrike_Timer -= diff;
+                HolyStrike_Timer += 15000;
+            }
 
-            //Dazed
-            if (Dazed_Timer < diff && !m_creature->IsNonMeleeSpellCast(false))
+            Dazed_Timer -= diff;
+            if (Dazed_Timer <= diff && !m_creature->IsNonMeleeSpellCast(false))
             {
                 //Cast
                 if (rand()%100 < 50) //50% chance to cast
@@ -202,8 +203,8 @@ struct boss_dathrohan_balnazzarAI : public ScriptedAI
                     DoCast(m_creature->getVictim(),SPELL_DAZED);
                 }
                 //15 seconds until we should cast this again
-                Dazed_Timer = 15000;
-            }else Dazed_Timer -= diff;
+                Dazed_Timer += 15000;
+            }
 
             //BalnazzarTransform
             if (m_creature->GetHealth()*100 / m_creature->GetMaxHealth() < 40)
@@ -219,8 +220,8 @@ struct boss_dathrohan_balnazzarAI : public ScriptedAI
         } else {
 
 
-            //MindBlast
-            if (MindBlast_Timer < diff && !m_creature->IsNonMeleeSpellCast(false))
+            MindBlast_Timer -= diff;
+            if (MindBlast_Timer <= diff && !m_creature->IsNonMeleeSpellCast(false))
             {
                 //Cast
                 if (rand()%100 < 60) //70% chance to cast
@@ -228,11 +229,11 @@ struct boss_dathrohan_balnazzarAI : public ScriptedAI
                     DoCast(m_creature->getVictim(),SPELL_MINDBLAST);
                 }
                 //15 seconds until we should cast this again
-                MindBlast_Timer = 10000;
-            }else MindBlast_Timer -= diff;
+                MindBlast_Timer += 10000;
+            }
 
-            //ShadowShock
-            if (ShadowShock_Timer < diff)
+            ShadowShock_Timer -= diff;
+            if (ShadowShock_Timer <= diff)
             {
                 //Cast
                 if (rand()%100 < 80) //80% chance to cast
@@ -240,11 +241,11 @@ struct boss_dathrohan_balnazzarAI : public ScriptedAI
                     DoCast(m_creature->getVictim(),SPELL_SHADOWSHOCK);
                 }
                 //15 seconds until we should cast this again
-                ShadowShock_Timer = 11000;
-            }else ShadowShock_Timer -= diff;
+                ShadowShock_Timer += 11000;
+            }
 
-            //PsychicScream
-            if (PsychicScream_Timer < diff)
+            PsychicScream_Timer -= diff;
+            if (PsychicScream_Timer <= diff)
             {
                 //Cast
                 if (rand()%100 < 60) //60% chance to cast
@@ -254,11 +255,11 @@ struct boss_dathrohan_balnazzarAI : public ScriptedAI
                         DoModifyThreatPercent(m_creature->getVictim(),-50);
                 }
                 //15 seconds until we should cast this again
-                PsychicScream_Timer = 20000;
-            }else PsychicScream_Timer -= diff;
+                PsychicScream_Timer += 20000;
+            }
 
-            //DeepSleep
-            if (DeepSleep_Timer < diff)
+            DeepSleep_Timer -= diff;
+            if (DeepSleep_Timer <= diff)
             {
                 //Cast
                 if (rand()%100 < 55) //55% chance to cast
@@ -268,14 +269,14 @@ struct boss_dathrohan_balnazzarAI : public ScriptedAI
 
                     target = SelectUnit(SELECT_TARGET_RANDOM,0);
                     if (target)
-                    DoCast(target,SPELL_DEEPSLEEP);
+                    DoCast(target,SPELL_SLEEP);
                 }
                 //15 seconds until we should cast this again
-                DeepSleep_Timer = 15000;
-            }else DeepSleep_Timer -= diff;
+                DeepSleep_Timer += 15000;
+            }
 
-            //ShadowBoltVolley
-            if (ShadowBoltVolley_Timer < diff)
+            ShadowBoltVolley_Timer -= diff;
+            if (ShadowBoltVolley_Timer <= diff)
             {
                 //Cast
                 if (rand()%100 < 75) //75% chance to cast
@@ -283,11 +284,11 @@ struct boss_dathrohan_balnazzarAI : public ScriptedAI
                     DoCast(m_creature->getVictim(),SPELL_SHADOWBOLTVOLLEY);
                 }
                 //15 seconds until we should cast this again
-                ShadowBoltVolley_Timer = 13000;
-            }else ShadowBoltVolley_Timer -= diff;
+                ShadowBoltVolley_Timer += 13000;
+            }
 
-            //MindControl
-            //            if (MindControl_Timer < diff)
+              //          MindControl_Timer -= diff;
+            //            if (MindControl_Timer <= diff)
             //            {
             //Cast
             //                if (rand()%100 < 50) //50% chance to cast
@@ -295,8 +296,8 @@ struct boss_dathrohan_balnazzarAI : public ScriptedAI
             //                DoCast(m_creature->getVictim(),SPELL_MINDCONTROL);
             //                }
             //15 seconds until we should cast this again
-            //                MindControl_Timer = 15000;
-            //            }else MindControl_Timer -= diff;
+            //                MindControl_Timer += 15000;
+            //            }
 
             //END ELSE TRANSFORMED
         }

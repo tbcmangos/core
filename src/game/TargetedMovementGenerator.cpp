@@ -51,7 +51,7 @@ void TargetedMovementGeneratorMedium<T,D>::_setTargetLocation(T &owner)
     }
     else if (!_offset)
     {
-        if (_target->IsWithinMeleeRange(&owner))
+        if (_target->IsWithinMeleeRange(&owner, MELEE_RANGE - 0.5f))
         {
             if (!owner.IsStopped())
                 owner.StopMoving();
@@ -80,13 +80,20 @@ void TargetedMovementGeneratorMedium<T,D>::_setTargetLocation(T &owner)
         _target->GetNearPoint(x, y, z, owner.GetObjectSize(), _offset, _angle);
     }
 
+    if (abs(_target->GetPositionZ() - z) > 5.0f) // get nearpoint is normalizing position for ground, enable fly and swim
+        z = _target->GetPositionZ();
+
     if (!_path)
         _path = new PathFinder(&owner);
 
     // allow pets following their master to cheat while generating paths
     bool forceDest = (owner.GetObjectGuid().IsPet() && owner.hasUnitState(UNIT_STAT_FOLLOW));
     bool result = _path->calculate(x, y, z, forceDest);
-    if (!result || _path->getPathType() & PATHFIND_NOPATH)
+    //if (!result || _path->getPathType() & PATHFIND_NOPATH)
+    //    return;
+    if (!forceDest && _path->getPathType() & PATHFIND_NOPATH)
+        result = _path->calculate(x, y, z, true);
+    if (!result)
         return;
 
     _targetReached = false;
@@ -234,9 +241,6 @@ void ChaseMovementGenerator<T>::Finalize(T &owner)
 
         if (creature->isPet())
             return;
-
-        if (!creature->isInCombat())
-            creature->GetMotionMaster()->MoveTargetedHome();
     }
 }
 

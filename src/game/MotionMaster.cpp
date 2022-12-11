@@ -116,7 +116,7 @@ void MotionMaster::MoveFollow(Unit* target, float dist, float angle)
     if (!target || m_owner->HasFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_DISABLE_MOVE))
         return;
 
-    m_owner->GetMotionMaster()->MovementExpired();
+    m_owner->GetMotionMaster()->StopControlledMovement();
 
     if (m_owner->GetTypeId() == TYPEID_PLAYER)
         Mutate(new FollowMovementGenerator<Player>(*target,dist,angle), UNIT_ACTION_DOWAYPOINTS);
@@ -182,6 +182,13 @@ void MotionMaster::MovePath(uint32 path_id, bool repeatable)
         sLog.outLog(LOG_DEFAULT, "ERROR: MotionMaster: Non-creature %s attempt to MoveWaypoint()", m_owner->GetGuidStr().c_str());
 }
 
+void MotionMaster::MoveRotate(uint32 time, RotateDirection direction)
+{
+    if (!time)
+        return;
+    Mutate(new RotateMovementGenerator(time, direction), UNIT_ACTION_CONTROLLED);
+}
+
 void MotionMaster::MoveDistract(uint32 timer)
 {
     Mutate(new DistractMovementGenerator(timer), UNIT_ACTION_EFFECT);
@@ -224,13 +231,18 @@ MotionMaster::MotionMaster(Unit *unit) : m_owner(unit)
 {
 }
 
-/** Does nothing */
+/** Drops all states */
 void MotionMaster::Clear(bool reset /*= true*/, bool all /*= false*/)
 {
     if (all)
         impl()->InitDefaults();
     else if (reset)
         impl()->DropAllStates();
+}
+
+void MotionMaster::StopControlledMovement()
+{
+    impl()->DropAllControlledStates();
 }
 
 MovementGenerator* MotionMaster::top()
@@ -276,27 +288,27 @@ void MotionMaster::MoveFall()
     if (fabs(m_owner->GetPositionZ() - tz) < 0.1f)
         return;
 
+    Mutate(new EffectMovementGenerator(0), UNIT_ACTION_EFFECT);
     Movement::MoveSplineInit init(*m_owner);
     init.MoveTo(m_owner->GetPositionX(),m_owner->GetPositionY(),tz);
     init.SetFall();
     init.Launch();
-    Mutate(new EffectMovementGenerator(0), UNIT_ACTION_EFFECT);
 }
 
-void MotionMaster::MoveCharge(float x, float y, float z, float speed /*= SPEED_CHARGE*/, uint32 id /*= EVENT_CHARGE*/, bool generatePath /*= false*/)
+void MotionMaster::MoveCharge(float x, float y, float z, float speed /*= SPEED_CHARGE*/)
 {
+    Mutate(new EffectMovementGenerator(EVENT_CHARGE), UNIT_ACTION_EFFECT);
     Movement::MoveSplineInit init(*m_owner);
     init.MoveTo(x,y,z);
     init.SetVelocity(speed);
     init.Launch();
-    Mutate(new EffectMovementGenerator(id), UNIT_ACTION_EFFECT);
 }
 
-void MotionMaster::MoveCharge(PathFinder path, float speed /*= SPEED_CHARGE*/, uint32 id /*= EVENT_CHARGE*/)
+void MotionMaster::MoveCharge(PathFinder path, float speed /*= SPEED_CHARGE*/)
 {
+    Mutate(new EffectMovementGenerator(EVENT_CHARGE), UNIT_ACTION_EFFECT);
     Movement::MoveSplineInit init(*m_owner);
     init.MovebyPath(path.getPath());
     init.SetVelocity(speed);
     init.Launch();
-    Mutate(new EffectMovementGenerator(id), UNIT_ACTION_EFFECT);
 }

@@ -59,9 +59,9 @@ struct boss_curatorAI : public ScriptedAI
 
     ScriptedInstance* pInstance;
 
-    uint32 addTimer;
-    uint32 hatefulBoltTimer;
-    uint32 berserkTimer;
+    Timer addTimer;
+    Timer hatefulBoltTimer;
+    Timer berserkTimer;
 
     WorldLocation wLoc;
 
@@ -70,14 +70,15 @@ struct boss_curatorAI : public ScriptedAI
 
     void Reset()
     {
-        addTimer = 10000;
-        hatefulBoltTimer = 15000;                           //This time may be wrong
-        berserkTimer = 720000;                              //12 minutes
+        addTimer.Reset(10000);
+        hatefulBoltTimer.Reset(15000);                           //This time may be wrong
+        berserkTimer.Reset(720000);                              //12 minutes
         enraged = false;
         evocating = false;
         me->ApplySpellImmune(0, IMMUNITY_SCHOOL, SPELL_SCHOOL_MASK_ARCANE, true);
         me->ApplySpellImmune(1, IMMUNITY_STATE, SPELL_AURA_PERIODIC_LEECH, true);
         me->ApplySpellImmune(2, IMMUNITY_STATE, SPELL_AURA_PERIODIC_MANA_LEECH, true);
+        me->ApplySpellImmune(3, IMMUNITY_DISPEL, DISPEL_POISON, true);
 
         pInstance->SetData(DATA_CURATOR_EVENT, NOT_STARTED);
     }
@@ -120,7 +121,7 @@ struct boss_curatorAI : public ScriptedAI
 
         if (!enraged && !evocating)
         {
-            if (addTimer < diff)
+            if (addTimer.Expired(diff))
             {
                 //Summon Astral Flare
                 Creature* astralFlare = DoSpawnCreature(17096, rand()%37, rand()%37, 0, 0, TEMPSUMMON_TIMED_DESPAWN_OUT_OF_COMBAT, 5000);
@@ -130,6 +131,7 @@ struct boss_curatorAI : public ScriptedAI
                 {
                     astralFlare->CastSpell(astralFlare, SPELL_ASTRAL_FLARE_PASSIVE, false);
                     astralFlare->ApplySpellImmune(0, IMMUNITY_SCHOOL, SPELL_SCHOOL_MASK_ARCANE, true);
+                    astralFlare->ApplySpellImmune(1, IMMUNITY_STATE, SPELL_AURA_MOD_TAUNT, true);
                     astralFlare->AI()->AttackStart(target);
                 }
 
@@ -141,16 +143,13 @@ struct boss_curatorAI : public ScriptedAI
 
                 addTimer = 10000;
             }
-            else
-                addTimer -= diff;
 
-            if (hatefulBoltTimer < diff)
+            if (hatefulBoltTimer.Expired(diff))
             {
                 AddSpellToCast(SPELL_HATEFUL_BOLT, CAST_THREAT_SECOND);
                 hatefulBoltTimer = enraged ? 7000 : 15000;
             }
-            else
-                hatefulBoltTimer -= diff;
+            
 
             if (!enraged && HealthBelowPct(15))
             {
@@ -159,13 +158,13 @@ struct boss_curatorAI : public ScriptedAI
             }
         }
 
-        if (berserkTimer < diff)
+
+        if (berserkTimer.Expired(diff))
         {
             ForceSpellCastWithScriptText(SPELL_BERSERK, CAST_SELF, SAY_ENRAGE);
             berserkTimer = 60000;
         }
-        else
-            berserkTimer -= diff;
+        
 
         CastNextSpellIfAnyAndReady();
         DoMeleeAttackIfReady();

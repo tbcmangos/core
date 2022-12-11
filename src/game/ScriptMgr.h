@@ -42,9 +42,6 @@ class WorldObject;
 
 struct SpellEntry;
 
-#define MIN_DB_SCRIPT_STRING_ID        MAX_HELLGROUND_STRING_ID // 'db_script_string'
-#define MAX_DB_SCRIPT_STRING_ID        2000010000
-
 struct ScriptInfo
 {
     uint32 id;
@@ -87,8 +84,6 @@ class ScriptMgr
         void LoadSpellScripts();
         void LoadWaypointScripts();
 
-        void LoadDbScriptStrings();
-
         void LoadScriptNames();
         void LoadAreaTriggerScripts();
         void LoadCompletedCinematicScripts();
@@ -124,9 +119,6 @@ class ScriptMgr
         bool OnAreaTrigger(Player* pPlayer, AreaTriggerEntry const* atEntry);
         bool OnCompletedCinematic(Player* pPlayer, CinematicSequencesEntry const* cinematic);
         bool OnProcessEvent(uint32 eventId, Object* pSource, Object* pTarget, bool isStart);
-        bool OnEffectDummy(Unit* pCaster, uint32 spellId, uint32 effIndex, Creature* pTarget);
-        bool OnEffectDummy(Unit* pCaster, uint32 spellId, uint32 effIndex, GameObject* pTarget);
-        bool OnEffectDummy(Unit* pCaster, uint32 spellId, uint32 effIndex, Item* pTarget);
         bool OnAuraDummy(Aura const* pAura, bool apply);
 
         bool OnReceiveEmote(Player *pPlayer, Creature *pCreature, uint32 emote);
@@ -137,7 +129,6 @@ class ScriptMgr
 
     private:
         void LoadScripts(ScriptMapMap& scripts, const char* tablename);
-        void CheckScripts(ScriptMapMap const& scripts,std::set<int32>& ids);
 
         template<class T>
         void GetScriptHookPtr(T& ptr, const char* name)
@@ -161,7 +152,6 @@ class ScriptMgr
 
         void (HELLGROUND_IMPORT* m_pOnInitScriptLibrary)(char const*);
         void (HELLGROUND_IMPORT* m_pOnFreeScriptLibrary)();
-        const char* (HELLGROUND_IMPORT* m_pGetScriptLibraryVersion)();
 
         CreatureAI* (HELLGROUND_IMPORT* m_pGetCreatureAI) (Creature*);
         InstanceData* (HELLGROUND_IMPORT* m_pCreateInstanceData) (Map*);
@@ -183,9 +173,6 @@ class ScriptMgr
         bool (HELLGROUND_IMPORT* m_pOnAreaTrigger) (Player*, AreaTriggerEntry const*);
         bool (HELLGROUND_IMPORT* m_pOnCompletedCinematic) (Player*, CinematicSequencesEntry const*);
         bool (HELLGROUND_IMPORT* m_pOnProcessEvent) (uint32, Object*, Object*, bool);
-        bool (HELLGROUND_IMPORT* m_pOnEffectDummyCreature) (Unit*, uint32, uint32, Creature*);
-        bool (HELLGROUND_IMPORT* m_pOnEffectDummyGO) (Unit*, uint32, uint32, GameObject*);
-        bool (HELLGROUND_IMPORT* m_pOnEffectDummyItem) (Unit*, uint32, uint32, Item*);
         bool (HELLGROUND_IMPORT* m_pOnAuraDummy) (Aura const*, bool);
 
         bool (HELLGROUND_IMPORT* m_pOnReceiveEmote) (Player *pPlayer, Creature *pCreature, uint32 emote);

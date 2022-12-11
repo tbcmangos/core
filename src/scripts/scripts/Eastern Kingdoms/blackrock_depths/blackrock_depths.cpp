@@ -218,7 +218,7 @@ struct npc_grimstoneAI : public npc_escortAI
 
                 if (RingBossGUID)
                 {
-                    Creature *boss = Unit::GetCreature(*me,RingBossGUID);
+                    Creature *boss = Unit::GetCreature(*me, RingBossGUID);
                     if (boss && !boss->isAlive() && boss->isDead())
                     {
                         RingBossGUID = 0;
@@ -229,9 +229,9 @@ struct npc_grimstoneAI : public npc_escortAI
                     return;
                 }
 
-                for(uint8 i = 0; i < MOB_AMOUNT; i++)
+                for (uint8 i = 0; i < MOB_AMOUNT; i++)
                 {
-                    Creature *mob = Unit::GetCreature(*me,RingMobGUID[i]);
+                    Creature *mob = Unit::GetCreature(*me, RingMobGUID[i]);
                     if (mob && !mob->isAlive() && mob->isDead())
                     {
                         RingMobGUID[i] = 0;
@@ -254,11 +254,11 @@ struct npc_grimstoneAI : public npc_escortAI
         {
             if (Event_Timer <= diff)
             {
-                switch(EventPhase)
+                switch (EventPhase)
                 {
                 case 0:
                     DoScriptText(-1000001, me);//1
-                    DoGate(DATA_ARENA4,1);
+                    DoGate(DATA_ARENA4, 1);
                     Start(false, false);
                     CanWalk = true;
                     Event_Timer = 0;
@@ -271,7 +271,7 @@ struct npc_grimstoneAI : public npc_escortAI
                     Event_Timer = 2000;
                     break;
                 case 3:
-                    DoGate(DATA_ARENA1,0);
+                    DoGate(DATA_ARENA1, 0);
                     Event_Timer = 3000;
                     break;
                 case 4:
@@ -291,13 +291,13 @@ struct npc_grimstoneAI : public npc_escortAI
                     break;
                 case 7:
                     me->SetVisibility(VISIBILITY_ON);
-                    DoGate(DATA_ARENA1,1);
+                    DoGate(DATA_ARENA1, 1);
                     DoScriptText(-1000004, me);//4
                     CanWalk = true;
                     Event_Timer = 0;
                     break;
                 case 8:
-                    DoGate(DATA_ARENA2,0);
+                    DoGate(DATA_ARENA2, 0);
                     Event_Timer = 5000;
                     break;
                 case 9:
@@ -307,9 +307,9 @@ struct npc_grimstoneAI : public npc_escortAI
                     break;
                 case 10:
                     //if quest, complete
-                    DoGate(DATA_ARENA2,1);
-                    DoGate(DATA_ARENA3,0);
-                    DoGate(DATA_ARENA4,0);
+                    DoGate(DATA_ARENA2, 1);
+                    DoGate(DATA_ARENA3, 0);
+                    DoGate(DATA_ARENA4, 0);
                     CanWalk = true;
                     Event_Timer = 0;
                     break;
@@ -348,9 +348,9 @@ struct mob_phalanxAI : public ScriptedAI
 {
     mob_phalanxAI(Creature *c) : ScriptedAI(c) {}
 
-    uint32 ThunderClap_Timer;
-    uint32 FireballVolley_Timer;
-    uint32 MightyBlow_Timer;
+    int32 ThunderClap_Timer;
+    int32 FireballVolley_Timer;
+    int32 MightyBlow_Timer;
 
     void Reset()
     {
@@ -369,35 +369,33 @@ struct mob_phalanxAI : public ScriptedAI
         if (!UpdateVictim())
             return;
 
-        //ThunderClap_Timer
-        if (ThunderClap_Timer < diff)
+        ThunderClap_Timer -= diff;
+        if (ThunderClap_Timer <= diff)
         {
             DoCast(me->getVictim(),SPELL_THUNDERCLAP);
-            ThunderClap_Timer = 10000;
+            ThunderClap_Timer += 10000;
         }
-        else
-            ThunderClap_Timer -= diff;
+        
+            
 
-        //FireballVolley_Timer
-        if (me->GetHealth()*100 / me->GetMaxHealth() < 51)
+        FireballVolley_Timer -= diff;
+        if (me->GetHealth() * 100 / me->GetMaxHealth() < 51)
         {
-            if (FireballVolley_Timer < diff)
+            if (FireballVolley_Timer <= diff)
             {
                 DoCast(me->getVictim(),SPELL_FIREBALLVOLLEY);
-                FireballVolley_Timer = 15000;
+                FireballVolley_Timer += 15000;
             }
-            else
-                FireballVolley_Timer -= diff;
         }
 
-        //MightyBlow_Timer
-        if (MightyBlow_Timer < diff)
+        MightyBlow_Timer -= diff;
+        if (MightyBlow_Timer <= diff)
         {
             DoCast(me->getVictim(),SPELL_MIGHTYBLOW);
-            MightyBlow_Timer = 10000;
+            MightyBlow_Timer += 10000;
         }
-        else
-            MightyBlow_Timer -= diff;
+        
+         
 
         DoMeleeAttackIfReady();
     }
@@ -635,18 +633,18 @@ struct npc_rocknotAI : public npc_escortAI
 
         if (BreakKeg_Timer)
         {
+            BreakKeg_Timer -= diff;
             if (BreakKeg_Timer <= diff)
             {
                 DoGo(DATA_GO_BAR_KEG,0);
                 BreakKeg_Timer = 0;
                 BreakDoor_Timer = 1000;
             }
-            else
-                BreakKeg_Timer -= diff;
         }
 
         if (BreakDoor_Timer)
         {
+            BreakDoor_Timer -= diff;
             if (BreakDoor_Timer <= diff)
             {
                 DoGo(DATA_GO_BAR_DOOR,2);
@@ -662,8 +660,6 @@ struct npc_rocknotAI : public npc_escortAI
 
                 BreakDoor_Timer = 0;
             }
-            else
-                BreakDoor_Timer -= diff;
         }
 
         npc_escortAI::UpdateAI(diff);

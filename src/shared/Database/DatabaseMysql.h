@@ -83,6 +83,7 @@ class MySQLConnection : public SqlConnection
         bool BeginTransaction();
         bool CommitTransaction();
         bool RollbackTransaction();
+        bool Ping();
 
     protected:
         SqlPreparedStatement * CreateStatement(const std::string& fmt);
@@ -107,7 +108,6 @@ class DatabaseMysql : public Database
         void ThreadStart();
         // must be call before finish thread run
         void ThreadEnd();
-
     protected:
         virtual SqlConnection * CreateConnection();
 

@@ -186,6 +186,7 @@ class GridMap
         float getHeight(float x, float y) { return (this->*m_gridGetHeight)(x, y); }
         float getLiquidLevel(float x, float y);
         uint8 getTerrainType(float x, float y);
+        uint32 lastTimeUsed;
         GridMapLiquidStatus getLiquidStatus(float x, float y, float z, uint8 ReqLiquidType, GridMapLiquidData *data = 0);
 };
 
@@ -274,7 +275,6 @@ class HELLGROUND_IMPORT_EXPORT TerrainInfo : public Referencable<AtomicLong>
         friend class Map;
         //load/unload terrain data
         GridMap * Load(const uint32 x, const uint32 y);
-        void Unload(const uint32 x, const uint32 y);
 
     private:
         TerrainInfo(const TerrainInfo&);
@@ -282,9 +282,6 @@ class HELLGROUND_IMPORT_EXPORT TerrainInfo : public Referencable<AtomicLong>
 
         GridMap * GetGrid( const float x, const float y );
         GridMap * LoadMapAndVMap(const uint32 x, const uint32 y );
-
-        int RefGrid(const uint32& x, const uint32& y);
-        int UnrefGrid(const uint32& x, const uint32& y);
 
         const uint32 m_mapId;
 
@@ -294,12 +291,11 @@ class HELLGROUND_IMPORT_EXPORT TerrainInfo : public Referencable<AtomicLong>
         int16 m_GridRef[MAX_NUMBER_OF_GRIDS][MAX_NUMBER_OF_GRIDS];
 
         //global garbage collection timer
-        ShortIntervalTimer i_timer;
+        Timer i_timer;
 
         typedef ACE_Thread_Mutex LOCK_TYPE;
         typedef ACE_Guard<LOCK_TYPE> LOCK_GUARD;
         LOCK_TYPE m_mutex;
-        LOCK_TYPE m_refMutex;
 };
 
 //class for managing TerrainData object and all sort of geometry querying operations

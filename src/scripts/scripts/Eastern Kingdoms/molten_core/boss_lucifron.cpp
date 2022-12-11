@@ -39,9 +39,9 @@ struct boss_lucifronAI : public ScriptedAI
     }
 
     ScriptedInstance * pInstance;
-    uint32 ImpendingDoom_Timer;
-    uint32 LucifronCurse_Timer;
-    uint32 ShadowShock_Timer;
+    int32 ImpendingDoom_Timer;
+    int32 LucifronCurse_Timer;
+    int32 ShadowShock_Timer;
 
     void Reset()
     {
@@ -70,26 +70,26 @@ struct boss_lucifronAI : public ScriptedAI
         if (!UpdateVictim())
             return;
 
-        //Impending doom timer
-        if (ImpendingDoom_Timer < diff)
+        ImpendingDoom_Timer -= diff; 
+        if (ImpendingDoom_Timer <= diff)
         {
             DoCast(m_creature->getVictim(),SPELL_IMPENDINGDOOM);
-            ImpendingDoom_Timer = 20000;
-        }else ImpendingDoom_Timer -= diff;
+            ImpendingDoom_Timer += 20000;
+        }
 
-        //Lucifron's curse timer
-        if (LucifronCurse_Timer < diff)
+        LucifronCurse_Timer -= diff;
+        if (LucifronCurse_Timer <= diff)
         {
             DoCast(m_creature->getVictim(),SPELL_LUCIFRONCURSE);
-            LucifronCurse_Timer = 15000;
-        }else LucifronCurse_Timer -= diff;
+            LucifronCurse_Timer += 15000;
+        }
 
-        //Shadowshock
-        if (ShadowShock_Timer < diff)
+        ShadowShock_Timer -= diff;
+        if (ShadowShock_Timer <= diff)
         {
             DoCast(m_creature->getVictim(),SPELL_SHADOWSHOCK);
-            ShadowShock_Timer = 6000;
-        }else ShadowShock_Timer -= diff;
+            ShadowShock_Timer += 6000;
+        }
 
         DoMeleeAttackIfReady();
     }

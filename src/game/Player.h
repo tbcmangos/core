@@ -21,12 +21,10 @@
 #ifndef HELLGROUND_PLAYER_H
 #define HELLGROUND_PLAYER_H
 
-#include "Common.h"
-
 #include "ItemPrototype.h"
 #include "Unit.h"
 #include "Item.h"
-
+#include "CooldownMgr.h"
 #include "Database/DatabaseEnv.h"
 #include "BattleGround.h"
 #include "NPCHandler.h"
@@ -66,6 +64,8 @@ enum AnticheatChecks
 {
     ANTICHEAT_CHECK_FLYHACK,
     ANTICHEAT_CHECK_WATERWALKHACK,
+    ANTICHEAT_CHECK_SHORTMOVE,
+    ANTICHEAT_CHECK_RARE_CASE,
 
     ANTICHEAT_CHECK_MAX
 };
@@ -123,14 +123,6 @@ typedef UNORDERED_MAP<uint16, PlayerSpell> PlayerSpellMap;
 typedef std::list<SpellModifier*> SpellModList;
 
 typedef UNORDERED_MAP<uint64, std::pair<uint32, uint64>> ConsecutiveKillsMap;
-
-struct SpellCooldown
-{
-    time_t end;
-    uint16 itemid;
-};
-
-typedef std::map<uint32, SpellCooldown> SpellCooldowns;
 
 enum TrainerSpellState
 {
@@ -575,9 +567,12 @@ enum PlayerExtraFlags
     PLAYER_EXTRA_TAXICHEAT          = 0x0008,
     PLAYER_EXTRA_GM_INVISIBLE       = 0x0010,
     PLAYER_EXTRA_GM_CHAT            = 0x0020,               // Show GM badge in chat messages
+    PLAYER_EXTRA_AGGRESIVE_AC       = 0x0040,
+    PLAYER_EXTRA_GM_TRIGGERS        = 0x0080,               // true = hide triggers in gm mode
 
     // other states
-    PLAYER_EXTRA_PVP_DEATH          = 0x0100                // store PvP death status until corpse creating.
+    PLAYER_EXTRA_PVP_DEATH          = 0x0100,               // store PvP death status until corpse creating.
+    PLAYER_EXTRA_ARENA_SPECTATING   = 0x0200                // player should be in arena, pacified and invisible, not saved
 };
 
 // 2^n values
@@ -587,8 +582,7 @@ enum AtLoginFlags
     AT_LOGIN_RENAME         = 0x1,
     AT_LOGIN_RESET_SPELLS   = 0x2,
     AT_LOGIN_RESET_TALENTS  = 0x4,
-    AT_LOGIN_DISPLAY_CHANGE = 0x8,
-    AT_LOGIN_FIRST          = 0x20,
+    AT_LOGIN_DISPLAY_CHANGE = 0x8
 };
 
 typedef std::map<uint32, QuestStatusData> QuestStatusMap;
@@ -807,6 +801,7 @@ enum TeleportToOptions
     TELE_TO_NOT_LEAVE_COMBAT    = 0x04,
     TELE_TO_NOT_UNSUMMON_PET    = 0x08,
     TELE_TO_SPELL               = 0x10,
+    TELE_TO_SPECTATE_ARENA      = 0x20,
 };
 
 /// Type of environmental damages
@@ -853,6 +848,7 @@ enum PlayerLoginQueryIndex
     PLAYER_LOGIN_QUERY_LOADMAILS                = 18,
     PLAYER_LOGIN_QUERY_LOADMAILEDITEMS          = 19,
     PLAYER_LOGIN_QUERY_LOADDAILYARENA           = 20,
+    PLAYER_LOGIN_QUERY_LOADFREERESPECTIME       = 21,
 
     MAX_PLAYER_LOGIN_QUERY
 };
@@ -1003,7 +999,6 @@ class HELLGROUND_EXPORT Player : public Unit
             m_summon_z = z;
         }
         void SummonIfPossible(bool agree, uint64 summonerGUID);
-        bool CanBeSummonedBy(uint64 summoner);
         bool CanBeSummonedBy(const Unit * summoner);
 
         bool Create(uint32 guidlow, const std::string& name, uint8 race, uint8 class_, uint8 gender, uint8 skin, uint8 face, uint8 hairStyle, uint8 hairColor, uint8 facialHair, uint8 outfitId);
@@ -1037,6 +1032,7 @@ class HELLGROUND_EXPORT Player : public Unit
         uint8 chatTag() const;
         std::string afkMsg;
         std::string dndMsg;
+        Timer afkTimer;
 
         PlayerSocial *GetSocial() { return m_social; }
 
@@ -1053,11 +1049,19 @@ class HELLGROUND_EXPORT Player : public Unit
         void SetGameMaster(bool on);
         bool isGMChat() const { return GetSession()->HasPermissions(PERM_GMT) && (m_ExtraFlags & PLAYER_EXTRA_GM_CHAT); }
         void SetGMChat(bool on) { if (on) m_ExtraFlags |= PLAYER_EXTRA_GM_CHAT; else m_ExtraFlags &= ~PLAYER_EXTRA_GM_CHAT; }
+        bool isGMTriggersVisible() const {return GetSession()->HasPermissions(PERM_GMT) && (m_ExtraFlags & PLAYER_EXTRA_GM_ON) && !(m_ExtraFlags & PLAYER_EXTRA_GM_TRIGGERS); }
+        void SetGMHideTriggers(bool on) { if (on) m_ExtraFlags |= PLAYER_EXTRA_GM_TRIGGERS; else m_ExtraFlags &= ~PLAYER_EXTRA_GM_TRIGGERS; }
         bool isTaxiCheater() const { return m_ExtraFlags & PLAYER_EXTRA_TAXICHEAT; }
         void SetTaxiCheater(bool on) { if (on) m_ExtraFlags |= PLAYER_EXTRA_TAXICHEAT; else m_ExtraFlags &= ~PLAYER_EXTRA_TAXICHEAT; }
         bool isGMVisible() const { return !(m_ExtraFlags & PLAYER_EXTRA_GM_INVISIBLE); }
         void SetGMVisible(bool on);
         void SetPvPDeath(bool on) { if (on) m_ExtraFlags |= PLAYER_EXTRA_PVP_DEATH; else m_ExtraFlags &= ~PLAYER_EXTRA_PVP_DEATH; }
+        // arena spectate
+        bool isArenaSpectating() const { return m_ExtraFlags & PLAYER_EXTRA_ARENA_SPECTATING; }
+        void SpectateArena(uint32 arenaMap);
+        void UnspectateArena(const bool teleport);
+        bool isForcedAC() const { return m_ExtraFlags & PLAYER_EXTRA_AGGRESIVE_AC; }
+        void setForcedAC(bool set) { if (set) m_ExtraFlags |= PLAYER_EXTRA_AGGRESIVE_AC; else m_ExtraFlags &= ~PLAYER_EXTRA_AGGRESIVE_AC; }
 
         void GiveXP(uint32 xp, Unit* victim);
         void GiveLevel(uint32 level);
@@ -1106,8 +1110,8 @@ class HELLGROUND_EXPORT Player : public Unit
         GuardianPetList const& GetGuardians() const { return m_guardianPets; }
         void Uncharm();
 
-        void Say(const std::string& text, const uint32 language);
-        void Yell(const std::string& text, const uint32 language);
+        void Say(const std::string& text, const uint32 language = LANG_UNIVERSAL);
+        void Yell(const std::string& text, const uint32 language = LANG_UNIVERSAL);
         void TextEmote(const std::string& text);
         void Whisper(const std::string& text, const uint32 language,uint64 receiver);
         void BuildPlayerChat(WorldPacket *data, uint8 msgtype, const std::string& text, uint32 language) const;
@@ -1471,7 +1475,9 @@ class HELLGROUND_EXPORT Player : public Unit
         void AddMItem(Item* it)
         {
             ASSERT(it);
-            //assert deleted, because items can be added before loading
+            ASSERT(mMitems.find(it->GetGUIDLow()) == mMitems.end());
+            // if some pointer is already there we can get some invalid pointers and stuff
+
             mMitems[it->GetGUIDLow()] = it;
         }
 
@@ -1490,6 +1496,7 @@ class HELLGROUND_EXPORT Player : public Unit
         void CharmAI(bool enable = true);
 
         void PetSpellInitialize();
+        void DelayedPetSpellInitialize() { m_refreshPetSpells = true; };
         void CharmSpellInitialize();
         void PossessSpellInitialize();
         bool HasSpell(uint32 spell) const;
@@ -1508,9 +1515,10 @@ class HELLGROUND_EXPORT Player : public Unit
         void learnQuestRewardedSpells(Quest const* quest);
 
         uint32 GetFreeTalentPoints() const { return GetUInt32Value(PLAYER_CHARACTER_POINTS1); }
-        void SetFreeTalentPoints(uint32 points);
+        void SetFreeTalentPoints(uint32 points) { SetUInt32Value(PLAYER_CHARACTER_POINTS1,points); }
         bool resetTalents(bool no_cost = false);
         uint32 resetTalentsCost() const;
+        void buyFreeRespec();
         void UpdateFreeTalentPoints(bool resetIfNeed = true);
         void InitTalentForLevel();
 
@@ -1532,26 +1540,12 @@ class HELLGROUND_EXPORT Player : public Unit
         void RestoreSpellMods(Spell const* spell);
 
         CooldownMgr& GetCooldownMgr() { return m_CooldownMgr; }
-
-        bool HasSpellCooldown(uint32 spell_id) const
-        {
-            SpellCooldowns::const_iterator itr = m_spellCooldowns.find(spell_id);
-            return itr != m_spellCooldowns.end() && itr->second.end > time(NULL);
-        }
-        uint32 GetSpellCooldownDelay(uint32 spell_id) const
-        {
-            SpellCooldowns::const_iterator itr = m_spellCooldowns.find(spell_id);
-            time_t t = time(NULL);
-            return itr != m_spellCooldowns.end() && itr->second.end > t ? itr->second.end - t : 0;
-        }
-        void AddSpellCooldown(uint32 spell_id, uint32 itemid, time_t end_time);
         void SendCooldownEvent(SpellEntry const *spellInfo);
         void ProhibitSpellSchool(SpellSchoolMask idSchoolMask, uint32 unTimeMs);
         void RemoveSpellCooldown(uint32 spell_id, bool update = false);
         void RemoveArenaSpellCooldowns();
         void RemoveAllSpellCooldown();
-        void _LoadSpellCooldowns(QueryResultAutoPtr result);
-        void _SaveSpellCooldowns();
+        void RemoveCooldownsByCategory(uint32 category);
 
         void setResurrectRequestData(uint64 guid, uint32 mapId, float X, float Y, float Z, uint32 health, uint32 mana)
         {
@@ -1600,13 +1594,13 @@ class HELLGROUND_EXPORT Player : public Unit
         void UpdatePvpTitles();
         void UpdateBgTitle();
 
-        void UpdateZoneDependentAuras(uint32 zone_id);    // zones
+        void UpdateZoneDependentAuras(uint32 oldZone, uint32 zone_id);    // zones
         void UpdateAreaDependentAuras(uint32 area_id);    // subzones
 
         void UpdateAfkReport(time_t currTime);
         void UpdatePvPFlag(time_t currTime);
         void UpdateContestedPvP(uint32 currTime);
-        void SetContestedPvPTimer(uint32 newTime) {m_contestedPvPTimer = newTime;}
+        void SetContestedPvPTimer(uint32 newTime) {m_contestedPvPTimer.Reset(newTime);}
         void ResetContestedPvP()
         {
             clearUnitState(UNIT_STAT_ATTACK_PLAYER);
@@ -1658,7 +1652,6 @@ class HELLGROUND_EXPORT Player : public Unit
         bool UpdateGatherSkill(uint32 SkillId, uint32 SkillValue, uint32 RedLevel, uint32 Multiplicator = 1);
         bool UpdateFishingSkill();
 
-        uint32 GetBaseDefenseSkillValue() const { return GetBaseSkillValue(SKILL_DEFENSE); }
         uint32 GetBaseWeaponSkillValue(WeaponAttackType attType) const;
 
         uint32 GetSpellByProto(ItemPrototype *proto);
@@ -1856,7 +1849,7 @@ class HELLGROUND_EXPORT Player : public Unit
         /*********************************************************/
         /***                 ANTICHEAT SYSTEM                  ***/
         /*********************************************************/
-        void CumulativeACReport(AnticheatChecks check);
+        uint32 CumulativeACReport(AnticheatChecks check);
         uint32 m_AC_timer;
         uint32 m_AC_NoFall_count;
 
@@ -2102,6 +2095,7 @@ class HELLGROUND_EXPORT Player : public Unit
         /***                 VARIOUS SYSTEMS                   ***/
         /*********************************************************/
 
+        Position m_desiredPosition;
         uint32 m_lastFallTime;
         float  m_lastFallZ;
         void SetFallInformation(uint32 time, float z)
@@ -2314,7 +2308,7 @@ class HELLGROUND_EXPORT Player : public Unit
         std::set<uint32> m_bgAfkReporter;
         uint8 m_bgAfkReportedCount;
         time_t m_bgAfkReportedTimer;
-        uint32 m_contestedPvPTimer;
+        Timer m_contestedPvPTimer;
 
         uint32 m_bgTeam;    // what side the player will be added to
 
@@ -2408,7 +2402,6 @@ class HELLGROUND_EXPORT Player : public Unit
 
         PlayerMails m_mail;
         PlayerSpellMap m_spells;
-        SpellCooldowns m_spellCooldowns;
 
         ActionButtonList m_actionButtons;
 
@@ -2482,6 +2475,7 @@ class HELLGROUND_EXPORT Player : public Unit
         uint32 m_resetTalentsCost;
         time_t m_resetTalentsTime;
         uint32 m_usedTalentCount;
+        time_t m_freeTalentRespecTime;
 
         // Social
         PlayerSocial *m_social;
@@ -2499,6 +2493,7 @@ class HELLGROUND_EXPORT Player : public Unit
 
         // last used pet number (for BG's)
         uint32 m_lastpetnumber;
+        bool m_refreshPetSpells;
 
         // Player summoning
         time_t m_summon_expire;
@@ -2541,7 +2536,7 @@ class HELLGROUND_EXPORT Player : public Unit
         uint32 m_timeSyncTimer;
         uint32 m_timeSyncClient;
         uint32 m_timeSyncServer;
-        
+
         void AddConsecutiveKill(uint64 guid);
         uint32 GetConsecutiveKillsCount(uint64 guid);
         void UpdateConsecutiveKills();
@@ -2621,9 +2616,5 @@ template <class T> T Player::ApplySpellMod(uint32 spellId, SpellModOp op, T &bas
     float diff = (float)basevalue*(float)totalpct/100.0f + (float)totalflat;
     basevalue = T((float)basevalue + diff);
     return T(diff);
-}
-namespace Gladdy
-{
-	std::string GuidToHex(uint64 guid);
 }
 #endif

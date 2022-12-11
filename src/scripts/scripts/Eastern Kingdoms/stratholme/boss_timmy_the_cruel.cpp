@@ -34,7 +34,7 @@ struct boss_timmy_the_cruelAI : public ScriptedAI
 {
     boss_timmy_the_cruelAI(Creature *c) : ScriptedAI(c) {}
 
-    uint32 RavenousClaw_Timer;
+    int32 RavenousClaw_Timer;
     bool HasYelled;
 
     void Reset()
@@ -58,14 +58,14 @@ struct boss_timmy_the_cruelAI : public ScriptedAI
         if (!UpdateVictim())
             return;
 
-        //RavenousClaw
-        if (RavenousClaw_Timer < diff)
+        RavenousClaw_Timer -= diff;
+        if (RavenousClaw_Timer <= diff)
         {
             //Cast
             DoCast(m_creature->getVictim(),SPELL_RAVENOUSCLAW);
             //15 seconds until we should cast this again
-            RavenousClaw_Timer = 15000;
-        }else RavenousClaw_Timer -= diff;
+            RavenousClaw_Timer += 15000;
+        }
 
         DoMeleeAttackIfReady();
     }

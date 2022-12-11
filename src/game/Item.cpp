@@ -24,7 +24,6 @@
 #include "WorldPacket.h"
 #include "Database/DatabaseEnv.h"
 #include "ItemEnchantmentMgr.h"
-#include "luaengine/HookMgr.h"
 
 void AddItemsSetItem(Player*player,Item *item)
 {
@@ -301,9 +300,6 @@ void Item::UpdateDuration(Player* owner, uint32 diff)
 
     if (GetUInt32Value(ITEM_FIELD_DURATION)<=diff)
     {
-        // used by eluna
-        sHookMgr->OnExpire(owner, GetProto());
-
         owner->DestroyItem(GetBagSlot(), GetSlot(), true);
         return;
     }
@@ -483,83 +479,6 @@ Player* Item::GetOwner()const
     return sObjectMgr.GetPlayer(GetOwnerGUID());
 }
 
-uint32 Item::GetSkill()
-{
-    const static uint32 item_weapon_skills[MAX_ITEM_SUBCLASS_WEAPON] =
-    {
-        SKILL_AXES,     SKILL_2H_AXES,  SKILL_BOWS,          SKILL_GUNS         , SKILL_MACES,
-        SKILL_2H_MACES, SKILL_POLEARMS, SKILL_SWORDS,        SKILL_2H_SWORDS    , 0,
-        SKILL_STAVES,   0,              0,                   SKILL_FIST_WEAPONS , 0,
-        SKILL_DAGGERS,  SKILL_THROWN,   SKILL_ASSASSINATION, SKILL_CROSSBOWS    , SKILL_WANDS,
-        SKILL_FISHING
-    };
-
-    const static uint32 item_armor_skills[MAX_ITEM_SUBCLASS_ARMOR] =
-    {
-        0,SKILL_CLOTH,SKILL_LEATHER,SKILL_MAIL,SKILL_PLATE_MAIL,0,SKILL_SHIELD,0,0,0
-    };
-
-    ItemPrototype const* proto = GetProto();
-
-    switch (proto->Class)
-    {
-        case ITEM_CLASS_WEAPON:
-            if (proto->SubClass >= MAX_ITEM_SUBCLASS_WEAPON)
-                return 0;
-            else
-                return item_weapon_skills[proto->SubClass];
-
-        case ITEM_CLASS_ARMOR:
-            if (proto->SubClass >= MAX_ITEM_SUBCLASS_ARMOR)
-                return 0;
-            else
-                return item_armor_skills[proto->SubClass];
-
-        default:
-            return 0;
-    }
-}
-
-uint32 Item::GetSpell()
-{
-    ItemPrototype const* proto = GetProto();
-
-    switch (proto->Class)
-    {
-        case ITEM_CLASS_WEAPON:
-            switch (proto->SubClass)
-            {
-                case ITEM_SUBCLASS_WEAPON_AXE:     return  196;
-                case ITEM_SUBCLASS_WEAPON_AXE2:    return  197;
-                case ITEM_SUBCLASS_WEAPON_BOW:     return  264;
-                case ITEM_SUBCLASS_WEAPON_GUN:     return  266;
-                case ITEM_SUBCLASS_WEAPON_MACE:    return  198;
-                case ITEM_SUBCLASS_WEAPON_MACE2:   return  199;
-                case ITEM_SUBCLASS_WEAPON_POLEARM: return  200;
-                case ITEM_SUBCLASS_WEAPON_SWORD:   return  201;
-                case ITEM_SUBCLASS_WEAPON_SWORD2:  return  202;
-                case ITEM_SUBCLASS_WEAPON_STAFF:   return  227;
-                case ITEM_SUBCLASS_WEAPON_DAGGER:  return 1180;
-                case ITEM_SUBCLASS_WEAPON_THROWN:  return 2567;
-                case ITEM_SUBCLASS_WEAPON_SPEAR:   return 3386;
-                case ITEM_SUBCLASS_WEAPON_CROSSBOW:return 5011;
-                case ITEM_SUBCLASS_WEAPON_WAND:    return 5009;
-                default: return 0;
-            }
-        case ITEM_CLASS_ARMOR:
-            switch (proto->SubClass)
-            {
-                case ITEM_SUBCLASS_ARMOR_CLOTH:    return 9078;
-                case ITEM_SUBCLASS_ARMOR_LEATHER:  return 9077;
-                case ITEM_SUBCLASS_ARMOR_MAIL:     return 8737;
-                case ITEM_SUBCLASS_ARMOR_PLATE:    return  750;
-                case ITEM_SUBCLASS_ARMOR_SHIELD:   return 9116;
-                default: return 0;
-            }
-    }
-    return 0;
-}
-
 int32 Item::GenerateItemRandomPropertyId(uint32 item_id)
 {
     ItemPrototype const *itemProto = sItemStorage.LookupEntry<ItemPrototype>(item_id);
@@ -723,7 +642,8 @@ void Item::RemoveFromUpdateQueueOf(Player *player)
         sLog.outDebug("Item::RemoveFromUpdateQueueOf - Owner's guid (%u) and player's guid (%u) don't match!", GUID_LOPART(GetOwnerGUID()), player->GetGUIDLow());
         return;
     }
-
+    ASSERT(player->mMitems.find(GetGUIDLow()) == player->mMitems.end());
+    // we remove item, lets make sure there is no trace of it
     if (player->m_itemUpdateQueueBlocked) return;
 
     player->m_itemUpdateQueue[uQueuePos] = NULL;
@@ -963,3 +883,39 @@ Item* Item::CloneItem(uint32 count, Player const* player) const
     return newItem;
 }
 
+uint32 Item::GetSkill()
+{
+    const static uint32 item_weapon_skills[MAX_ITEM_SUBCLASS_WEAPON] =
+    {
+        SKILL_AXES,     SKILL_2H_AXES,  SKILL_BOWS,          SKILL_GUNS         , SKILL_MACES,
+        SKILL_2H_MACES, SKILL_POLEARMS, SKILL_SWORDS,        SKILL_2H_SWORDS    , 0,
+        SKILL_STAVES,   0,              0,                   SKILL_FIST_WEAPONS , 0,
+        SKILL_DAGGERS,  SKILL_THROWN,   SKILL_ASSASSINATION, SKILL_CROSSBOWS    , SKILL_WANDS,
+        SKILL_FISHING
+    };
+
+    const static uint32 item_armor_skills[MAX_ITEM_SUBCLASS_ARMOR] =
+    {
+        0,SKILL_CLOTH,SKILL_LEATHER,SKILL_MAIL,SKILL_PLATE_MAIL,0,SKILL_SHIELD,0,0,0
+    };
+
+    const ItemPrototype* pProto = GetProto();
+
+    switch (pProto->Class)
+    {
+    case ITEM_CLASS_WEAPON:
+        if (pProto->SubClass >= MAX_ITEM_SUBCLASS_WEAPON)
+            return 0;
+        else
+            return item_weapon_skills[pProto->SubClass];
+
+    case ITEM_CLASS_ARMOR:
+        if (pProto->SubClass >= MAX_ITEM_SUBCLASS_ARMOR)
+            return 0;
+        else
+            return item_armor_skills[pProto->SubClass];
+
+    default:
+        return 0;
+    }
+};

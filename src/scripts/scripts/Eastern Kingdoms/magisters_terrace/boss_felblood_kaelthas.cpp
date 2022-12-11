@@ -89,20 +89,20 @@ struct boss_felblood_kaelthasAI : public ScriptedAI
     ScriptedInstance* pInstance;
 
     SummonList summons;
-    uint32 FireballTimer;
-    uint32 PhoenixTimer;
-    uint32 FlameStrikeTimer;
-    uint32 TrashCheckTimer;
-    uint32 CheckTimer;
-    uint32 IntroTimer;
-    uint32 OutroTimer;
+    Timer FireballTimer;
+    Timer PhoenixTimer;
+    Timer FlameStrikeTimer;
+    Timer CheckTimer;
+    Timer IntroTimer;
+    Timer OutroTimer;
     bool Intro;
     bool Outro;
+    std::list<uint64> trashList;
 
     //Heroic only
-    uint32 PyroblastTimer;
+    Timer PyroblastTimer;
 
-    uint32 GravityLapseTimer;
+    Timer GravityLapseTimer;
     uint32 GravityLapsePhase;
 
     uint8 Phase;
@@ -111,20 +111,19 @@ struct boss_felblood_kaelthasAI : public ScriptedAI
 
     void Reset()
     {
-        FireballTimer = 0;
-        PhoenixTimer = urand(15000,20000);
-        FlameStrikeTimer = urand(25000, 35000);
-        TrashCheckTimer = 2000;
-        CheckTimer = 2000;
-        IntroTimer = 36000;
-        OutroTimer = 11000;
+        FireballTimer.Reset(urand(2000, 6000));
+        PhoenixTimer.Reset(urand(15000, 20000));
+        FlameStrikeTimer.Reset(urand(25000, 35000));
+        CheckTimer.Reset(2000);
+        IntroTimer.Reset(36000);
+        OutroTimer.Reset(11000);
         Intro = false;
         Outro = false;
         summons.DespawnAll();
 
-        PyroblastTimer = 60000;
+        PyroblastTimer.Reset(60000);
 
-        GravityLapseTimer = 0;
+        GravityLapseTimer.Reset(0);
         GravityLapsePhase = 0;
 
         Phase = 0;
@@ -185,6 +184,13 @@ struct boss_felblood_kaelthasAI : public ScriptedAI
 
     void MoveInLineOfSight(Unit* who)
     {
+        if (pInstance && pInstance->GetData(DATA_KAEL_TRASH_EVENT) == SPECIAL)
+        {
+            Intro = true;
+            DoScriptText(SAY_AGGRO, m_creature);
+            pInstance->SetData(DATA_KAEL_TRASH_EVENT, DONE);
+        }
+
         if(Intro || (pInstance && pInstance->GetData(DATA_KAEL_TRASH_EVENT) != DONE))
             return;
         ScriptedAI::MoveInLineOfSight(who);
@@ -241,47 +247,32 @@ struct boss_felblood_kaelthasAI : public ScriptedAI
 
     void UpdateAI(const uint32 diff)
     {
-        if(pInstance && pInstance->GetData(DATA_KAEL_TRASH_EVENT) != DONE)
-        {
-            if(TrashCheckTimer < diff)
-            {
-                if(pInstance->GetData(DATA_KAEL_TRASH_COUNTER) >= 6)
-                {
-                    pInstance->SetData(DATA_KAEL_TRASH_EVENT, DONE);
-                    DoScriptText(SAY_AGGRO, m_creature);
-                    Intro = true;
-                }
-                TrashCheckTimer = 2000;
-            }
-            else
-                TrashCheckTimer -= diff;
-        }
 
         if(Intro)
         {
-            if(IntroTimer < diff)
+            if (IntroTimer.Expired(diff))
             {
                 me->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
                 Intro = false;
             }
-            IntroTimer -= diff;
         }
 
         if(Outro)
         {
-            if(OutroTimer < diff)
+
+            if (OutroTimer.Expired(diff))
             {
                 me->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE | UNIT_FLAG_NON_ATTACKABLE);
                 me->DealDamage(me, me->GetHealth());
             }
-            OutroTimer -= diff;
             return;
         }
 
         if(!UpdateVictim() && Phase != 2)
             return;
 
-        if(CheckTimer < diff)
+
+        if (CheckTimer.Expired(diff))
         {
             if(pInstance)
             {
@@ -295,8 +286,7 @@ struct boss_felblood_kaelthasAI : public ScriptedAI
             }
             CheckTimer = 2000;
         }
-        else
-            CheckTimer -= diff;
+
 
         switch(Phase)
         {
@@ -304,17 +294,16 @@ struct boss_felblood_kaelthasAI : public ScriptedAI
             {
                 if(HeroicMode)
                 {
-                    if(PyroblastTimer < diff)
+                    if (PyroblastTimer.Expired(diff))
                     {
                         ForceSpellCastWithScriptText(SPELL_SHOCK_BARRIER, CAST_SELF, EMOTE_HEROIC_PYROBLAST, INTERRUPT_AND_CAST);
                         AddSpellToCast(SPELL_PYROBLAST, CAST_TANK);
                         PyroblastTimer = 60000;
                     }
-                    else
-                        PyroblastTimer -= diff;
                 }
 
-                if(FireballTimer < diff)
+
+                if (FireballTimer.Expired(diff))
                 {
                     AddSpellToCast(SPELL_FIREBALL, CAST_TANK);
                     if(me->IsWithinMeleeRange(me->getVictim()))
@@ -325,31 +314,25 @@ struct boss_felblood_kaelthasAI : public ScriptedAI
                     }
                     else
                     {
-                        if(me->GetMotionMaster()->GetCurrentMovementGeneratorType() == CHASE_MOTION_TYPE)
+                        if(me->hasUnitState(UNIT_STAT_CHASE))
                             me->GetMotionMaster()->MoveIdle();
                         FireballTimer = 2000;
                     }
                 }
-                else
-                    FireballTimer -= diff;
 
-                if(PhoenixTimer < diff)
+                if (PhoenixTimer.Expired(diff))
                 {
                     AddSpellToCastWithScriptText(SPELL_PHOENIX, CAST_SELF, SAY_PHOENIX);
                     PhoenixTimer = urand(45000, 55000);
                 }
-                else
-                    PhoenixTimer -= diff;
 
-                if(FlameStrikeTimer < diff)
+                if (FlameStrikeTimer.Expired(diff))
                 {
                     AddSpellToCast(SPELL_SUMMON_FLAMESTRIKE, CAST_RANDOM);
                     if(roll_chance_f(40))
                         DoScriptText(SAY_FLAMESTRIKE, me);
                     FlameStrikeTimer = urand(25000, 35000);
                 }
-                else
-                    FlameStrikeTimer -= diff;
 
                 // Below 50%
                 if(HealthBelowPct(50))
@@ -362,7 +345,7 @@ struct boss_felblood_kaelthasAI : public ScriptedAI
                     m_creature->ApplySpellImmune(0, IMMUNITY_EFFECT, SPELL_EFFECT_INTERRUPT_CAST, true);
                     m_creature->StopMoving();
                     DoStartNoMovement(me->getVictim());
-                    GravityLapseTimer = 0;
+                    GravityLapseTimer = 1;
                     GravityLapsePhase = 1;
                     Phase = 2;
                     if(pInstance)
@@ -374,7 +357,7 @@ struct boss_felblood_kaelthasAI : public ScriptedAI
 
             case 2:
             {
-                if(GravityLapseTimer < diff)
+                if (GravityLapseTimer.Expired(diff))
                 {
                     switch(GravityLapsePhase)
                     {
@@ -406,8 +389,6 @@ struct boss_felblood_kaelthasAI : public ScriptedAI
                             break;
                     }
                 }
-                else
-                    GravityLapseTimer -= diff;
             }
             break;
         }
@@ -419,22 +400,21 @@ struct mob_felkael_flamestrikeAI : public Scripted_NoMovementAI
 {
     mob_felkael_flamestrikeAI(Creature *c) : Scripted_NoMovementAI(c) { }
 
-    uint32 FlameStrikeTimer;
+    Timer FlameStrikeTimer;
 
     void Reset()
     {
-        FlameStrikeTimer = 5000;
+        FlameStrikeTimer.Reset(5000);
         DoCast(m_creature, SPELL_FLAMESTRIKE_VISUAL, true);
     }
     void UpdateAI(const uint32 diff)
     {
-        if(FlameStrikeTimer < diff)
+        if (FlameStrikeTimer.Expired(diff))
         {
             DoCast(me, SPELL_FLAMESTRIKE, true);
             me->Kill(me, false);
         }
-        else
-            FlameStrikeTimer -= diff;
+
     }
 };
 
@@ -444,36 +424,35 @@ struct mob_felkael_phoenix_eggAI : public Scripted_NoMovementAI
     {
         pInstance = (c->GetInstanceData());
     }
-    uint32 CheckTimer;
-    uint32 HatchTimer;
+    Timer CheckTimer;
+    Timer HatchTimer;
     ScriptedInstance* pInstance;
 
     void Reset()
     {
-        CheckTimer = 2000;
-        HatchTimer = 15000;
+        CheckTimer.Reset(2000);
+        HatchTimer.Reset(15000);
     }
 
     void UpdateAI(const uint32 diff)
     {
-        if(CheckTimer < diff)
+        if (CheckTimer.Expired(diff))
         {
             if(pInstance && pInstance->GetData(DATA_KAELTHAS_EVENT) != IN_PROGRESS)
                 me->Kill(me, false);
             CheckTimer = 2000;
         }
-        else
-            CheckTimer -= diff;
 
-        if(HatchTimer < diff)
+
+
+        if (HatchTimer.Expired(diff))
         {
             Creature* phoenix = DoSpawnCreature(CREATURE_PHOENIX, 0, 0, 0, 0, TEMPSUMMON_CORPSE_TIMED_DESPAWN, 5000);
             if(phoenix)
                 phoenix->CastSpell((Unit*)NULL, SPELL_REBIRTH_EGG, true);
             me->Kill(me, false);
         }
-        else
-            HatchTimer -= diff;
+
     }
 };
 
@@ -484,7 +463,7 @@ struct mob_felkael_phoenixAI : public ScriptedAI
         pInstance = (c->GetInstanceData());
     }
     uint8 phase;
-    uint32 CheckTimer;
+    Timer CheckTimer;
     uint64 EggGUID;
     ScriptedInstance* pInstance;
 
@@ -507,7 +486,7 @@ struct mob_felkael_phoenixAI : public ScriptedAI
 
     void UpdateAI(const uint32 diff)
     {
-        if(CheckTimer < diff)
+        if (CheckTimer.Expired(diff))
         {
             if (pInstance)
             {
@@ -518,8 +497,7 @@ struct mob_felkael_phoenixAI : public ScriptedAI
             }
             CheckTimer = 1000;
         }
-        else
-            CheckTimer -= diff;
+
 
         if(!UpdateVictim())
         {
@@ -547,9 +525,9 @@ struct mob_arcane_sphereAI : public ScriptedAI
     {
         pInstance = (c->GetInstanceData());
     }
-    uint32 DespawnTimer;
-    uint32 ChangeTargetTimer;
-    uint32 CheckTimer;
+    Timer DespawnTimer;
+    Timer ChangeTargetTimer;
+    Timer CheckTimer;
 
     ScriptedInstance* pInstance;
 
@@ -559,46 +537,46 @@ struct mob_arcane_sphereAI : public ScriptedAI
         m_creature->SetLevitate(true);
         m_creature->SetSpeed(MOVE_FLIGHT, 0.6);
         DoCast(m_creature, SPELL_ARCANE_SPHERE_PASSIVE, true);
-        DespawnTimer = 29000;
-        ChangeTargetTimer = 1000;
-        CheckTimer = 1000;
+        DespawnTimer.Reset(29000);
+        ChangeTargetTimer.Reset(1000);
+        CheckTimer.Reset(1000);
     }
 
     void MovementInform(uint32 Type, uint32 Id)
     {
         if(Type == POINT_MOTION_TYPE)
             if(Id == 1)
-                ChangeTargetTimer = 0;
+                ChangeTargetTimer.Reset(1);
     }
 
     void UpdateAI(const uint32 diff)
     {
-        if(CheckTimer < diff)
+
+        if (CheckTimer.Expired(diff))
         {
             m_creature->SetSpeed(MOVE_FLIGHT, 0.6);    // to be tested
             if(pInstance && pInstance->GetData(DATA_KAELTHAS_EVENT) != IN_PROGRESS)
-                DespawnTimer = 0;
+                DespawnTimer.Reset(1);
             CheckTimer = 1000;
         }
-        else
-            CheckTimer -= diff;
 
-        if(DespawnTimer < diff)
+
+
+        if (DespawnTimer.Expired(diff))
         {
             me->DisappearAndDie();
         }
-        else
-            DespawnTimer -= diff;
 
-        if(ChangeTargetTimer < diff)
+
+
+        if (ChangeTargetTimer.Expired(diff))
         {
             DoResetThreat();
             if(Unit *target = SelectUnit(SELECT_TARGET_RANDOM, 0, 200, true, me->getVictimGUID()))
                 me->GetMotionMaster()->MovePoint(1, target->GetPositionX(), target->GetPositionY(), target->GetPositionZ(), false, true, UNIT_ACTION_DOWAYPOINTS);
             ChangeTargetTimer = 7000;   // to be tested
         }
-        else
-            ChangeTargetTimer -= diff;
+
     }
 };
 

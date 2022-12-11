@@ -31,7 +31,7 @@
 BattleGroundRL::BattleGroundRL()
 {
     m_BgObjects.resize(BG_RL_OBJECT_MAX);
-    m_BgCreatures.resize(BG_RL_CREATURE_MAX);
+    m_BgCreatures.resize(BG_ARENA_NPC_MAX);
 }
 
 BattleGroundRL::~BattleGroundRL()
@@ -58,12 +58,12 @@ void BattleGroundRL::Update(uint32 diff)
                 return;
             }
 
-            //AddSpectatorNPC();
+            SpawnBGObject(BG_RL_OBJECT_DOOR_1, RESPAWN_IMMEDIATELY);
+            SpawnBGObject(BG_RL_OBJECT_DOOR_2, RESPAWN_IMMEDIATELY);
 
-            for (uint32 i = BG_RL_OBJECT_DOOR_1; i <= BG_RL_OBJECT_DOOR_2; i++)
-                SpawnBGObject(i, RESPAWN_IMMEDIATELY);
-
-            AddSpectatorNPC(1286.46f, 1668.28f, 52.30f, 0.0f);
+            
+            AddCreature(BG_READY_NPC_ENTRY, BG_ARENA_READY_NPC1, 35, 1300.576538f, 1598.051382f, 31.602930f, 4.053882f);
+            AddCreature(BG_READY_NPC_ENTRY, BG_ARENA_READY_NPC2, 35, 1271.025757f, 1733.989868f, 31.602962f, 0.853383f);
 
             SetStartDelayTime(START_DELAY1);
             SendMessageToAll(LANG_ARENA_ONE_MINUTE);
@@ -85,11 +85,13 @@ void BattleGroundRL::Update(uint32 diff)
         {
             m_Events |= 0x10;
             
-            for (uint32 i = BG_RL_OBJECT_DOOR_1; i <= BG_RL_OBJECT_DOOR_2; i++)
-                DoorOpen(i);
+            DoorOpen(BG_RL_OBJECT_DOOR_1);
+            DoorOpen(BG_RL_OBJECT_DOOR_2);
 
-            for (uint32 i = BG_RL_OBJECT_BUFF_1; i <= BG_RL_OBJECT_BUFF_2; i++)
-                SpawnBGObject(i, 60);
+            SpawnBGObject(BG_RL_OBJECT_BUFF_1, 90);
+            SpawnBGObject(BG_RL_OBJECT_BUFF_2, 90);
+            DelCreature(BG_ARENA_READY_NPC1);
+            DelCreature(BG_ARENA_READY_NPC2);
 
             SendMessageToAll(LANG_ARENA_BEGUN);
             SetStatus(STATUS_IN_PROGRESS);

@@ -154,7 +154,6 @@ class SpellCastTargets
 
         uint64 getCorpseTargetGUID() const { return m_CorpseTargetGUID.GetRawValue(); }
         void setCorpseTarget(Corpse* corpse);
-        Corpse *getCorpseTarget() const { return m_corpseTarget; }
         uint64 getItemTargetGUID() const { return m_itemTargetGUID.GetRawValue(); }
         Item* getItemTarget() const { return m_itemTarget; }
         uint32 getItemTargetEntry() const { return m_itemTargetEntry; }
@@ -185,7 +184,6 @@ class SpellCastTargets
         Unit *m_unitTarget;
         GameObject *m_GOTarget;
         Item *m_itemTarget;
-        Corpse* m_corpseTarget;
 
         // object GUID/etc, can be used always
         ObjectGuid m_unitTargetGUID;
@@ -362,7 +360,7 @@ class Spell
         ~Spell();
 
         void prepare(SpellCastTargets * targets, Aura* triggeredByAura = NULL);
-        void cancel();
+        void cancel(SpellCastResult reason);
         void update(uint32 difftime);
         void cast(bool skipCheck = false);
         void finish(bool ok = true);
@@ -398,11 +396,13 @@ class Spell
 
         void WriteSpellGoTargets(WorldPacket * data);
         void WriteAmmoToPacket(WorldPacket * data);
-        void FillTargetMap();
 
+        void FillTargetMap();
         void SetTargetMap(uint32 i, uint32 cur);
 
         Unit* SelectMagnetTarget();
+        void CheckForReflects(); // reflects are checked in moment spell finishes
+
         void HandleHitTriggerAura();
         bool CheckTarget(Unit* target, uint32 eff);
         bool CanAutoCast(Unit* target);
@@ -480,7 +480,7 @@ class Spell
         Unit* GetOriginalCaster() const { return m_originalCaster; }
         int32 GetPowerCost() const { return m_powerCost; }
 
-        void UpdatePointers();                              // must be used at call Spell code after time delay (non triggered spell cast/update spell call/etc)
+        bool UpdatePointers();                              // must be used at call Spell code after time delay (non triggered spell cast/update spell call/etc)
 
         bool IsAffectedBy(SpellEntry const *spellInfo, uint32 effectId);
 
@@ -489,8 +489,11 @@ class Spell
         void AddTriggeredSpell(SpellEntry const* spell) { if (spell) m_TriggerSpells.push_back(spell); }
 
         void CleanupTargetList();
-
+        
         void SetSpellValue(SpellValueMod mod, int32 value);
+
+        // if player was moving when rooted client will try to continue moving after unrooting even if player is not clicking to move anymore
+        void SetPossiblePos(Position& pos) { m_possiblePos = pos; }
 
         SpellEntry const* GetSpellEntry() const { return m_spellInfo; }
 
@@ -517,6 +520,7 @@ class Spell
         int32 m_casttime;                                   // Calculated spell cast time initialized only in Spell::prepare
         bool m_canReflect;                                  // can reflect this spell?
         bool m_autoRepeat;
+        float m_extraCrit;                                  // extra crit bonus from aura modifiers, initialized only in Spell::prepare
 
         uint8 m_delayAtDamageCount;
         int32 GetNextDelayAtDamageMsTime() { return m_delayAtDamageCount < 5 ? 1000 - (m_delayAtDamageCount++)* 200 : 200; }
@@ -631,9 +635,11 @@ class Spell
         ChanceTriggerSpells m_ChanceTriggerSpells;
 
         uint32 m_spellState;
-        uint32 m_timer;
+        Timer m_timer;
+        Timer m_autocastDelayTimer;
 
         Position m_cast;
+        Position m_possiblePos;
 
         bool IsTriggeredSpell() const { return m_IsTriggeredSpell; }
         bool IsAutoShootSpell() const { return IsAutoRepeat() && IsRangedSpell(); }
@@ -760,7 +766,7 @@ namespace Hellground
                 if (!itr->getSource()->isAlive() || (itr->getSource()->GetTypeId() == TYPEID_PLAYER && ((Player*)itr->getSource())->IsTaxiFlying()))
                     continue;
 
-                if (itr->getSource()->m_invisibilityMask && itr->getSource()->m_invisibilityMask & (1 << 10) && !i_caster->canDetectInvisibilityOf(itr->getSource(), i_caster))
+                if (itr->getSource()->m_invisibilityMask && itr->getSource()->m_invisibilityMask & (1 << 10) && !i_caster->canDetectInvisibilityOf(itr->getSource()))
                     continue;
 
                 switch (i_TargetType)
@@ -771,7 +777,7 @@ namespace Hellground
                         break;
                     case SPELL_TARGETS_ENEMY:
                     {
-                        if (itr->getSource()->GetTypeId()==TYPEID_UNIT && ((Creature*)itr->getSource())->isTotem())
+                        if (itr->getSource()->GetTypeId()==TYPEID_UNIT && (((Creature*)itr->getSource())->isTotem() || itr->getSource()->GetCreatureType() == CREATURE_TYPE_CRITTER))
                             continue;
                         if (!itr->getSource()->isTargetableForAttack())
                             continue;

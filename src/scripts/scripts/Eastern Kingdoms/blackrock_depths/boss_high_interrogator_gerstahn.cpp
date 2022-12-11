@@ -35,10 +35,10 @@ struct boss_high_interrogator_gerstahnAI : public ScriptedAI
 {
     boss_high_interrogator_gerstahnAI(Creature *c) : ScriptedAI(c) {}
 
-    uint32 ShadowWordPain_Timer;
-    uint32 ManaBurn_Timer;
-    uint32 PsychicScream_Timer;
-    uint32 ShadowShield_Timer;
+    int32 ShadowWordPain_Timer;
+    int32 ManaBurn_Timer;
+    int32 PsychicScream_Timer;
+    int32 ShadowShield_Timer;
 
     void Reset()
     {
@@ -58,45 +58,43 @@ struct boss_high_interrogator_gerstahnAI : public ScriptedAI
         if (!UpdateVictim() )
             return;
 
-        //ShadowWordPain_Timer
-        if (ShadowWordPain_Timer < diff)
+        ShadowWordPain_Timer -= diff;
+        if (ShadowWordPain_Timer <= diff)
         {
             Unit* target = NULL;
             target = SelectUnit(SELECT_TARGET_RANDOM,0);
             if (target)DoCast(target,SPELL_SHADOWWORDPAIN);
-            ShadowWordPain_Timer = 7000;
+            ShadowWordPain_Timer += 7000;
         }
-        else
-            ShadowWordPain_Timer -= diff;
+        
 
-        //ManaBurn_Timer
-        if (ManaBurn_Timer < diff)
+
+        ManaBurn_Timer -= diff;
+        if (ManaBurn_Timer <= diff)
         {
             Unit* target = NULL;
             target = SelectUnit(SELECT_TARGET_RANDOM,0);
             if (target)DoCast(target,SPELL_MANABURN);
-            ManaBurn_Timer = 10000;
+            ManaBurn_Timer += 10000;
         }
-        else
-            ManaBurn_Timer -= diff;
+        
 
-        //PsychicScream_Timer
-        if (PsychicScream_Timer < diff)
+        PsychicScream_Timer -= diff;
+        if (PsychicScream_Timer <= diff)
         {
             DoCast(me->getVictim(),SPELL_PSYCHICSCREAM);
-            PsychicScream_Timer = 30000;
+            PsychicScream_Timer += 30000;
         }
-        else
-            PsychicScream_Timer -= diff;
+        
+           
 
-        //ShadowShield_Timer
-        if (ShadowShield_Timer < diff)
+        ShadowShield_Timer -= diff;
+        if (ShadowShield_Timer <= diff)
         {
             DoCast(me,SPELL_SHADOWSHIELD);
-            ShadowShield_Timer = 25000;
+            ShadowShield_Timer += 25000;
         }
-        else
-            ShadowShield_Timer -= diff;
+        
 
         DoMeleeAttackIfReady();
     }

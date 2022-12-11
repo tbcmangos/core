@@ -24,6 +24,7 @@
 #include <map>
 #include "Auth/BigNumber.h"
 #include "ByteBuffer.h"
+#include "Timer.h"
 
 enum WardenOpcodes
 {
@@ -122,7 +123,7 @@ class WardenBase
         uint8 Seed[16];
         SARC4 iCrypto;
         SARC4 oCrypto;
-        uint32 m_WardenCheckTimer;                          // timer between data packets
+        Timer m_WardenCheckTimer;                          // timer between data packets
         bool m_WardenDataSent;
         uint32 m_WardenKickTimer;                           // time after send packet
         uint32 m_WardenTimer;

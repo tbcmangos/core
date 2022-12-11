@@ -71,23 +71,23 @@ struct npc_millhouse_manastormAI : public ScriptedAI
 
     ScriptedInstance* pInstance;
 
-    uint32 EventProgress_Timer;
+    Timer EventProgress_Timer;
     uint32 Phase;
     bool Init;
     bool LowHp;
 
-    uint32 Pyroblast_Timer;
-    uint32 Fireball_Timer;
+    Timer Pyroblast_Timer;
+    Timer Fireball_Timer;
 
     void Reset()
     {
-        EventProgress_Timer = 2000;
+        EventProgress_Timer.Reset(2000);
         LowHp = false;
         Init = false;
         Phase = 1;
 
-        Pyroblast_Timer = 1000;
-        Fireball_Timer = 2500;
+        Pyroblast_Timer.Reset(1000);
+        Fireball_Timer.Reset(2500);
 
         me->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_ATTACKABLE_2);
 
@@ -111,6 +111,7 @@ struct npc_millhouse_manastormAI : public ScriptedAI
 
         me->SetHomePosition(me->GetPositionX(), me->GetPositionY(), me->GetPositionZ(), 4.8f);
         me->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_ATTACKABLE_2);
+        me->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_PVP); // enable healing
         me->SetReactState(REACT_AGGRESSIVE);
     }
 
@@ -132,7 +133,7 @@ struct npc_millhouse_manastormAI : public ScriptedAI
     {
         if( !Init )
         {
-            if( EventProgress_Timer < diff )
+            if (EventProgress_Timer.Expired(diff))
             {
                 if( Phase < 8 )
                 {
@@ -173,7 +174,7 @@ struct npc_millhouse_manastormAI : public ScriptedAI
                     }
                     ++Phase;
                 }
-            } else EventProgress_Timer -= diff;
+            }
         }
 
         if( !UpdateVictim() )
@@ -185,7 +186,7 @@ struct npc_millhouse_manastormAI : public ScriptedAI
             LowHp = true;
         }
 
-        if( Pyroblast_Timer < diff )
+        if (Pyroblast_Timer.Expired(diff))
         {
             if( me->IsNonMeleeSpellCast(false) )
                 return;
@@ -194,13 +195,13 @@ struct npc_millhouse_manastormAI : public ScriptedAI
 
             DoCast(me->getVictim(),SPELL_PYROBLAST);
             Pyroblast_Timer = 40000;
-        }else Pyroblast_Timer -=diff;
+        }
 
-        if( Fireball_Timer < diff )
+        if (Fireball_Timer.Expired(diff))
         {
             DoCast(me->getVictim(),SPELL_FIREBALL);
             Fireball_Timer = 4000;
-        }else Fireball_Timer -=diff;
+        }
 
         //DoMeleeAttackIfReady();
     }
@@ -260,7 +261,7 @@ struct npc_warden_mellicharAI : public ScriptedAI
     bool IsRunning;
     bool CanSpawn;
 
-    uint32 EventProgress_Timer;
+    Timer EventProgress_Timer;
     uint32 Phase;
 
     void Reset()
@@ -268,7 +269,7 @@ struct npc_warden_mellicharAI : public ScriptedAI
         IsRunning = false;
         CanSpawn = false;
 
-        EventProgress_Timer = 22000;
+        EventProgress_Timer.Reset(22000);
         Phase = 1;
 
         me->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
@@ -373,7 +374,7 @@ struct npc_warden_mellicharAI : public ScriptedAI
         if( !IsRunning )
             return;
 
-        if( EventProgress_Timer < diff )
+        if (EventProgress_Timer.Expired(diff))
         {
             if( pInstance )
             {
@@ -465,7 +466,7 @@ struct npc_warden_mellicharAI : public ScriptedAI
                         break;
                 }
             }
-        } else EventProgress_Timer -= diff;
+        }
     }
 };
 
@@ -484,11 +485,11 @@ struct npc_felfire_waveAI : public ScriptedAI
 {
     npc_felfire_waveAI(Creature* c) : ScriptedAI(c) {}
 
-    uint32 Burn;
+    Timer BurnTimer;
 
     void IsSummonedBy(Unit *summoner)
     {
-        Burn = 0;
+        BurnTimer = 1;
         float x, y, z;
         me->SetSpeed(MOVE_RUN, 1.1);
         me->GetNearPoint(x, y, z, 0, 20, summoner->GetAngle(me));
@@ -508,13 +509,11 @@ struct npc_felfire_waveAI : public ScriptedAI
 
     void UpdateAI(const uint32 diff)
     {
-        if(Burn < diff)
+        if (BurnTimer.Expired(diff))
         {
             DoCast(me, SPELL_FELFIRE, true);
-            Burn = 450;
+            BurnTimer = 450;
         }
-        else
-            Burn -= diff;
     }
 };
 
@@ -531,14 +530,12 @@ struct npc_arcatraz_sentinelAI : public ScriptedAI
     npc_arcatraz_sentinelAI(Creature *c) : ScriptedAI(c)
     {
         pInstance = c->GetInstanceData();
-        HeroicMode = me->GetMap()->IsHeroic();
     }
 
-    uint32 ThreatWipe_Timer;
-    uint32 Suicide_Timer;
+    Timer ThreatWipe_Timer;
+    Timer Suicide_Timer;
 
     ScriptedInstance *pInstance;
-    bool HeroicMode;
 
     void Reset()
     {
@@ -547,7 +544,7 @@ struct npc_arcatraz_sentinelAI : public ScriptedAI
         me->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
         me->CastSpell(me, SPELL_AURA, true);
 
-        ThreatWipe_Timer = urand(5000, 10000);
+        ThreatWipe_Timer.Reset(urand(5000, 10000));
         Suicide_Timer = 0;
     }
 
@@ -556,6 +553,7 @@ struct npc_arcatraz_sentinelAI : public ScriptedAI
         me->SetUInt32Value(UNIT_DYNAMIC_FLAGS, UNIT_DYNFLAG_NONE);
         me->SetUInt32Value(UNIT_FIELD_BYTES_1, PLAYER_STATE_NONE);
         me->SetHealth(me->GetMaxHealth() * 40 / 100);
+        me->ResetPlayerDamageReq();
     }
 
     void UpdateAI(const uint32 diff)
@@ -563,15 +561,13 @@ struct npc_arcatraz_sentinelAI : public ScriptedAI
         if (!UpdateVictim())
             return;
 
-        if (!Suicide_Timer)
+        if (!Suicide_Timer.GetInterval())
         {
-            if (ThreatWipe_Timer < diff)
+            if (ThreatWipe_Timer.Expired(diff))
             {
                 DoResetThreat();
                 ThreatWipe_Timer = urand(10000, 15000);
             }
-            else
-                ThreatWipe_Timer -= diff;
 
             if (me->GetHealth()*100/me->GetMaxHealth() <= 12)
             {
@@ -582,13 +578,8 @@ struct npc_arcatraz_sentinelAI : public ScriptedAI
                 Suicide_Timer = 10000;
             }
         }
-        else
-        {
-            if (Suicide_Timer < diff)
-                me->Kill(me, false);
-            else
-                Suicide_Timer -= diff;
-        }
+        else if (Suicide_Timer.Expired(diff))
+            me->getVictim()->Kill(me, false);
 
         DoMeleeAttackIfReady();
     }
@@ -620,7 +611,7 @@ struct npc_warder_corpseAI : public ScriptedAI
         summon = false;
     }
 
-    void EnterCombat(Unit *who) {}
+    void EnterCombat(Unit *who) { EnterEvadeMode(); }
     void AttackStart(Unit* who) {}
 
     void MoveInLineOfSight(Unit* who)
@@ -636,6 +627,156 @@ struct npc_warder_corpseAI : public ScriptedAI
 CreatureAI* GetAI_npc_warder_corpse(Creature *_Creature)
 {
     return new npc_warder_corpseAI (_Creature);
+}
+
+struct npc_negaton_screamerAI : public ScriptedAI
+{
+    enum spells {
+        // common
+        SPELL_PSYCHIC_SCREAM        = 13704,
+
+        SPELL_REDUCTION_ARCANE      = 34331,
+        SPELL_REDUCTION_FIRE        = 34333,
+        SPELL_REDUCTION_FROST       = 34334,
+        SPELL_REDUCTION_NATURE      = 34335,
+        SPELL_REDUCTION_HOLY        = 34336,
+        SPELL_REDUCTION_SHADOW      = 34338,
+
+        // normal
+        SPELL_SHADOW_BOLT_VOLLEY    = 36736,
+        SPELL_ARCANE_VOLLEY         = 36738,
+        SPELL_LIGHTNING_BOLT_VOLLEY = 36740,
+        SPELL_FROSTBOLT_VOLLEY      = 36741,
+        SPELL_FIREBALL_VOLLEY       = 36742,
+        SPELL_HOLY_BOLT_VOLLEY      = 36743,
+
+        // heroic
+        SPELL_SHADOW_BOLT_VOLLEY_HERO    = 38840,
+        SPELL_ARCANE_VOLLEY_HERO         = 38835,
+        SPELL_LIGHTNING_BOLT_VOLLEY_HERO = 36740,
+        SPELL_FROSTBOLT_VOLLEY_HERO      = 38837,
+        SPELL_FIREBALL_VOLLEY_HERO       = 38836,
+        SPELL_HOLY_BOLT_VOLLEY_HERO      = 38838,
+    };
+
+    npc_negaton_screamerAI(Creature* c) : ScriptedAI(c) {}
+
+    Timer fearTimer;
+    Timer volleyTimer;
+    SpellSchools school;
+
+    void Reset()
+    {
+        fearTimer.Reset(urand(1000, 7000));
+        volleyTimer = 0;
+        school = SPELL_SCHOOL_NORMAL;
+        me->RemoveSpellsCausingAura(SPELL_AURA_MOD_DAMAGE_PERCENT_TAKEN);
+    }
+
+    uint32 GetVolleySpell()
+    {
+        if (me->GetMap()->IsHeroic())
+        {
+            switch (school)
+            {
+                case SPELL_SCHOOL_HOLY:     return SPELL_HOLY_BOLT_VOLLEY_HERO;
+                case SPELL_SCHOOL_FIRE:     return SPELL_FIREBALL_VOLLEY_HERO;
+                case SPELL_SCHOOL_NATURE:   return SPELL_LIGHTNING_BOLT_VOLLEY_HERO;
+                case SPELL_SCHOOL_FROST:    return SPELL_FROSTBOLT_VOLLEY_HERO;
+                case SPELL_SCHOOL_SHADOW:   return SPELL_SHADOW_BOLT_VOLLEY_HERO;
+                default:
+                case SPELL_SCHOOL_ARCANE:   return SPELL_ARCANE_VOLLEY_HERO;
+            }
+        }
+        else
+        {
+            switch (school)
+            {
+                case SPELL_SCHOOL_HOLY:     return SPELL_HOLY_BOLT_VOLLEY;
+                case SPELL_SCHOOL_FIRE:     return SPELL_FIREBALL_VOLLEY;
+                case SPELL_SCHOOL_NATURE:   return SPELL_LIGHTNING_BOLT_VOLLEY;
+                case SPELL_SCHOOL_FROST:    return SPELL_FROSTBOLT_VOLLEY;
+                case SPELL_SCHOOL_SHADOW:   return SPELL_SHADOW_BOLT_VOLLEY;
+                default:
+                case SPELL_SCHOOL_ARCANE:   return SPELL_ARCANE_VOLLEY;
+            }
+        }
+    }
+
+    void UpdateAI(const uint32 diff)
+    {
+        if (!UpdateVictim())
+            return;
+
+        if (volleyTimer.Expired(diff))
+        {
+            DoCast(me->getVictim(), GetVolleySpell());
+            volleyTimer = urand(6000, 9000); // will be reset in SpellHitTarget
+        }
+
+        if (fearTimer.Expired(diff))
+        {
+            DoCast(me->getVictim(), SPELL_PSYCHIC_SCREAM);
+            fearTimer = urand(15000, 30000);
+        }
+
+        DoMeleeAttackIfReady();
+    }
+
+    void SpellHit(Unit*, const SpellEntry* spell)
+    {
+        if (school != SPELL_SCHOOL_NORMAL ||
+            spell->SchoolMask & SPELL_SCHOOL_MASK_NORMAL)
+            return;
+
+        if (spell->SchoolMask & SPELL_SCHOOL_MASK_HOLY)
+        {
+            me->CastSpell(me, SPELL_REDUCTION_HOLY, true);
+            school = SPELL_SCHOOL_HOLY;
+        }
+        else if (spell->SchoolMask & SPELL_SCHOOL_MASK_FIRE)
+        {
+            me->CastSpell(me, SPELL_REDUCTION_FIRE, true);
+            school = SPELL_SCHOOL_FIRE;
+        }
+        else if (spell->SchoolMask & SPELL_SCHOOL_MASK_NATURE)
+        {
+            me->CastSpell(me, SPELL_REDUCTION_NATURE, true);
+            school = SPELL_SCHOOL_NATURE;
+        }
+        else if (spell->SchoolMask & SPELL_SCHOOL_MASK_FROST)
+        {
+            me->CastSpell(me, SPELL_REDUCTION_FROST, true);
+            school = SPELL_SCHOOL_FROST;
+        }
+        else if (spell->SchoolMask & SPELL_SCHOOL_MASK_SHADOW)
+        {
+            me->CastSpell(me, SPELL_REDUCTION_SHADOW, true);
+            school = SPELL_SCHOOL_SHADOW;
+        }
+        else if (spell->SchoolMask & SPELL_SCHOOL_MASK_ARCANE)
+        {
+            me->CastSpell(me, SPELL_REDUCTION_ARCANE, true);
+            school = SPELL_SCHOOL_ARCANE;
+        }
+
+        volleyTimer = urand(3000, 5000);
+    }
+
+    void SpellHitTarget(Unit*, const SpellEntry* spell)
+    {
+        if (school != SPELL_SCHOOL_NORMAL)
+        {
+            me->RemoveSpellsCausingAura(SPELL_AURA_MOD_DAMAGE_PERCENT_TAKEN);
+            school = SPELL_SCHOOL_NORMAL;
+            volleyTimer = 0; // disable volleys
+        }
+    }
+};
+
+CreatureAI* GetAI_npc_negaton_screamer(Creature* _Creature)
+{
+    return new npc_negaton_screamerAI(_Creature);
 }
 
 void AddSC_arcatraz()
@@ -666,5 +807,9 @@ void AddSC_arcatraz()
     newscript->Name="warder_corpse";
     newscript->GetAI = &GetAI_npc_warder_corpse;
     newscript->RegisterSelf();
-}
 
+    newscript = new Script;
+    newscript->Name = "npc_negaton_screamer";
+    newscript->GetAI = &GetAI_npc_negaton_screamer;
+    newscript->RegisterSelf();
+}

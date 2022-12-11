@@ -114,15 +114,17 @@ void TicketMgr::DeleteGMTicketPermanently(uint64 ticketGuid)
     }
 
     // delete database record
-    RealmDataDatabase.PExecute("DELETE FROM `gm_tickets` WHERE guid= '%u'", ticketGuid);
+    RealmDataDatabase.PExecute("DELETE FROM `gm_tickets` WHERE guid= '%lu'", ticketGuid);
 }
 
 
 void TicketMgr::LoadGMTickets()
 {
     // Delete all out of object holder
-    GM_TicketList.clear();
-    QueryResultAutoPtr result = RealmDataDatabase.Query("SELECT `guid`, `playerGuid`, `name`, `message`, `createtime`, `map`, `posX`, `posY`, `posZ`, `timestamp`, `closed`, `assignedto`, `comment` FROM `gm_tickets`");
+    GM_TicketList.clear();                              //        0           1         2         3           4          5      6       7       8
+    QueryResultAutoPtr result = RealmDataDatabase.Query("SELECT `guid`, `playerGuid`, `name`, `message`, `createtime`, `map`, `posX`, `posY`, `posZ`, "
+                                                        //    9          10          11          12          13
+                                                        "`timestamp`, `closed`, `assignedto`, `comment`, `response` FROM `gm_tickets`");
     GM_Ticket *ticket;
 
     if (!result)
@@ -150,6 +152,7 @@ void TicketMgr::LoadGMTickets()
         ticket->closed = fields[10].GetUInt64();
         ticket->assignedToGM = fields[11].GetUInt64();
         ticket->comment = fields[12].GetString();
+        ticket->response = fields[13].GetString();
 
         AddGMTicket(ticket, true);
 
@@ -187,10 +190,12 @@ void TicketMgr::RemoveGMTicketByPlayer(uint64 playerGuid, uint64 GMguid)
 
 void TicketMgr::SaveGMTicket(GM_Ticket* ticket)
 {
-    std::string msg = ticket->message;
+    std::string msg = ticket->message, comment = ticket->comment, response = ticket->response;
     RealmDataDatabase.escape_string(msg);
+    RealmDataDatabase.escape_string(comment);
+    RealmDataDatabase.escape_string(response);
     std::stringstream ss;
-    ss << "REPLACE INTO `gm_tickets` (`guid`, `playerGuid`, `name`, `message`, `createtime`, `map`, `posX`, `posY`, `posZ`, `timestamp`, `closed`, `assignedto`, `comment`) VALUES('";
+    ss << "REPLACE INTO `gm_tickets` (`guid`, `playerGuid`, `name`, `message`, `createtime`, `map`, `posX`, `posY`, `posZ`, `timestamp`, `closed`, `assignedto`, `comment`, `response`) VALUES('";
     ss << ticket->guid << "', '";
     ss << ticket->playerGuid << "', '";
     ss << ticket->name << "', '";
@@ -203,7 +208,9 @@ void TicketMgr::SaveGMTicket(GM_Ticket* ticket)
     ss << ticket->timestamp << "', '";
     ss << ticket->closed << "', '";
     ss << ticket->assignedToGM << "', '";
-    ss << ticket->comment << "');";
+    ss << comment << "', '";
+    ss << response << "');";
+
     RealmDataDatabase.BeginTransaction();
     RealmDataDatabase.Execute(ss.str().c_str());
     RealmDataDatabase.CommitTransaction();

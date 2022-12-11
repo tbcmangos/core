@@ -49,21 +49,19 @@ struct boss_thespiaAI : public ScriptedAI
     boss_thespiaAI(Creature *c) : ScriptedAI(c)
     {
         pInstance = (c->GetInstanceData());
-        HeroicMode = me->GetMap()->IsHeroic();
     }
 
     ScriptedInstance *pInstance;
-    bool HeroicMode;
 
-    uint32 LightningCloud_Timer;
-    uint32 LungBurst_Timer;
-    uint32 EnvelopingWinds_Timer;
+    Timer LightningCloud_Timer;
+    Timer LungBurst_Timer;
+    Timer EnvelopingWinds_Timer;
 
     void Reset()
     {
-        LightningCloud_Timer = 15000;
-        LungBurst_Timer = 7000;
-        EnvelopingWinds_Timer = 9000;
+        LightningCloud_Timer.Reset(15000);
+        LungBurst_Timer.Reset(7000);
+        EnvelopingWinds_Timer.Reset(9000);
 
         std::list<Creature*> water_elementals = FindAllCreaturesWithEntry(17917, 100);
         for(std::list<Creature*>::iterator it = water_elementals.begin(); it != water_elementals.end(); it++)
@@ -108,7 +106,7 @@ struct boss_thespiaAI : public ScriptedAI
             return;
 
         //LightningCloud_Timer
-        if (LightningCloud_Timer < diff)
+        if (LightningCloud_Timer.Expired(diff))
         {
             //cast twice in Heroic mode
             if (Unit* target = SelectUnit(SELECT_TARGET_RANDOM,0))
@@ -117,18 +115,18 @@ struct boss_thespiaAI : public ScriptedAI
                 if (Unit* target = SelectUnit(SELECT_TARGET_RANDOM,0))
                     DoCast(target, SPELL_LIGHTNING_CLOUD);
             LightningCloud_Timer = 15000+rand()%10000;
-        }else LightningCloud_Timer -=diff;
+        }
 
         //LungBurst_Timer
-        if (LungBurst_Timer < diff)
+        if (LungBurst_Timer.Expired(diff))
         {
             if (Unit* target = SelectUnit(SELECT_TARGET_RANDOM,0))
                 DoCast(target, SPELL_LUNG_BURST);
             LungBurst_Timer = 7000+rand()%5000;
-        }else LungBurst_Timer -=diff;
+        }
 
         //EnvelopingWinds_Timer
-        if (EnvelopingWinds_Timer < diff)
+        if (EnvelopingWinds_Timer.Expired(diff))
         {
             //cast twice in Heroic mode
             if (Unit* target = SelectUnit(SELECT_TARGET_RANDOM,0))
@@ -137,8 +135,7 @@ struct boss_thespiaAI : public ScriptedAI
                 if (Unit* target = SelectUnit(SELECT_TARGET_RANDOM,0))
                     DoCast(target, SPELL_ENVELOPING_WINDS);
             EnvelopingWinds_Timer = 10000+rand()%5000;
-        }else EnvelopingWinds_Timer -=diff;
-
+        }
         DoMeleeAttackIfReady();
     }
 };
@@ -150,13 +147,11 @@ struct mob_coilfang_waterelementalAI : public ScriptedAI
 {
     mob_coilfang_waterelementalAI(Creature *c) : ScriptedAI(c) {}
 
-    bool HeroicMode;
-    uint32 WaterBoltVolley_Timer;
+    Timer WaterBoltVolley_Timer;
 
     void Reset()
     {
-        HeroicMode = me->GetMap()->IsHeroic();
-        WaterBoltVolley_Timer = 3000+rand()%3000;
+        WaterBoltVolley_Timer.Reset(3000 + rand() % 3000);
     }
 
     void EnterCombat(Unit *who) { }
@@ -166,11 +161,11 @@ struct mob_coilfang_waterelementalAI : public ScriptedAI
         if (!UpdateVictim())
             return;
 
-        if (WaterBoltVolley_Timer < diff)
+        if (WaterBoltVolley_Timer.Expired(diff))
         {
             DoCast(me, HeroicMode ? H_SPELL_WATER_BOLT_VOLLEY : SPELL_WATER_BOLT_VOLLEY);
             WaterBoltVolley_Timer = 7000+rand()%5000;
-        }else WaterBoltVolley_Timer -= diff;
+        }
 
         DoMeleeAttackIfReady();
     }

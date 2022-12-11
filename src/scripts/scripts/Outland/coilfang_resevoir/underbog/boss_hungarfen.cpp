@@ -33,19 +33,17 @@ struct boss_hungarfenAI : public ScriptedAI
 {
     boss_hungarfenAI(Creature *c) : ScriptedAI(c)
     {
-        HeroicMode = me->GetMap()->IsHeroic();
     }
 
-    bool HeroicMode;
     bool Root;
-    uint32 Mushroom_Timer;
-    uint32 AcidGeyser_Timer;
+    Timer Mushroom_Timer;
+    Timer AcidGeyser_Timer;
 
     void Reset()
     {
         Root = false;
-        Mushroom_Timer = 5000;                              // 1 mushroom after 5s, then one per 10s. This should be different in heroic mode
-        AcidGeyser_Timer = 10000;
+        Mushroom_Timer.Reset(5000);                              // 1 mushroom after 5s, then one per 10s. This should be different in heroic mode
+        AcidGeyser_Timer.Reset(10000);
     }
 
     void EnterCombat(Unit *who)
@@ -66,22 +64,22 @@ struct boss_hungarfenAI : public ScriptedAI
             }
         }
 
-        if( Mushroom_Timer < diff )
+        if (Mushroom_Timer.Expired(diff))
         {
             if( Unit *target = SelectUnit(SELECT_TARGET_RANDOM,0) )
-                me->SummonCreature(17990, target->GetPositionX()+(rand()%8), target->GetPositionY()+(rand()%8), target->GetPositionZ(), (rand()%5), TEMPSUMMON_TIMED_DESPAWN, 22000);
+                me->SummonCreature(17990, target->GetPositionX()+(rand()%8), target->GetPositionY()+(rand()%8), target->GetPositionZ(), (rand()%5), TEMPSUMMON_TIMED_DESPAWN, 31000);
             else
-                me->SummonCreature(17990, me->GetPositionX()+(rand()%8), me->GetPositionY()+(rand()%8), me->GetPositionZ(), (rand()%5), TEMPSUMMON_TIMED_DESPAWN, 22000);
+                me->SummonCreature(17990, me->GetPositionX()+(rand()%8), me->GetPositionY()+(rand()%8), me->GetPositionZ(), (rand()%5), TEMPSUMMON_TIMED_DESPAWN, 31000);
 
             Mushroom_Timer = 10000;
-        }else Mushroom_Timer -= diff;
+        }
 
-        if( AcidGeyser_Timer < diff )
+        if (AcidGeyser_Timer.Expired(diff))
         {
             if( Unit *target = SelectUnit(SELECT_TARGET_RANDOM,0) )
                 DoCast(target,SPELL_ACID_GEYSER);
             AcidGeyser_Timer = 10000+rand()%7500;
-        }else AcidGeyser_Timer -= diff;
+        }
 
         DoMeleeAttackIfReady();
     }
@@ -100,17 +98,19 @@ struct mob_underbog_mushroomAI : public ScriptedAI
     mob_underbog_mushroomAI(Creature *c) : ScriptedAI(c) {}
 
     bool Stop;
-    uint32 Grow_Timer;
-    uint32 Shrink_Timer;
+    Timer Grow_Timer;
+    Timer Shrink_Timer;
 
     void Reset()
     {
         Stop = false;
-        Grow_Timer = 0;
-        Shrink_Timer = 20000;
+        Grow_Timer.Reset(3000);
+        Shrink_Timer.Reset(20000);
+
+        me->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
+        me->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
 
         DoCast(me,SPELL_PUTRID_MUSHROOM,true);
-        DoCast(me,SPELL_SPORE_CLOUD,true);
     }
 
     void MoveInLineOfSight(Unit *who) { return; }
@@ -122,17 +122,30 @@ struct mob_underbog_mushroomAI : public ScriptedAI
         if( Stop )
             return;
 
-        if( Grow_Timer <= diff )
+        if (Grow_Timer.Expired(diff))
         {
-            DoCast(me,SPELL_GROW);
+            DoCast(me, SPELL_GROW);
             Grow_Timer = 3000;
-        }else Grow_Timer -= diff;
+        }
 
-        if( Shrink_Timer <= diff )
+        if (Shrink_Timer.Expired(diff))
         {
-            me->RemoveAurasDueToSpell(SPELL_GROW);
-            Stop = true;
-        }else Shrink_Timer -= diff;
+            if (Shrink_Timer.GetInterval() == 20000)
+            {
+                // shrink
+                me->RemoveAurasDueToSpell(SPELL_GROW);
+                Shrink_Timer = 1000;
+                Grow_Timer = 0;
+                m_creature->CastSpell(me->GetPositionX(), me->GetPositionY(), me->GetPositionZ(), SPELL_SPORE_CLOUD, false);
+            }
+            else
+            {
+                // disappear visually
+                me->RemoveAurasDueToSpell(SPELL_PUTRID_MUSHROOM);
+                Stop = true;
+                Shrink_Timer = 0;
+            }
+        }
     }
 };
 CreatureAI* GetAI_mob_underbog_mushroom(Creature *_Creature)

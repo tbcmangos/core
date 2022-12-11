@@ -34,9 +34,9 @@ struct boss_vectusAI : public ScriptedAI
 {
     boss_vectusAI(Creature *c) : ScriptedAI(c) {}
 
-    uint32 FireShield_Timer;
-    uint32 BlastWave_Timer;
-    uint32 Frenzy_Timer;
+    int32 FireShield_Timer;
+    int32 BlastWave_Timer;
+    int32 Frenzy_Timer;
 
     void Reset()
     {
@@ -54,30 +54,31 @@ struct boss_vectusAI : public ScriptedAI
         if (!UpdateVictim())
             return;
 
-        //FireShield_Timer
-        if (FireShield_Timer < diff)
+        FireShield_Timer -= diff;
+        if (FireShield_Timer <= diff)
         {
             DoCast(m_creature, SPELL_FIRESHIELD);
-            FireShield_Timer = 90000;
-        }else FireShield_Timer -= diff;
+            FireShield_Timer += 90000;
+        }
 
-        //BlastWave_Timer
-        if (BlastWave_Timer < diff)
+        BlastWave_Timer -= diff;
+        if (BlastWave_Timer <= diff)
         {
             DoCast(m_creature->getVictim(),SPELL_BLASTWAVE);
-            BlastWave_Timer = 12000;
-        }else BlastWave_Timer -= diff;
+            BlastWave_Timer += 12000;
+        }
 
         //Frenzy_Timer
         if ( m_creature->GetHealth()*100 / m_creature->GetMaxHealth() < 25 )
         {
-            if (Frenzy_Timer < diff)
+            Frenzy_Timer -= diff;
+            if (Frenzy_Timer <= diff)
             {
                 DoCast(m_creature,SPELL_FRENZY);
                 DoTextEmote("goes into a killing frenzy!",NULL);
 
-                Frenzy_Timer = 24000;
-            }else Frenzy_Timer -= diff;
+                Frenzy_Timer += 24000;
+            }
         }
 
         DoMeleeAttackIfReady();

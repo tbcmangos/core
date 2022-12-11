@@ -20,36 +20,37 @@
 #include "def_hyjal.h"
 #include "hyjal_trash.h"
 
-#define SPELL_FROST_ARMOR     31256
-#define SPELL_DEATH_AND_DECAY 31258
-
-#define SPELL_FROST_NOVA      31250
-#define SPELL_ICEBOLT         31249
-#define SPELL_BERSERK         28498
-
+// texts
 #define SAY_ONDEATH "You have won this battle, but not... the... war"
-#define SOUND_ONDEATH 11026
-
 #define SAY_ONSLAY1 "All life must perish!"
 #define SAY_ONSLAY2 "Victory to the Legion!"
-#define SOUND_ONSLAY1 11025
-#define SOUND_ONSLAY2 11057
-
 #define SAY_DECAY1 "Crumble and rot!"
 #define SAY_DECAY2 "Ashes to ashes, dust to dust"
-#define SOUND_DECAY1 11023
-#define SOUND_DECAY2 11055
-
 #define SAY_NOVA1 "Succumb to the icy chill... of death!"
 #define SAY_NOVA2 "It will be much colder in your grave"
-#define SOUND_NOVA1 11024
-#define SOUND_NOVA2 11058
-
 #define SAY_ONAGGRO "The Legion's final conquest has begun! Once again the subjugation of this world is within our grasp. Let none survive!"
-#define SOUND_ONAGGRO 11022
 
 struct boss_rage_winterchillAI : public hyjal_trashAI
 {
+    enum spells {
+        SPELL_FROST_ARMOR     = 31256,
+        SPELL_DEATH_AND_DECAY = 31258,
+        SPELL_FROST_NOVA      = 31250,
+        SPELL_ICEBOLT         = 31249,
+        SPELL_BERSERK         = 28498
+    };
+
+    enum sounds {
+        SOUND_ONDEATH   = 11026,
+        SOUND_ONSLAY1   = 11025,
+        SOUND_ONSLAY2   = 11057,
+        SOUND_DECAY1    = 11023,
+        SOUND_DECAY2    = 11055,
+        SOUND_NOVA1     = 11024,
+        SOUND_NOVA2     = 11058,
+        SOUND_ONAGGRO   = 11022
+    };
+
     boss_rage_winterchillAI(Creature *c) : hyjal_trashAI(c)
     {
         pInstance = (c->GetInstanceData());
@@ -57,12 +58,12 @@ struct boss_rage_winterchillAI : public hyjal_trashAI
         pos = 0;
     }
 
-    uint32 FrostArmorTimer;
-    uint32 DecayTimer;
-    uint32 NovaTimer;
-    uint32 IceboltTimer;
-    uint32 CheckTimer;
-    uint32 Enrage_Timer;
+    Timer FrostArmorTimer;
+    Timer DecayTimer;
+    Timer NovaTimer;
+    Timer IceboltTimer;
+    Timer CheckTimer;
+    Timer Enrage_Timer;
 
     bool go;
     uint32 pos;
@@ -72,12 +73,16 @@ struct boss_rage_winterchillAI : public hyjal_trashAI
         ClearCastQueue();
 
         damageTaken = 0;
-        FrostArmorTimer = 20000;
-        DecayTimer = 45000;
-        NovaTimer = 15000;
-        IceboltTimer = 10000;
-        CheckTimer = 3000;
-        Enrage_Timer = 600000;
+        FrostArmorTimer.Reset(20000);
+        DecayTimer.Reset(45000);
+        NovaTimer.Reset(15000);
+        IceboltTimer.Reset(10000);
+        CheckTimer.Reset(3000);
+        Enrage_Timer.Reset(600000);
+
+        me->ApplySpellImmune(0, IMMUNITY_STATE, SPELL_AURA_MOD_FEAR, true);
+        me->ApplySpellImmune(0, IMMUNITY_STATE, SPELL_AURA_MOD_STUN, true);
+        me->ApplySpellImmune(0, IMMUNITY_MECHANIC, MECHANIC_STUN, true);
 
         if(pInstance && IsEvent)
             pInstance->SetData(DATA_RAGEWINTERCHILLEVENT, NOT_STARTED);
@@ -126,9 +131,9 @@ struct boss_rage_winterchillAI : public hyjal_trashAI
         }
     }
 
-    void JustDied(Unit *victim)
+    void JustDied(Unit *Killer)
     {
-        hyjal_trashAI::JustDied(victim);
+        hyjal_trashAI::JustDied(Killer);
         if(pInstance && IsEvent)
             pInstance->SetData(DATA_RAGEWINTERCHILLEVENT, DONE);
 
@@ -165,32 +170,33 @@ struct boss_rage_winterchillAI : public hyjal_trashAI
         if (!UpdateVictim() )
             return;
 
-        if(CheckTimer < diff)
+
+        if (CheckTimer.Expired(diff))
         {
             DoZoneInCombat();
             m_creature->SetSpeed(MOVE_RUN, 3.0);
-            CheckTimer = 3000;
+            CheckTimer = 1000;
         }
-        else
-            CheckTimer -= diff;
 
-        if(FrostArmorTimer < diff)
+
+
+        if (FrostArmorTimer.Expired(diff))
         {
             //AddSpellToCast(m_creature, SPELL_FROST_ARMOR, true);
             DoCast(m_creature, SPELL_FROST_ARMOR,true);
             FrostArmorTimer = 11000+rand()%20000;
         }
-        else
-            FrostArmorTimer -= diff;
 
-        if(DecayTimer < diff)
+
+
+        if (DecayTimer.Expired(diff))
         {
             if(Unit *target = SelectUnit(SELECT_TARGET_RANDOM, 0, 70, true))
                 //AddSpellToCast(target, SPELL_DEATH_AND_DECAY);
                 DoCast(target,SPELL_DEATH_AND_DECAY);
 
-            if(NovaTimer < 20000)
-                NovaTimer = 20000 +diff;
+            if(NovaTimer.GetTimeLeft() < 20000)
+                NovaTimer.Reset(20000);
 
             DecayTimer = 60000+rand()%20000;
             switch(rand()%2)
@@ -205,10 +211,10 @@ struct boss_rage_winterchillAI : public hyjal_trashAI
                     break;
             }
         }
-        else
-            DecayTimer -= diff;
 
-        if(NovaTimer < diff)
+
+
+        if (NovaTimer.Expired(diff))
         {
             if(Unit *target = m_creature->getVictim())
                 //AddSpellToCast(target, SPELL_FROST_NOVA, true);
@@ -216,8 +222,8 @@ struct boss_rage_winterchillAI : public hyjal_trashAI
 
             NovaTimer = 30000+rand()%15000;
 
-            if(DecayTimer < 10000)
-                DecayTimer = 10000 +diff;
+            if(DecayTimer.GetTimeLeft() < 10000)
+                DecayTimer.Reset(10000);
 
             switch(rand()%2)
             {
@@ -231,10 +237,10 @@ struct boss_rage_winterchillAI : public hyjal_trashAI
                     break;
             }
         }
-        else
-            NovaTimer -= diff;
 
-        if(IceboltTimer < diff)
+
+
+        if (IceboltTimer.Expired(diff))
         {
             if(Unit *target = SelectUnit(SELECT_TARGET_RANDOM, 0, 40, true))
                 //AddSpellToCast(target, SPELL_ICEBOLT, true);
@@ -242,17 +248,16 @@ struct boss_rage_winterchillAI : public hyjal_trashAI
 
             IceboltTimer = 11000+rand()%20000;
         }
-        else
-            IceboltTimer -= diff;
 
-        if(Enrage_Timer < diff)
+
+
+        if (Enrage_Timer.Expired(diff))
         {
             //AddSpellToCast(m_creature, SPELL_BERSERK);
             DoCast(m_creature, SPELL_BERSERK);
             Enrage_Timer = 300000;
         }
-        else
-            Enrage_Timer -= diff;
+
 
         CastNextSpellIfAnyAndReady();
         DoMeleeAttackIfReady();

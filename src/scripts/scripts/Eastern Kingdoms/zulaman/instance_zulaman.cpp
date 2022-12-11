@@ -59,9 +59,9 @@ struct instance_zulaman : public ScriptedInstance
     uint64 AkilzonGUID;
     uint64 HexLordGUID;
 
-    uint32 QuestTimer;
-    uint16 BossKilled;
-    uint16 QuestMinute;
+    Timer QuestTimer;
+    int16 BossKilled;
+    int16 QuestMinute;
     uint16 ChestLooted;
     uint32 AkilzonGauntlet;
 
@@ -87,7 +87,7 @@ struct instance_zulaman : public ScriptedInstance
 
         AkilzonGUID = 0;
         HarrisonGUID = 0;
-        QuestTimer = 0;
+        QuestTimer = 1;
         QuestMinute = 0;
         BossKilled = 0;
         ChestLooted = 0;
@@ -267,8 +267,15 @@ struct instance_zulaman : public ScriptedInstance
         if(BossKilled >= 4)
             HandleGameObject(HexLordEntranceGateGUID, true);
 
-        if(BossKilled >= 5)
+        if (BossKilled >= 5)
+        {
             HandleGameObject(HexLordExitGateGUID, true);
+            /* TODO: It should be activated by players
+            GameObject* gate = instance->GetGameObject(HexLordExitGateGUID);
+            if (gate)
+                gate->RemoveFlag(GAMEOBJECT_FLAGS, GO_FLAG_LOCKED);
+                */
+        }
     }
 
     void UpdateWorldState(uint32 field, uint32 value)
@@ -522,6 +529,8 @@ struct instance_zulaman : public ScriptedInstance
             player->SendUpdateWorldState(3104, 1);
             player->SendUpdateWorldState(3106, QuestMinute);
         }
+        else
+            player->SendUpdateWorldState(3104, 0);
     }
 
 
@@ -529,11 +538,11 @@ struct instance_zulaman : public ScriptedInstance
     {
         if(QuestMinute)
         {
-            if(QuestTimer < diff)
+            if (QuestTimer.Expired(diff))
             {
                 QuestMinute--;
                 SaveToDB();
-                QuestTimer += 60000;
+                QuestTimer = 60000;
                 if(QuestMinute)
                 {
                     UpdateWorldState(3104, 1);
@@ -572,7 +581,6 @@ struct instance_zulaman : public ScriptedInstance
                     UpdateWorldState(3104, 0);
                 }
             }
-            QuestTimer -= diff;
         }
     }
 };

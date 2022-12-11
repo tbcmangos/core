@@ -74,56 +74,53 @@ static Say PeonDies[]=
 #define H_SPELL_SHADOW_SLAM         35953
 
 #define SPELL_HEMORRHAGE            30478
-#define SPELL_CONSUMPTION           30497
+#define SPELL_CONSUMPTION           (HeroicMode ? 35952 : 30497)
+#define NPC_FEL_ORC                 17083
 
 struct boss_grand_warlock_nethekurseAI : public ScriptedAI
 {
     boss_grand_warlock_nethekurseAI(Creature *c) : ScriptedAI(c)
     {
         pInstance = c->GetInstanceData();
-        HeroicMode = me->GetMap()->IsHeroic();
     }
 
     ScriptedInstance* pInstance;
-    bool HeroicMode;
-
     bool IntroOnce;
     bool IsIntroEvent;
-    bool IsMainEvent;
     bool SpinOnce;
     bool Phase;
 
     uint32 PeonEngagedCount;
     uint32 PeonKilledCount;
+    std::list<uint64 > orcs;
 
-    uint32 IntroEvent_Timer;
-    uint32 DeathCoil_Timer;
-    uint32 ShadowFissure_Timer;
-    uint32 Cleave_Timer;
-    uint32 ShadowBolt_Timer;
-    uint32 DarkCleave_Timer;
+    Timer IntroEvent_Timer;
+    Timer DeathCoil_Timer;
+    Timer ShadowFissure_Timer;
+    Timer Cleave_Timer;
+    Timer ShadowBolt_Timer;
+    Timer DarkCleave_Timer;
 
     void Reset()
     {
         me->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
         IsIntroEvent = false;
-        IntroOnce = false;
-        IsMainEvent = false;
         SpinOnce = false;
         Phase = false;
 
         PeonEngagedCount = 0;
         PeonKilledCount = 0;
 
-        IntroEvent_Timer = 20000;
-        DeathCoil_Timer = 20000;
-        ShadowFissure_Timer = 8000;
-        Cleave_Timer = 17000;
-        ShadowBolt_Timer = 1000;
-        DarkCleave_Timer = 1000;
+        IntroEvent_Timer.Reset(0);
+        DeathCoil_Timer.Reset(20000);
+        ShadowFissure_Timer.Reset(8000);
+        Cleave_Timer.Reset(17000);
+        ShadowBolt_Timer.Reset(1000);
+        DarkCleave_Timer.Reset(1000);
 
         if (pInstance)
             pInstance->SetData(TYPE_NETHEKURSE, NOT_STARTED);
+        orcs = me->GetMap()->GetCreaturesGUIDList(NPC_FEL_ORC);
     }
 
     void DoYellForPeonEnterCombat()
@@ -143,28 +140,23 @@ struct boss_grand_warlock_nethekurseAI : public ScriptedAI
         DoScriptText(PeonDies[PeonKilledCount].id, me);
         ++PeonKilledCount;
 
+        if (PeonKilledCount == 3)
+        {
+            me->CastSpell((Unit*)NULL, SPELL_SHADOW_SEAR, true);
+            IntroEvent_Timer.Reset(20000);
+        }
         if (PeonKilledCount == 4)
         {
+            DoScriptText(RAND(SAY_TAUNT_1, SAY_TAUNT_2, SAY_TAUNT_3), me);
             IsIntroEvent = false;
-            IsMainEvent = true;
             me->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
+            DoZoneInCombat();
         }
-    }
-
-    void PeonsAreDead()
-    {
-        DoScriptText(RAND(SAY_TAUNT_1, SAY_TAUNT_2, SAY_TAUNT_3), me);
-
-        IsIntroEvent = false;
-        PeonEngagedCount = 4;
-        PeonKilledCount = 4;
-        IsMainEvent = true;
-        me->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
     }
 
     void AttackStart(Unit* who)
     {
-        if (IsIntroEvent || !IsMainEvent)
+        if (IsIntroEvent)
             return;
 
         ScriptedAI::AttackStart(who);
@@ -172,23 +164,18 @@ struct boss_grand_warlock_nethekurseAI : public ScriptedAI
 
     void MoveInLineOfSight(Unit *who)
     {
-        if (!IntroOnce && me->IsWithinDistInMap(who, 40.0f))
+        if (me->IsWithinDistInMap(who, 40.0f) && pInstance && pInstance->GetData(TYPE_NETHEKURSE) == NOT_STARTED)
         {
             if (who->GetTypeId() != TYPEID_PLAYER || ((Player*)who)->isGameMaster())
                 return;
 
             DoScriptText(SAY_INTRO, me);
-            IntroOnce = true;
             IsIntroEvent = true;
 
-            if (pInstance)
-            {
-                pInstance->SetData(TYPE_NETHEKURSE,IN_PROGRESS);
-                pInstance->SetData(TYPE_NETHEKURSE, SPECIAL);
-            }
+            pInstance->SetData(TYPE_NETHEKURSE,IN_PROGRESS);
         }
 
-        if (IsIntroEvent || !IsMainEvent)
+        if (IsIntroEvent)
             return;
 
         ScriptedAI::MoveInLineOfSight(who);
@@ -224,14 +211,15 @@ struct boss_grand_warlock_nethekurseAI : public ScriptedAI
 
         if (pInstance)
         {
-            pInstance->SetData(TYPE_NETHEKURSE, FAIL);
+            for (std::list<uint64>::iterator itr = orcs.begin(); itr != orcs.end(); itr++)
+            {
+                Creature* Orc = me->GetCreature(*itr);
+                if (!Orc || Orc->isAlive())
+                    continue;
 
-            float x, y, z;
-            me->GetRespawnCoord(x, y, z);
-            me->GetMotionMaster()->MovePoint(1, x, y, z);
+                Orc->Respawn();
+            }
         }
-        else
-            me->GetMotionMaster()->MoveTargetedHome();
     }
 
     void JustDied(Unit* killer)
@@ -244,84 +232,70 @@ struct boss_grand_warlock_nethekurseAI : public ScriptedAI
         pInstance->SetData(TYPE_NETHEKURSE,DONE);
     }
 
-    void MovementInform(uint32 type, uint32 id)
-    {
-        if (type != POINT_MOTION_TYPE)
-            return;
-
-        if(id == 1)
-        {
-            Reset();
-            me->SetFacingTo(4.4f);
-            me->CastSpell(me, SPELL_SHADOW_SEAR, true);
-        }
-    }
-
     void UpdateAI(const uint32 diff)
     {
         if (IsIntroEvent)
         {
-            if (!pInstance)
-                return;
-
-            if (pInstance->GetData(TYPE_NETHEKURSE) == IN_PROGRESS)
+            if (IntroEvent_Timer.Expired(diff))
             {
-                if (IntroEvent_Timer <= diff)
+                for (std::list<uint64>::iterator itr = orcs.begin(); itr != orcs.end(); itr++)
                 {
-                    PeonsAreDead();
-                } else IntroEvent_Timer -= diff;
+                    Creature* Orc = me->GetCreature(*itr);
+                    if (!Orc || !Orc->isAlive())
+                        continue;
+
+                    me->Kill(Orc);
+                }
+                IntroEvent_Timer = 0;
             }
-        }
-
-        if (!UpdateVictim())
             return;
-
-        if (!IsMainEvent)
+        }
+        if (!UpdateVictim())
             return;
 
         if (Phase)
         {
             if (!SpinOnce)
             {
-                me->GetUnitStateMgr().PushAction(UNIT_ACTION_STUN);
+                me->GetUnitStateMgr().PushAction(UNIT_ACTION_ROOT);
                 DoCast(me, SPELL_DARK_SPIN);
                 SpinOnce = true;
             }
 
-            if (ShadowBolt_Timer <= diff)
+            if (ShadowBolt_Timer.Expired(diff))
             {
                 if (Unit *pTarget = SelectUnit(SELECT_TARGET_RANDOM,0))
                     DoCast(pTarget,SPELL_SHADOW_BOLT);
                 ShadowBolt_Timer = 1000;
-            } else ShadowBolt_Timer -= diff;
+            }
 
-            if (DarkCleave_Timer <= diff)
+            if (DarkCleave_Timer.Expired(diff))
             {
                 DoCast(me->getVictim(),SPELL_DARK_CLEAVE);
                 DarkCleave_Timer = 1000;
-            } else DarkCleave_Timer -= diff;
+            }
         }
         else
         {
-            if (ShadowFissure_Timer <= diff)
+            if (ShadowFissure_Timer.Expired(diff))
             {
                 if (Unit *pTarget = SelectUnit(SELECT_TARGET_RANDOM,0))
                     DoCast(pTarget,SPELL_SHADOW_FISSURE);
                 ShadowFissure_Timer = 7500+rand()%7500;
-            } else ShadowFissure_Timer -= diff;
+            }
 
-            if (DeathCoil_Timer <= diff)
+            if (DeathCoil_Timer.Expired(diff))
             {
                 if (Unit *pTarget = SelectUnit(SELECT_TARGET_RANDOM,0))
                     DoCast(pTarget,SPELL_DEATH_COIL);
                 DeathCoil_Timer = 15000+rand()%5000;
-            } else DeathCoil_Timer -= diff;
+            }
 
-            if (Cleave_Timer <= diff)
+            if (Cleave_Timer.Expired(diff))
             {
                 DoCast(me->getVictim(),(HeroicMode ? H_SPELL_SHADOW_SLAM : SPELL_SHADOW_CLEAVE));
                 Cleave_Timer = 20000+rand()%2500;
-            } else Cleave_Timer -= diff;
+            }
 
             if ((me->GetHealth()*100) / me->GetMaxHealth() <= 20)
                 Phase = true;
@@ -339,18 +313,25 @@ struct mob_fel_orc_convertAI : public ScriptedAI
     }
 
     ScriptedInstance* pInstance;
-    uint32 Hemorrhage_Timer;
-    uint32 Kill_Timer;
+    Timer Hemorrhage_Timer;
+    Timer Kill_Timer;
 
     void Reset()
     {
+        me->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
         me->SetNoCallAssistance(true);
-        Hemorrhage_Timer = 3000;
+        Hemorrhage_Timer.Reset(3000);
         Kill_Timer = 0;
     }
 
     void MoveInLineOfSight(Unit* who)
     {
+        // dont allow puling by sending pet
+        if (who->GetTypeId() == TYPEID_PLAYER && me->HasFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE) &&
+            who->IsWithinDist(me,10.0))
+            me->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
+
+        // do nothing mote
         return;
     }
 
@@ -395,23 +376,20 @@ struct mob_fel_orc_convertAI : public ScriptedAI
 
     void UpdateAI(const uint32 diff)
     {
-        if (Kill_Timer)
+        if (Kill_Timer.Expired(diff))
         {
-            if (Kill_Timer <= diff)
-            {
-                me->DealDamage(me, me->GetHealth(), DIRECT_DAMAGE, SPELL_SCHOOL_MASK_NORMAL, NULL, false);
-                Kill_Timer = 0;
-            } else Kill_Timer -= diff;
+            me->DealDamage(me, me->GetHealth(), DIRECT_DAMAGE, SPELL_SCHOOL_MASK_NORMAL, NULL, false);
+            Kill_Timer = 0;
         }
 
         if (!UpdateVictim())
             return;
 
-        if (Hemorrhage_Timer <= diff)
+        if (Hemorrhage_Timer.Expired(diff))
         {
             DoCast(me->getVictim(),SPELL_HEMORRHAGE);
             Hemorrhage_Timer = 15000;
-        } else Hemorrhage_Timer -= diff;
+        }
 
         DoMeleeAttackIfReady();
     }

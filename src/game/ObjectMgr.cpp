@@ -210,133 +210,6 @@ CreatureInfo const* ObjectMgr::GetCreatureTemplate(uint32 id)
     return sCreatureStorage.LookupEntry<CreatureInfo>(id);
 }
 
-void ObjectMgr::LoadCreatureLocales()
-{
-    mCreatureLocaleMap.clear();                              // need for reload case
-
-    QueryResultAutoPtr result = GameDataDatabase.Query("SELECT entry,name_loc1,subname_loc1,name_loc2,subname_loc2,name_loc3,subname_loc3,name_loc4,subname_loc4,name_loc5,subname_loc5,name_loc6,subname_loc6,name_loc7,subname_loc7,name_loc8,subname_loc8 FROM locales_creature");
-
-    if (!result)
-    {
-        BarGoLink bar(1);
-
-        bar.step();
-
-        sLog.outString("");
-        sLog.outString(">> Loaded 0 creature locale strings. DB table `locales_creature` is empty.");
-        return;
-    }
-
-    BarGoLink bar(result->GetRowCount());
-
-    do
-    {
-        Field *fields = result->Fetch();
-        bar.step();
-
-        uint32 entry = fields[0].GetUInt32();
-
-        CreatureLocale& data = mCreatureLocaleMap[entry];
-
-        for (int i = 1; i < MAX_LOCALE; ++i)
-        {
-            std::string str = fields[1+2*(i-1)].GetCppString();
-            if (!str.empty())
-            {
-                int idx = GetOrNewIndexForLocale(LocaleConstant(i));
-                if (idx >= 0)
-                {
-                    if (data.Name.size() <= idx)
-                        data.Name.resize(idx+1);
-
-                    data.Name[idx] = str;
-                }
-            }
-            str = fields[1+2*(i-1)+1].GetCppString();
-            if (!str.empty())
-            {
-                int idx = GetOrNewIndexForLocale(LocaleConstant(i));
-                if (idx >= 0)
-                {
-                    if (data.SubName.size() <= idx)
-                        data.SubName.resize(idx+1);
-
-                    data.SubName[idx] = str;
-                }
-            }
-        }
-    } while (result->NextRow());
-
-    sLog.outString();
-    sLog.outString(">> Loaded %u creature locale strings", mCreatureLocaleMap.size());
-}
-
-void ObjectMgr::LoadNpcOptionLocales()
-{
-    mNpcOptionLocaleMap.clear();                              // need for reload case
-
-    QueryResultAutoPtr result = GameDataDatabase.Query("SELECT entry,"
-        "option_text_loc1,box_text_loc1,option_text_loc2,box_text_loc2,"
-        "option_text_loc3,box_text_loc3,option_text_loc4,box_text_loc4,"
-        "option_text_loc5,box_text_loc5,option_text_loc6,box_text_loc6,"
-        "option_text_loc7,box_text_loc7,option_text_loc8,box_text_loc8 "
-        "FROM locales_npc_option");
-
-    if (!result)
-    {
-        BarGoLink bar(1);
-
-        bar.step();
-
-        sLog.outString("");
-        sLog.outString(">> Loaded 0 npc_option locale strings. DB table `locales_npc_option` is empty.");
-        return;
-    }
-
-    BarGoLink bar(result->GetRowCount());
-
-    do
-    {
-        Field *fields = result->Fetch();
-        bar.step();
-
-        uint32 entry = fields[0].GetUInt32();
-
-        NpcOptionLocale& data = mNpcOptionLocaleMap[entry];
-
-        for (int i = 1; i < MAX_LOCALE; ++i)
-        {
-            std::string str = fields[1+2*(i-1)].GetCppString();
-            if (!str.empty())
-            {
-                int idx = GetOrNewIndexForLocale(LocaleConstant(i));
-                if (idx >= 0)
-                {
-                    if (data.OptionText.size() <= idx)
-                        data.OptionText.resize(idx+1);
-
-                    data.OptionText[idx] = str;
-                }
-            }
-            str = fields[1+2*(i-1)+1].GetCppString();
-            if (!str.empty())
-            {
-                int idx = GetOrNewIndexForLocale(LocaleConstant(i));
-                if (idx >= 0)
-                {
-                    if (data.BoxText.size() <= idx)
-                        data.BoxText.resize(idx+1);
-
-                    data.BoxText[idx] = str;
-                }
-            }
-        }
-    } while (result->NextRow());
-
-    sLog.outString();
-    sLog.outString(">> Loaded %u npc_option locale strings", mNpcOptionLocaleMap.size());
-}
-
 struct SQLCreatureLoader : public SQLStorageLoaderBase<SQLCreatureLoader>
 {
     template<class D>
@@ -369,7 +242,7 @@ void ObjectMgr::LoadCreatureTemplates()
             CreatureInfo const* heroicInfo = GetCreatureTemplate(cInfo->HeroicEntry);
             if (!heroicInfo)
             {
-                sLog.outLog(LOG_DB_ERR, "Creature (Entry: %u) have `heroic_entry`=%u but creature entry %u not exist.",cInfo->HeroicEntry,cInfo->HeroicEntry);
+                sLog.outLog(LOG_DB_ERR, "Creature (Entry: %u) have `heroic_entry`=%u but creature entry does not exist.", i, cInfo->HeroicEntry);
                 continue;
             }
 
@@ -493,7 +366,7 @@ void ObjectMgr::LoadCreatureTemplates()
         {
             if (!GetEquipmentInfo(cInfo->equipmentId))
             {
-                sLog.outLog(LOG_DB_ERR, "Table `creature_template` have creature (Entry: %u) with equipment_id %u not found in table `creature_equip_template`, set to no equipment.", cInfo->Entry, cInfo->equipmentId);
+                sLog.outLog(LOG_DB_ERR, "Table `creature_template` has creature (Entry: %u) with equipment_id %u not found in table `creature_equip_template`, set to no equipment.", cInfo->Entry, cInfo->equipmentId);
                 const_cast<CreatureInfo*>(cInfo)->equipmentId = 0;
             }
         }
@@ -508,7 +381,7 @@ void ObjectMgr::LoadCreatureTemplates()
 
         if (cInfo->xpMod < 0)
         {
-            sLog.outLog(LOG_DB_ERR, "Table `creature_template` have creature (Entry: %u) with wrong xpMod: %u. Defaulting to 0.0f", cInfo->Entry, cInfo->equipmentId);
+            sLog.outLog(LOG_DB_ERR, "Table `creature_template` has creature (Entry: %u) with wrong xpMod: %u. Defaulting to 0.0f", cInfo->Entry, cInfo->equipmentId);
             const_cast<CreatureInfo*>(cInfo)->xpMod = 0.0f;
         }
     }
@@ -750,7 +623,7 @@ void ObjectMgr::LoadCreatureLinkedRespawn()
 
         bar.step();
 
-        sLog.outString("");
+        sLog.outString();
         sLog.outLog(LOG_DB_ERR, ">> Loaded 0 linked respawns. DB table `creature_linked_respawn` is empty.");
         return;
     }
@@ -771,7 +644,7 @@ void ObjectMgr::LoadCreatureLinkedRespawn()
     } while (result->NextRow());
 
     sLog.outString();
-    sLog.outString(">> Loaded %u linked respawns", mCreatureLinkedRespawnMap.size());
+    sLog.outString(">> Loaded %lu linked respawns", mCreatureLinkedRespawnMap.size());
 }
 
 bool ObjectMgr::SetCreatureLinkedRespawn(uint32 guid, uint32 linkedGuid)
@@ -806,7 +679,7 @@ void ObjectMgr::LoadUnqueuedAccountList()
 
         bar.step();
 
-        sLog.outString("");
+        sLog.outString();
         sLog.outString(">> Loaded 0 unqueued accounts. DB table `unqueue_account` is empty.");
         return;
     }
@@ -823,7 +696,7 @@ void ObjectMgr::LoadUnqueuedAccountList()
     }while (result->NextRow());
 
     sLog.outString();
-    sLog.outString(">> Loaded %u unqueued accounts", m_UnqueuedAccounts.size());
+    sLog.outString(">> Loaded %lu unqueued accounts", m_UnqueuedAccounts.size());
 }
 
 bool ObjectMgr::IsUnqueuedAccount(uint64 accid)
@@ -834,14 +707,13 @@ bool ObjectMgr::IsUnqueuedAccount(uint64 accid)
 void ObjectMgr::LoadCreatures()
 {
     uint32 count = 0;
-    //                                                       0              1   2    3
+    //                                                            0           1   2    3
     QueryResultAutoPtr result = GameDataDatabase.Query("SELECT creature.guid, id, map, modelid,"
-    //   4             5           6           7           8            9              10         11
-        "equipment_id, position_x, position_y, position_z, orientation, spawntimesecs, spawndist, currentwaypoint,"
-    //   12         13       14          15            16         17     18
-        "curhealth, curmana, DeathState, MovementType, spawnMask, event, pool_entry "
-        "FROM creature LEFT OUTER JOIN game_event_creature ON creature.guid = game_event_creature.guid "
-        "LEFT OUTER JOIN pool_creature ON creature.guid = pool_creature.guid");
+                                                       //   4             5           6           7           8            9              10         11
+                                                       "equipment_id, position_x, position_y, position_z, orientation, spawntimesecs, spawndist, currentwaypoint,"
+                                                       //   12         13       14          15            16         17     
+                                                       "curhealth, curmana, DeathState, MovementType, spawnMask, event "
+                                                       "FROM creature LEFT OUTER JOIN game_event_creature ON creature.guid = game_event_creature.guid;");
 
 
     if (!result)
@@ -850,7 +722,7 @@ void ObjectMgr::LoadCreatures()
 
         bar.step();
 
-        sLog.outString("");
+        sLog.outString();
         sLog.outLog(LOG_DB_ERR, ">> Loaded 0 creature. DB table `creature` is empty.");
         return;
     }
@@ -898,11 +770,10 @@ void ObjectMgr::LoadCreatures()
         data.movementType   = fields[15].GetUInt8();
         data.spawnMask      = fields[16].GetUInt8();
         int16 gameEvent     = fields[17].GetInt16();
-        int16 PoolId        = fields[18].GetInt16();
 
         if (heroicCreatures.find(data.id)!=heroicCreatures.end())
         {
-            sLog.outLog(LOG_DB_ERR, "Table `creature` have creature (GUID: %u) that listed as heroic template in `creature_template_substitution`, skipped.",guid,data.id);
+            sLog.outLog(LOG_DB_ERR, "Table `creature` has creature (GUID: %u) that listed as heroic template in `creature_template_substitution`, skipped.",guid);
             continue;
         }
 
@@ -910,33 +781,33 @@ void ObjectMgr::LoadCreatures()
         {
             if (!GetEquipmentInfo(data.equipmentId))
             {
-                sLog.outLog(LOG_DB_ERR, "Table `creature` have creature (Entry: %u) with equipment_id %u not found in table `creature_equip_template`, set to no equipment.", data.id, data.equipmentId);
+                sLog.outLog(LOG_DB_ERR, "Table `creature` has creature (Entry: %u) with equipment_id %u not found in table `creature_equip_template`, set to no equipment.", data.id, data.equipmentId);
                 data.equipmentId = -1;
             }
         }
 
         if (cInfo->RegenHealth && data.curhealth < cInfo->minhealth)
         {
-            sLog.outLog(LOG_DB_ERR, "Table `creature` have creature (GUID: %u Entry: %u) with `creature_template`.`RegenHealth`=1 and low current health (%u), `creature_template`.`minhealth`=%u.",guid,data.id,data.curhealth, cInfo->minhealth);
+            sLog.outLog(LOG_DB_ERR, "Table `creature` has creature (GUID: %u Entry: %u) with `creature_template`.`RegenHealth`=1 and low current health (%u), `creature_template`.`minhealth`=%u.",guid,data.id,data.curhealth, cInfo->minhealth);
             data.curhealth = cInfo->minhealth;
         }
 
         if (data.curmana < cInfo->minmana)
         {
-            sLog.outLog(LOG_DB_ERR, "Table `creature` have creature (GUID: %u Entry: %u) with low current mana (%u), `creature_template`.`minmana`=%u.",guid,data.id,data.curmana, cInfo->minmana);
+            sLog.outLog(LOG_DB_ERR, "Table `creature` has creature (GUID: %u Entry: %u) with low current mana (%u), `creature_template`.`minmana`=%u.",guid,data.id,data.curmana, cInfo->minmana);
             data.curmana = cInfo->minmana;
         }
 
         if (data.spawndist < 0.0f)
         {
-            sLog.outLog(LOG_DB_ERR, "Table `creature` have creature (GUID: %u Entry: %u) with `spawndist`< 0, set to 0.",guid,data.id);
+            sLog.outLog(LOG_DB_ERR, "Table `creature` has creature (GUID: %u Entry: %u) with `spawndist`< 0, set to 0.",guid,data.id);
             data.spawndist = 0.0f;
         }
         else if (data.movementType == RANDOM_MOTION_TYPE)
         {
             if (data.spawndist == 0.0f)
             {
-                sLog.outLog(LOG_DB_ERR, "Table `creature` have creature (GUID: %u Entry: %u) with `MovementType`=1 (random movement) but with `spawndist`=0, replace by idle movement type (0).",guid,data.id);
+                sLog.outLog(LOG_DB_ERR, "Table `creature` has creature (GUID: %u Entry: %u) with `MovementType`=1 (random movement) but with `spawndist`=0, replace by idle movement type (0).",guid,data.id);
                 data.movementType = IDLE_MOTION_TYPE;
             }
         }
@@ -944,19 +815,19 @@ void ObjectMgr::LoadCreatures()
         {
             if (data.spawndist != 0.0f)
             {
-                sLog.outLog(LOG_DB_ERR, "Table `creature` have creature (GUID: %u Entry: %u) with `MovementType`=0 (idle) have `spawndist`<>0, set to 0.",guid,data.id);
+                sLog.outLog(LOG_DB_ERR, "Table `creature` has creature (GUID: %u Entry: %u) with `MovementType`=0 (idle) have `spawndist`<>0, set to 0.",guid,data.id);
                 data.spawndist = 0.0f;
             }
         }
 
-        if (gameEvent == 0 && PoolId == 0)                    // if not this is to be managed by GameEvent System
+        if (gameEvent == 0)                    // if not this is to be managed by GameEvent System
             AddCreatureToGrid(guid, &data);
         ++count;
 
     } while (result->NextRow());
 
     sLog.outString();
-    sLog.outString(">> Loaded %u creatures", mCreatureDataMap.size());
+    sLog.outString(">> Loaded %lu creatures", mCreatureDataMap.size());
 }
 
 void ObjectMgr::AddCreatureToGrid(uint32 guid, CreatureData const* data)
@@ -1032,55 +903,6 @@ uint32 ObjectMgr::AddGOData(uint32 entry, uint32 artKit, uint32 mapId, float x, 
                 return 0;
             }
             map->Add(go);
-        }
-    }
-
-    return guid;
-}
-
-uint32 ObjectMgr::AddCreData(uint32 entry, uint32 team, uint32 mapId, float x, float y, float z, float o, uint32 spawntimedelay)
-{
-    CreatureInfo const *cInfo = GetCreatureTemplate(entry);
-    if (!cInfo)
-        return 0;
-
-    uint32 guid = GenerateLowGuid(HIGHGUID_UNIT);
-    CreatureData& data = NewOrExistCreatureData(guid);
-    data.id = entry;
-    data.mapid = mapId;
-    data.displayid = 0;
-    data.equipmentId = cInfo->equipmentId;
-    data.posX = x;
-    data.posY = y;
-    data.posZ = z;
-    data.orientation = o;
-    data.spawntimesecs = spawntimedelay;
-    data.spawndist = 0;
-    data.currentwaypoint = 0;
-    data.curhealth = cInfo->maxhealth;
-    data.curmana = cInfo->maxmana;
-    data.is_dead = false;
-    data.movementType = cInfo->MovementType;
-    data.spawnMask = 1;
-    data.dbData = false;
-
-    AddCreatureToGrid(guid, &data);
-
-    // Spawn if necessary (loaded grids only)
-    if (Map* map = sMapMgr.FindMap(mapId))
-    {
-        // We use spawn coords to spawn
-        if (!map->Instanceable() && !map->IsRemovalGrid(x, y))
-        {
-            Creature* creature = new Creature;
-            if (!creature->LoadFromDB(guid, map))
-            {
-                sLog.outLog(LOG_DEFAULT, "ERROR: AddCreature: cannot add creature entry %u to map", entry);
-                delete creature;
-                return 0;
-            }
-
-            map->Add(creature);
         }
     }
 
@@ -1179,7 +1001,7 @@ void ObjectMgr::LoadGameobjects()
     } while (result->NextRow());
 
     sLog.outString();
-    sLog.outString(">> Loaded %u gameobjects", mGameObjectDataMap.size());
+    sLog.outString(">> Loaded %lu gameobjects", mGameObjectDataMap.size());
 }
 
 void ObjectMgr::AddGameobjectToGrid(uint32 guid, GameObjectData const* data)
@@ -1247,7 +1069,7 @@ void ObjectMgr::LoadCreatureRespawnTimes()
         ++count;
     } while (result->NextRow());
 
-    sLog.outString(">> Loaded %u creature respawn times", mCreatureRespawnTimes.size());
+    sLog.outString(">> Loaded %lu creature respawn times", mCreatureRespawnTimes.size());
     sLog.outString();
 }
 
@@ -1288,7 +1110,7 @@ void ObjectMgr::LoadGameobjectRespawnTimes()
         ++count;
     } while (result->NextRow());
 
-    sLog.outString(">> Loaded %u gameobject respawn times", mGORespawnTimes.size());
+    sLog.outString(">> Loaded %lu gameobject respawn times", mGORespawnTimes.size());
     sLog.outString();
 }
 
@@ -1371,67 +1193,6 @@ uint32 ObjectMgr::GetPlayerAccountIdByPlayerName(const std::string& name) const
     return 0;
 }
 
-void ObjectMgr::LoadItemLocales()
-{
-    mItemLocaleMap.clear();                                 // need for reload case
-
-    QueryResultAutoPtr result = GameDataDatabase.Query("SELECT entry,name_loc1,description_loc1,name_loc2,description_loc2,name_loc3,description_loc3,name_loc4,description_loc4,name_loc5,description_loc5,name_loc6,description_loc6,name_loc7,description_loc7,name_loc8,description_loc8 FROM locales_item");
-
-    if (!result)
-    {
-        BarGoLink bar(1);
-
-        bar.step();
-
-        sLog.outString("");
-        sLog.outString(">> Loaded 0 Item locale strings. DB table `locales_item` is empty.");
-        return;
-    }
-
-    BarGoLink bar(result->GetRowCount());
-
-    do
-    {
-        Field *fields = result->Fetch();
-        bar.step();
-
-        uint32 entry = fields[0].GetUInt32();
-
-        ItemLocale& data = mItemLocaleMap[entry];
-
-        for (int i = 1; i < MAX_LOCALE; ++i)
-        {
-            std::string str = fields[1+2*(i-1)].GetCppString();
-            if (!str.empty())
-            {
-                int idx = GetOrNewIndexForLocale(LocaleConstant(i));
-                if (idx >= 0)
-                {
-                    if (data.Name.size() <= idx)
-                        data.Name.resize(idx+1);
-
-                    data.Name[idx] = str;
-                }
-            }
-
-            str = fields[1+2*(i-1)+1].GetCppString();
-            if (!str.empty())
-            {
-                int idx = GetOrNewIndexForLocale(LocaleConstant(i));
-                if (idx >= 0)
-                {
-                    if (data.Description.size() <= idx)
-                        data.Description.resize(idx+1);
-
-                    data.Description[idx] = str;
-                }
-            }
-        }
-    } while (result->NextRow());
-
-    sLog.outString();
-    sLog.outString(">> Loaded %u Item locale strings", mItemLocaleMap.size());
-}
 
 struct SQLItemLoader : public SQLStorageLoaderBase<SQLItemLoader>
 {
@@ -1698,7 +1459,7 @@ void ObjectMgr::LoadItemPrototypes()
                     }
                     else if (proto->Spells[j].SpellCategory)
                     {
-                        sSpellCategoryStore[proto->Spells[j].SpellCategory].insert(proto->Spells[j].SpellId);
+                        sSpellCategoryStore[- int32(proto->Spells[j].SpellCategory)].insert(i);
                     }
                 }
             }
@@ -3163,145 +2924,7 @@ void ObjectMgr::LoadQuests()
     }
 
     sLog.outString();
-    sLog.outString(">> Loaded %u quests definitions", mQuestTemplates.size());
-}
-
-void ObjectMgr::LoadQuestLocales()
-{
-    mQuestLocaleMap.clear();                                // need for reload case
-
-    QueryResultAutoPtr result = GameDataDatabase.Query("SELECT entry,"
-        "Title_loc1,Details_loc1,Objectives_loc1,OfferRewardText_loc1,RequestItemsText_loc1,EndText_loc1,ObjectiveText1_loc1,ObjectiveText2_loc1,ObjectiveText3_loc1,ObjectiveText4_loc1,"
-        "Title_loc2,Details_loc2,Objectives_loc2,OfferRewardText_loc2,RequestItemsText_loc2,EndText_loc2,ObjectiveText1_loc2,ObjectiveText2_loc2,ObjectiveText3_loc2,ObjectiveText4_loc2,"
-        "Title_loc3,Details_loc3,Objectives_loc3,OfferRewardText_loc3,RequestItemsText_loc3,EndText_loc3,ObjectiveText1_loc3,ObjectiveText2_loc3,ObjectiveText3_loc3,ObjectiveText4_loc3,"
-        "Title_loc4,Details_loc4,Objectives_loc4,OfferRewardText_loc4,RequestItemsText_loc4,EndText_loc4,ObjectiveText1_loc4,ObjectiveText2_loc4,ObjectiveText3_loc4,ObjectiveText4_loc4,"
-        "Title_loc5,Details_loc5,Objectives_loc5,OfferRewardText_loc5,RequestItemsText_loc5,EndText_loc5,ObjectiveText1_loc5,ObjectiveText2_loc5,ObjectiveText3_loc5,ObjectiveText4_loc5,"
-        "Title_loc6,Details_loc6,Objectives_loc6,OfferRewardText_loc6,RequestItemsText_loc6,EndText_loc6,ObjectiveText1_loc6,ObjectiveText2_loc6,ObjectiveText3_loc6,ObjectiveText4_loc6,"
-        "Title_loc7,Details_loc7,Objectives_loc7,OfferRewardText_loc7,RequestItemsText_loc7,EndText_loc7,ObjectiveText1_loc7,ObjectiveText2_loc7,ObjectiveText3_loc7,ObjectiveText4_loc7,"
-        "Title_loc8,Details_loc8,Objectives_loc8,OfferRewardText_loc8,RequestItemsText_loc8,EndText_loc8,ObjectiveText1_loc8,ObjectiveText2_loc8,ObjectiveText3_loc8,ObjectiveText4_loc8"
-        " FROM locales_quest"
-       );
-
-    if (!result)
-    {
-        BarGoLink bar(1);
-
-        bar.step();
-
-        sLog.outString("");
-        sLog.outString(">> Loaded 0 Quest locale strings. DB table `locales_quest` is empty.");
-        return;
-    }
-
-    BarGoLink bar(result->GetRowCount());
-
-    do
-    {
-        Field *fields = result->Fetch();
-        bar.step();
-
-        uint32 entry = fields[0].GetUInt32();
-
-        QuestLocale& data = mQuestLocaleMap[entry];
-        for (int i = 1; i < MAX_LOCALE; ++i)
-        {
-            std::string str = fields[1+10*(i-1)].GetCppString();
-            if (!str.empty())
-            {
-                int idx = GetOrNewIndexForLocale(LocaleConstant(i));
-                if (idx >= 0)
-                {
-                    if (data.Title.size() <= idx)
-                        data.Title.resize(idx+1);
-
-                    data.Title[idx] = str;
-                }
-            }
-            str = fields[1+10*(i-1)+1].GetCppString();
-            if (!str.empty())
-            {
-                int idx = GetOrNewIndexForLocale(LocaleConstant(i));
-                if (idx >= 0)
-                {
-                    if (data.Details.size() <= idx)
-                        data.Details.resize(idx+1);
-
-                    data.Details[idx] = str;
-                }
-            }
-
-            str = fields[1+10*(i-1)+2].GetCppString();
-            if (!str.empty())
-            {
-                int idx = GetOrNewIndexForLocale(LocaleConstant(i));
-                if (idx >= 0)
-                {
-                    if (data.Objectives.size() <= idx)
-                        data.Objectives.resize(idx+1);
-
-                    data.Objectives[idx] = str;
-                }
-            }
-            str = fields[1+10*(i-1)+3].GetCppString();
-            if (!str.empty())
-            {
-                int idx = GetOrNewIndexForLocale(LocaleConstant(i));
-                if (idx >= 0)
-                {
-                    if (data.OfferRewardText.size() <= idx)
-                        data.OfferRewardText.resize(idx+1);
-
-                    data.OfferRewardText[idx] = str;
-                }
-            }
-
-            str = fields[1+10*(i-1)+4].GetCppString();
-            if (!str.empty())
-            {
-                int idx = GetOrNewIndexForLocale(LocaleConstant(i));
-                if (idx >= 0)
-                {
-                    if (data.RequestItemsText.size() <= idx)
-                        data.RequestItemsText.resize(idx+1);
-
-                    data.RequestItemsText[idx] = str;
-                }
-            }
-
-            str = fields[1+10*(i-1)+5].GetCppString();
-            if (!str.empty())
-            {
-                int idx = GetOrNewIndexForLocale(LocaleConstant(i));
-                if (idx >= 0)
-                {
-                    if (data.EndText.size() <= idx)
-                        data.EndText.resize(idx+1);
-
-                    data.EndText[idx] = str;
-                }
-            }
-
-            for (int k = 0; k < 4; ++k)
-            {
-                str = fields[1+10*(i-1)+6+k].GetCppString();
-                if (!str.empty())
-                {
-                    int idx = GetOrNewIndexForLocale(LocaleConstant(i));
-                    if (idx >= 0)
-                    {
-                        if (data.ObjectiveText[k].size() <= idx)
-                            data.ObjectiveText[k].resize(idx+1);
-
-                        data.ObjectiveText[k][idx] = str;
-                    }
-                }
-            }
-        }
-    }
-    while (result->NextRow());
-
-    sLog.outString();
-    sLog.outString(">> Loaded %u Quest locale strings", mQuestLocaleMap.size());
+    sLog.outString(">> Loaded %lu quests definitions", mQuestTemplates.size());
 }
 
 void ObjectMgr::LoadPetCreateSpells()
@@ -3388,62 +3011,12 @@ void ObjectMgr::LoadPageTexts()
                     ss << *itr << " ";
                 ss << "create(s) a circular reference, which can cause the server to freeze. Changing Next_Page of page "
                     << pageItr->Page_ID <<" to 0";
-                sLog.outLog(LOG_DB_ERR, ss.str().c_str());
+                sLog.outLog(LOG_DB_ERR, "%s", ss.str().c_str());
                 const_cast<PageText*>(pageItr)->Next_Page = 0;
                 break;
             }
         }
     }
-}
-
-void ObjectMgr::LoadPageTextLocales()
-{
-    mPageTextLocaleMap.clear();                             // need for reload case
-
-    QueryResultAutoPtr result = GameDataDatabase.Query("SELECT entry,text_loc1,text_loc2,text_loc3,text_loc4,text_loc5,text_loc6,text_loc7,text_loc8 FROM locales_page_text");
-    if (!result)
-    {
-        BarGoLink bar(1);
-
-        bar.step();
-
-        sLog.outString("");
-        sLog.outString(">> Loaded 0 PageText locale strings. DB table `locales_page_text` is empty.");
-        return;
-    }
-
-    BarGoLink bar(result->GetRowCount());
-
-    do
-    {
-        Field *fields = result->Fetch();
-        bar.step();
-
-        uint32 entry = fields[0].GetUInt32();
-
-        PageTextLocale& data = mPageTextLocaleMap[entry];
-
-        for (int i = 1; i < MAX_LOCALE; ++i)
-        {
-            std::string str = fields[i].GetCppString();
-            if (str.empty())
-                continue;
-
-            int idx = GetOrNewIndexForLocale(LocaleConstant(i));
-            if (idx >= 0)
-            {
-                if (data.Text.size() <= idx)
-                    data.Text.resize(idx+1);
-
-                data.Text[idx] = str;
-            }
-        }
-
-    }
-    while (result->NextRow());
-
-    sLog.outString();
-    sLog.outString(">> Loaded %u PageText locale strings", mPageTextLocaleMap.size());
 }
 
 struct SQLInstanceLoader : public SQLStorageLoaderBase<SQLInstanceLoader>
@@ -3561,79 +3134,6 @@ void ObjectMgr::LoadGossipText()
 
     sLog.outString();
     sLog.outString(">> Loaded %u npc texts", count);
-}
-
-void ObjectMgr::LoadNpcTextLocales()
-{
-    mNpcTextLocaleMap.clear();                              // need for reload case
-
-    QueryResultAutoPtr result = GameDataDatabase.Query("SELECT entry,"
-        "Text0_0_loc1,Text0_1_loc1,Text1_0_loc1,Text1_1_loc1,Text2_0_loc1,Text2_1_loc1,Text3_0_loc1,Text3_1_loc1,Text4_0_loc1,Text4_1_loc1,Text5_0_loc1,Text5_1_loc1,Text6_0_loc1,Text6_1_loc1,Text7_0_loc1,Text7_1_loc1,"
-        "Text0_0_loc2,Text0_1_loc2,Text1_0_loc2,Text1_1_loc2,Text2_0_loc2,Text2_1_loc2,Text3_0_loc2,Text3_1_loc1,Text4_0_loc2,Text4_1_loc2,Text5_0_loc2,Text5_1_loc2,Text6_0_loc2,Text6_1_loc2,Text7_0_loc2,Text7_1_loc2,"
-        "Text0_0_loc3,Text0_1_loc3,Text1_0_loc3,Text1_1_loc3,Text2_0_loc3,Text2_1_loc3,Text3_0_loc3,Text3_1_loc1,Text4_0_loc3,Text4_1_loc3,Text5_0_loc3,Text5_1_loc3,Text6_0_loc3,Text6_1_loc3,Text7_0_loc3,Text7_1_loc3,"
-        "Text0_0_loc4,Text0_1_loc4,Text1_0_loc4,Text1_1_loc4,Text2_0_loc4,Text2_1_loc4,Text3_0_loc4,Text3_1_loc1,Text4_0_loc4,Text4_1_loc4,Text5_0_loc4,Text5_1_loc4,Text6_0_loc4,Text6_1_loc4,Text7_0_loc4,Text7_1_loc4,"
-        "Text0_0_loc5,Text0_1_loc5,Text1_0_loc5,Text1_1_loc5,Text2_0_loc5,Text2_1_loc5,Text3_0_loc5,Text3_1_loc1,Text4_0_loc5,Text4_1_loc5,Text5_0_loc5,Text5_1_loc5,Text6_0_loc5,Text6_1_loc5,Text7_0_loc5,Text7_1_loc5,"
-        "Text0_0_loc6,Text0_1_loc6,Text1_0_loc6,Text1_1_loc6,Text2_0_loc6,Text2_1_loc6,Text3_0_loc6,Text3_1_loc1,Text4_0_loc6,Text4_1_loc6,Text5_0_loc6,Text5_1_loc6,Text6_0_loc6,Text6_1_loc6,Text7_0_loc6,Text7_1_loc6,"
-        "Text0_0_loc7,Text0_1_loc7,Text1_0_loc7,Text1_1_loc7,Text2_0_loc7,Text2_1_loc7,Text3_0_loc7,Text3_1_loc1,Text4_0_loc7,Text4_1_loc7,Text5_0_loc7,Text5_1_loc7,Text6_0_loc7,Text6_1_loc7,Text7_0_loc7,Text7_1_loc7, "
-        "Text0_0_loc8,Text0_1_loc8,Text1_0_loc8,Text1_1_loc8,Text2_0_loc8,Text2_1_loc8,Text3_0_loc8,Text3_1_loc1,Text4_0_loc8,Text4_1_loc8,Text5_0_loc8,Text5_1_loc8,Text6_0_loc8,Text6_1_loc8,Text7_0_loc8,Text7_1_loc8 "
-        " FROM locales_npc_text");
-
-    if (!result)
-    {
-        BarGoLink bar(1);
-
-        bar.step();
-
-        sLog.outString("");
-        sLog.outString(">> Loaded 0 Quest locale strings. DB table `locales_npc_text` is empty.");
-        return;
-    }
-
-    BarGoLink bar(result->GetRowCount());
-
-    do
-    {
-        Field *fields = result->Fetch();
-        bar.step();
-
-        uint32 entry = fields[0].GetUInt32();
-
-        NpcTextLocale& data = mNpcTextLocaleMap[entry];
-
-        for (int i=1; i<MAX_LOCALE; ++i)
-        {
-            for (int j=0; j<8; ++j)
-            {
-                std::string str0 = fields[1+8*2*(i-1)+2*j].GetCppString();
-                if (!str0.empty())
-                {
-                    int idx = GetOrNewIndexForLocale(LocaleConstant(i));
-                    if (idx >= 0)
-                    {
-                        if (data.Text_0[j].size() <= idx)
-                            data.Text_0[j].resize(idx+1);
-
-                        data.Text_0[j][idx] = str0;
-                    }
-                }
-                std::string str1 = fields[1+8*2*(i-1)+2*j+1].GetCppString();
-                if (!str1.empty())
-                {
-                    int idx = GetOrNewIndexForLocale(LocaleConstant(i));
-                    if (idx >= 0)
-                    {
-                        if (data.Text_1[j].size() <= idx)
-                            data.Text_1[j].resize(idx+1);
-
-                        data.Text_1[j][idx] = str1;
-                    }
-                }
-            }
-        }
-    } while (result->NextRow());
-
-    sLog.outString();
-    sLog.outString(">> Loaded %u NpcText locale strings", mNpcTextLocaleMap.size());
 }
 
 //not very fast function but it is called only once a day, or on starting-up
@@ -4424,13 +3924,13 @@ AreaTrigger const* ObjectMgr::GetMapEntranceTrigger(uint32 Map) const
 
 void ObjectMgr::SetHighestGuids()
 {
-    QueryResultAutoPtr result = RealmDataDatabase.Query("SELECT MAX(guid) FROM characters");
+    QueryResultAutoPtr result = RealmDataDatabase.Query("SELECT `LastCharacterGuid` from saved_variables");
     if (result)
         m_hiCharGuid = (*result)[0].GetUInt32()+1;
 
     result = GameDataDatabase.Query("SELECT MAX(guid) FROM creature");
     if (result)
-        m_hiCreatureGuid = (*result)[0].GetUInt32()+1;
+        m_hiCreatureGuid = (*result)[0].GetUInt32()+10000;
 
     result = RealmDataDatabase.Query("SELECT MAX(guid) FROM item_instance");
     if (result)
@@ -4446,7 +3946,7 @@ void ObjectMgr::SetHighestGuids()
 
     result = GameDataDatabase.Query("SELECT MAX(guid) FROM gameobject");
     if (result)
-        m_hiGoGuid = (*result)[0].GetUInt32()+1;
+        m_hiGoGuid = (*result)[0].GetUInt32()+10000;
 
     result = RealmDataDatabase.Query("SELECT MAX(id) FROM auctionhouse");
     if (result)
@@ -4535,7 +4035,7 @@ uint32 ObjectMgr::GenerateLowGuid(HighGuid guidhigh)
             }
             return m_hiItemGuid++;
         case HIGHGUID_UNIT:
-            if (m_hiCreatureGuid>=0xFFFFFFFE)
+            if (m_hiCreatureGuid>=0x00FFFFFE) // npc add command bugs at more than this 
             {
                 sLog.outLog(LOG_DEFAULT, "ERROR: Creature guid overflow!! Can't continue, shutting down server. ");
                 World::StopNow(ERROR_EXIT_CODE);
@@ -4554,6 +4054,7 @@ uint32 ObjectMgr::GenerateLowGuid(HighGuid guidhigh)
                 sLog.outLog(LOG_DEFAULT, "ERROR: Players guid overflow!! Can't continue, shutting down server. ");
                 World::StopNow(ERROR_EXIT_CODE);
             }
+            RealmDataDatabase.PExecute("UPDATE `saved_variables` SET `LastCharacterGuid` = %u", m_hiCharGuid + 1);
             return m_hiCharGuid++;
         case HIGHGUID_GAMEOBJECT:
             if (m_hiGoGuid>=0x00FFFFFE)
@@ -4582,75 +4083,6 @@ uint32 ObjectMgr::GenerateLowGuid(HighGuid guidhigh)
 
     ASSERT(0);
     return 0;
-}
-
-void ObjectMgr::LoadGameObjectLocales()
-{
-    mGameObjectLocaleMap.clear();                           // need for reload case
-
-    QueryResultAutoPtr result = GameDataDatabase.Query("SELECT entry,"
-        "name_loc1,name_loc2,name_loc3,name_loc4,name_loc5,name_loc6,name_loc7,name_loc8,"
-        "castbarcaption_loc1,castbarcaption_loc2,castbarcaption_loc3,castbarcaption_loc4,"
-        "castbarcaption_loc5,castbarcaption_loc6,castbarcaption_loc7,castbarcaption_loc8 FROM locales_gameobject");
-
-    if (!result)
-    {
-        BarGoLink bar(1);
-
-        bar.step();
-
-        sLog.outString("");
-        sLog.outString(">> Loaded 0 gameobject locale strings. DB table `locales_gameobject` is empty.");
-        return;
-    }
-
-    BarGoLink bar(result->GetRowCount());
-
-    do
-    {
-        Field *fields = result->Fetch();
-        bar.step();
-
-        uint32 entry = fields[0].GetUInt32();
-
-        GameObjectLocale& data = mGameObjectLocaleMap[entry];
-
-        for (int i = 1; i < MAX_LOCALE; ++i)
-        {
-            std::string str = fields[i].GetCppString();
-            if (!str.empty())
-            {
-                int idx = GetOrNewIndexForLocale(LocaleConstant(i));
-                if (idx >= 0)
-                {
-                    if (data.Name.size() <= idx)
-                        data.Name.resize(idx+1);
-
-                    data.Name[idx] = str;
-                }
-            }
-        }
-
-        for(int i = 1; i < MAX_LOCALE; ++i)
-        {
-            std::string str = fields[i+(MAX_LOCALE-1)].GetCppString();
-            if (!str.empty())
-            {
-                int idx = GetOrNewIndexForLocale(LocaleConstant(i));
-                if (idx >= 0)
-                {
-                    if (data.CastBarCaption.size() <= idx)
-                        data.CastBarCaption.resize(idx+1);
-
-                    data.CastBarCaption[idx] = str;
-                }
-            }
-        }
-
-    } while (result->NextRow());
-
-    sLog.outString();
-    sLog.outString(">> Loaded %u gameobject locale strings", mGameObjectLocaleMap.size());
 }
 
 struct SQLGameObjectLoader : public SQLStorageLoaderBase<SQLGameObjectLoader>
@@ -5333,19 +4765,19 @@ void ObjectMgr::LoadWeatherZoneChances()
             if (wzc.data[season].rainChance > 100)
             {
                 wzc.data[season].rainChance = 25;
-                sLog.outLog(LOG_DB_ERR, "Weather for zone %u season %u has wrong rain chance > 100%",zone_id,season);
+                sLog.outLog(LOG_DB_ERR, "Weather for zone %u season %u has wrong rain chance > 100%%",zone_id,season);
             }
 
             if (wzc.data[season].snowChance > 100)
             {
                 wzc.data[season].snowChance = 25;
-                sLog.outLog(LOG_DB_ERR, "Weather for zone %u season %u has wrong snow chance > 100%",zone_id,season);
+                sLog.outLog(LOG_DB_ERR, "Weather for zone %u season %u has wrong snow chance > 100%%",zone_id,season);
             }
 
             if (wzc.data[season].stormChance > 100)
             {
                 wzc.data[season].stormChance = 25;
-                sLog.outLog(LOG_DB_ERR, "Weather for zone %u season %u has wrong storm chance > 100%",zone_id,season);
+                sLog.outLog(LOG_DB_ERR, "Weather for zone %u season %u has wrong storm chance > 100%%",zone_id,season);
             }
         }
 
@@ -5408,10 +4840,13 @@ void ObjectMgr::DeleteRespawnTimeForInstance(uint32 instance)
             mCreatureRespawnTimes.erase(itr);
     }
 
-    RealmDataDatabase.BeginTransaction();
-    RealmDataDatabase.PExecute("DELETE FROM creature_respawn WHERE instance = '%u'", instance);
-    RealmDataDatabase.PExecute("DELETE FROM gameobject_respawn WHERE instance = '%u'", instance);
-    RealmDataDatabase.CommitTransaction();
+    if (instance != 0)
+    {
+        RealmDataDatabase.BeginTransaction();
+        RealmDataDatabase.PExecute("DELETE FROM creature_respawn WHERE instance = '%u'", instance);
+        RealmDataDatabase.PExecute("DELETE FROM gameobject_respawn WHERE instance = '%u'", instance);
+        RealmDataDatabase.CommitTransaction();
+    }
 }
 
 void ObjectMgr::DeleteGOData(uint32 guid)
@@ -5542,7 +4977,7 @@ void ObjectMgr::LoadReservedPlayersNames()
 {
     m_ReservedNames.clear();                                // need for reload case
 
-    QueryResultAutoPtr result = RealmDataDatabase.Query("SELECT name FROM reserved_name");
+    QueryResultAutoPtr result = RealmDataDatabase.Query("SELECT name, accid FROM reserved_name");
 
     uint32 count = 0;
 
@@ -5564,9 +4999,10 @@ void ObjectMgr::LoadReservedPlayersNames()
         bar.step();
         fields = result->Fetch();
         std::string name= fields[0].GetCppString();
+        uint32 accid = fields[1].GetUInt32();
         if (normalizePlayerName(name))
         {
-            m_ReservedNames.insert(name);
+            m_ReservedNames.insert(std::pair<std::string,uint32>(name,accid));
             ++count;
         }
     } while (result->NextRow());
@@ -5751,15 +5187,15 @@ bool ObjectMgr::LoadHellgroundStrings(DatabaseType& db, char const* table, int32
     }
 
     // cleanup affected map part for reloading case
-    for (HellgroundStringLocaleMap::iterator itr = mHellgroundStringLocaleMap.begin(); itr != mHellgroundStringLocaleMap.end();)
+    for (HellgroundStringMap::iterator itr = mHellgroundStringMap.begin(); itr != mHellgroundStringMap.end();)
     {
         if (itr->first >= start_value && itr->first < end_value)
-            mHellgroundStringLocaleMap.erase(itr++);
+            mHellgroundStringMap.erase(itr++);
         else
             ++itr;
     }
 
-    QueryResultAutoPtr result = db.PQuery("SELECT entry,content_default,content_loc1,content_loc2,content_loc3,content_loc4,content_loc5,content_loc6,content_loc7,content_loc8 FROM %s",table);
+    QueryResultAutoPtr result = db.PQuery("SELECT entry,content_default FROM %s",table);
 
     if (!result)
     {
@@ -5797,36 +5233,17 @@ bool ObjectMgr::LoadHellgroundStrings(DatabaseType& db, char const* table, int32
             continue;
         }
 
-        HellgroundStringLocale& data = mHellgroundStringLocaleMap[entry];
+        std::string& data = mHellgroundStringMap[entry];
 
-        if (data.Content.size() > 0)
+        if (data.size() > 0)
         {
             sLog.outLog(LOG_DB_ERR, "Table `%s` contain data for already loaded entry  %i (from another table?), ignored.",table,entry);
             continue;
         }
 
-        data.Content.resize(1);
-        ++count;
-
-        // 0 -> default, idx in to idx+1
-        data.Content[0] = fields[1].GetCppString();
-
-        for (int i = 1; i < MAX_LOCALE; ++i)
-        {
-            std::string str = fields[i+1].GetCppString();
-            if (!str.empty())
-            {
-                int idx = GetOrNewIndexForLocale(LocaleConstant(i));
-                if (idx >= 0)
-                {
-                    // 0 -> default, idx in to idx+1
-                    if (data.Content.size() <= idx+1)
-                        data.Content.resize(idx+2);
-
-                    data.Content[idx+1] = str;
-                }
-            }
-        }
+        data = fields[1].GetCppString();
+        if (data.size() > 0)
+            ++count;
     } while (result->NextRow());
 
     sLog.outString();
@@ -5840,15 +5257,9 @@ bool ObjectMgr::LoadHellgroundStrings(DatabaseType& db, char const* table, int32
 
 const char *ObjectMgr::GetHellgroundString(int32 entry, int locale_idx) const
 {
-    // locale_idx==-1 -> default, locale_idx >= 0 in to idx+1
-    // Content[0] always exist if exist HellgroundStringLocale
-    if (HellgroundStringLocale const *msl = GetHellgroundStringLocale(entry))
-    {
-        if (msl->Content.size() > locale_idx+1 && !msl->Content[locale_idx+1].empty())
-            return msl->Content[locale_idx+1].c_str();
-        else
-            return msl->Content[0].c_str();
-    }
+    HellgroundStringMap::const_iterator itr = mHellgroundStringMap.find(entry);
+    if (itr != mHellgroundStringMap.end())
+        return itr->second.c_str();
 
     if (entry > 0)
         sLog.outLog(LOG_DB_ERR, "Entry %i not found in `HELLGROUND_string` table.",entry);
@@ -6773,7 +6184,8 @@ void ObjectMgr::LoadTransportEvents()
     {
         BarGoLink bar1(1);
         bar1.step();
-        sLog.outString("\n>> Transport events table is empty \n");
+        sLog.outString();
+        sLog.outString(">> Transport events table is empty");
         return;
     }
 
@@ -6795,85 +6207,8 @@ void ObjectMgr::LoadTransportEvents()
     }
     while (result->NextRow());
 
-    sLog.outString("\n>> Loaded %u transport events \n", result->GetRowCount());
-}
-
-void ObjectMgr::GetCreatureLocaleStrings(uint32 entry, int32 loc_idx, char const** namePtr, char const** subnamePtr) const
-{
-    if (loc_idx >= 0)
-    {
-        if (CreatureLocale const *il = GetCreatureLocale(entry))
-        {
-            if (namePtr && il->Name.size() > size_t(loc_idx) && !il->Name[loc_idx].empty())
-                *namePtr = il->Name[loc_idx].c_str();
-
-            if (subnamePtr && il->SubName.size() > size_t(loc_idx) && !il->SubName[loc_idx].empty())
-                *subnamePtr = il->SubName[loc_idx].c_str();
-        }
-    }
-}
-
-void ObjectMgr::GetItemLocaleStrings(uint32 entry, int32 loc_idx, std::string* namePtr, std::string* descriptionPtr) const
-{
-    if (loc_idx >= 0)
-    {
-        if(ItemLocale const *il = GetItemLocale(entry))
-        {
-            if (namePtr && il->Name.size() > size_t(loc_idx) && !il->Name[loc_idx].empty())
-                *namePtr = il->Name[loc_idx];
-
-            if (descriptionPtr && il->Description.size() > size_t(loc_idx) && !il->Description[loc_idx].empty())
-                *descriptionPtr = il->Description[loc_idx];
-        }
-    }
-}
-
-void ObjectMgr::GetQuestLocaleStrings(uint32 entry, int32 loc_idx, std::string* titlePtr) const
-{
-    if (loc_idx >= 0)
-    {
-        if(QuestLocale const *il = GetQuestLocale(entry))
-        {
-            if (titlePtr && il->Title.size() > size_t(loc_idx) && !il->Title[loc_idx].empty())
-                *titlePtr = il->Title[loc_idx];
-        }
-    }
-}
-
-void ObjectMgr::GetNpcTextLocaleStringsAll(uint32 entry, int32 loc_idx, ObjectMgr::NpcTextArray* text0_Ptr, ObjectMgr::NpcTextArray* text1_Ptr) const
-{
-    if (loc_idx >= 0)
-    {
-        if (NpcTextLocale const *nl = GetNpcTextLocale(entry))
-        {
-            if (text0_Ptr)
-                for (int i = 0; i < MAX_GOSSIP_TEXT_OPTIONS; ++i)
-                    if (nl->Text_0[i].size() > (size_t)loc_idx && !nl->Text_0[i][loc_idx].empty())
-                        (*text0_Ptr)[i] = nl->Text_0[i][loc_idx];
-
-            if (text1_Ptr)
-                for (int i = 0; i < MAX_GOSSIP_TEXT_OPTIONS; ++i)
-                    if (nl->Text_1[i].size() > (size_t)loc_idx && !nl->Text_1[i][loc_idx].empty())
-                        (*text1_Ptr)[i] = nl->Text_1[i][loc_idx];
-        }
-    }
-}
-
-void ObjectMgr::GetNpcTextLocaleStrings0(uint32 entry, int32 loc_idx, std::string* text0_0_Ptr, std::string* text1_0_Ptr) const
-{
-    if (loc_idx >= 0)
-    {
-        if (NpcTextLocale const *nl = GetNpcTextLocale(entry))
-        {
-            if (text0_0_Ptr)
-                if (nl->Text_0[0].size() > (size_t)loc_idx && !nl->Text_0[0][loc_idx].empty())
-                    *text0_0_Ptr = nl->Text_0[0][loc_idx];
-
-            if (text1_0_Ptr)
-                if (nl->Text_1[0].size() > (size_t)loc_idx && !nl->Text_1[0][loc_idx].empty())
-                    *text1_0_Ptr = nl->Text_1[0][loc_idx];
-        }
-    }
+    sLog.outString();
+    sLog.outString(">> Loaded %lu transport events", result->GetRowCount());
 }
 
 void ObjectMgr::LoadOpcodesCooldown()
@@ -6906,5 +6241,44 @@ void ObjectMgr::LoadOpcodesCooldown()
     }
     while (result->NextRow());
 
-    sLog.outString("\n>> Loaded %u opcode cooldowns \n", _opcodesCooldown.size());
+    sLog.outString();
+    sLog.outString(">> Loaded %lu opcode cooldowns", _opcodesCooldown.size());
+}
+
+void ObjectMgr::UpdateRolls(uint32 diff)
+{
+    for (Rolls::iterator itr = mLootRolls.begin(); itr != mLootRolls.end();)
+    {
+        if ((*itr)->rollTimer <= diff)
+        {
+            if ((*itr)->isValid())
+                (*itr)->CountTheRoll(); // good value?
+
+            delete (*itr);
+            itr = mLootRolls.erase(itr);
+        }
+        else
+        {
+            (*itr)->rollTimer -= diff;
+            ++itr;
+        }
+    }
+}
+
+void ObjectMgr::CountRollVote(const uint64& playerGUID, const uint64& Guid, uint8 Choice)
+{
+    for (Rolls::iterator iter = mLootRolls.begin(); iter != mLootRolls.end(); ++iter)
+    {
+        if ((*iter) == NULL)
+        {
+            sLog.outLog(LOG_DEFAULT, "ERROR: Objectmgr::CountRollVote(args) Rolls::iterator is NULL!");
+            return;
+        }
+        if ((*iter)->isValid() && (*iter)->itemGUID == Guid && (*iter)->CountRollVote(playerGUID, Choice))
+        {
+            mLootRolls.erase(iter);
+            delete (*iter);
+            return;
+        }
+    }
 }

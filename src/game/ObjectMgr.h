@@ -104,23 +104,11 @@ typedef UNORDERED_MAP<uint64/*(instance,guid) pair*/,time_t> RespawnTimes;
 #define MIN_CREATURE_AI_TEXT_STRING_ID (-1)                 // 'creature_ai_texts'
 #define MAX_CREATURE_AI_TEXT_STRING_ID (-1000000)
 
-struct HellgroundStringLocale
-{
-    std::vector<std::string> Content;                       // 0 -> default, i -> i-1 locale index
-};
-
 typedef std::map<uint32,uint32> CreatureLinkedRespawnMap;
 typedef UNORDERED_MAP<uint32,CreatureData> CreatureDataMap;
 typedef UNORDERED_MAP<uint32,GameObjectData> GameObjectDataMap;
-typedef UNORDERED_MAP<uint32,CreatureLocale> CreatureLocaleMap;
-typedef UNORDERED_MAP<uint32,GameObjectLocale> GameObjectLocaleMap;
-typedef UNORDERED_MAP<uint32,ItemLocale> ItemLocaleMap;
-typedef UNORDERED_MAP<uint32,QuestLocale> QuestLocaleMap;
-typedef UNORDERED_MAP<uint32,NpcTextLocale> NpcTextLocaleMap;
-typedef UNORDERED_MAP<uint32,PageTextLocale> PageTextLocaleMap;
-typedef UNORDERED_MAP<uint32,HellgroundStringLocale> HellgroundStringLocaleMap;
-typedef UNORDERED_MAP<uint32,NpcOptionLocale> NpcOptionLocaleMap;
-typedef UNORDERED_MAP<uint16,ShortIntervalTimer> OpcodesCooldown;
+typedef UNORDERED_MAP<int32,std::string> HellgroundStringMap;
+typedef UNORDERED_MAP<uint16,Timer> OpcodesCooldown;
 
 typedef std::multimap<uint32,uint32> QuestRelations;
 
@@ -269,6 +257,7 @@ class ObjectMgr
         typedef UNORDERED_MAP<uint32, Item*> ItemMap;
 
         typedef std::set< Group * > GroupSet;
+        typedef std::list<Roll*> Rolls;
 
         typedef UNORDERED_MAP<uint32, ArenaTeam*> ArenaTeamMap;
         typedef UNORDERED_MAP<uint32, Quest*> QuestMap;
@@ -297,6 +286,9 @@ class ObjectMgr
         void RemoveGroup(Group* group) { mGroupSet.erase(group); }
         GroupSet::iterator GetGroupSetBegin() { return mGroupSet.begin(); }
         GroupSet::iterator GetGroupSetEnd()   { return mGroupSet.end(); }
+        void UpdateRolls(uint32 diff);
+        void AddRoll(Roll* r) { mLootRolls.push_back(r); };
+        void CountRollVote(const uint64& playerGUID, const uint64& Guid, uint8 Choice);
 
         ArenaTeam* GetArenaTeamById(const uint32 arenateamid) const;
         ArenaTeam* GetArenaTeamByName(const std::string& arenateamname) const;
@@ -466,7 +458,6 @@ class ObjectMgr
         bool LoadHellgroundStrings() { return LoadHellgroundStrings(GameDataDatabase,"hellground_string",MIN_HELLGROUND_STRING_ID,MAX_HELLGROUND_STRING_ID); }
 
         void LoadPetCreateSpells();
-        void LoadCreatureLocales();
         void LoadCreatureTemplates();
         void LoadCreatures();
         void LoadCreatureLinkedRespawn();
@@ -478,15 +469,9 @@ class ObjectMgr
         void LoadCreatureAddons();
         void LoadCreatureModelInfo();
         void LoadEquipmentTemplates();
-        void LoadGameObjectLocales();
         void LoadGameobjects();
         void LoadGameobjectRespawnTimes();
         void LoadItemPrototypes();
-        void LoadItemLocales();
-        void LoadQuestLocales();
-        void LoadNpcTextLocales();
-        void LoadPageTextLocales();
-        void LoadNpcOptionLocales();
         void LoadInstanceTemplate();
 
         void LoadGossipText();
@@ -586,65 +571,6 @@ class ObjectMgr
             return itr->second;
         }
 
-        CreatureLocale const* GetCreatureLocale(uint32 entry) const
-        {
-            CreatureLocaleMap::const_iterator itr = mCreatureLocaleMap.find(entry);
-            if (itr==mCreatureLocaleMap.end()) return NULL;
-            return &itr->second;
-        }
-
-        void GetCreatureLocaleStrings(uint32 entry, int32 loc_idx, char const** namePtr, char const** subnamePtr = NULL) const;
-
-        GameObjectLocale const* GetGameObjectLocale(uint32 entry) const
-        {
-            GameObjectLocaleMap::const_iterator itr = mGameObjectLocaleMap.find(entry);
-            if (itr==mGameObjectLocaleMap.end()) return NULL;
-            return &itr->second;
-        }
-
-        ItemLocale const* GetItemLocale(uint32 entry) const
-        {
-            ItemLocaleMap::const_iterator itr = mItemLocaleMap.find(entry);
-            if (itr==mItemLocaleMap.end()) return NULL;
-            return &itr->second;
-        }
-
-        void GetItemLocaleStrings(uint32 entry, int32 loc_idx, std::string* namePtr, std::string* descriptionPtr = NULL) const;
-
-        QuestLocale const* GetQuestLocale(uint32 entry) const
-        {
-            QuestLocaleMap::const_iterator itr = mQuestLocaleMap.find(entry);
-            if (itr==mQuestLocaleMap.end()) return NULL;
-            return &itr->second;
-        }
-
-        void GetQuestLocaleStrings(uint32 entry, int32 loc_idx, std::string* titlePtr) const;
-
-        NpcTextLocale const* GetNpcTextLocale(uint32 entry) const
-        {
-            NpcTextLocaleMap::const_iterator itr = mNpcTextLocaleMap.find(entry);
-            if (itr==mNpcTextLocaleMap.end()) return NULL;
-            return &itr->second;
-        }
-
-        PageTextLocale const* GetPageTextLocale(uint32 entry) const
-        {
-            PageTextLocaleMap::const_iterator itr = mPageTextLocaleMap.find(entry);
-            if (itr==mPageTextLocaleMap.end()) return NULL;
-            return &itr->second;
-        }
-
-        NpcOptionLocale const* GetNpcOptionLocale(uint32 entry) const
-        {
-            NpcOptionLocaleMap::const_iterator itr = mNpcOptionLocaleMap.find(entry);
-            if (itr==mNpcOptionLocaleMap.end()) return NULL;
-            return &itr->second;
-        }
-
-        typedef std::string NpcTextArray[MAX_GOSSIP_TEXT_OPTIONS];
-        void GetNpcTextLocaleStringsAll(uint32 entry, int32 loc_idx, NpcTextArray *text0_Ptr, NpcTextArray* text1_Ptr) const;
-        void GetNpcTextLocaleStrings0(uint32 entry, int32 loc_idx, std::string* text0_0_Ptr, std::string* text1_0_Ptr) const;
-
         GameObjectData const* GetGOData(uint32 guid) const
         {
             GameObjectDataMap::const_iterator itr = mGameObjectDataMap.find(guid);
@@ -655,11 +581,9 @@ class ObjectMgr
         GameObjectData& NewGOData(uint32 guid) { return mGameObjectDataMap[guid]; }
         void DeleteGOData(uint32 guid);
 
-        HellgroundStringLocale const* GetHellgroundStringLocale(int32 entry) const
+        bool HasHellgroundString(int32 entry) const
         {
-            HellgroundStringLocaleMap::const_iterator itr = mHellgroundStringLocaleMap.find(entry);
-            if (itr==mHellgroundStringLocaleMap.end()) return NULL;
-            return &itr->second;
+            return mHellgroundStringMap.find(entry) != mHellgroundStringMap.end();
         }
         const char *GetHellgroundString(int32 entry, int locale_idx) const;
         const char *GetHellgroundStringForDBCLocale(int32 entry) const { return GetHellgroundString(entry,DBCLocaleIndex); }
@@ -682,13 +606,17 @@ class ObjectMgr
         void RemoveGameobjectFromGrid(uint32 guid, GameObjectData const* data);
 
         uint32 AddGOData(uint32 entry, uint32 ArtKit, uint32 map, float x, float y, float z, float o, uint32 spawntimedelay = 0, float rotation0 = 0, float rotation1 = 0, float rotation2 = 0, float rotation3 = 0);
-        uint32 AddCreData(uint32 entry, uint32 team, uint32 map, float x, float y, float z, float o, uint32 spawntimedelay = 0);
 
         // reserved names
         void LoadReservedPlayersNames();
-        bool IsReservedName(const std::string& name) const
+        bool IsReservedName(const std::string& name, uint32 accid = 0) const
         {
-            return m_ReservedNames.find(name) != m_ReservedNames.end();
+            for (ReservedNamesMap::iterator itr = m_ReservedNames.begin(); itr != m_ReservedNames.end(); itr++)
+            {
+                if (itr->first == name && (itr->second != accid || accid == 0))
+                    return true;
+            }
+            return false;
         }
 
         // name with valid structure and symbols
@@ -785,6 +713,7 @@ class ObjectMgr
         typedef std::set<uint32> GameObjectForQuestSet;
 
         GroupSet                mGroupSet;
+        Rolls                   mLootRolls;
         ArenaTeamMap            mArenaTeamMap;
 
         ItemTextMap             mItemTexts;
@@ -804,7 +733,7 @@ class ObjectMgr
         PetCreateSpellMap       mPetCreateSpell;
 
         //character reserved names
-        typedef std::set<std::string> ReservedNamesMap;
+        typedef std::set<std::pair<std::string,uint32>> ReservedNamesMap;
         ReservedNamesMap        m_ReservedNames;
 
         std::set<uint32>        m_DisabledPlayerSpells;
@@ -848,15 +777,8 @@ class ObjectMgr
         MapObjectGuids mMapObjectGuids;
         CreatureDataMap mCreatureDataMap;
         CreatureLinkedRespawnMap mCreatureLinkedRespawnMap;
-        CreatureLocaleMap mCreatureLocaleMap;
         GameObjectDataMap mGameObjectDataMap;
-        GameObjectLocaleMap mGameObjectLocaleMap;
-        ItemLocaleMap mItemLocaleMap;
-        QuestLocaleMap mQuestLocaleMap;
-        NpcTextLocaleMap mNpcTextLocaleMap;
-        PageTextLocaleMap mPageTextLocaleMap;
-        HellgroundStringLocaleMap mHellgroundStringLocaleMap;
-        NpcOptionLocaleMap mNpcOptionLocaleMap;
+        HellgroundStringMap mHellgroundStringMap;
         RespawnTimes mCreatureRespawnTimes;
         RespawnTimes mGORespawnTimes;
 

@@ -33,10 +33,10 @@ struct boss_kormokAI : public ScriptedAI
 {
     boss_kormokAI(Creature *c) : ScriptedAI(c) {}
 
-    uint32 ShadowVolley_Timer;
-    uint32 BoneShield_Timer;
-    uint32 Minion_Timer;
-    uint32 Mage_Timer;
+    int32 ShadowVolley_Timer;
+    int32 BoneShield_Timer;
+    int32 Minion_Timer;
+    int32 Mage_Timer;
     bool Mages;
     int Rand1;
     int Rand1X;
@@ -107,22 +107,22 @@ struct boss_kormokAI : public ScriptedAI
         if (!UpdateVictim())
             return;
 
-        //ShadowVolley_Timer
-        if (ShadowVolley_Timer < diff)
+        ShadowVolley_Timer -= diff;
+        if (ShadowVolley_Timer <= diff)
         {
             DoCast(m_creature->getVictim(),SPELL_SHADOWBOLTVOLLEY);
-            ShadowVolley_Timer = 15000;
-        }else ShadowVolley_Timer -= diff;
+            ShadowVolley_Timer += 15000;
+        }
 
-        //BoneShield_Timer
-        if (BoneShield_Timer < diff)
+        BoneShield_Timer -= diff;
+        if (BoneShield_Timer <= diff)
         {
             DoCast(m_creature->getVictim(),SPELL_BONESHIELD);
-            BoneShield_Timer = 45000;
-        }else BoneShield_Timer -= diff;
+            BoneShield_Timer += 45000;
+        }
 
-        //Minion_Timer
-        if (Minion_Timer < diff)
+        Minion_Timer -= diff;
+        if (Minion_Timer <= diff)
         {
             //Cast
             SummonMinion(m_creature->getVictim());
@@ -130,8 +130,8 @@ struct boss_kormokAI : public ScriptedAI
             SummonMinion(m_creature->getVictim());
             SummonMinion(m_creature->getVictim());
 
-            Minion_Timer = 12000;
-        }else Minion_Timer -= diff;
+            Minion_Timer += 12000;
+        }
 
         //Summon 2 Bone Mages
         if ( !Mages && m_creature->GetHealth()*100 / m_creature->GetMaxHealth() < 26 )

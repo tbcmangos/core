@@ -325,7 +325,7 @@ void SendDefaultMenu_guard_bluffwatcher(Player *player, Creature *_Creature, uin
             player->SEND_GOSSIP_MENU(3154,_Creature->GetGUID());
             break;
         case GOSSIP_ACTION_INFO_DEF + 6:                    //Auction House
-            player->SEND_POI(1381.77, -4371.16, 6, 6, 0, GOSSIP_TEXT_AUCTIONHOUSE);
+            player->SEND_POI(-1210.00, 94.00, 6, 6, 0, GOSSIP_TEXT_AUCTIONHOUSE);
             player->SEND_GOSSIP_MENU(3155,_Creature->GetGUID());
             break;
         case GOSSIP_ACTION_INFO_DEF + 7:                    //Weapon master
@@ -2503,15 +2503,15 @@ struct guard_shattrath_aldorAI : public guardAI
 {
     guard_shattrath_aldorAI(Creature *c) : guardAI(c) {}
 
-    uint32 Exile_Timer;
-    uint32 Banish_Timer;
+    Timer Exile_Timer;
+    Timer Banish_Timer;
     uint64 playerGUID;
     bool CanTeleport;
 
     void Reset()
     {
-        Banish_Timer = 5000;
-        Exile_Timer = 8500;
+        Banish_Timer.Reset(5000);
+        Exile_Timer.Reset(8500);
         playerGUID = 0;
         CanTeleport = false;
     }
@@ -2525,7 +2525,7 @@ struct guard_shattrath_aldorAI : public guardAI
 
         if( CanTeleport )
         {
-            if( Exile_Timer < diff )
+            if (Exile_Timer.Expired(diff))
             {
                 if( Unit* temp = Unit::GetUnit(*m_creature,playerGUID) )
                 {
@@ -2536,11 +2536,9 @@ struct guard_shattrath_aldorAI : public guardAI
                 Exile_Timer = 8500;
                 CanTeleport = false;
             }
-            else
-                Exile_Timer -= diff;
         }
         else
-            if( Banish_Timer < diff )
+            if (Banish_Timer.Expired(diff))
             {
                 Unit* temp = m_creature->getVictim();
                 if( temp && temp->GetTypeId() == TYPEID_PLAYER )
@@ -2552,8 +2550,6 @@ struct guard_shattrath_aldorAI : public guardAI
                         CanTeleport = true;
                 }
             }
-            else
-                Banish_Timer -= diff;
 
         DoMeleeAttackIfReady();
     }
@@ -2704,15 +2700,15 @@ struct guard_shattrath_scryerAI : public guardAI
 {
     guard_shattrath_scryerAI(Creature *c) : guardAI(c) {}
 
-    uint32 Exile_Timer;
-    uint32 Banish_Timer;
+    Timer Exile_Timer;
+    Timer Banish_Timer;
     uint64 playerGUID;
     bool CanTeleport;
 
     void Reset()
     {
-        Banish_Timer = 5000;
-        Exile_Timer = 8500;
+        Banish_Timer.Reset(5000);
+        Exile_Timer.Reset(8500);
         playerGUID = 0;
         CanTeleport = false;
     }
@@ -2726,7 +2722,7 @@ struct guard_shattrath_scryerAI : public guardAI
 
         if( CanTeleport )
         {
-            if( Exile_Timer < diff )
+            if (Exile_Timer.Expired(diff))
             {
                 if( Unit* temp = Unit::GetUnit(*m_creature,playerGUID) )
                 {
@@ -2737,11 +2733,9 @@ struct guard_shattrath_scryerAI : public guardAI
                 Exile_Timer = 8500;
                 CanTeleport = false;
             }
-            else
-                Exile_Timer -= diff;
         }
         else
-            if( Banish_Timer < diff )
+            if (Banish_Timer.Expired(diff))
             {
                 Unit* temp = m_creature->getVictim();
                 if( temp && temp->GetTypeId() == TYPEID_PLAYER )
@@ -2753,8 +2747,6 @@ struct guard_shattrath_scryerAI : public guardAI
                         CanTeleport = true;
                 }
             }
-            else
-                Banish_Timer -= diff;
 
         DoMeleeAttackIfReady();
     }
@@ -3937,6 +3929,51 @@ CreatureAI* GetAI_guard_undercity(Creature *_Creature)
 }
 
 /*******************************************************
+ * npc_silvermoon_guard end
+ *******************************************************/
+
+//Recive emote and replay for this
+bool ReciveEmote_npc_silvermoon_guard(Player *player, Creature *_Creature, uint32 emote)
+{
+    switch(emote)
+    {
+        case TEXTEMOTE_DANCE:
+            ((guardAI*)_Creature->AI())->EnterEvadeMode();
+            break;
+        case TEXTEMOTE_RUDE:
+            if (_Creature->IsWithinDistInMap(player, 5))
+                _Creature->HandleEmoteCommand(EMOTE_ONESHOT_RUDE);
+            else
+                _Creature->HandleEmoteCommand(EMOTE_ONESHOT_RUDE);
+            break;
+        case TEXTEMOTE_WAVE:
+            _Creature->HandleEmoteCommand(EMOTE_ONESHOT_WAVE);
+            break;
+        case TEXTEMOTE_BOW:
+            _Creature->HandleEmoteCommand(EMOTE_ONESHOT_BOW);
+            break;
+        case TEXTEMOTE_KISS:
+            _Creature->HandleEmoteCommand(EMOTE_ONESHOT_FLEX);
+            break;
+    }
+
+    return true;
+
+}
+
+
+//Obtain Guard AI
+CreatureAI* GetAI_npc_silvermoon_guard(Creature *_Creature)
+{
+    return new guardAI (_Creature);
+}
+
+/*******************************************************
+ * guard_silvermoon end
+ *******************************************************/
+
+
+/*******************************************************
  * AddSC
  *******************************************************/
 
@@ -4052,6 +4089,7 @@ void AddSC_guards()
     newscript->Name="guard_silvermoon";
     newscript->pGossipHello          = &GossipHello_guard_silvermoon;
     newscript->pGossipSelect         = &GossipSelect_guard_silvermoon;
+    newscript->pReceiveEmote         = &ReciveEmote_npc_silvermoon_guard;
     newscript->GetAI = &GetAI_guard_silvermoon;
     newscript->RegisterSelf();
 

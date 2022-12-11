@@ -40,11 +40,8 @@ class PetAI : public CreatureAI
         void UpdateAI(const uint32);
         static int Permissible(const Creature *);
 
-        void AttackStart(Unit *target)
-        {
-            m_forceTimer = 5000;
-            CreatureAI::AttackStart(target);
-        }
+        void ForcedAttackStart(Unit* target);
+        void AttackStart(Unit* target);
 
         virtual void PrepareSpellForAutocast(uint32 spellId);
         virtual void AddSpellForAutocast(uint32 spellId, Unit* target);
@@ -52,21 +49,26 @@ class PetAI : public CreatureAI
 
         bool targetHasInterruptableAura(Unit *target) const;
 
+        void ownerOrMeAttackedBy(uint64 enemy);
+        void clearEnemySet() { m_EnemySet.clear(); };
     protected:
 
         void UpdateMotionMaster();
 
         bool _isVisible(Unit *) const;
-        bool _needToStop(void) const;
+        bool _needToStop(void);
         void _stopAttack(void);
+        bool forced_attack;
 
         void UpdateAllies();
+        Unit* FindValidTarget(); // for aggresive stance
+        void TargetSelectHelper();
 
         TimeTracker i_tracker;
         std::set<uint64> m_AllySet;
+        std::set<uint64> m_EnemySet;
         
         TimeTrackerSmall updateAlliesTimer;
-        uint32 m_forceTimer;
 
         typedef std::pair<Unit*, Spell*> TargetSpellPair;
         std::vector<TargetSpellPair> m_targetSpellStore;
@@ -92,6 +94,14 @@ class FelhunterAI : public PetAI
         static int Permissible(const Creature *);
         void PrepareSpellForAutocast(uint32 spellId);
 
+};
+
+class WaterElementalAI : public PetAI
+{
+    public:
+        WaterElementalAI(Creature *c) : PetAI(c) {}
+        static int Permissible(const Creature *);
+        void UpdateAI(const uint32);
 };
 
 #endif

@@ -29,7 +29,6 @@
 #include "Chat.h"
 #include "SocialMgr.h"
 #include "Util.h"
-#include "luaengine/HookMgr.h"
 #include "GuildMgr.h"
 
 Guild::Guild()
@@ -65,8 +64,6 @@ bool Guild::create(uint64 lGuid, std::string gname)
         return false;
     if (sGuildMgr.GetGuildByName(gname))
         return false;
-
-    sLog.outLog(LOG_SPECIAL, "GUILD: creating guild %s to leader: %u", gname.c_str(), GUID_LOPART(lGuid));
 
     leaderGuid = lGuid;
     name = gname;
@@ -104,11 +101,6 @@ bool Guild::create(uint64 lGuid, std::string gname)
     CreateRank(rname,GR_RIGHT_GCHATLISTEN | GR_RIGHT_GCHATSPEAK);
     rname = "Initiate";
     CreateRank(rname,GR_RIGHT_GCHATLISTEN | GR_RIGHT_GCHATSPEAK);
-
-    Player* leader = sObjectMgr.GetPlayer(leaderGuid);
-
-    // used by eluna
-    sHookMgr->OnCreate(this, leader, gname.c_str());
 
     return AddMember(lGuid, (uint32)GR_GUILDMASTER);
 }
@@ -167,9 +159,6 @@ bool Guild::AddMember(uint64 plGuid, uint32 plRank)
 
     UpdateAccountsCount();
 
-    // used by eluna
-    sHookMgr->OnAddMember(this, pl, newmember.RankId);
-
     return true;
 }
 
@@ -180,9 +169,6 @@ void Guild::SetMOTD(std::string motd)
     // motd now can be used for encoding to DB
     RealmDataDatabase.escape_string(motd);
     RealmDataDatabase.PExecute("UPDATE guild SET motd='%s' WHERE guildid='%u'", motd.c_str(), Id);
-
-    // used by eluna
-    sHookMgr->OnMOTDChanged(this, motd);
 }
 
 void Guild::SetGINFO(std::string ginfo)
@@ -192,9 +178,6 @@ void Guild::SetGINFO(std::string ginfo)
     // ginfo now can be used for encoding to DB
     RealmDataDatabase.escape_string(ginfo);
     RealmDataDatabase.PExecute("UPDATE guild SET info='%s' WHERE guildid='%u'", ginfo.c_str(), Id);
-
-    // used by eluna
-    sHookMgr->OnInfoChanged(this, ginfo);
 }
 
 bool Guild::LoadGuildFromDB(uint32 GuildId)
@@ -223,7 +206,7 @@ bool Guild::LoadGuildFromDB(uint32 GuildId)
 
     if (!result)
         return false;
-
+    
     Field *fields = result->Fetch();
 
     Id = fields[0].GetUInt32();
@@ -311,7 +294,7 @@ bool Guild::LoadRanksFromDB(uint32 GuildId)
             std::string name = m_ranks[i].name;
             uint32 rights = m_ranks[i].rights;
             RealmDataDatabase.escape_string(name);
-            RealmDataDatabase.PExecute("INSERT INTO guild_rank (guildid,rid,rname,rights) VALUES ('%u', '%u', '%s', '%u')", GuildId, i+1, name.c_str(), rights);
+            RealmDataDatabase.PExecute("INSERT INTO guild_rank (guildid,rid,rname,rights) VALUES ('%u', '%lu', '%s', '%u')", GuildId, i+1, name.c_str(), rights);
         }
         RealmDataDatabase.CommitTransaction();
     }
@@ -540,9 +523,6 @@ void Guild::DelMember(uint64 guid, bool isDisbanding)
 
     RealmDataDatabase.PExecute("DELETE FROM guild_member WHERE guid = '%u'", GUID_LOPART(guid));
     UpdateAccountsCount();
-
-    // used by eluna
-    sHookMgr->OnRemoveMember(this, player, isDisbanding);
 }
 
 void Guild::ChangeRank(uint64 guid, uint32 newRank)
@@ -656,7 +636,7 @@ void Guild::CreateRank(std::string name_,uint32 rights)
 
     // name now can be used for encoding to DB
     RealmDataDatabase.escape_string(name_);
-    RealmDataDatabase.PExecute("INSERT INTO guild_rank (guildid,rid,rname,rights) VALUES ('%u', '%u', '%s', '%u')", Id, m_ranks.size(), name_.c_str(), rights);
+    RealmDataDatabase.PExecute("INSERT INTO guild_rank (guildid,rid,rname,rights) VALUES ('%u', '%lu', '%s', '%u')", Id, m_ranks.size(), name_.c_str(), rights);
 }
 
 void Guild::AddRank(const std::string& name_,uint32 rights, uint32 money)
@@ -686,6 +666,9 @@ std::string Guild::GetRankName(uint32 rankId)
 
 uint32 Guild::GetRankRights(uint32 rankId)
 {
+    if (rankId == GR_GUILDMASTER)
+        return GR_RIGHT_ALL;
+
     if (rankId >= m_ranks.size())
         return 0;
 
@@ -744,9 +727,6 @@ void Guild::Disband()
     RealmDataDatabase.PExecute("DELETE FROM guild_bank_eventlog WHERE guildid = '%u'",Id);
     RealmDataDatabase.PExecute("DELETE FROM guild_eventlog WHERE guildid = '%u'",Id);
     RealmDataDatabase.CommitTransaction();
-
-    // used by eluna
-    sHookMgr->OnDisband(this);
 
     sGuildMgr.RemoveGuild(Id);
 }
@@ -1007,15 +987,19 @@ void Guild::UnloadGuildEventlog()
 // This will renum guids used at load to prevent always going up until infinit
 void Guild::RenumGuildEventlog()
 {
-    RealmDataDatabase.PExecute("UPDATE guild_eventlog AS target INNER JOIN (SELECT *, (SELECT @COUNT := -1) FROM guild_eventlog WHERE guildid = %u ORDER BY logguid ASC) "
-                                   "AS source ON source.logguid = target.logguid AND source.guildid = target.guildid SET target.logguid = (@COUNT := @COUNT + 1);", Id);
-
     QueryResultAutoPtr result = RealmDataDatabase.PQuery("SELECT Max(LogGuid) FROM guild_eventlog WHERE guildid = %u", Id);
     if (!result)
         return;
 
     Field *fields = result->Fetch();
     GuildEventlogMaxGuid = fields[0].GetUInt32()+1;
+
+    if (GuildEventlogMaxGuid > GUILD_LOGS_MAX_GUID)
+    {
+        RealmDataDatabase.PExecute("DELETE FROM guild_eventlog WHERE guildid = %u AND LogGuid < %u", Id, (GUILD_LOGS_MAX_GUID - GUILD_EVENTLOG_MAX_ENTRIES));
+        RealmDataDatabase.PExecute("UPDATE guild_eventlog SET LogGuid = LogGuid - %u WHERE guildid = %u", GUILD_LOGS_MAX_GUID, Id);
+        GuildEventlogMaxGuid -= GUILD_LOGS_MAX_GUID;
+    }
 }
 
 // Add entry to guild eventlog
@@ -1023,6 +1007,7 @@ void Guild::LogGuildEvent(uint8 EventType, uint32 PlayerGuid1, uint32 PlayerGuid
 {
     GuildEventlogEntry *NewEvent = new GuildEventlogEntry;
     // Fill entry
+
     NewEvent->LogGuid = GuildEventlogMaxGuid++;
     NewEvent->EventType = EventType;
     NewEvent->PlayerGuid1 = PlayerGuid1;
@@ -1268,6 +1253,9 @@ void Guild::CreateBankRightForTab(uint32 rankId, uint8 TabId)
 
 uint32 Guild::GetBankRights(uint32 rankId, uint8 TabId) const
 {
+    if (rankId == GR_GUILDMASTER)
+        return GUILD_BANK_RIGHT_FULL;
+
     if (rankId >= m_ranks.size() || TabId >= GUILD_BANK_MAX_TABS)
         return 0;
 
@@ -1411,13 +1399,6 @@ bool Guild::MemberMoneyWithdraw(uint32 amount, uint32 LowGuid)
         RealmDataDatabase.PExecute("UPDATE guild_member SET BankRemMoney='%u' WHERE guildid='%u' AND guid='%u'",
             itr->second.BankRemMoney, Id, LowGuid);
     }
-
-    // Trigger OnMemberWitdrawMoney event
-    Player* player = sObjectMgr.GetPlayer(ObjectGuid(HIGHGUID_PLAYER, LowGuid));
-
-    // used by eluna
-    sHookMgr->OnMemberWitdrawMoney(this, player, amount, false); // IsRepair not a part of Mangos, implement?
-
     return true;
 }
 
@@ -1650,15 +1631,15 @@ void Guild::LoadGuildBankEventLogFromDB()
     // This cases can happen only if a crash occured somewhere and table has too many log entries
     if (!m_GuildBankEventLog_Money.empty())
     {
-        RealmDataDatabase.PExecute("DELETE FROM guild_bank_eventlog WHERE guildid=%u AND LogGuid < %u",
+        RealmDataDatabase.PExecute("DELETE FROM guild_bank_eventlog WHERE guildid=%u AND LogGuid < %u AND LogEntry in (4,5,6)",
             Id, m_GuildBankEventLog_Money.front()->LogGuid);
     }
     for (int i = 0; i < GUILD_BANK_MAX_TABS; ++i)
     {
         if (!m_GuildBankEventLog_Item[i].empty())
         {
-            RealmDataDatabase.PExecute("DELETE FROM guild_bank_eventlog WHERE guildid=%u AND LogGuid < %u",
-                Id, m_GuildBankEventLog_Item[i].front()->LogGuid);
+            RealmDataDatabase.PExecute("DELETE FROM guild_bank_eventlog WHERE guildid=%u AND LogGuid < %u AND TabId = %u",
+                Id, m_GuildBankEventLog_Item[i].front()->LogGuid,i);
         }
     }
 }
@@ -1766,26 +1747,47 @@ void Guild::LogBankEvent(uint8 LogEntry, uint8 TabId, uint32 PlayerGuidLow, uint
         }
         m_GuildBankEventLog_Item[TabId].push_back(NewEvent);
     }
-
-    // used by eluna
-    sHookMgr->OnBankEvent(this, LogEntry, TabId, PlayerGuidLow, ItemOrMoney, ItemStackCount, DestTabId);
-
     RealmDataDatabase.PExecute("INSERT INTO guild_bank_eventlog (guildid,LogGuid,LogEntry,TabId,PlayerGuid,ItemOrMoney,ItemStackCount,DestTabId,TimeStamp) VALUES ('%u','%u','%u','%u','%u','%u','%u','%u','" UI64FMTD "')",
         Id, NewEvent->LogGuid, uint32(NewEvent->LogEntry), uint32(TabId), NewEvent->PlayerGuid, NewEvent->ItemOrMoney, uint32(NewEvent->ItemStackCount), uint32(NewEvent->DestTabId), NewEvent->TimeStamp);
+
+    switch (LogEntry)
+    {
+    case GUILD_BANK_LOG_DEPOSIT_ITEM:
+        sLog.outLog(LOG_TRADE,"Player guid %u deposit item %u (amount %u) to %s guildbank",
+            PlayerGuidLow, ItemOrMoney, ItemStackCount, GetName().c_str());
+        break;
+    case GUILD_BANK_LOG_WITHDRAW_ITEM:
+        sLog.outLog(LOG_TRADE, "Player guid %u withdraw item %u (amount %u) from %s guildbank",
+            PlayerGuidLow, ItemOrMoney, ItemStackCount, GetName().c_str());
+        break;
+    case GUILD_BANK_LOG_DEPOSIT_MONEY:
+        sLog.outLog(LOG_TRADE, "Player guid %u deposit %u money to %s guildbank",
+            PlayerGuidLow, ItemOrMoney, GetName().c_str());
+        break;
+    case GUILD_BANK_LOG_WITHDRAW_MONEY:
+        sLog.outLog(LOG_TRADE, "Player guid %u withdraw money %u from %s guildbank",
+            PlayerGuidLow, ItemOrMoney, GetName().c_str());
+        break;
+    }
 }
 
 // This will renum guids used at load to prevent always going up until infinit
 void Guild::RenumBankLogs()
 {
-    RealmDataDatabase.PExecute("UPDATE guild_bank_eventlog AS target INNER JOIN (SELECT *, (SELECT @COUNT := -1) FROM guild_bank_eventlog WHERE guildid = %u ORDER BY logguid ASC) "
-                                   "AS source ON source.logguid = target.logguid AND source.guildid = target.guildid SET target.logguid = (@COUNT := @COUNT + 1);", Id);
-
     QueryResultAutoPtr result = RealmDataDatabase.PQuery("SELECT Max(LogGuid) FROM guild_bank_eventlog WHERE guildid = %u", Id);
     if (!result)
         return;
 
     Field *fields = result->Fetch();
     LogMaxGuid = fields[0].GetUInt32()+1;
+
+    if (LogMaxGuid > GUILD_LOGS_MAX_GUID)
+    {
+        //there are 7 logs stored together, so dont cut down to only GUILD_BANK_MAX_LOGS
+        RealmDataDatabase.PExecute("DELETE FROM guild_bank_eventlog WHERE guildid = %u AND LogGuid < %u", Id, (GUILD_LOGS_MAX_GUID - (GUILD_BANK_MAX_LOGS*10)));
+        RealmDataDatabase.PExecute("UPDATE guild_bank_eventlog SET LogGuid = LogGuid - %u WHERE guildid = %u", GUILD_LOGS_MAX_GUID, Id);
+        LogMaxGuid -= GUILD_LOGS_MAX_GUID;
+    }
 }
 
 bool Guild::AddGBankItemToDB(uint32 GuildId, uint32 BankTab , uint32 BankTabSlot , uint32 GUIDLow, uint32 Entry)
@@ -1878,7 +1880,7 @@ Item* Guild::_StoreItem(uint8 tab, uint8 slot, Item *pItem, uint32 count, bool c
         AddGBankItemToDB(GetId(), tab, slot, pItem->GetGUIDLow(), pItem->GetEntry());
         pItem->FSetState(ITEM_NEW);
         pItem->SaveToDB();                                  // not in onventory and can be save standalone
-
+        
         return pItem;
     }
     else

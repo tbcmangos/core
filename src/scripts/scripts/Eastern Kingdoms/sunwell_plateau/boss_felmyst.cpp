@@ -120,7 +120,7 @@ enum Side
     RIGHT_SIDE = 1
 };
 
-float FlightMarker[3][2][3] = 
+float FlightMarker[3][2][3] =
 {
    //left                     //right
     {{1446.56, 702.57, 50.08}, {1441.64, 502.52, 50.08}},
@@ -128,13 +128,13 @@ float FlightMarker[3][2][3] =
     {{1494.76, 705.00, 50.08}, {1492.82, 515.67, 50.08}}
 };
 
-float FlightSide[2][3] = 
+float FlightSide[2][3] =
 {
     {1468.38, 730.27, 60.08},   // left
     {1458.17, 501.3, 60.08}     // right
 };
 
-float FallCoord[2][3] = 
+float FallCoord[2][3] =
 {
     {1476.30, 649, 21.5},     // left
     {1472.55, 580, 22.5}     // right
@@ -182,8 +182,7 @@ struct boss_felmystAI : public ScriptedAI
     ScriptedInstance *pInstance;
     PhaseFelmyst Phase;
     EventFelmyst Event;
-    uint32 Timer[10];
-    uint32 PulseCombat;
+    Timer _Timer[10];
 
     SummonList summons;
 
@@ -193,15 +192,14 @@ struct boss_felmystAI : public ScriptedAI
     uint32 FlightCount;
     uint32 BreathCount;
     uint32 IntroPhase;
-    uint32 IntroTimer;
+    Timer IntroTimer;
 
     void Reset()
     {
         Phase = PHASE_NULL;
         Event = EVENT_NULL;
-        Timer[EVENT_BERSERK] = 600000;
-        Timer[EVENT_CHECK] = 1000;
-        PulseCombat = 2000;
+        _Timer[EVENT_BERSERK].Reset(600000);
+        _Timer[EVENT_CHECK].Reset(1000);
         FlightCount = 0;
         IntroPhase = 0;
         IntroTimer = 0;
@@ -215,7 +213,6 @@ struct boss_felmystAI : public ScriptedAI
         me->SetFloatValue(UNIT_FIELD_COMBATREACH, 10);
         me->setActive(true);
         me->SetWalk(false);
-        DespawnSummons();   // for unyielding dead summoned by trigger
 
         if(pInstance)
             pInstance->SetData(DATA_FELMYST_EVENT, NOT_STARTED);
@@ -232,10 +229,14 @@ struct boss_felmystAI : public ScriptedAI
         DoZoneInCombat();
         RemoveMCAuraIfExist();  // just in case
         EnterPhase(PHASE_GROUND);
-        Phase = PHASE_NULL; // not attack yet, but counters on
         me->GetMotionMaster()->Clear();
         me->GetMotionMaster()->MoveIdle();
         me->SetSpeed(MOVE_FLIGHT, 2);
+
+        if (!me->HasAura(AURA_NOXIOUS_FUMES))
+            me->CastSpell(me, AURA_NOXIOUS_FUMES, true);
+
+
         if(Unit* target = SelectUnit(SELECT_TARGET_TOPAGGRO, 0))
         {
             float x, y, z;
@@ -301,6 +302,8 @@ struct boss_felmystAI : public ScriptedAI
 
     void JustDied(Unit* Killer)
     {
+        me->SetLevitate(false);
+        me->setHover(false);
         DoScriptText(YELL_DEATH, me);
         pInstance->SetData(DATA_FELMYST_EVENT, DONE);
         me->SummonCreature(MOB_KALECGOS, 1555, 737, 88, 0, TEMPSUMMON_TIMED_DESPAWN, 300000);
@@ -309,6 +312,7 @@ struct boss_felmystAI : public ScriptedAI
     void EnterEvadeMode()
     {
         CreatureAI::EnterEvadeMode();
+        me->HandleEmoteCommand(EMOTE_ONESHOT_LIFTOFF);
         me->SetSpeed(MOVE_FLIGHT, 1.7, false);
         me->GetMotionMaster()->MovePath(FELMYST_OOC_PATH, true);
         IntroPhase = 6; // to make proper landing on next EnterCombat
@@ -321,19 +325,6 @@ struct boss_felmystAI : public ScriptedAI
                     me->Kill(p, false);
             }
         summons.DespawnAll();
-    }
-
-    void DespawnSummons()
-    {
-        std::list<uint64> AddList = me->GetMap()->GetCreaturesGUIDList(MOB_UNYIELDING_DEAD, GET_FIRST_CREATURE_GUID, 0);
-        if (AddList.empty())
-            return;
-
-        for (std::list<uint64>::iterator i = AddList.begin(); i!= AddList.end(); ++i)
-        {
-            if(Creature* Skeleton = me->GetCreature(*i))
-                Skeleton->ForcedDespawn();
-        }
     }
 
     void JustSummoned(Creature *summon)
@@ -352,7 +343,7 @@ struct boss_felmystAI : public ScriptedAI
 
     void DamageTaken(Unit*, uint32 &damage)
     {
-        if(Phase != PHASE_GROUND && ((uint32(me->GetHealth()*100/me->GetMaxHealth()) <= 1)))
+        if (Phase != PHASE_GROUND && (damage >= me->GetHealth() || me->GetHealth() <= 1))
             damage = 0;
     }
 
@@ -361,19 +352,19 @@ struct boss_felmystAI : public ScriptedAI
         switch(NextPhase)
         {
             case PHASE_GROUND:
-                Timer[EVENT_CLEAVE] = urand(5000, 10000);
-                Timer[EVENT_CORROSION] = urand(12000, 20000);
-                Timer[EVENT_GAS_NOVA] = urand(20000, 25000);
-                Timer[EVENT_ENCAPSULATE] = 30000;
-                Timer[EVENT_FLIGHT] = 60000;
-                Timer[EVENT_CHECK] = 1000;
+                _Timer[EVENT_CLEAVE].Reset(urand(5000, 10000));
+                _Timer[EVENT_CORROSION].Reset(urand(12000, 20000));
+                _Timer[EVENT_GAS_NOVA].Reset(urand(20000, 25000));
+                _Timer[EVENT_ENCAPSULATE].Reset(30000);
+                _Timer[EVENT_FLIGHT].Reset(60000);
+                _Timer[EVENT_CHECK].Reset(1000);
                 //DoResetThreat();
                 break;
             case PHASE_FLIGHT:
                 side = RAND(LEFT_SIDE, RIGHT_SIDE);
-                Timer[EVENT_FLIGHT_SEQUENCE] = 1000;
-                Timer[EVENT_SUMMON_FOG] = 0;
-                Timer[EVENT_CHECK] = 1000;
+                _Timer[EVENT_FLIGHT_SEQUENCE].Reset(1000);
+                _Timer[EVENT_SUMMON_FOG].Reset(0);
+                _Timer[EVENT_CHECK].Reset(1000);
                 FlightCount = 0;
                 BreathCount = 0;
                 break;
@@ -414,16 +405,10 @@ struct boss_felmystAI : public ScriptedAI
                 me->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
                 IntroTimer = 0;
                 break;
-            case 6:
-                Phase = PHASE_GROUND;
-                if (!me->HasAura(AURA_NOXIOUS_FUMES))
-                    me->CastSpell(me, AURA_NOXIOUS_FUMES, true);
-                AttackStart(me->getVictim());
-                break;
         }
-        IntroPhase++;
+        IntroPhase++;     
     }
-    
+
     void JustReachedHome()
     {
         me->SetLevitate(true);
@@ -448,16 +433,16 @@ struct boss_felmystAI : public ScriptedAI
                     break;
                 case 1: // on starting phase 2
                     me->setHover(true);
-                    Timer[EVENT_FLIGHT_SEQUENCE] = 1000;
+                    _Timer[EVENT_FLIGHT_SEQUENCE] = 1000;
                     break;
                 case 2: // on left/right side marker
                     me->setHover(true);
-                    Timer[EVENT_FLIGHT_SEQUENCE] = 3000;
+                    _Timer[EVENT_FLIGHT_SEQUENCE] = 3000;
                     break;
                 case 3: // on path start node
                     me->setHover(true);
                     me->SetSpeed(MOVE_FLIGHT, 3.5, false);
-                    Timer[EVENT_FLIGHT_SEQUENCE] = urand(3000, 4000);
+                    _Timer[EVENT_FLIGHT_SEQUENCE] = urand(3000, 4000);
                     break;
                 case 4: // on path stop node
                     me->setHover(true);
@@ -469,11 +454,11 @@ struct boss_felmystAI : public ScriptedAI
                         FlightCount = 4;
                     else
                         FlightCount = 7;
-                    Timer[EVENT_FLIGHT_SEQUENCE] = 3000;
+                    _Timer[EVENT_FLIGHT_SEQUENCE] = 3000;
                     break;
                 case 5: // on landing after phase 2
                     me->HandleEmoteCommand(EMOTE_ONESHOT_LAND);
-                    Timer[EVENT_FLIGHT_SEQUENCE] = 1500;
+                    _Timer[EVENT_FLIGHT_SEQUENCE] = 1500;
                     break;
                 case 6:
                     me->setHover(true);
@@ -494,11 +479,11 @@ struct boss_felmystAI : public ScriptedAI
             me->SetLevitate(true);
             me->setHover(true);
             DoScriptText(YELL_TAKEOFF, me);
-            Timer[EVENT_FLIGHT_SEQUENCE] = 2000;
+            _Timer[EVENT_FLIGHT_SEQUENCE] = 2000;
             break;
         case 1:
             me->GetMotionMaster()->MovePoint(1, me->GetPositionX()+10, me->GetPositionY(), me->GetPositionZ()+20);
-            Timer[EVENT_FLIGHT_SEQUENCE] = 0;
+            _Timer[EVENT_FLIGHT_SEQUENCE] = 0;
             break;
         case 2: // summon vapor on player 2 times
         case 3:
@@ -511,13 +496,13 @@ struct boss_felmystAI : public ScriptedAI
                 EnterEvadeMode();
                 return;
             }
-            Timer[EVENT_FLIGHT_SEQUENCE] = 11000;
+            _Timer[EVENT_FLIGHT_SEQUENCE] = 11000;
             break;
             }
         case 4: // go to side left/right marker
             me->SetSpeed(MOVE_FLIGHT, 1.7, false);
             me->GetMotionMaster()->MovePoint(2, FlightSide[side][0], FlightSide[side][1], FlightSide[side][2]);
-            Timer[EVENT_FLIGHT_SEQUENCE] = 0;
+            _Timer[EVENT_FLIGHT_SEQUENCE] = 0;
             break;
         case 5: // decide path to go breathing
             {
@@ -525,7 +510,7 @@ struct boss_felmystAI : public ScriptedAI
             float *pos = FlightMarker[path][side];
             counter = side ? (path ? (path%2 ? 7 : 24) : 6) : 0;
             me->GetMotionMaster()->MovePoint(3, pos[0], pos[1], pos[2]);
-            Timer[EVENT_FLIGHT_SEQUENCE] = 0;
+            _Timer[EVENT_FLIGHT_SEQUENCE] = 0;
             break;
             }
         case 6: // start fog breath
@@ -534,8 +519,8 @@ struct boss_felmystAI : public ScriptedAI
             me->GetMotionMaster()->MovePoint(4, pos[0], pos[1], pos[2]);
             DoScriptText(EMOTE_BREATH, me);
             AddSpellToCast(me, SPELL_FOG_BREATH);
-            Timer[EVENT_SUMMON_FOG] = 50;
-            Timer[EVENT_FLIGHT_SEQUENCE] = 0;
+            _Timer[EVENT_SUMMON_FOG] = 50;
+            _Timer[EVENT_FLIGHT_SEQUENCE] = 0;
             break;
             }
         case 7: // start landing..
@@ -550,7 +535,7 @@ struct boss_felmystAI : public ScriptedAI
                 EnterEvadeMode();
                 return;
             }
-            Timer[EVENT_FLIGHT_SEQUENCE] = 0;
+            _Timer[EVENT_FLIGHT_SEQUENCE] = 0;
             break;
         case 9: // ..and go for phase 1
             me->SetSpeed(MOVE_RUN, 2.0, false);
@@ -575,35 +560,38 @@ struct boss_felmystAI : public ScriptedAI
             case EVENT_BERSERK:
                 DoScriptText(YELL_BERSERK, me);
                 ForceSpellCast(me, SPELL_BERSERK, INTERRUPT_AND_CAST_INSTANTLY);
-                Timer[EVENT_BERSERK] = 300000;   // 5 min just in case :)
+                _Timer[EVENT_BERSERK] = 300000;   // 5 min just in case :)
                 break;
             case EVENT_CHECK:
                 DoZoneInCombat();
                 me->SetSpeed(MOVE_RUN, 2.0, false);
-                Timer[EVENT_CHECK]=1000;
+                _Timer[EVENT_CHECK]=1000;
                 break;
             case EVENT_CLEAVE:
                 AddSpellToCast(me->getVictim(), SPELL_CLEAVE);
-                Timer[EVENT_CLEAVE] = urand(5000, 10000);
+                _Timer[EVENT_CLEAVE] = urand(5000, 10000);
                 break;
             case EVENT_CORROSION:
                 AddSpellToCast(me->getVictim(), SPELL_CORROSION);
-                Timer[EVENT_CORROSION] = urand(20000, 30000);
+                _Timer[EVENT_CORROSION] = urand(20000, 30000);
                 break;
             case EVENT_GAS_NOVA:
+            {
                 AddSpellToCastWithScriptText(me, SPELL_GAS_NOVA, YELL_BREATH);
                 // gas nova should only be used 2 times in phase 1
-                Timer[EVENT_GAS_NOVA] =(Timer[EVENT_FLIGHT] <= 20000)?40000:urand(20000, 25000);
+                uint32 intval = (_Timer[EVENT_FLIGHT].GetTimeLeft() <= 20000) ? 40000 : urand(20000, 25000);
+                _Timer[EVENT_GAS_NOVA].Reset(intval);
                 break;
+            }
             case EVENT_ENCAPSULATE:
                 if(Unit* target = SelectUnit(SELECT_TARGET_RANDOM, 0, 60, true))
                 {
                     ClearCastQueue();
                     me->SetSelection(target->GetGUID());
                     AddSpellToCast(target, SPELL_ENCAPSULATE_CHANNEL, false, true);
-                    Timer[EVENT_ENCAPSULATE] = urand(22000, 35000);
-                    if(Timer[EVENT_FLIGHT] < 7000)
-                        Timer[EVENT_FLIGHT] = 7000;
+                    _Timer[EVENT_ENCAPSULATE] = urand(22000, 35000);
+                    if(_Timer[EVENT_FLIGHT].GetTimeLeft() < 7000)
+                        _Timer[EVENT_FLIGHT].Reset(7000);
                 }
                 break;
             case EVENT_FLIGHT:
@@ -617,11 +605,11 @@ struct boss_felmystAI : public ScriptedAI
                 if(Creature *Fog = me->SummonCreature(MOB_FOG_OF_CORRUPTION, posFog[0], posFog[1], posFog[2], 0, TEMPSUMMON_TIMED_DESPAWN, 15000))
                     Fog->CastSpell(Fog, SPELL_FOG_TRIGGER, true);
                 if((side && !counter) || (!side && counter == (path ? (path%2 ? 7 : 24) : 6)))
-                    Timer[EVENT_SUMMON_FOG] = 0;
+                    _Timer[EVENT_SUMMON_FOG] = 0;
                 else
                 {
                     side ? counter-- : counter++;
-                    Timer[EVENT_SUMMON_FOG] = (6000/(path ? (path%2 ? 8 : 25) : 7));  // check this timer
+                    _Timer[EVENT_SUMMON_FOG].Reset(6000/(path ? (path%2 ? 8 : 25) : 7));  // check this timer
                 }
                 break;
         }
@@ -648,43 +636,28 @@ struct boss_felmystAI : public ScriptedAI
 
     void UpdateAI(const uint32 diff)
     {
-        if(IntroTimer)
-        {
-            if(IntroTimer <= diff)
-                DoIntro();
-            else
-                IntroTimer -= diff;
-        }
+
+        if (IntroTimer.Expired(diff))
+            DoIntro();
+
 
         if (!UpdateVictim())
             return;
 
-        if(PulseCombat < diff)
-        {
-            DoZoneInCombat();
-            PulseCombat = 2000;
-        }
-        else
-            PulseCombat -= diff;
+        DoSpecialThings(diff, DO_PULSE_COMBAT, 400.0f);
+
 
         // use enrage timer both phases
-        if(Timer[EVENT_BERSERK] <= diff)
+        if (_Timer[EVENT_BERSERK].Expired(diff))
             ProcessEvent(EVENT_BERSERK);
-        else
-            Timer[EVENT_BERSERK] -= diff;
+
 
         if(Phase == PHASE_GROUND || Phase == PHASE_NULL)
         {
             for(uint32 i = 2; i <= 7; i++)
-            {
-                if(Timer[i])
-                {
-                    if(Timer[i] <= diff)
-                        ProcessEvent((EventFelmyst)i);
-                    else
-                        Timer[i] -= diff;
-                }
-            }
+                if (_Timer[i].Expired(diff))
+                    ProcessEvent((EventFelmyst)i);
+
             CastNextSpellIfAnyAndReady();
             if(Phase == PHASE_GROUND)
                 DoMeleeAttackIfReady();
@@ -693,15 +666,9 @@ struct boss_felmystAI : public ScriptedAI
         if(Phase == PHASE_FLIGHT)
         {
             for(uint32 i = 8; i < 10; i++)
-            {
-                if(Timer[i])
-                {
-                    if(Timer[i] <= diff)
-                        ProcessEvent((EventFelmyst)i);
-                    else
-                        Timer[i] -= diff;
-                }
-            }
+                if (_Timer[i].Expired(diff))
+                    ProcessEvent((EventFelmyst)i);
+
             CastNextSpellIfAnyAndReady();
         }
     }
@@ -716,8 +683,10 @@ struct mob_felmyst_vaporAI : public ScriptedAI
         me->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
         me->SetSpeed(MOVE_RUN, 1.0);
         me->SetFloatValue(UNIT_FIELD_COMBATREACH, 0.01);
+        me->SetReactState(REACT_PASSIVE);
     }
     void Reset() {}
+    void MoveInLineOfSight(Unit*) {}
     void JustRespawned()
     {
         DoZoneInCombat();
@@ -729,7 +698,7 @@ struct mob_felmyst_vaporAI : public ScriptedAI
 
     void UpdateAI(const uint32 diff)
     {
-        if(!me->getVictim() || !me->getVictim()->isTargetableForAttack())
+        if(!me->getVictim() || !me->getVictim()->isTargetableForAttack() || me->getVictim()->GetTypeId() != TYPEID_PLAYER)
             AttackStart(SelectUnit(SELECT_TARGET_NEAREST, 0, 100.0, true));
     }
 };
@@ -739,14 +708,16 @@ struct mob_felmyst_trailAI : public Scripted_NoMovementAI
 {
     mob_felmyst_trailAI(Creature *c) : Scripted_NoMovementAI(c)
     {
+        pInstance = (c->GetInstanceData());
         me->CastSpell(me, SPELL_TRAIL_TRIGGER, true);
         me->setFaction(1771);
-        Delay = 6000;
-        Despawn = 20000;
+        Delay.Reset(6000);
+        Despawn.Reset(20000);
     }
 
-    uint32 Delay;   // timer for Unyielding Dead summoning
-    uint32 Despawn; // for despawning
+    ScriptedInstance* pInstance;
+    Timer Delay;   // timer for Unyielding Dead summoning
+    Timer Despawn; // for despawning
 
     void SpellHitTarget(Unit* target, const SpellEntry *entry)
     {
@@ -756,34 +727,26 @@ struct mob_felmyst_trailAI : public Scripted_NoMovementAI
 
     void JustSummoned(Creature* summon)
     {
-        Map::PlayerList const& players = me->GetMap()->GetPlayers();
-        if (!players.isEmpty())
-        {
-            for(Map::PlayerList::const_iterator itr = players.begin(); itr != players.end(); ++itr)
-            {
-                if(Player* plr = itr->getSource())
-                {
-                    summon->SetInCombatWith(plr);
-                    summon->AddThreat(plr, 0.0f);
-                }
-            }
-        }
+        if(summon->AI())
+            summon->AI()->DoZoneInCombat();
+        if(Unit* Felmyst = me->GetUnit(pInstance->GetData64(DATA_FELMYST)))
+            Felmyst->ToCreature()->AI()->JustSummoned(summon);
     }
 
     void UpdateAI(const uint32 diff)
     {
-        if(Delay < diff)
+
+        if (Delay.Expired(diff))
         {
             DoCast(me, SPELL_DEAD_SUMMON);
             Delay = 30000;  // will despawn sooner
         }
-        else
-            Delay -= diff;
 
-        if(Despawn < diff)
+
+
+        if (Despawn.Expired(diff))
             me->ForcedDespawn();
-        else
-            Despawn -= diff;
+
     }
 };
 

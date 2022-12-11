@@ -40,7 +40,7 @@ EndScriptData */
 
 struct instance_mount_hyjal : public ScriptedInstance
 {
-    instance_mount_hyjal(Map *map) : ScriptedInstance(map) {Initialize();};
+    instance_mount_hyjal(Map *map) : ScriptedInstance(map), m_gbk(map) {Initialize();};
 
     uint64 RageWinterchill;
     uint64 Anetheron;
@@ -59,8 +59,8 @@ struct instance_mount_hyjal : public ScriptedInstance
     uint32 hordeRetreat;
     uint32 allianceRetreat;
     bool ArchiYell;
-
     uint32 RaidDamage;
+    GBK_handler m_gbk;
 
     void Initialize()
     {
@@ -121,6 +121,8 @@ struct instance_mount_hyjal : public ScriptedInstance
                     break;
             }
         }
+
+        m_gbk.PlayerDied(pVictim->GetGUIDLow());
     }
 
     void OnObjectCreate(GameObject *go)
@@ -208,6 +210,19 @@ struct instance_mount_hyjal : public ScriptedInstance
         return 0;
     }
 
+    GBK_Encounters EncounterForGBK(uint32 enc)
+    {
+        switch (enc)
+        {
+        case DATA_RAGEWINTERCHILLEVENT: return GBK_RAGE_WINTERCHILL;
+        case DATA_ANETHERONEVENT:      return GBK_ANETHERON;
+        case DATA_KAZROGALEVENT:       return GBK_KAZROGAL;
+        case DATA_AZGALOREVENT:        return GBK_AZGALOR;
+        case DATA_ARCHIMONDEEVENT:     return GBK_ARCHIMONDE;
+        }
+        return GBK_NONE;
+    }
+
     void SetData(uint32 type, uint32 data)
     {
         switch(type)
@@ -284,9 +299,20 @@ struct instance_mount_hyjal : public ScriptedInstance
                 break;
         }
 
-         debug_log("TSCR: Instance Hyjal: Instance data updated for event %u (Data=%u)",type,data);
+        debug_log("TSCR: Instance Hyjal: Instance data updated for event %u (Data=%u)",type,data);
 
-        if(data == DONE)
+        GBK_Encounters gbkEnc = EncounterForGBK(type);
+        if (gbkEnc != GBK_NONE)
+        {
+            if (data == DONE)
+                m_gbk.StopCombat(gbkEnc, true);
+            else if (data == NOT_STARTED)
+                m_gbk.StopCombat(gbkEnc, false);
+            else if (data == IN_PROGRESS)
+                m_gbk.StartCombat(gbkEnc);
+        }
+        
+        if (data == DONE)
             SaveToDB();
     }
 
@@ -357,6 +383,16 @@ struct instance_mount_hyjal : public ScriptedInstance
             if(Encounters[i] == IN_PROGRESS)                // Do not load an encounter as IN_PROGRESS - reset it instead.
                 Encounters[i] = NOT_STARTED;
         OUT_LOAD_INST_DATA_COMPLETE;
+    }
+
+    void OnPlayerDealDamage(Player* plr, uint32 amount)
+    {
+        m_gbk.DamageDone(plr->GetGUIDLow(), amount);
+    }
+
+    void OnPlayerHealDamage(Player* plr, uint32 amount)
+    {
+        m_gbk.HealingDone(plr->GetGUIDLow(), amount);
     }
 };
 

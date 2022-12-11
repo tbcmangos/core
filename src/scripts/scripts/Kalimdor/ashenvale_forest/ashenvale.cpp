@@ -56,8 +56,8 @@ struct npc_torekAI : public npc_escortAI
 {
     npc_torekAI(Creature *c) : npc_escortAI(c) {}
 
-    uint32 Rend_Timer;
-    uint32 Thunderclap_Timer;
+    int32 Rend_Timer;
+    int32 Thunderclap_Timer;
     bool Completed;
 
     void WaypointReached(uint32 i)
@@ -113,21 +113,21 @@ struct npc_torekAI : public npc_escortAI
         if (!UpdateVictim())
             return;
 
-        if (Rend_Timer < diff)
+        Rend_Timer -= diff;
+        if (Rend_Timer <= diff)
         {
             DoCast(m_creature->getVictim(),SPELL_REND);
-            Rend_Timer = 20000;
+            Rend_Timer += 20000;
         }
-        else
-            Rend_Timer -= diff;
+        
 
-        if (Thunderclap_Timer < diff)
+        Thunderclap_Timer -= diff;
+        if (Thunderclap_Timer <= diff)
         {
             DoCast(m_creature,SPELL_THUNDERCLAP);
-            Thunderclap_Timer = 30000;
+            Thunderclap_Timer += 30000;
         }
-        else 
-            Thunderclap_Timer -= diff;
+        
     }
 };
 
@@ -326,13 +326,15 @@ struct npc_muglashAI : public npc_escortAI
     npc_muglashAI(Creature* pCreature) : npc_escortAI(pCreature) { }
 
     uint32 m_uiWaveId;
-    uint32 m_uiEventTimer;
-    uint32 m_uiPausedCheckTimer;
+    int32 m_uiEventTimer;
+    int32 m_uiPausedCheckTimer;
     uint64 m_uiBrazierGUID;
     bool m_bIsBrazierExtinguished;
 
     void JustSummoned(Creature* pSummoned)
     {
+        pSummoned->SetHomePosition(m_creature->GetPositionX(), m_creature->GetPositionY(), m_creature->GetPositionZ(), 0);
+        pSummoned->SetAggroRange(50.0f);
         pSummoned->AI()->AttackStart(m_creature);
     }
 
@@ -470,28 +472,27 @@ struct npc_muglashAI : public npc_escortAI
         {
             if (HasEscortState(STATE_ESCORT_PAUSED))
             {
-                if(m_uiPausedCheckTimer < uiDiff)
+                m_uiPausedCheckTimer -= uiDiff;
+                if(m_uiPausedCheckTimer <= uiDiff)
                 {
                     SetEscortPaused(false);
                     m_creature->Kill(m_creature, false);
                     m_creature->RemoveCorpse();
                 }
-                else
-                    m_uiPausedCheckTimer -= uiDiff;
+                
 
                 if(m_bIsBrazierExtinguished)
                 {
-                    if (m_uiEventTimer < uiDiff)
+                    m_uiEventTimer -= uiDiff;
+                    if (m_uiEventTimer <= uiDiff)
                     {
                         ++m_uiWaveId;
                         DoWaveSummon();
                         if(m_uiWaveId == 3)
-                            m_uiEventTimer = 2000;
+                            m_uiEventTimer += 2000;
                         else
-                            m_uiEventTimer = 10000;
+                            m_uiEventTimer += 10000;
                     }
-                    else
-                        m_uiEventTimer -= uiDiff;
                 }
             }
             return;
@@ -526,6 +527,8 @@ bool GOUse_go_naga_brazier(Player* pPlayer, GameObject* pGo)
     {
         if (npc_muglashAI* pEscortAI = CAST_AI(npc_muglashAI, pCreature->AI()))
         {
+            if (pEscortAI->m_bIsBrazierExtinguished)
+                return false;
             DoScriptText(SAY_MUG_BRAZIER_WAIT, pCreature);
             pEscortAI->m_bIsBrazierExtinguished = true;
             return false;
@@ -550,9 +553,9 @@ struct npc_Heretic_EmisaryAI : public ScriptedAI
 {
     npc_Heretic_EmisaryAI(Creature* c) : ScriptedAI(c) {}
 
-    uint32 TalkTimer;
+    int32 TalkTimer;
     uint32 Phase;
-    uint32 Check;
+    int32 Check;
     uint64 player;
     bool EventStarted;
 
@@ -583,7 +586,8 @@ struct npc_Heretic_EmisaryAI : public ScriptedAI
         {
             if (EventStarted)
             {
-                if (TalkTimer < diff)
+                TalkTimer -= diff;
+                if (TalkTimer <= diff)
                 {
                     Player * Player_;
                     Creature * Briatha = GetClosestCreatureWithEntry(me, NPC_ICECALLERBRIATHA, 20);
@@ -617,13 +621,11 @@ struct npc_Heretic_EmisaryAI : public ScriptedAI
                             EventStarted = false;
                             break;
                         }
-                        TalkTimer = 5000;
+                        TalkTimer += 5000;
                     }
                     else
                         EventStarted = false;
                 }
-            else
-                TalkTimer -= diff;
             }
 
             return;
@@ -636,6 +638,114 @@ struct npc_Heretic_EmisaryAI : public ScriptedAI
 CreatureAI* GetAI_npc_Heretic_Emisary(Creature *_Creature)
 {
     return new npc_Heretic_EmisaryAI(_Creature);
+}
+
+const float feero_adds[][3] = {
+    { 3519.252197,219.959412,10.116269 },
+    { 3521.238037,216.784348,9.499805 },
+    { 3521.570068,210.839874,9.394688 },
+    { 3520.265625,205.178207,10.311738 },
+    { 3809.975830,132.909821,9.805327 },
+    { 3806.964844,125.293358,9.614912 },
+    { 3804.356201,122.136726,9.610646 },
+    { 4253.566406,132.063339,40.726017 },
+    { 4256.975098,126.932564,40.685898 },
+    { 4261.208496,132.154388,41.457546 }
+};
+
+enum efeero
+{
+    QUEST_SUPPLIES_TO_AUBERDINE = 976,
+    SPEECH_FEERO_START = -1000010,
+    NPC_DARK_STRAND_ASSASIN = 3879,
+    NPC_FORSAKEN_SCOUT = 3893,
+    NPC_ALIGAR = 3898,
+    NPC_BALIZAR = 3899,
+    NPC_CAEDAKAR = 3900
+};
+
+struct npc_feero_ironhandAI : public npc_escortAI
+{
+    npc_feero_ironhandAI(Creature *c) : npc_escortAI(c) {}
+
+    void Reset()
+    {
+    }
+
+    void SummonAdd(uint32 id, uint8 pos)
+    {
+        Creature* summon = m_creature->SummonCreature(id, feero_adds[pos][0], feero_adds[pos][1], feero_adds[pos][2],
+            0, TEMPSUMMON_DEAD_DESPAWN, 10000);
+        if (summon)
+        {
+            summon->AI()->AttackStart(m_creature);
+            if (pos == 8)
+                DoScriptText(SPEECH_FEERO_START - 6, summon);
+            if (pos == 4)
+                DoScriptText(SPEECH_FEERO_START - 3, summon);
+        }
+    }
+
+    void WaypointReached(uint32 i)
+    {
+        Player* pPlayer = GetPlayerForEscort();
+        if (!pPlayer)
+            return;
+
+        switch (i)
+        {
+        case 9:
+            DoScriptText(SPEECH_FEERO_START, m_creature);
+            SummonAdd(NPC_DARK_STRAND_ASSASIN, 0);
+            SummonAdd(NPC_DARK_STRAND_ASSASIN, 1);
+            SummonAdd(NPC_DARK_STRAND_ASSASIN, 2);
+            SummonAdd(NPC_DARK_STRAND_ASSASIN, 3);
+            break;
+        case 10:
+            DoScriptText(SPEECH_FEERO_START - 1, m_creature);
+            break;
+        case 18:
+            DoScriptText(SPEECH_FEERO_START - 2, m_creature);
+            SummonAdd(NPC_FORSAKEN_SCOUT, 4);
+            SummonAdd(NPC_FORSAKEN_SCOUT, 5);
+            SummonAdd(NPC_FORSAKEN_SCOUT, 6);
+            break;
+        case 19:
+            DoScriptText(SPEECH_FEERO_START - 4, m_creature);
+            break;
+        case 33:
+            DoScriptText(SPEECH_FEERO_START - 5, m_creature);
+            SummonAdd(NPC_CAEDAKAR, 7);
+            SummonAdd(NPC_BALIZAR, 8);
+            SummonAdd(NPC_ALIGAR, 9);
+            DoScriptText(SPEECH_FEERO_START - 7, m_creature);
+            break;
+        case 34:
+            DoScriptText(SPEECH_FEERO_START - 8, m_creature);
+            pPlayer->GroupEventHappens(QUEST_SUPPLIES_TO_AUBERDINE, m_creature);
+            break;
+        case 35:
+            m_creature->DisappearAndDie();
+            break;
+        }
+    }
+    
+};
+
+bool QuestAccept_npc_feero_ironhand(Player* pPlayer, Creature* pCreature, Quest const* quest)
+{
+    if (quest->GetQuestId() == QUEST_SUPPLIES_TO_AUBERDINE)
+    {
+        pCreature->setFaction(113);
+
+        if (npc_escortAI* pEscortAI = CAST_AI(npc_feero_ironhandAI, (pCreature->AI())))
+            pEscortAI->Start(true, true, pPlayer->GetGUID(), quest);
+    }
+    return true;
+}
+CreatureAI* GetAI_npc_feero_ironhand(Creature* c)
+{
+    return new npc_feero_ironhandAI(c);
 }
 
 
@@ -676,4 +786,9 @@ void AddSC_ashenvale()
     newscript->GetAI = &GetAI_npc_Heretic_Emisary;
     newscript->RegisterSelf();
 
+    newscript = new Script;
+    newscript->Name = "npc_feero_ironhand";
+    newscript->GetAI = &GetAI_npc_feero_ironhand;
+    newscript->pQuestAcceptNPC = &QuestAccept_npc_feero_ironhand;
+    newscript->RegisterSelf();
 }

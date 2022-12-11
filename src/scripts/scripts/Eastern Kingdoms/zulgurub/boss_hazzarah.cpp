@@ -37,9 +37,9 @@ struct boss_hazzarahAI : public ScriptedAI
         pInstance = c->GetInstanceData();
     }
 
-    uint32 ManaBurn_Timer;
-    uint32 Sleep_Timer;
-    uint32 Illusions_Timer;
+    int32 ManaBurn_Timer;
+    int32 Sleep_Timer;
+    int32 Illusions_Timer;
     Creature* Illusion;
     ScriptedInstance * pInstance;
 
@@ -66,26 +66,24 @@ struct boss_hazzarahAI : public ScriptedAI
         if (!UpdateVictim())
             return;
 
-        //ManaBurn_Timer
-        if (ManaBurn_Timer < diff)
+        ManaBurn_Timer -= diff;
+        if (ManaBurn_Timer <= diff)
         {
             DoCast(m_creature->getVictim(),SPELL_MANABURN);
-            ManaBurn_Timer = 8000 + rand()%8000;
+            ManaBurn_Timer += 8000 + rand()%8000;
         }
-        else
-            ManaBurn_Timer -= diff;
+        
 
-        //Sleep_Timer
-        if (Sleep_Timer < diff)
+        Sleep_Timer -= diff;
+        if (Sleep_Timer <= diff)
         {
             DoCast(m_creature->getVictim(),SPELL_SLEEP);
-            Sleep_Timer = 12000 + rand()%8000;
+            Sleep_Timer += 12000 + rand()%8000;
         }
-        else
-            Sleep_Timer -= diff;
+        
 
-        //Illusions_Timer
-        if (Illusions_Timer < diff)
+        Illusions_Timer -= diff;
+        if (Illusions_Timer <= diff)
         {
             //We will summon 3 illusions that will spawn on a random gamer and attack this gamer
             //We will just use one model for the beginning
@@ -101,10 +99,9 @@ struct boss_hazzarahAI : public ScriptedAI
                     ((CreatureAI*)Illusion->AI())->AttackStart(target);
             }
 
-            Illusions_Timer = 15000 + rand()%10000;
+            Illusions_Timer += 15000 + rand()%10000;
         }
-        else
-            Illusions_Timer -= diff;
+        
 
         DoMeleeAttackIfReady();
     }

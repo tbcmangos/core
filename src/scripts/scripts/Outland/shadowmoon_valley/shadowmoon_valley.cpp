@@ -64,12 +64,12 @@ struct mob_azalothAI : public ScriptedAI
 {
     mob_azalothAI(Creature* c) : ScriptedAI(c)   {}
 
-    uint32 cleave_timer;
-    uint32 cripple_timer;
-    uint32 rain_timer;
-    uint32 warstomp_timer;
-    uint64 banish_timer;
-
+    Timer cleave_timer;
+    Timer cripple_timer;
+    Timer rain_timer;
+    Timer warstomp_timer;
+    Timer banish_timer;
+    Timer warlock_check_timer;
 
     void JustRespawned()
     {
@@ -87,72 +87,72 @@ struct mob_azalothAI : public ScriptedAI
 
     void Reset()
     {
-        cleave_timer  = 6000;
-        cripple_timer = 18000;
-        rain_timer    = 15000;
-        warstomp_timer= 10000;
-        banish_timer  = TIME_TO_BANISH;
+        cleave_timer.Reset(6000);
+        cripple_timer.Reset(18000);
+        rain_timer.Reset(15000);
+        warstomp_timer.Reset(10000);
+        warlock_check_timer.Reset(5000);
+        banish_timer.Reset(TIME_TO_BANISH);
     }
 
     void UpdateAI(const uint32 diff)
     {
-        if (banish_timer < diff)
+        if (banish_timer.Passed())
         {
-            DoCast(m_creature,SPELL_BANISH);
-            banish_timer  = TIME_TO_BANISH;
+            DoCast(m_creature, SPELL_BANISH);
+            banish_timer = TIME_TO_BANISH;
         }
 
-        std::list<Creature*> warlocks = FindAllCreaturesWithEntry(21503, 20.0f);
-        for (std::list<Creature*>::iterator itr = warlocks.begin(); itr != warlocks.end(); ++itr)
+        if (warlock_check_timer.Expired(diff))
         {
-            (*itr)->GetMotionMaster()->Clear(false);
-            (*itr)->StopMoving();
-            (*itr)->CastSpell(me,SPELL_VISUAL_BANISH, false);
+            std::list<Creature*> warlocks = FindAllCreaturesWithEntry(21503, 20.0f);
+            for (std::list<Creature*>::iterator itr = warlocks.begin(); itr != warlocks.end(); ++itr)
+            {
+                if ((*itr)->isInCombat())
+                    continue;
+                (*itr)->GetMotionMaster()->Clear(false);
+                (*itr)->StopMoving();
+                (*itr)->CastSpell(me, SPELL_VISUAL_BANISH, false);
+            }
+            warlock_check_timer = 5000;
         }
 
         if (!UpdateVictim())
         {
-            banish_timer-=diff;
+            banish_timer.Update(diff);
             return;
         }
 
         //spell cleave
-        if (cleave_timer<diff)
+        if (cleave_timer.Expired(diff))
         {
             DoCast(m_creature->getVictim(), SPELL_CLEAVE);
             cleave_timer  = 6000;
         }
-        else
-            cleave_timer-=diff;
 
         //spell cripple
-        if (cripple_timer<diff)
+        if (cripple_timer.Expired(diff))
         {
             DoCast(m_creature->getVictim(), SPELL_CRIPPLE);
            cripple_timer = 40000;
         }
-        else
-            cripple_timer-=diff;
-/* This spell has been disabled due to HUGE spam in logs: 
-2013-11-10 09:41:01 ERROR: SPELL: no destination for spell ID 38741
-x 20 0000 000 times... or more
+
+        //This spell has been disabled due to HUGE spam in logs: 
+        //2013-11-10 09:41:01 ERROR: SPELL: no destination for spell ID 38741
+        //x 20 0000 000 times... or more
         //spell rain of fire
-        if (rain_timer<diff)
+        if (rain_timer.Expired(diff))
         {
-            DoCast(m_creature->getVictim(), SPELL_RAIN_OF_FIRE);
+            me->CastSpell(m_creature->getVictim(), SPELL_RAIN_OF_FIRE, false);
             rain_timer    = 15000;
         }
-        else
-            rain_timer-=diff;
-*/
+
         //spell warstomp
-        if (warstomp_timer<diff)
+        if (warstomp_timer.Expired(diff))
         {
             DoCast(m_creature->getVictim(), SPELL_WARSTOMP);
             warstomp_timer= 10000;
         }
-        else
-            warstomp_timer-=diff;
 
         DoMeleeAttackIfReady();
     }
@@ -179,11 +179,11 @@ struct mob_mature_netherwing_drakeAI : public npc_escortAI
 {
     mob_mature_netherwing_drakeAI(Creature* creature) : npc_escortAI(creature) {}
 
-    uint32 CastTimer;
+    Timer CastTimer;
 
     void Reset()
     {
-        CastTimer = 5000;
+        CastTimer.Reset(5000);
     }
 
     void WaypointReached(uint32 i)
@@ -244,12 +244,11 @@ struct mob_mature_netherwing_drakeAI : public npc_escortAI
         if (!UpdateVictim())
             return;
 
-        if (CastTimer < diff)
+        if (CastTimer.Expired(diff))
         {
             DoCast(me->getVictim(), SPELL_NETHER_BREATH);
             CastTimer = 5000;
         }
-        else CastTimer -= diff;
 
         DoMeleeAttackIfReady();
     }
@@ -282,7 +281,7 @@ struct mob_enslaved_netherwing_drakeAI : public ScriptedAI
     }
 
     uint64 PlayerGUID;
-    uint32 FlyTimer;
+    Timer FlyTimer;
     bool Tapped;
 
     void Reset()
@@ -290,7 +289,7 @@ struct mob_enslaved_netherwing_drakeAI : public ScriptedAI
         if(!Tapped)
             m_creature->setFaction(FACTION_DEFAULT);
 
-        FlyTimer = 10000;
+        FlyTimer.Reset(10000);
         m_creature->SetLevitate(false);
         m_creature->SetVisibility(VISIBILITY_ON);
     }
@@ -349,7 +348,7 @@ struct mob_enslaved_netherwing_drakeAI : public ScriptedAI
         if(!UpdateVictim())
         {
             if(Tapped)
-                if(FlyTimer < diff)
+                if(FlyTimer.Expired(diff))
             {
                 Tapped = false;
                 if(PlayerGUID)
@@ -381,7 +380,7 @@ struct mob_enslaved_netherwing_drakeAI : public ScriptedAI
                         m_creature->GetMotionMaster()->MovePoint(1, dx, dy, dz);
                     }
                 }
-            }else FlyTimer -= diff;
+            }
             return;
         }
 
@@ -398,13 +397,30 @@ CreatureAI* GetAI_mob_enslaved_netherwing_drake(Creature* _Creature)
 # mob_dragonmaw_peon
 #####*/
 
+enum eDragonmawPeons
+{
+    NPC_WORKING_PEON        = 22252,
+    NPC_DISOBEDIENT_PEON    = 23311,
+    NPC_SLOW_DEATH_CREDIT   = 23209,
+    QUEST_SLOW_DEATH        = 11020,
+    QUEST_BOOTERANG         = 11055,
+    SPELL_BOOTERANG_HIT     = 40742,
+    SPELL_BOOTERANG_CREDIT  = 39160,
+    SPELL_SLOW_DEATH_HIT    = 40468,
+    SPELL_PEON_0            = 40735,
+    SPELL_PEON_1            = 40732,
+    SPELL_PEON_2            = 40714,
+
+    GOSSIP_PEON_START       = -1001030,
+};
+
 struct mob_dragonmaw_peonAI : public ScriptedAI
 {
     mob_dragonmaw_peonAI(Creature* c) : ScriptedAI(c) {}
 
     uint64 PlayerGUID;
     bool Tapped;
-    uint32 PoisonTimer;
+    Timer PoisonTimer;
 
     void Reset()
     {
@@ -418,7 +434,7 @@ struct mob_dragonmaw_peonAI : public ScriptedAI
         if(!caster)
             return;
 
-        if(caster->GetTypeId() == TYPEID_PLAYER && spell->Id == 40468 && !Tapped)
+        if(caster->GetTypeId() == TYPEID_PLAYER && spell->Id == SPELL_SLOW_DEATH_HIT && !Tapped)
         {
             PlayerGUID = caster->GetGUID();
 
@@ -445,20 +461,19 @@ struct mob_dragonmaw_peonAI : public ScriptedAI
 
     void UpdateAI(const uint32 diff)
     {
-        if(PoisonTimer)
-            if(PoisonTimer <= diff)
+        if(PoisonTimer.Expired(diff))
         {
             if(PlayerGUID)
             {
                 Player* plr = Unit::GetPlayer(PlayerGUID);
-                if(plr && plr->GetQuestStatus(11020) == QUEST_STATUS_INCOMPLETE)
-                    plr->KilledMonster(23209, m_creature->GetGUID());
+                if(plr && plr->GetQuestStatus(QUEST_SLOW_DEATH) == QUEST_STATUS_INCOMPLETE)
+                    plr->KilledMonster(NPC_SLOW_DEATH_CREDIT, m_creature->GetGUID());
             }
             PoisonTimer = 0;
             m_creature->DealDamage(m_creature, m_creature->GetHealth(), DIRECT_DAMAGE, SPELL_SCHOOL_MASK_NORMAL, NULL, false);
-        }else PoisonTimer -= diff;
+        }
 
-         DoMeleeAttackIfReady();
+        DoMeleeAttackIfReady();
     }
 };
 
@@ -466,6 +481,107 @@ CreatureAI* GetAI_mob_dragonmaw_peon(Creature* _Creature)
 {
     return new mob_dragonmaw_peonAI(_Creature);
 }
+
+struct mob_disobedient_dragonmaw_peonAI : public ScriptedAI
+{
+    mob_disobedient_dragonmaw_peonAI(Creature* c) : ScriptedAI(c) {}
+
+    uint64 PlayerGUID;
+    uint32 myAura;
+    Timer WorkingTimer;
+    Timer SayTimer;
+
+    void Reset()
+    {
+        SelectAura();
+        PlayerGUID = 0;
+        WorkingTimer.Reset(0);
+        SayTimer.Reset(6000);
+    }
+
+    void SelectAura()
+    {
+        switch (urand(0, 2))
+        {
+        case 0: myAura = SPELL_PEON_0; break;
+        case 1: myAura = SPELL_PEON_1; break;
+        case 2: myAura = SPELL_PEON_2; break;
+        }
+    }
+
+    void SpellHit(Unit* caster, const SpellEntry* spell)
+    {
+        if (!caster)
+            return;
+
+        if (caster->GetTypeId() == TYPEID_PLAYER && spell->Id == SPELL_BOOTERANG_HIT && !WorkingTimer.GetInterval())
+        {
+            m_creature->RemoveAllAuras();
+            m_creature->CombatStop();
+            myAura = 0;
+            caster->ToPlayer()->CastCreatureOrGO(NPC_DISOBEDIENT_PEON, m_creature->GetGUID(), SPELL_BOOTERANG_CREDIT);
+            m_creature->CastSpell(caster, SPELL_BOOTERANG_CREDIT, true); // visual of returning
+            m_creature->LoadEquipment(451);
+            DoScriptText(GOSSIP_PEON_START - (urand(3, 7)), m_creature, caster);
+
+            Unit* peon = FindCreature(NPC_WORKING_PEON, 60.0f, m_creature);
+            if (peon)
+            {
+                float x, y, z;
+                peon->GetNearPoint(x, y, z, m_creature->GetObjectSize());
+
+                m_creature->SetWalk(false);
+                m_creature->GetMotionMaster()->MovePoint(1, x, y, z);
+                WorkingTimer.Reset(MINUTE*IN_MILISECONDS);
+            }
+        }
+    }
+
+    void MovementInform(uint32 type, uint32 id)
+    {
+        if (type != POINT_MOTION_TYPE)
+            return;
+
+        if (id)
+        {
+            m_creature->SetUInt32Value(UNIT_NPC_EMOTESTATE, EMOTE_ONESHOT_ATTACK1H);
+        }
+    }
+
+    void UpdateAI(const uint32 diff)
+    {
+        if (WorkingTimer.Expired(diff))
+        {
+            m_creature->LoadEquipment(0, true);
+            m_creature->SetUInt32Value(UNIT_NPC_EMOTESTATE, EMOTE_ONESHOT_NONE);
+            m_creature->GetMotionMaster()->MoveTargetedHome();
+            SelectAura();
+            WorkingTimer.Reset(0);
+        }
+
+        if (!UpdateVictim())
+        {
+            if (SayTimer.Expired(diff))
+            {
+                if (myAura && !m_creature->IsInEvadeMode() && !m_creature->HasAura(myAura))
+                    m_creature->CastSpell(m_creature, myAura, true);
+
+                if (myAura == SPELL_PEON_0)
+                    DoScriptText(GOSSIP_PEON_START - (urand(0, 2)), m_creature);
+                SayTimer = 6000;
+            }
+            return;
+        }
+
+        DoMeleeAttackIfReady();
+    }
+};
+
+CreatureAI* GetAI_mob_disobedient_dragonmaw_peon(Creature* _Creature)
+{
+    return new mob_disobedient_dragonmaw_peonAI(_Creature);
+}
+
 
 /*######
 ## npc_drake_dealer_hurlunk
@@ -823,9 +939,9 @@ struct npc_overlord_morghorAI : public ScriptedAI
     uint64 PlayerGUID;
     uint64 IllidanGUID;
 
-    uint32 ConversationTimer;
+    Timer ConversationTimer;
     uint32 Step;
-    uint32 resetTimer;
+    Timer resetTimer;
 
     bool Event;
 
@@ -837,7 +953,7 @@ struct npc_overlord_morghorAI : public ScriptedAI
         ConversationTimer = 0;
         Step = 0;
 
-        resetTimer = 180000;
+        resetTimer.Reset(180000);
 
         Event = false;
         m_creature->SetUInt32Value(UNIT_NPC_FLAGS, 2);
@@ -972,16 +1088,13 @@ struct npc_overlord_morghorAI : public ScriptedAI
 
     void UpdateAI(const uint32 diff)
     {
-        if(!ConversationTimer)
-            return;
-
-        if(ConversationTimer <= diff)
+        if(ConversationTimer.Expired(diff))
         {
             if(Event && IllidanGUID && PlayerGUID)
             {
                 ConversationTimer = NextStep(++Step);
             }
-        }else ConversationTimer -= diff;
+        }
     }
 };
 
@@ -1253,16 +1366,16 @@ static Location SpawnLocation[]=
 struct WaveData
 {
     uint8 SpawnCount, UsedSpawnPoint;
-    uint32 CreatureId, SpawnTimer,YellTimer;
+    uint32 CreatureId;
     int32 WaveTextId;
 };
 
 static WaveData WavesInfo[]=
 {
-    {9, 0, 22075, 10000, 7000, -1000371},   //Illidari Soldier
-    {2, 9, 22074, 10000, 7000, -1000372},   //Illidari Mind Breaker
-    {4, 11, 19797, 10000, 7000, -1000373},  //Illidari Highlord
-    {1, 15, 22076, 10000, 7000, -1000374}   //Torloth The Magnificent
+    {9, 0, 22075, -1000371},   //Illidari Soldier
+    {2, 9, 22074, -1000372},   //Illidari Mind Breaker
+    {4, 11, 19797, -1000373},  //Illidari Highlord
+    {1, 15, 22076, -1000374}   //Torloth The Magnificent
 };
 
 struct SpawnSpells
@@ -1289,10 +1402,10 @@ static SpawnSpells SpawnCast[]=
 
 struct mob_illidari_spawnAI : public ScriptedAI
 {
-    mob_illidari_spawnAI(Creature* c) : ScriptedAI(c) {}
+    mob_illidari_spawnAI(Creature* c) : ScriptedAI(c) { me->SetAggroRange(60.0f); }
 
     uint64 LordIllidanGUID;
-    uint32 SpellTimer1, SpellTimer2, SpellTimer3;
+    Timer SpellTimer1, SpellTimer2, SpellTimer3;
     bool Timers;
 
     void Reset()
@@ -1302,7 +1415,6 @@ struct mob_illidari_spawnAI : public ScriptedAI
     }
 
     void EnterCombat(Unit* who) {}
-    void JustDied(Unit* slayer);
 
     void UpdateAI(const uint32 diff)
     {
@@ -1331,16 +1443,16 @@ struct mob_illidari_spawnAI : public ScriptedAI
         //Illidari Soldier
         if(m_creature->GetEntry() == 22075)
         {
-            if(SpellTimer1 < diff)
+            if(SpellTimer1.Expired(diff))
             {
                 DoCast(m_creature->getVictim(), SpawnCast[0].SpellId);//Spellbreaker
                 SpellTimer1 = SpawnCast[0].Timer2 + (rand()%5 * 1000);
-            }else SpellTimer1 -= diff;
+            }
         }
         //Illidari Mind Breaker
         if(m_creature->GetEntry() == 22074)
         {
-            if(SpellTimer1 < diff)
+            if(SpellTimer1.Expired(diff))
             {
                 if(Unit *target = SelectUnit(SELECT_TARGET_RANDOM,0))
                 {
@@ -1348,36 +1460,38 @@ struct mob_illidari_spawnAI : public ScriptedAI
                     {
                         DoCast(target, SpawnCast[1].SpellId); //Focused Bursts
                         SpellTimer1 = SpawnCast[1].Timer2 + (rand()%5 * 1000);
-                    }else SpellTimer1 = 2000;
+                    }
+                    else
+                        SpellTimer1 = 2000;
                 }
-            }else SpellTimer1 -= diff;
+            }
 
-            if(SpellTimer2 < diff)
+            if(SpellTimer2.Expired(diff))
             {
                 DoCast(m_creature->getVictim(), SpawnCast[2].SpellId);//Psychic Scream
                 SpellTimer2 = SpawnCast[2].Timer2 + (rand()%13 * 1000);
-            }else SpellTimer2 -= diff;
+            }
 
-            if(SpellTimer3 < diff)
+            if(SpellTimer3.Expired(diff))
             {
                 DoCast(m_creature->getVictim(), SpawnCast[3].SpellId);//Mind Blast
                 SpellTimer3 = SpawnCast[3].Timer2 + (rand()%8 * 1000);
-            }else SpellTimer3 -= diff;
+            }
         }
         //Illidari Highlord
         if(m_creature->GetEntry() == 19797)
         {
-            if(SpellTimer1 < diff)
+            if(SpellTimer1.Expired(diff))
             {
                 DoCast(m_creature->getVictim(), SpawnCast[4].SpellId);//Curse Of Flames
                 SpellTimer1 = SpawnCast[4].Timer2 + (rand()%10 * 1000);
-            }else SpellTimer1 -= diff;
+            }
 
-            if(SpellTimer2 < diff)
+            if(SpellTimer2.Expired(diff))
             {
                 DoCast(m_creature->getVictim(), SpawnCast[5].SpellId);//Flamestrike
                 SpellTimer2 = SpawnCast[5].Timer2 + (rand()%7 * 13000);
-            }else SpellTimer2 -= diff;
+            }
         }
 
         DoMeleeAttackIfReady();
@@ -1392,7 +1506,7 @@ struct mob_torloth_the_magnificentAI : public ScriptedAI
 {
     mob_torloth_the_magnificentAI(Creature* c) : ScriptedAI(c) {}
 
-    uint32 AnimationTimer, SpellTimer1, SpellTimer2, SpellTimer3;
+    Timer AnimationTimer, SpellTimer1, SpellTimer2, SpellTimer3;
 
     uint8 AnimationCount;
 
@@ -1403,7 +1517,7 @@ struct mob_torloth_the_magnificentAI : public ScriptedAI
 
     void Reset()
     {
-        AnimationTimer = 4000;
+        AnimationTimer.Reset(4000);
         AnimationCount = 0;
         LordIllidanGUID = 0;
         AggroTargetGUID = 0;
@@ -1464,18 +1578,14 @@ struct mob_torloth_the_magnificentAI : public ScriptedAI
 
     void UpdateAI(const uint32 diff)
     {
-        if(AnimationTimer)
-        {
-            if(AnimationTimer <= diff)
-            {
-                HandleAnimation();
-            }else AnimationTimer -= diff;
-        }
+        if(AnimationTimer.Expired(diff))
+            HandleAnimation();
 
         if(AnimationCount < 6)
         {
             m_creature->CombatStop();
-        }else if(!Timers)
+        }
+        else if(!Timers)
         {
 
             SpellTimer1 = SpawnCast[6].Timer1;
@@ -1486,23 +1596,23 @@ struct mob_torloth_the_magnificentAI : public ScriptedAI
 
         if(Timers)
         {
-            if(SpellTimer1 < diff)
+            if(SpellTimer1.Expired(diff))
             {
                 DoCast(m_creature->getVictim(), SpawnCast[6].SpellId);//Cleave
                 SpellTimer1 = SpawnCast[6].Timer2 + (rand()%10 * 1000);
-            }else SpellTimer1 -= diff;
+            }
 
-            if(SpellTimer2 < diff)
+            if(SpellTimer2.Expired(diff))
             {
                 DoCast(m_creature->getVictim(), SpawnCast[7].SpellId);//Shadowfury
                 SpellTimer2 = SpawnCast[7].Timer2 + (rand()%5 * 1000);
-            }else SpellTimer2 -= diff;
+            }
 
-            if(SpellTimer3 < diff)
+            if(SpellTimer3.Expired(diff))
             {
                 DoCast(m_creature, SpawnCast[8].SpellId);
                 SpellTimer3 = SpawnCast[8].Timer2 + (rand()%7 * 1000);//Spell Reflection
-            }else SpellTimer3 -= diff;
+            }
         }
 
         DoMeleeAttackIfReady();
@@ -1537,33 +1647,28 @@ struct mob_torloth_the_magnificentAI : public ScriptedAI
 
 struct npc_lord_illidan_stormrageAI : public ScriptedAI
 {
-    npc_lord_illidan_stormrageAI(Creature* c) : ScriptedAI(c) {}
+    npc_lord_illidan_stormrageAI(Creature* c) : ScriptedAI(c), summons(c) {}
 
     uint64 PlayerGUID;
 
-    uint32 WaveTimer;
-    uint32 AnnounceTimer;
+    Timer WaveTimer;
+    Timer AnnounceTimer;
 
-    int8 LiveCount;
+    SummonList summons;
     uint8 WaveCount;
 
     bool EventStarted;
-    bool Announced;
-    bool Failed;
 
     void Reset()
     {
         PlayerGUID = 0;
 
-        WaveTimer = 10000;
-        AnnounceTimer = 7000;
-        LiveCount = 0;
+        WaveTimer.Reset(10000);
+        AnnounceTimer.Reset(7000);
+        summons.DespawnAll();
         WaveCount = 0;
 
         EventStarted = false;
-        Announced = false;
-        Failed = false;
-
         m_creature->SetVisibility(VISIBILITY_OFF);
     }
 
@@ -1574,7 +1679,6 @@ struct npc_lord_illidan_stormrageAI : public ScriptedAI
     {
         uint8 count = WavesInfo[WaveCount].SpawnCount;
         uint8 locIndex = WavesInfo[WaveCount].UsedSpawnPoint;
-        srand(time(NULL));//initializing random seed
         uint8 FelguardCount = 0;
         uint8 DreadlordCount = 0;
 
@@ -1586,25 +1690,25 @@ struct npc_lord_illidan_stormrageAI : public ScriptedAI
             float Z = SpawnLocation[locIndex + i].z;
             float O = SpawnLocation[locIndex + i].o;
             Spawn = m_creature->SummonCreature(WavesInfo[WaveCount].CreatureId, X, Y, Z, O, TEMPSUMMON_TIMED_OR_DEAD_DESPAWN, 60000);
-            ++LiveCount;
 
             if(Spawn)
             {
+                summons.Summon(Spawn);
                 Spawn->LoadCreaturesAddon();
 
                 if(WaveCount == 0)//1 Wave
                 {
-                    if(rand()%3 == 1 && FelguardCount<2)
+                    if (!urand(0, 2) && FelguardCount < 2)
                     {
                         Spawn->SetUInt32Value(UNIT_FIELD_DISPLAYID,18654);
                         ++FelguardCount;
                     }
-                    else if(DreadlordCount < 3)
+                    else if (DreadlordCount < 3)
                     {
                         Spawn->SetUInt32Value(UNIT_FIELD_DISPLAYID,19991);
                         ++DreadlordCount;
                     }
-                    else if(FelguardCount<2)
+                    else if (FelguardCount < 2)
                     {
                         Spawn->SetUInt32Value(UNIT_FIELD_DISPLAYID,18654);
                         ++FelguardCount;
@@ -1617,9 +1721,7 @@ struct npc_lord_illidan_stormrageAI : public ScriptedAI
                     {
                         if(Player* pTarget = Unit::GetPlayer(PlayerGUID))
                         {
-                            float x, y, z;
-                            pTarget->GetPosition(x,y,z);
-                            Spawn->GetMotionMaster()->MovePoint(0,x, y, z);
+                            Spawn->CombatStart(pTarget);
                         }
                     }
                     ((mob_illidari_spawnAI*)Spawn->AI())->LordIllidanGUID = m_creature->GetGUID();
@@ -1634,24 +1736,22 @@ struct npc_lord_illidan_stormrageAI : public ScriptedAI
             }
         }
         ++WaveCount;
-        WaveTimer = WavesInfo[WaveCount].SpawnTimer;
-        AnnounceTimer = WavesInfo[WaveCount].YellTimer;
+
+        WaveTimer = 10000;
+        AnnounceTimer = 7000;
     }
 
-    void CheckEventFail()
+    bool CheckEventFail()
     {
         Player* pPlayer = Unit::GetPlayer(PlayerGUID);
 
         if(!pPlayer)
-            return;
+            return true;
 
         if(Group *EventGroup = pPlayer->GetGroup())
         {
             Player* GroupMember;
-
-            uint8 GroupMemberCount = 0;
-            uint8 DeadMemberCount = 0;
-            uint8 FailedMemberCount = 0;
+            bool failed = true;
 
             const Group::MemberSlotList members = EventGroup->GetMemberSlots();
 
@@ -1660,26 +1760,12 @@ struct npc_lord_illidan_stormrageAI : public ScriptedAI
                 GroupMember = (Unit::GetPlayer(itr->guid));
                 if(!GroupMember)
                     continue;
-                if(!GroupMember->IsWithinDistInMap(m_creature, EVENT_AREA_RADIUS) && GroupMember->GetQuestStatus(QUEST_BATTLE_OF_THE_CRIMSON_WATCH) == QUEST_STATUS_INCOMPLETE)
-                {
-                    GroupMember->FailQuest(QUEST_BATTLE_OF_THE_CRIMSON_WATCH);
-                    GroupMember->SetQuestStatus(QUEST_BATTLE_OF_THE_CRIMSON_WATCH, QUEST_STATUS_NONE);
-                    ++FailedMemberCount;
-                }
-                ++GroupMemberCount;
 
-                if(GroupMember->isDead())
-                {
-                    ++DeadMemberCount;
-                }
+                if(GroupMember->IsWithinDistInMap(m_creature, EVENT_AREA_RADIUS) && GroupMember->isAlive())
+                    failed = false;
             }
 
-            if(GroupMemberCount == FailedMemberCount)
-            {
-                Failed = true;
-            }
-
-            if(GroupMemberCount == DeadMemberCount)
+            if(failed)
             {
                 for(Group::member_citerator itr = members.begin(); itr!= members.end(); itr++)
                 {
@@ -1691,54 +1777,45 @@ struct npc_lord_illidan_stormrageAI : public ScriptedAI
                         GroupMember->SetQuestStatus(QUEST_BATTLE_OF_THE_CRIMSON_WATCH, QUEST_STATUS_NONE);
                     }
                 }
-                Failed = true;
+                return true;
             }
-        }else if (pPlayer->isDead() || !pPlayer->IsWithinDistInMap(m_creature, EVENT_AREA_RADIUS))
+        }
+        else if (pPlayer->isDead() || !pPlayer->IsWithinDistInMap(m_creature, EVENT_AREA_RADIUS))
         {
             pPlayer->FailQuest(QUEST_BATTLE_OF_THE_CRIMSON_WATCH);
-            Failed = true;
+            return true;
         }
+        return false;
     }
 
-    void LiveCounter()
+    void SummonedCreatureDespawn(Creature* despawned)
     {
-        --LiveCount;
-        if(!LiveCount)
-            Announced = false;
+        summons.Despawn(despawned);
     }
 
     void UpdateAI(const uint32 diff)
     {
-        if(!PlayerGUID || !EventStarted)
+        //there are checks bellow that *SHOULD* check for fail etc etc but i don't have time to read that wall of text
+        if (!PlayerGUID || !EventStarted)
             return;
 
-        if(!LiveCount && WaveCount < 4)
+        if (CheckEventFail())
+            EnterEvadeMode();
+
+
+        if(summons.empty() && WaveCount < 4)
         {
-            if(!Announced && AnnounceTimer < diff)
+            if(AnnounceTimer.Expired(diff))
             {
                 DoScriptText(WavesInfo[WaveCount].WaveTextId, m_creature);
-                Announced = true;
-            }else AnnounceTimer -= diff;
+                AnnounceTimer = 0;
+            }
 
-            if(WaveTimer < diff)
-            {
+            if(WaveTimer.Expired(diff))
                 SummonNextWave();
-            }else WaveTimer -= diff;
         }
-        CheckEventFail();
-
-        if(Failed)
-            EnterEvadeMode();
     }
 };
-
-void mob_illidari_spawnAI::JustDied(Unit *slayer)
-{
-    m_creature->RemoveCorpse();
-    if(Creature* LordIllidan = (Unit::GetCreature(*m_creature, LordIllidanGUID)))
-        if(LordIllidan)
-            ((npc_lord_illidan_stormrageAI*)LordIllidan->AI())->LiveCounter();
-}
 
 /*#####
 # go_crystal_prison
@@ -1754,7 +1831,6 @@ bool GOQuestAccept_GO_crystal_prison(Player* plr, GameObject* go, Quest const* q
         {
             ((npc_lord_illidan_stormrageAI*)((Creature*)Illidan)->AI())->Reset();
             ((npc_lord_illidan_stormrageAI*)((Creature*)Illidan)->AI())->PlayerGUID = plr->GetGUID();
-            ((npc_lord_illidan_stormrageAI*)((Creature*)Illidan)->AI())->LiveCount = 0;
             ((npc_lord_illidan_stormrageAI*)((Creature*)Illidan)->AI())->EventStarted=true;
         }
     }
@@ -1970,7 +2046,7 @@ struct npc_AkamaAI : public ScriptedAI
     uint64 IllidanGUID;
     uint64 OlumSpiritGUID;
 
-    uint32 TalkTimer;
+    Timer TalkTimer;
     uint32 Step;
 
     std::list<uint64> targets;
@@ -2275,17 +2351,13 @@ struct npc_AkamaAI : public ScriptedAI
     {
         if (EventStarted && VagathGUID)
         {
-            if (TalkTimer < diff)
-            {
+            if (TalkTimer.Expired(diff))
                 TalkTimer = NextStep(Step++);
-            }
-            else
-                TalkTimer -= diff;
         }
 
         if(PreludeEventStarted && OlumGUID)
         {
-            if (Step == 16 && !IllidanGUID && TalkTimer < diff)
+            if (Step == 16 && !IllidanGUID && TalkTimer.Passed())
             {
                 Creature* Illidan = m_creature->SummonCreature(ILLIDAN,OlumNewPos[0]-3.0f,OlumNewPos[1]+0.5f,OlumNewPos[2],OlumNewPos[3],TEMPSUMMON_CORPSE_DESPAWN,0);
                 Illidan->SetFloatValue(OBJECT_FIELD_SCALE_X,0.65f);
@@ -2293,12 +2365,9 @@ struct npc_AkamaAI : public ScriptedAI
                 Illidan->SetFlag(UNIT_FIELD_FLAGS,UNIT_FLAG_NOT_SELECTABLE);
                 IllidanGUID = Illidan->GetGUID();
             }
-            if (TalkTimer < diff)
-            {
+
+            if (TalkTimer.Expired(diff))
                 TalkTimer = PreludeNextStep(Step++);
-            }
-            else
-                TalkTimer -= diff;
         }
     }
 };
@@ -2341,6 +2410,9 @@ EndContentData */
 # npc_shadowlord_trigger
 ######*/
 
+#define NPC_RETAINER_ID 22102
+#define NPC_SOULSTEALER_ID 22061
+
 struct npc_shadowlord_triggerAI : public Scripted_NoMovementAI
 {
     npc_shadowlord_triggerAI(Creature* c) : Scripted_NoMovementAI(c)
@@ -2351,9 +2423,9 @@ struct npc_shadowlord_triggerAI : public Scripted_NoMovementAI
     }
 
     std::list<Creature*> SoulstealerList;
-    uint32 Check_Timer;
-    uint32 Wave_Timer;
-    uint32 Reset_Timer;
+    Timer Check_Timer;
+    Timer Wave_Timer;
+    Timer Reset_Timer;
     uint32 counter;         //is alive counter
     uint32 Ccounter;        //is in combat counter
     float x, y, z;
@@ -2365,11 +2437,12 @@ struct npc_shadowlord_triggerAI : public Scripted_NoMovementAI
 
     void Reset()
     {
+        m_creature->setActive(true);
         Reset_Timer = 0;
-        Check_Timer = 0;
-        Wave_Timer = 0;
+        Check_Timer = 1;
+        Wave_Timer = 1;
         SoulstealerList.clear();
-        SoulstealerList = FindAllCreaturesWithEntry(22061, 80.0f);
+        SoulstealerList = FindAllCreaturesWithEntry(NPC_SOULSTEALER_ID, 80.0f);
         m_creature->Relocate(x, y, z);
     }
 
@@ -2379,18 +2452,27 @@ struct npc_shadowlord_triggerAI : public Scripted_NoMovementAI
         m_creature->GetMotionMaster()->MoveIdle();
     }
 
+    void JustRespawned()
+    {
+        SoulstealerList.clear();
+        SoulstealerList = FindAllCreaturesWithEntry(NPC_SOULSTEALER_ID, 80.0f);
+        for (std::list<Creature*>::iterator i = SoulstealerList.begin(); i != SoulstealerList.end(); ++i)
+            if (!(*i)->isAlive())
+                (*i)->Respawn();
+    }
+
     void UpdateAI(const uint32 diff)
     {
         if(!m_creature->isInCombat())
             return;
 
-        if(Check_Timer < diff)
+        if(Check_Timer.Expired(diff))
         {
             SoulstealerList.clear();
             counter = 0;
             Ccounter = 0;
             m_creature->CallAssistance();
-            SoulstealerList = FindAllCreaturesWithEntry(22061, 80.0f);
+            SoulstealerList = FindAllCreaturesWithEntry(NPC_SOULSTEALER_ID, 80.0f);
             if(!SoulstealerList.empty())
                 for(std::list<Creature*>::iterator i = SoulstealerList.begin(); i != SoulstealerList.end(); ++i)
                 {
@@ -2406,29 +2488,26 @@ struct npc_shadowlord_triggerAI : public Scripted_NoMovementAI
             NewZ = 137.15;  //normalize Z
             DoTeleportTo(NewX, NewY, NewZ);
             m_creature->Relocate(NewX, NewY, NewZ);
-            if(!Ccounter && counter && !Reset_Timer)
+            if(!Ccounter && counter && !Reset_Timer.GetInterval())
                 Reset_Timer = 20000;
         }
-        else
-            Check_Timer -= diff;
 
         if(counter)
         {
-            if(Wave_Timer < diff)
+            if(Wave_Timer.Expired(diff))
             {
                 float x,y,z;
                 for(uint8 i = 0; i < 3; ++i)
                 {
                     m_creature->GetRandomPoint(SpawnX,SpawnY,SpawnZ,3.0f,x,y,z);
                     z = SpawnZ;
-                    Unit *Retainer = m_creature->SummonCreature(22102,x,y,z,m_creature->GetOrientation(),
-                    TEMPSUMMON_TIMED_DESPAWN_OUT_OF_COMBAT,80000);
+                    Unit *Retainer = m_creature->SummonCreature(NPC_RETAINER_ID,x,y,z,m_creature->GetOrientation(),
+                    TEMPSUMMON_TIMED_OR_CORPSE_DESPAWN,80000);
+                    Retainer->GetMotionMaster()->MoveIdle();
                     Retainer->GetMotionMaster()->MovePath(2096+i, false);
                 }
                 Wave_Timer = 25000;
             }
-            else
-                Wave_Timer -= diff;
         }
         else
         {
@@ -2442,16 +2521,13 @@ struct npc_shadowlord_triggerAI : public Scripted_NoMovementAI
             m_creature->RemoveCorpse();
         }
 
-        if(Reset_Timer)
+
+        if (Reset_Timer.Expired(diff))
         {
-            if(Reset_Timer < diff)
-            {
-                EnterEvadeMode();
-                Reset_Timer = 0;
-            }
-            else
-                Reset_Timer -= diff;
+            EnterEvadeMode();
+            Reset_Timer = 0;
         }
+        
     }
 };
 
@@ -2476,12 +2552,12 @@ struct mob_shadowlord_deathwailAI : public ScriptedAI
     mob_shadowlord_deathwailAI(Creature* c) : ScriptedAI(c) {}
 
     CreatureInfo* cInfo;
-    uint32 Check_Timer;
-    uint32 Patrol_Timer;
-    uint32 Shadowbolt_Timer;
-    uint32 ShadowboltVoley_Timer;
-    uint32 Fear_Timer;
-    uint32 Deathcoil_Timer;
+    Timer Check_Timer;
+    Timer Patrol_Timer;
+    Timer Shadowbolt_Timer;
+    Timer ShadowboltVoley_Timer;
+    Timer Fear_Timer;
+    Timer Deathcoil_Timer;
 
     uint64 HeartGUID;
 
@@ -2493,14 +2569,14 @@ struct mob_shadowlord_deathwailAI : public ScriptedAI
         ClearCastQueue();
 
         m_creature->SetNoCallAssistance(true);
-        Check_Timer = 2000;
-        landed = true;
+        m_creature->LoadCreaturesAddon(true);
+        Check_Timer.Reset(2000);
         felfire = false;
 
-        Shadowbolt_Timer = 4000;
-        ShadowboltVoley_Timer = 13000;
-        Fear_Timer = 20000;
-        Deathcoil_Timer = 8000;
+        Shadowbolt_Timer.Reset(4000);
+        ShadowboltVoley_Timer.Reset(13000);
+        Fear_Timer.Reset(20000);
+        Deathcoil_Timer.Reset(8000);
 
         m_creature->GetMotionMaster()->Initialize();
         m_creature->SetLevitate(true);
@@ -2529,7 +2605,7 @@ struct mob_shadowlord_deathwailAI : public ScriptedAI
 
     void UpdateAI(const uint32 diff)
     {
-        if(Check_Timer < diff)
+        if(Check_Timer.Expired(diff))
         {
             Unit* trigger = FindCreature(22096, 100, m_creature);
 
@@ -2541,7 +2617,6 @@ struct mob_shadowlord_deathwailAI : public ScriptedAI
                 m_creature->GetMotionMaster()->MovePoint(1, -3247, 284, 138.1);
                 m_creature->SetHomePosition( -3247, 284, 138.1, 0);
                 m_creature->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
-                DoZoneInCombat(50);
                 landed = true;
                 felfire = false;
             }
@@ -2550,6 +2625,7 @@ struct mob_shadowlord_deathwailAI : public ScriptedAI
 
             if(!m_creature->IsWalking() && m_creature->GetPositionZ() < 142)
             {
+                m_creature->Unmount();
                 me->SetWalk(true);
                 m_creature->SetSpeed(MOVE_WALK, 4.0);
                 m_creature->SetSpeed(MOVE_RUN, 2.0);
@@ -2557,41 +2633,33 @@ struct mob_shadowlord_deathwailAI : public ScriptedAI
             if(felfire && trigger && !trigger->isInCombat())
                 felfire = false;
             if(felfire)
-                AddSpellToCast(m_creature, SPELL_FEL_FIREBALL);
+                DoCast(m_creature, SPELL_FEL_FIREBALL);
             Check_Timer = 5000;
         }
-        else
-            Check_Timer -= diff;
 
-        if(!landed || !UpdateVictim())
+        if(!UpdateVictim() || !landed)
             return;
 
-        if(Shadowbolt_Timer < diff)
+        if(Shadowbolt_Timer.Expired(diff))
         {
             AddSpellToCast(m_creature->getVictim(), SPELL_SHADOWBOLT);
             Shadowbolt_Timer = 12000+rand()%6000;
         }
-        else
-            Shadowbolt_Timer -= diff;
 
-        if(ShadowboltVoley_Timer < diff)
+        if(ShadowboltVoley_Timer.Expired(diff))
         {
             AddSpellToCast(m_creature->getVictim(), SPELL_SHADOWBOLT);
             ShadowboltVoley_Timer = 25000+rand()%15000;
         }
-        else
-            ShadowboltVoley_Timer -= diff;
 
-        if(Fear_Timer < diff)
+        if(Fear_Timer.Expired(diff))
         {
             if(Unit* target = SelectUnit(SELECT_TARGET_RANDOM, 0, 30.0, true))
                 AddSpellToCast(target, SPELL_FEAR);
             Fear_Timer = 10000+rand()%20000;
         }
-        else
-            Fear_Timer -= diff;
 
-        if(Deathcoil_Timer < diff)
+        if(Deathcoil_Timer.Expired(diff))
         {
             if(Unit* target = SelectUnit(SELECT_TARGET_RANDOM, 0, 30.0, true, m_creature->getVictimGUID()))
                 AddSpellToCast(target, SPELL_DEATHCOIL);
@@ -2599,8 +2667,6 @@ struct mob_shadowlord_deathwailAI : public ScriptedAI
                 AddSpellToCast(m_creature->getVictim(), SPELL_DEATHCOIL);
             Deathcoil_Timer = 15000+rand()%30000;
         }
-        else
-            Deathcoil_Timer -= diff;
        
         CastNextSpellIfAnyAndReady();
         DoMeleeAttackIfReady();
@@ -2624,6 +2690,7 @@ struct mob_shadowmoon_soulstealerAI : public Scripted_NoMovementAI
     void Reset()
     {
         DoCast(m_creature, 38250);
+        m_creature->SetIgnoreVictimSelection(true);
     }
 
     void MoveInLineOfSight(Unit *who)
@@ -2643,7 +2710,7 @@ struct mob_shadowmoon_soulstealerAI : public Scripted_NoMovementAI
 
     void EnterCombat(Unit* who)
     {
-        m_creature->GetUnitStateMgr().PushAction(UNIT_ACTION_STUN);
+        m_creature->GetUnitStateMgr().PushAction(UNIT_ACTION_ROOT);
         m_creature->CombatStart(who);
         if(Unit* Deathwail = FindCreature(22006, 100.0, m_creature))
             ((mob_shadowlord_deathwailAI*)((Creature*) Deathwail)->AI())->felfire = true;
@@ -2720,6 +2787,7 @@ EndContentData */
 #define VAGATH_INTRO      "A miserable defense from Light-swollen fools. Xi'ri, I will consume you myself! "
 #define VAGATH_DEATH      "You'ves sealed your fate, Akama! The master will learn of your betrayal! "
 #define XIRI_GOSSIP_HELLO "I am ready to join your forces in Battle Xi'ri"
+#define XIRI_GOSSIP_RESTORE_ITEM "Restore Medallion of Karabor"
 
 //NPC spawn positions and Waypoints
 static float MaievBT[4] =
@@ -2824,12 +2892,12 @@ struct npc_maiev_BT_attuAI : public npc_escortAI
     npc_maiev_BT_attuAI(Creature* c) : npc_escortAI(c) {}
 
     bool moving;
-    uint32 FanOfBlades;
+    Timer FanOfBladesTimer;
 
     void Reset()
     {
         moving = false;
-        FanOfBlades = urand(2000, 6000);
+        FanOfBladesTimer.Reset(urand(2000, 6000));
     }
 
     void MoveInLineOfSight(Unit* who)
@@ -2859,13 +2927,11 @@ struct npc_maiev_BT_attuAI : public npc_escortAI
 
         if(UpdateVictim())
         {
-            if(FanOfBlades < diff)
+            if(FanOfBladesTimer.Expired(diff))
             {
                 DoCast(m_creature->getVictim(), SPELL_FAN_OF_BLADES);
-                FanOfBlades = urand(8000, 16000);
+                FanOfBladesTimer = urand(8000, 16000);
             }
-            else
-                FanOfBlades -= diff;
         }
     }
 
@@ -2894,13 +2960,13 @@ struct npc_akama_BT_attuAI : public npc_escortAI
     bool moving;
     bool yell;
     bool say;
-    uint32 ChainLightning;
-    uint32 YellCounter;
-    uint32 KillSayTimer;
+    Timer YellTimer;
+    Timer ChainLightningTimer;
+    Timer KillSayTimer;
 
     void Reset()
     {
-        ChainLightning = 1000;
+        ChainLightningTimer.Reset(1000);
         moving = false;
         say = false;
         yell = false;
@@ -2919,7 +2985,7 @@ struct npc_akama_BT_attuAI : public npc_escortAI
         if(id == 4)
         {
             yell = true;
-            YellCounter = 10000;
+            YellTimer = 10000;
         }
         if(id == 7)
         {
@@ -2932,21 +2998,17 @@ struct npc_akama_BT_attuAI : public npc_escortAI
     {
         npc_escortAI::UpdateAI(diff);
 
-        if(yell && YellCounter < diff)
+        if(yell && YellTimer.Expired(diff))
         {
             DoYell(AKAMA_YELL, 0, 0);
             yell = false;
         }
-        else
-            YellCounter -= diff;
 
-        if(say && KillSayTimer < diff)
+        if(say && KillSayTimer.Expired(diff))
         {
             DoSay(AKAMA_KILL, 0, 0);
             say = false;
         }
-        else
-            KillSayTimer -= diff;
 
         if(!moving)
         {
@@ -2957,13 +3019,11 @@ struct npc_akama_BT_attuAI : public npc_escortAI
 
         if(UpdateVictim())
         {
-            if(ChainLightning < diff)
+            if(ChainLightningTimer.Expired(diff))
             {
                 DoCast(m_creature->getVictim(), CHAIN_LIGHTNING);
-                ChainLightning = urand(5000, 10000);
+                ChainLightningTimer = urand(5000, 10000);
             }
-            else
-                ChainLightning -= diff;
         }
     }
 
@@ -2998,14 +3058,14 @@ struct npc_ashtongue_deathswornAI : public npc_escortAI
 {
     npc_ashtongue_deathswornAI(Creature* c) : npc_escortAI(c) {}
 
-    uint32 AttackTimer;
+    Timer AttackTimer;
     bool intro;
 
     void Reset()
     {
         if(!HasEscortState(STATE_ESCORT_ESCORTING))
         {
-            AttackTimer = 25000;
+            AttackTimer.Reset(25000);
             intro = false;
         }
     }
@@ -3020,14 +3080,12 @@ struct npc_ashtongue_deathswornAI : public npc_escortAI
 
     void UpdateAI(const uint32 diff)
     {
-        if(!intro && AttackTimer < diff)
+        if(!intro && AttackTimer.Expired(diff))
         {
             intro = true;
             if(!HasEscortState(STATE_ESCORT_ESCORTING))
                 npc_escortAI::Start(true, true);
         }
-        else
-            AttackTimer -= diff;
 
         npc_escortAI::UpdateAI(diff);
     }
@@ -3087,45 +3145,39 @@ struct mob_illidari_shadowlordAI : public ScriptedAI
 {
     mob_illidari_shadowlordAI(Creature* c) : ScriptedAI(c) {}
 
-    uint32 CarrionSwarm;
-    uint32 Inferno;
-    uint32 Sleep;
+    Timer CarrionSwarmTimer;
+    Timer InfernoTimer;
+    Timer SleepTimer;
 
     void Reset()
     {
-        CarrionSwarm = urand(4000, 10000);
-        Inferno = urand(6000, 15000);
-        Sleep = urand(2000, 30000);
+        CarrionSwarmTimer.Reset(urand(4000, 10000));
+        InfernoTimer.Reset(urand(6000, 15000));
+        SleepTimer.Reset(urand(2000, 30000));
     }
 
     void UpdateAI(const uint32 diff)
     {
         if(UpdateVictim())
         {
-            if(CarrionSwarm < diff)
+            if(CarrionSwarmTimer.Expired(diff))
             {
                 DoCast(m_creature->getVictim(), SPELL_CARRION_SWARM);
-                CarrionSwarm = urand(8000, 16000);
+                CarrionSwarmTimer = urand(8000, 16000);
             }
-            else
-                CarrionSwarm -= diff;
 
-            if(Inferno < diff)
+            if(InfernoTimer.Expired(diff))
             {
                 DoCast(m_creature->getVictim(), SPELL_INFERNO);
-                Inferno = urand(35000, 50000);
+                InfernoTimer = urand(35000, 50000);
             }
-            else
-                Inferno -= diff;
 
-            if(Sleep < diff)
+            if(SleepTimer.Expired(diff))
             {
                 if(!urand(0, 3))
                     DoCast(m_creature->getVictim(), SPELL_SLEEP);
-                Sleep = 60000;
+                SleepTimer = 60000;
             }
-            else
-                Sleep -= diff;
 
             DoMeleeAttackIfReady();
         }
@@ -3147,11 +3199,11 @@ struct npc_xiriAI : public Scripted_NoMovementAI
 
     bool EventStarted;
     uint64 PlayerGUID;
-    uint32 QuestTimer;
+    Timer QuestTimer;
 
     void Reset()
     {
-        QuestTimer = 140000;
+        QuestTimer.Reset(140000);
         PlayerGUID = 0;
         EventStarted = false;
     }
@@ -3197,15 +3249,13 @@ struct npc_xiriAI : public Scripted_NoMovementAI
     {
         if(EventStarted)
         {
-            if(QuestTimer < diff)
+            if(QuestTimer.Expired(diff))
             {
                 Player* pl = m_creature->GetPlayer(PlayerGUID);
                 if(pl && pl->GetQuestStatus(10985) == QUEST_STATUS_INCOMPLETE)
                     pl->GroupEventHappens(10985, m_creature);
                 Reset();
             }
-            else
-                QuestTimer -= diff;
         }
 
     }
@@ -3231,12 +3281,11 @@ bool GossipHello_npc_xiri(Player *player, Creature *_Creature)
         player->PrepareQuestMenu( _Creature->GetGUID() );
 
     if (player->GetQuestStatus(10985) == QUEST_STATUS_INCOMPLETE)
-    {
         player->ADD_GOSSIP_ITEM( 0, XIRI_GOSSIP_HELLO, GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF);
-        player->SEND_GOSSIP_MENU(_Creature->GetNpcTextId(), _Creature->GetGUID());
-    }
-    else
-        player->SEND_GOSSIP_MENU(_Creature->GetNpcTextId(), _Creature->GetGUID());
+    else if (player->GetQuestStatus(10985) == QUEST_STATUS_COMPLETE && !player->HasItemCount(32649,1,true) && !player->HasItemCount(32757,1,true))
+        player->ADD_GOSSIP_ITEM(0, XIRI_GOSSIP_RESTORE_ITEM, GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF + 1);
+
+    player->SEND_GOSSIP_MENU(_Creature->GetNpcTextId(), _Creature->GetGUID());
 
     return true;
 }
@@ -3249,6 +3298,20 @@ bool GossipSelect_npc_xiri(Player *player, Creature *_Creature, uint32 sender, u
             player->CLOSE_GOSSIP_MENU();
             ((npc_xiriAI*)_Creature->AI())->StartEvent();
             ((npc_xiriAI*)_Creature->AI())->PlayerGUID = player->GetGUID();
+            break;
+        case GOSSIP_ACTION_INFO_DEF +1:
+            player->CLOSE_GOSSIP_MENU();
+            // recheck quest status and select medallion version
+            if (player->GetQuestStatus(10985) != QUEST_STATUS_COMPLETE)
+                break;
+            uint32 entry = (player->GetQuestStatus(10959) == QUEST_STATUS_COMPLETE) ? 32757 : 32649;
+            ItemPosCountVec dest;
+            uint8 msg = player->CanStoreNewItem(NULL_BAG, NULL_SLOT, dest, entry, 1);
+            if (msg == EQUIP_ERR_OK)
+            {
+                Item* item = player->StoreNewItem(dest, entry, true);
+                player->SendNewItem(item, 1, true, false, true);
+            }
             break;
     }
     return true;
@@ -3285,7 +3348,7 @@ struct mob_deathbringer_joovanAI : public ScriptedAI
     bool EventStarted;
     bool ContinueMove;
     uint64 ImageOfWarbringerGUID;
-    uint32 EventTimer;
+    Timer EventTimer;
     uint8 EventCounter;
 
     mob_deathbringer_joovanAI(Creature* c) : ScriptedAI(c)
@@ -3315,7 +3378,7 @@ struct mob_deathbringer_joovanAI : public ScriptedAI
     {
         ImageOfWarbringerGUID = creature->GetGUID();
         EventStarted = true;
-        EventTimer = 0;
+        EventTimer = 1;
         EventCounter = 0;
     }
 
@@ -3364,7 +3427,7 @@ struct mob_deathbringer_joovanAI : public ScriptedAI
 
         if(EventStarted)
         {
-            if(EventTimer < diff)
+            if(EventTimer.Expired(diff))
             {
                 switch(EventCounter)
                 {
@@ -3410,12 +3473,8 @@ struct mob_deathbringer_joovanAI : public ScriptedAI
                                 Player *p = (Player*)(*it);
                                 if(p->HasAura(37097, 0))
                                 {
-                                    // event happens nie dziala, a powinien!
                                     p->AreaExploredOrEventHappens(10596);
                                     p->AreaExploredOrEventHappens(10563);
-                                    // dlatego recznie musimy complete quest dac
-                                    p->CompleteQuest(10596);
-                                    p->CompleteQuest(10563);
                                 }
                             }
                         }
@@ -3433,8 +3492,6 @@ struct mob_deathbringer_joovanAI : public ScriptedAI
                 else
                     EventTimer = 4000;
             }
-            else
-                EventTimer -= diff;
         }
 /*
         if(!UpdateVictim())
@@ -3518,6 +3575,56 @@ bool GossipSelect_npc_thane_yoregar(Player *player, Creature *_Creature, uint32 
     return true;
 }
 
+/*####
+# npc_restore_spectrecles
+####*/
+
+#define GOSSIP_RESTORE_SPECTRECLES "Restore Spectrecles."
+#define ITEM_SPECTRECLES_T1 30719
+#define ITEM_SPECTRECLES_T2 30721
+
+bool GossipHello_npc_restore_spectrecles(Player *player, Creature *_Creature)
+{
+    if (_Creature->isQuestGiver())
+        player->PrepareQuestMenu(_Creature->GetGUID());
+
+    if ((player->GetQuestStatus(10643) || player->GetQuestStatus(10625)) && !player->HasItemCount(ITEM_SPECTRECLES_T1, 1, true))
+        player->ADD_GOSSIP_ITEM(0, GOSSIP_RESTORE_SPECTRECLES, GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF + 1);
+    if ((player->GetQuestStatus(10644) || player->GetQuestStatus(10633)) && !player->HasItemCount(ITEM_SPECTRECLES_T2, 1, true))
+        player->ADD_GOSSIP_ITEM(0, GOSSIP_RESTORE_SPECTRECLES, GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF + 2);
+    player->SEND_GOSSIP_MENU(_Creature->GetNpcTextId(), _Creature->GetGUID());
+    return true;
+}
+
+bool GossipSelect_npc_restore_spectrecles(Player *player, Creature *_Creature, uint32 sender, uint32 action)
+{
+    if (action == GOSSIP_ACTION_INFO_DEF + 1 && (player->GetQuestStatus(10643) || player->GetQuestStatus(10625)) && !player->HasItemCount(ITEM_SPECTRECLES_T1, 1, true))
+    {
+        ItemPosCountVec dest;
+        uint8 msg = player->CanStoreNewItem(NULL_BAG, NULL_SLOT, dest, ITEM_SPECTRECLES_T1, 1);
+        if (msg == EQUIP_ERR_OK)
+        {
+            Item* item = player->StoreNewItem(dest, ITEM_SPECTRECLES_T1, true);
+            player->SendNewItem(item, 1, true, false, true);
+        }
+    }
+    if (action == GOSSIP_ACTION_INFO_DEF + 2 && (player->GetQuestStatus(10644) || player->GetQuestStatus(10633)) && !player->HasItemCount(ITEM_SPECTRECLES_T2, 1, true))
+    {
+        ItemPosCountVec dest;
+        uint8 msg = player->CanStoreNewItem(NULL_BAG, NULL_SLOT, dest, ITEM_SPECTRECLES_T2, 1);
+        if (msg == EQUIP_ERR_OK)
+        {
+            Item* item = player->StoreNewItem(dest, ITEM_SPECTRECLES_T2, true);
+            player->SendNewItem(item, 1, true, false, true);
+        }
+    }
+    return true;
+}
+
+/*####
+# go_forged_illidari_bane
+####*/
+
 bool GOUse_go_forged_illidari_bane(Player *pPlayer, GameObject *pGo)
 {
     ItemPosCountVec dest;
@@ -3532,6 +3639,132 @@ bool GOUse_go_forged_illidari_bane(Player *pPlayer, GameObject *pGo)
 
     pGo->SetLootState(GO_JUST_DEACTIVATED);
     return true;
+}
+
+#define SPELL_BLUE_BEAM 40225
+#define NPC_LEGION_HOLD_REAVER 21404
+struct npc_invis_legion_hold_casterAI : public ScriptedAI
+{
+    npc_invis_legion_hold_casterAI(Creature* c) : ScriptedAI(c) {}
+
+    void Reset()
+    {
+        Unit* reaver = FindCreature(NPC_LEGION_HOLD_REAVER, 30, m_creature);
+        if (reaver)
+            m_creature->CastSpell(reaver, SPELL_BLUE_BEAM, false);
+    }
+
+    void UpdateAI(const uint32 diff)
+    {
+        if (!m_creature->IsNonMeleeSpellCast(true))
+            Reset();
+    }
+};
+
+CreatureAI* GetAI_npc_invis_legion_hold_caster(Creature* c)
+{
+    return new npc_invis_legion_hold_casterAI(c);
+}
+
+#define NPC_INFERNAL_ATTACKER 21419
+#define SPELL_INFERNAL_SUMMON_DUMMY 23053
+struct npc_invis_infernal_casterAI : public ScriptedAI
+{
+    npc_invis_infernal_casterAI(Creature* c) : ScriptedAI(c) {}
+
+    Timer summonTimer;
+    uint64 myInfernal;
+    void Reset()
+    {
+        summonTimer.Reset(60000);
+        myInfernal = 0;
+    }
+
+    void UpdateAI(const uint32 diff)
+    {
+        if(summonTimer.Expired(diff))
+        {
+            if (!myInfernal)
+            {
+                if (summonTimer.GetInterval() == 3000)
+                {
+                    summonTimer = 10000;
+                    Creature* infernal = m_creature->SummonCreature(NPC_INFERNAL_ATTACKER, m_creature->GetPositionX(),
+                        m_creature->GetPositionY(), m_creature->GetPositionZ(), 0, TEMPSUMMON_DEAD_DESPAWN, 0);
+                    if (infernal)
+                    {
+                        infernal->SetDefaultMovementType(RANDOM_MOTION_TYPE);
+                        infernal->GetMotionMaster()->Initialize();
+                        myInfernal = infernal->GetGUID();
+                    }
+                    
+                }
+                else
+                {
+                    m_creature->CastSpell(m_creature->GetPositionX(), m_creature->GetPositionY(), m_creature->GetPositionZ(),
+                        SPELL_INFERNAL_SUMMON_DUMMY, false);
+                    summonTimer = 3000;
+                }
+            }
+            else
+            {
+                Unit* infernal = m_creature->GetUnit(myInfernal);
+                if (!infernal || infernal->isDead())
+                {
+                    summonTimer = 60000;
+                    myInfernal = 0;
+                }
+                else
+                    summonTimer = 10000;
+            }
+        }
+    }
+
+};
+
+CreatureAI* GetAI_npc_invis_infernal_caster(Creature* c)
+{
+    return new npc_invis_infernal_casterAI(c);
+}
+
+#define SPELL_SPIRIT_HUNTER 36620
+#define NPC_VENERATUS 20427
+struct npc_veneratus_spawn_nodeAI : public ScriptedAI
+{
+    npc_veneratus_spawn_nodeAI(Creature* c) : ScriptedAI(c) {}
+
+    Timer resetTimer;
+
+    void Reset()
+    {
+        resetTimer = 0;
+    }
+
+    void MoveInLineOfSight(Unit* who)
+    {
+        if (!resetTimer.GetInterval() && who->HasAura(SPELL_SPIRIT_HUNTER))
+        {
+            m_creature->SummonCreature(NPC_VENERATUS, m_creature->GetPositionX(),
+                m_creature->GetPositionY(), m_creature->GetPositionZ(), 0, TEMPSUMMON_DEAD_DESPAWN, 0);
+            resetTimer = 60000;
+        }
+    }
+
+    void UpdateAI(const uint32 diff)
+    {
+        if (resetTimer.Expired(diff))
+        {
+            if (FindCreature(NPC_VENERATUS, 30, m_creature))
+                resetTimer = 60000;
+            else
+                resetTimer = 0;
+        }
+    }
+};
+
+CreatureAI* GetAI_npc_veneratus_spawn_node(Creature* c)
+{
+    return new npc_veneratus_spawn_nodeAI(c);
 }
 
 void AddSC_shadowmoon_valley()
@@ -3556,6 +3789,11 @@ void AddSC_shadowmoon_valley()
     newscript = new Script;
     newscript->Name = "mob_dragonmaw_peon";
     newscript->GetAI = &GetAI_mob_dragonmaw_peon;
+    newscript->RegisterSelf();
+
+    newscript = new Script;
+    newscript->Name = "mob_disobedient_dragonmaw_peon";
+    newscript->GetAI = &GetAI_mob_disobedient_dragonmaw_peon;
     newscript->RegisterSelf();
 
     newscript = new Script;
@@ -3714,5 +3952,26 @@ void AddSC_shadowmoon_valley()
     newscript = new Script;
     newscript->Name="go_forged_illidari_bane";
     newscript->pGOUse = &GOUse_go_forged_illidari_bane;
+    newscript->RegisterSelf();
+
+    newscript = new Script;
+    newscript->Name = "npc_restore_spectrecles";
+    newscript->pGossipHello = &GossipHello_npc_restore_spectrecles;
+    newscript->pGossipSelect = &GossipSelect_npc_restore_spectrecles;
+    newscript->RegisterSelf();
+    
+    newscript = new Script;
+    newscript->Name = "npc_invis_legion_hold_caster";
+    newscript->GetAI = &GetAI_npc_invis_legion_hold_caster;
+    newscript->RegisterSelf();
+
+    newscript = new Script;
+    newscript->Name = "npc_invis_infernal_caster";
+    newscript->GetAI = &GetAI_npc_invis_infernal_caster;
+    newscript->RegisterSelf();
+    
+    newscript = new Script;
+    newscript->Name = "npc_veneratus_spawn_node";
+    newscript->GetAI = &GetAI_npc_veneratus_spawn_node;
     newscript->RegisterSelf();
 }

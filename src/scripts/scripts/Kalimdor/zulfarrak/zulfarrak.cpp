@@ -48,13 +48,13 @@ struct npc_sergeant_blyAI : public ScriptedAI
 {
     npc_sergeant_blyAI(Creature *c) : ScriptedAI(c) {}
 
-    uint32 ShieldBash_Timer;
-    uint32 Revenge_Timer;                                   //this is wrong, spell should never be used unless m_creature->getVictim() dodge, parry or block attack. Trinity support required.
+    Timer ShieldBash_Timer;
+    Timer Revenge_Timer;                                   //this is wrong, spell should never be used unless m_creature->getVictim() dodge, parry or block attack. Trinity support required.
 
     void Reset()
     {
-        ShieldBash_Timer = 5000;
-        Revenge_Timer = 8000;
+        ShieldBash_Timer.Reset(5000);
+        Revenge_Timer.Reset(8000);
 
         m_creature->setFaction(FACTION_FRIENDLY);
     }
@@ -68,17 +68,17 @@ struct npc_sergeant_blyAI : public ScriptedAI
         if( !UpdateVictim() )
             return;
 
-        if( ShieldBash_Timer < diff )
+        if( ShieldBash_Timer.Expired(diff) )
         {
             DoCast(m_creature->getVictim(),SPELL_SHIELD_BASH);
             ShieldBash_Timer = 15000;
-        }else ShieldBash_Timer -= diff;
+        }
 
-        if( Revenge_Timer < diff )
+        if (Revenge_Timer.Expired(diff))
         {
             DoCast(m_creature->getVictim(),SPELL_REVENGE);
             Revenge_Timer = 10000;
-        }else Revenge_Timer -= diff;
+        }
 
         DoMeleeAttackIfReady();
     }

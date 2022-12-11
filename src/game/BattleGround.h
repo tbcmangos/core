@@ -33,6 +33,15 @@ class WorldPacket;
 
 struct WorldSafeLocsEntry;
 
+enum BattleGroundArenaNPC
+{
+    BG_ARENA_READY_NPC1 = 0,
+    BG_ARENA_READY_NPC2 = 1,
+    BG_ARENA_NPC_MAX    = 2,
+
+    BG_READY_NPC_ENTRY  = 40000
+};
+
 enum BattleGroundSounds
 {
     SOUND_HORDE_WINS                = 8454,
@@ -223,11 +232,6 @@ enum BattleGroundJoinError
     BG_JOIN_ERR_GROUP_NOT_ENOUGH = 9
 };
 
-enum ArenaSharedNPC
-{
-    ARENA_NPC_SPECTATOR = 0
-};
-
 class BattleGroundScore
 {
     public:
@@ -332,8 +336,8 @@ class HELLGROUND_IMPORT_EXPORT BattleGround
 
         void AnnounceBGStart();
 
-        void ModifyStartDelayTime(int diff) { m_StartDelayTime -= diff; }
-        void SetStartDelayTime(int Time)    { m_StartDelayTime = Time; }
+        void ModifyStartDelayTime(int diff) { m_StartDelayTime -= diff; }  //}
+        void SetStartDelayTime(int Time)    { m_StartDelayTime = Time; }   //} FIXME: convert to [Timer]
 
         void SetMaxPlayersPerTeam(uint32 MaxPlayers) { m_MaxPlayersPerTeam = MaxPlayers; }
         void SetMinPlayersPerTeam(uint32 MinPlayers) { m_MinPlayersPerTeam = MinPlayers; }
@@ -480,7 +484,6 @@ class HELLGROUND_IMPORT_EXPORT BattleGround
         bool DelCreature(uint32 type);
         bool DelObject(uint32 type, bool setGoState = true);
         bool AddSpiritGuide(uint32 type, float x, float y, float z, float o, uint32 team);
-        void AddSpectatorNPC(float x, float y, float z, float o);
         int32 GetObjectType(uint64 guid);
 
         void DoorOpen(uint32 type);
@@ -493,12 +496,11 @@ class HELLGROUND_IMPORT_EXPORT BattleGround
         uint32 GetPlayerTeam(uint64 guid);
         static uint32 GetOtherTeam(uint32 team){ return team ? ((team == ALLIANCE) ? HORDE : ALLIANCE) : TEAM_NONE; }
         bool IsPlayerInBattleGround(uint64 guid);
-        void PlayerRelogin(uint64 guid);
 
         void SetDeleteThis(){ m_SetDeleteThis = true; }
 
-        bool SetPlayerReady(uint64 guid);
-
+        uint8 SetPlayerReady(uint64 guid);
+        void RestorePet(Player* plr);
     protected:
         //this method is called, when BG cannot spawn its own spirit guide, or something is wrong, It correctly ends BattleGround
         void EndNow();
@@ -524,7 +526,7 @@ class HELLGROUND_IMPORT_EXPORT BattleGround
 
         bool   m_BuffChange;
         uint32 m_TimeElapsedSinceBeggining;
-    uint32 m_score[2];                    //array that keeps general team scores, used to determine who gets most marks when bg ends prematurely
+        uint32 m_score[2];                    //array that keeps general team scores, used to determine who gets most marks when bg ends prematurely
 
         BGHonorMode m_HonorMode;
     private:

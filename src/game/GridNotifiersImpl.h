@@ -50,7 +50,7 @@ inline void PlayerCreatureRelocationWorker(Player* p, Creature* c)
     if (p->IsTaxiFlying() && !c->CanReactToPlayerOnTaxi())
         return;
 
-    if (c->hasUnitState(UNIT_STAT_LOST_CONTROL | UNIT_STAT_SIGHTLESS | UNIT_STAT_IGNORE_ATTACKERS))
+    if (c->hasUnitState(UNIT_STAT_LOST_CONTROL | UNIT_STAT_IGNORE_ATTACKERS))
         return;
 
     // Creature AI reaction
@@ -60,7 +60,7 @@ inline void PlayerCreatureRelocationWorker(Player* p, Creature* c)
 
 inline void CreatureCreatureRelocationWorker(Creature* c1, Creature* c2)
 {
-    if (c1->hasUnitState(UNIT_STAT_LOST_CONTROL | UNIT_STAT_SIGHTLESS | UNIT_STAT_IGNORE_ATTACKERS))
+    if (c1->hasUnitState(UNIT_STAT_LOST_CONTROL | UNIT_STAT_IGNORE_ATTACKERS))
         return;
 
     if (c2->hasUnitState(UNIT_STAT_IGNORE_ATTACKERS))
@@ -118,7 +118,7 @@ struct UpdateListSorter : public std::binary_function<Creature*, Creature*, bool
     // functor for operator ">"
     bool operator()(Creature* left, Creature* right) const
     {
-        return left->GetUpdateCounter().timeElapsed() > right->GetUpdateCounter().timeElapsed();
+        return left->GetUpdateCounter() > right->GetUpdateCounter();
     }
 };
 
@@ -127,9 +127,6 @@ inline void ObjectUpdater::Visit(CreatureMapType &m)
     UpdateList updateList;
     for (CreatureMapType::iterator iter = m.begin(); iter != m.end(); ++iter)
     {
-        if (iter->getSource()->isSpiritGuide())
-            continue;
-
         if (WorldObject::UpdateHelper::ProcessUpdate(iter->getSource()))
             updateList.push_back(iter->getSource());
     }
@@ -140,6 +137,19 @@ inline void ObjectUpdater::Visit(CreatureMapType &m)
         // sort list (objects updated old time ago will be first)
         updateList.sort(UpdateListSorter());
         updateList.resize(sWorld.getConfig(CONFIG_MAPUPDATE_MAXVISITORS), NULL); // set initial value for added elements to NULL
+        
+        for (UpdateList::iterator it = updateList.begin(); it != updateList.end(); ++it)
+        {
+            WorldObject::UpdateHelper helper(*it);
+            if (maxListSize > 0)
+            {
+                helper.Update(i_timeDiff);
+                maxListSize--;
+            }
+            else
+                helper.NoUpdate(i_timeDiff); // just tell then they wont be updated
+        }
+        return;
     }
 
     for (UpdateList::iterator it = updateList.begin(); it != updateList.end(); ++it)
@@ -257,30 +267,6 @@ void UnitListSearcher<Check>::Visit(CreatureMapType &m)
             i_objects.push_back(itr->getSource());
 }
 
-template<class Builder>
-void LocalizedPacketDo<Builder>::operator()( Player* p )
-{
-    uint32 loc_idx = p->GetSession()->GetSessionDbLocaleIndex();
-    uint32 cache_idx = loc_idx+1;
-    WorldPacket* data;
-
-    // create if not cached yet
-    if(i_data_cache.size() < cache_idx+1 || !i_data_cache[cache_idx])
-    {
-        if(i_data_cache.size() < cache_idx+1)
-            i_data_cache.resize(cache_idx+1);
-
-        data = new WorldPacket(SMSG_MESSAGECHAT, 200);
-
-        i_builder(*data,loc_idx);
-
-        i_data_cache[cache_idx] = data;
-    }
-    else
-        data = i_data_cache[cache_idx];
-
-    p->SendPacketToSelf(data);
-}
 }
 
 #endif

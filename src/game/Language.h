@@ -698,16 +698,18 @@ enum HellgroundStrings
     // Room for BG/ARENA                  751-769 not used
 
     LANG_ARENA_TESTING                  = 785,
-
     LANG_AUTO_ANN                       = 786,
-    LANG_ANNOUNCE_COLOR                 = 787,
     LANG_GUILD_ANNOUNCE                 = 788,
 
     LANG_MOVEGENS_FOLLOW_PLAYER         = 789,
     LANG_MOVEGENS_FOLLOW_CREATURE       = 790,
     LANG_MOVEGENS_FOLLOW_NULL           = 791,
     LANG_MOVEGENS_EFFECT                = 792,
-    LANG_HDEV_ANNOUNCE_COLOR            = 793,
+    LANG_ANNOUNCE_COLOR_HDEV            = 793,
+    LANG_ANNOUNCE_COLOR_ADM             = 794,
+    LANG_ANNOUNCE_COLOR_HGM             = 795,
+    LANG_ANNOUNCE_COLOR_GM              = 796,
+    LANG_ANNOUNCE_COLOR_TESTGM          = 797,
 
     LANG_BG_GROUP_TOO_LARGE             = 1122, // "Your group is too large for this battleground. Please regroup to join."
     LANG_ARENA_GROUP_TOO_LARGE          = 1123, // "Your group is too large for this arena. Please regroup to join."
@@ -739,7 +741,16 @@ enum HellgroundStrings
     LANG_NEED_CHARACTER_NAME            = 807,
     LANG_PLAYER_NOT_EXIST_OR_OFFLINE    = 808,
     LANG_ACCOUNT_FOR_PLAYER_NOT_FOUND   = 809,
-    // Room for in-game strings           810-999 not used
+
+    LANG_SPECTATE_TARGET_NOT_IN_ARENA   = 812,
+    LANG_SPECTATE_ALREADY_SPECTATING    = 813,
+    LANG_SPECTATE_INFO_AFTER_JOIN       = 814,
+    LANG_SPECTATE_NOT_SPECTATNING       = 815,
+    LANG_FREE_RESPEC_NOT_ENABLED        = 816,
+    LANG_FREE_RESPEC_ALREADY_ENABLED    = 817,
+    LANG_FREE_RESPEC_NOT_ENOUGH_MONEY   = 818,
+    LANG_FREE_RESPEC_SUCCESFUL          = 819,
+    // Room for in-game strings           820-999 not used
 
     // Level 4 (CLI only commands)
     LANG_COMMAND_EXIT                   = 1000,
@@ -814,6 +825,7 @@ enum HellgroundStrings
     LANG_COMMAND_TICKETLISTCOMMENT      = 2023,
     LANG_COMMAND_TICKETLISTADDCOMMENT   = 2024,
     LANG_COMMAND_TICKETLISTAGECREATE    = 2025,
+    LANG_COMMAND_TICKETLISTRESPONSE     = 2026,
 
     // Trinity strings             5000-9999
     LANG_COMMAND_FREEZE                 = 5000,
@@ -917,10 +929,12 @@ enum HellgroundStrings
     LANG_ANTICHEAT_NOFALLDMG            = 11014,
     LANG_GM_BANNED_PLAYER               = 11015,
     LANG_POSSIBLE_CHEAT                 = 11016,
-    LANG_INSTA_KILL_GUARDIAN            = 11017
+    LANG_INSTA_KILL_GUARDIAN            = 11017,
+    LANG_INSTA_KILL_GUARDIAN_PET        = 11018,
+    LANG_ANTICHEAT_SHORTMOVE            = 11019,
+    LANG_ABUSE_BG_BOTH_FACTIONS         = 11020,
 
     // NOT RESERVED IDS                   12000-1999999999
-    // `db_script_string` table index     2000000000-2000009999 (MIN_DB_SCRIPT_STRING_ID-MAX_DB_SCRIPT_STRING_ID)
     // For other tables maybe             2000010000-2147483647 (max index)
 };
 #endif

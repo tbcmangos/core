@@ -27,7 +27,6 @@
 #include "ObjectMgr.h"
 #include "SpellMgr.h"
 #include "CreatureAI.h"
-#include "luaengine/HookMgr.h"
 
 Totem::Totem() : Creature()
 {
@@ -38,6 +37,8 @@ Totem::Totem() : Creature()
 
 void Totem::Update(uint32 update_diff, uint32 diff)
 {
+    SendHeartBeat();
+    UpdateVisibilityAndView();
     Unit *owner = GetOwner();
     if (!owner || !owner->isAlive() || !this->isAlive())
     {
@@ -96,7 +97,8 @@ void Totem::Summon(Unit* owner)
         case TOTEM_PASSIVE:
             if (GetSpell(1))
                 CastSpell(this, GetSpell(1), true);
-            CastSpell(this, GetSpell(), false);
+            if (GetSpell())
+                CastSpell(this, GetSpell(), false);
             break;
         case TOTEM_STATUE:  CastSpell(GetOwner(), GetSpell(), true); break;
         default: break;
@@ -108,9 +110,6 @@ void Totem::Summon(Unit* owner)
     // call JustSummoned function when totem summoned from spell
     if (owner->GetTypeId() == TYPEID_UNIT && ((Creature*)owner)->IsAIEnabled)
         ((Creature*)owner)->AI()->JustSummoned(this);
-
-    if (Unit* summoner = owner->ToUnit())
-        sHookMgr->OnSummoned(this, summoner);
 }
 
 void Totem::UnSummon()

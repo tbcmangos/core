@@ -362,9 +362,9 @@ void hyjalAI::Reset()
     BossGUID[1] = 0;
 
     // Timers
-    NextWaveTimer = 10000;
+    NextWaveTimer.Reset(10000);
     CheckTimer = 0;
-    RetreatTimer = 1000;
+    RetreatTimer.Reset(1000);
 
     // Misc
     WaveCount = 0;
@@ -597,7 +597,7 @@ void hyjalAI::StartEvent(Player* player)
     EventBegun = true;
     Summon = true;
 
-    NextWaveTimer = 15000;
+    NextWaveTimer.Reset(15000);
     CheckTimer = 5000;
     PlayerGUID = player->GetGUID();
 
@@ -781,13 +781,12 @@ void hyjalAI::UpdateAI(const uint32 diff)
 {
     if(IsDummy)
     {
-        if(MassTeleportTimer < diff && DoMassTeleport)
+        if (DoMassTeleport && MassTeleportTimer.Expired(diff))
         {
             m_creature->CastSpell(m_creature,SPELL_MASS_TELEPORT,false);
             DoMassTeleport = false;
         }
-        else
-            MassTeleportTimer -= diff;
+        
         return;
     }
     if(DoHide)
@@ -827,7 +826,7 @@ void hyjalAI::UpdateAI(const uint32 diff)
 
     if(DoRespawn)
     {
-        if(RespawnTimer < diff)
+        if (RespawnTimer.Expired(diff))
         {
             DoRespawn = false;
             RespawnNearPos(m_creature->GetPositionX(), m_creature->GetPositionY());
@@ -843,10 +842,7 @@ void hyjalAI::UpdateAI(const uint32 diff)
             m_creature->SetVisibility(VISIBILITY_ON);
         }
         else
-        {
-            RespawnTimer -= diff;
             m_creature->SetVisibility(VISIBILITY_OFF);
-        }
         return;
     }
     if(Overrun)
@@ -854,7 +850,7 @@ void hyjalAI::UpdateAI(const uint32 diff)
 
     if(bRetreat)
     {
-        if(RetreatTimer < diff)
+        if (RetreatTimer.Expired(diff))
         {
             IsDummy = true;
             bRetreat = false;
@@ -872,35 +868,31 @@ void hyjalAI::UpdateAI(const uint32 diff)
             }
             m_creature->SetVisibility(VISIBILITY_OFF);
         }
-        else
-            RetreatTimer -= diff;
     }
 
     if(!EventBegun)
         return;
 
-    if(Summon)
+    if (Summon)
     {
-        if(pInstance && EnemyCount)
+        if (pInstance && EnemyCount)
         {
             EnemyCount = pInstance->GetData(DATA_TRASH);
-            if(!EnemyCount)
-                NextWaveTimer = 5000;
+            if (!EnemyCount)
+                NextWaveTimer.Reset(5000);
         }
 
-        if(NextWaveTimer < diff)
+        if (NextWaveTimer.Expired(diff))
         {
-            if(Faction == 0)
+            if (Faction == 0)
                 SummonNextWave(AllianceWaves, WaveCount, AllianceBase);
-            else if(Faction == 1)
+            else if (Faction == 1)
                 SummonNextWave(HordeWaves, WaveCount, HordeBase);
             ++WaveCount;
         }
-        else
-            NextWaveTimer -= diff;
     }
 
-    if(CheckTimer < diff)
+    if (CheckTimer.Expired(diff))
     {
         for(uint8 i = 0; i < 2; ++i)
         {
@@ -929,8 +921,7 @@ void hyjalAI::UpdateAI(const uint32 diff)
         }
         CheckTimer = 5000;
     }
-    else
-        CheckTimer -= diff;
+    
 
     if(!UpdateVictim())
     {
@@ -942,7 +933,7 @@ void hyjalAI::UpdateAI(const uint32 diff)
     {
         if(Spell[i].SpellId)
         {
-            if(SpellTimer[i] < diff)
+            if (SpellTimer[i].Expired(diff))
             {
                 //if(m_creature->IsNonMeleeSpellCast(false))
                     //m_creature->InterruptNonMeleeSpells(false);
@@ -962,8 +953,6 @@ void hyjalAI::UpdateAI(const uint32 diff)
                     SpellTimer[i] = Spell[i].CooldownMin + rand() % (Spell[i].CooldownMax - Spell[i].CooldownMin);
                 }
             }
-            else
-                SpellTimer[i] -= diff;
         }
     }
 
@@ -1089,7 +1078,7 @@ void hyjalAI::DoOverrun(uint32 faction, const uint32 diff)
     npc_escortAI::UpdateAI(diff);
     if(WaitForTeleport)
     {
-        if(TeleportTimer < diff)
+        if (TeleportTimer.Expired(diff))
         {
             std::list<Creature*> creatures;
             Hellground::AllFriendlyCreaturesInGrid creature_check(m_creature);
@@ -1115,7 +1104,7 @@ void hyjalAI::DoOverrun(uint32 faction, const uint32 diff)
             WaitForTeleport = false;
             Teleported = true;
         }
-        TeleportTimer -= diff;
+
     }
 
     if(!Teleported)

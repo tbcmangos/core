@@ -39,6 +39,9 @@ uint32 BG_EY_HonorScoreTicks[BG_HONOR_MODE_NUM] = {
 
 BattleGroundEY::BattleGroundEY()
 {
+    Exploiter = NULL;
+    uWalkingDead = 5000;
+    uCheckDelayer = 5000;
     m_BuffChange = true;
     m_BgObjects.resize(BG_EY_OBJECT_MAX);
     m_BgCreatures.resize(BG_EY_CREATURES_MAX);
@@ -129,8 +132,7 @@ void BattleGroundEY::Update(uint32 diff)
     }
     else if (GetStatus() == STATUS_IN_PROGRESS)
     {
-        m_PointAddingTimer -= diff;
-        if (m_PointAddingTimer <= 0)
+        if (m_PointAddingTimer.Expired(diff))
         {
             m_PointAddingTimer = BG_EY_FPOINTS_TICK_TIME;
             if (m_TeamPointsCount[BG_TEAM_ALLIANCE] > 0)
@@ -141,9 +143,7 @@ void BattleGroundEY::Update(uint32 diff)
 
         if (m_FlagState == BG_EY_FLAG_STATE_WAIT_RESPAWN || m_FlagState == BG_EY_FLAG_STATE_ON_GROUND)
         {
-            m_FlagsTimer -= diff;
-
-            if (m_FlagsTimer < 0)
+            if (m_FlagsTimer.Expired(diff))
             {
                 m_FlagsTimer = 0;
                 if (m_FlagState == BG_EY_FLAG_STATE_WAIT_RESPAWN)
@@ -153,8 +153,7 @@ void BattleGroundEY::Update(uint32 diff)
             }
         }
 
-        m_TowerCapCheckTimer -= diff;
-        if (m_TowerCapCheckTimer <= 0)
+        if (m_TowerCapCheckTimer.Expired(diff))
         {
             //check if player joined point
             /*I used this order of calls, because although we will check if one player is in gameobject's distance 2 times
@@ -166,6 +165,39 @@ void BattleGroundEY::Update(uint32 diff)
             this->UpdatePointStatuses();
             m_TowerCapCheckTimer = BG_EY_FPOINTS_TICK_TIME;
         }
+
+        //checking for players walking on the bottom of the map (yup, it's possible)
+        if (uCheckDelayer.Expired(diff))
+        {
+            for (BattleGroundPlayerMap::const_iterator itr = GetPlayers().begin(); itr != GetPlayers().end(); ++itr)
+            {
+                if (Player *plr = sObjectMgr.GetPlayer(itr->first))
+                    if (plr->GetPositionZ() < 850.0f)
+                        Exploiter = plr;
+
+                uCheckDelayer = 5000;
+            }
+        }
+
+
+        if (Exploiter && Exploiter->isAlive())
+        {
+            if (uWalkingDead.Expired(diff))
+            {
+                Exploiter->Kill(Exploiter, false);
+                Exploiter = NULL;
+                uWalkingDead = 5000;
+            }
+
+        }
+        else if (Exploiter && !Exploiter->isAlive())
+        {
+            Exploiter->RepopAtGraveyard();
+
+            Exploiter = NULL;
+            uWalkingDead = 5000;
+        }       
+                    
     }
 }
 
@@ -266,7 +298,7 @@ void BattleGroundEY::CheckSomeoneLeftPoint()
                 else
                 {
                     //player is neat flag, so update count:
-                    m_CurrentPointPlayersCount[2 * i + GetTeamIndexByTeamId(plr->GetTeam())]++;
+                    m_CurrentPointPlayersCount[2 * i + GetTeamIndexByTeamId(plr->GetBGTeam())]++;
                     ++j;
                 }
             }
@@ -309,11 +341,11 @@ void BattleGroundEY::UpdatePointStatuses()
                 if (pointOwnerTeamId != m_PointOwnedByTeam[point])
                 {
                     //point was uncontrolled and player is from team which captured point
-                    if (m_PointState[point] == EY_POINT_STATE_UNCONTROLLED && plr->GetTeam() == pointOwnerTeamId)
+                    if (m_PointState[point] == EY_POINT_STATE_UNCONTROLLED && plr->GetBGTeam() == pointOwnerTeamId)
                         this->EventTeamCapturedPoint(plr, point);
 
                     //point was under control and player isn't from team which controlled it
-                    if (m_PointState[point] == EY_POINT_UNDER_CONTROL && plr->GetTeam() != m_PointOwnedByTeam[point])
+                    if (m_PointState[point] == EY_POINT_UNDER_CONTROL && plr->GetBGTeam() != m_PointOwnedByTeam[point])
                         this->EventTeamLostPoint(plr, point);
                 }
             }
@@ -411,22 +443,22 @@ void BattleGroundEY::HandleAreaTrigger(Player *Source, uint32 Trigger)
     switch (Trigger)
     {
         case TR_BLOOD_ELF_POINT:
-            if (m_PointState[BLOOD_ELF] == EY_POINT_UNDER_CONTROL && m_PointOwnedByTeam[BLOOD_ELF] == Source->GetTeam())
+            if (m_PointState[BLOOD_ELF] == EY_POINT_UNDER_CONTROL && m_PointOwnedByTeam[BLOOD_ELF] == Source->GetBGTeam())
                 if (m_FlagState && GetFlagPickerGUID() == Source->GetGUID())
                     EventPlayerCapturedFlag(Source, BG_EY_OBJECT_FLAG_BLOOD_ELF);
             break;
         case TR_FEL_REALVER_POINT:
-            if (m_PointState[FEL_REALVER] == EY_POINT_UNDER_CONTROL && m_PointOwnedByTeam[FEL_REALVER] == Source->GetTeam())
+            if (m_PointState[FEL_REALVER] == EY_POINT_UNDER_CONTROL && m_PointOwnedByTeam[FEL_REALVER] == Source->GetBGTeam())
                 if (m_FlagState && GetFlagPickerGUID() == Source->GetGUID())
                     EventPlayerCapturedFlag(Source, BG_EY_OBJECT_FLAG_FEL_REALVER);
             break;
         case TR_MAGE_TOWER_POINT:
-            if (m_PointState[MAGE_TOWER] == EY_POINT_UNDER_CONTROL && m_PointOwnedByTeam[MAGE_TOWER] == Source->GetTeam())
+            if (m_PointState[MAGE_TOWER] == EY_POINT_UNDER_CONTROL && m_PointOwnedByTeam[MAGE_TOWER] == Source->GetBGTeam())
                 if (m_FlagState && GetFlagPickerGUID() == Source->GetGUID())
                     EventPlayerCapturedFlag(Source, BG_EY_OBJECT_FLAG_MAGE_TOWER);
             break;
         case TR_DRAENEI_RUINS_POINT:
-            if (m_PointState[DRAENEI_RUINS] == EY_POINT_UNDER_CONTROL && m_PointOwnedByTeam[DRAENEI_RUINS] == Source->GetTeam())
+            if (m_PointState[DRAENEI_RUINS] == EY_POINT_UNDER_CONTROL && m_PointOwnedByTeam[DRAENEI_RUINS] == Source->GetBGTeam())
                 if (m_FlagState && GetFlagPickerGUID() == Source->GetGUID())
                     EventPlayerCapturedFlag(Source, BG_EY_OBJECT_FLAG_DRAENEI_RUINS);
             break;
@@ -555,8 +587,8 @@ void BattleGroundEY::ResetBGSubclass()
     m_FlagCapturedBgObjectType = 0;
     m_FlagKeeper = 0;
     m_DroppedFlagGUID = 0;
-    m_PointAddingTimer = 0;
-    m_TowerCapCheckTimer = 0;
+    m_PointAddingTimer.Reset(1);
+    m_TowerCapCheckTimer.Reset(1);
 
     for (uint8 i = 0; i < EY_POINTS_MAX; ++i)
     {
@@ -641,10 +673,10 @@ void BattleGroundEY::EventPlayerDroppedFlag(Player *Source)
     SetFlagPicker(0);
     Source->RemoveAurasDueToSpell(BG_EY_NETHERSTORM_FLAG_SPELL);
     m_FlagState = BG_EY_FLAG_STATE_ON_GROUND;
-    m_FlagsTimer = BG_EY_FLAG_RESPAWN_TIME;
+    m_FlagsTimer.Reset(BG_EY_FLAG_RESPAWN_TIME);
     Source->CastSpell(Source, SPELL_RECENTLY_DROPPED_FLAG, true);
     Source->CastSpell(Source, BG_EY_PLAYER_DROPPED_FLAG_SPELL, true);
-    if (Source->GetTeam() == ALLIANCE)
+    if (Source->GetBGTeam() == ALLIANCE)
     {
         message = GetHellgroundString(LANG_BG_EY_DROPPED_FLAG);
         type = CHAT_MSG_BG_SYSTEM_ALLIANCE;
@@ -672,7 +704,7 @@ void BattleGroundEY::EventPlayerClickedOnFlag(Player *Source, GameObject* target
     uint8 type = 0;
     message = GetHellgroundString(LANG_BG_EY_HAS_TAKEN_FLAG);
 
-    if (Source->GetTeam() == ALLIANCE)
+    if (Source->GetBGTeam() == ALLIANCE)
     {
         UpdateWorldState(NETHERSTORM_FLAG_STATE_ALLIANCE, BG_EY_FLAG_STATE_ON_PLAYER);
         type = CHAT_MSG_BG_SYSTEM_ALLIANCE;
@@ -756,7 +788,7 @@ void BattleGroundEY::EventTeamCapturedPoint(Player *Source, uint32 Point)
 
     uint8 type = 0;
     const char *message = "";
-    uint32 Team = Source->GetTeam();
+    uint32 Team = Source->GetBGTeam();
 
     SpawnBGObject(m_CapturingPointTypes[Point].DespawnNeutralObjectType, RESPAWN_ONE_DAY);
     SpawnBGObject(m_CapturingPointTypes[Point].DespawnNeutralObjectType + 1, RESPAWN_ONE_DAY);
@@ -791,7 +823,27 @@ void BattleGroundEY::EventTeamCapturedPoint(Player *Source, uint32 Point)
     SendPacketToAll(&data);
 
     if (m_BgCreatures[Point])
+    {
+        // send ghosts to other gy
+        std::vector<uint64> ghost_list = m_ReviveQueue[m_BgCreatures[Point]];
+        if (!ghost_list.empty())
+        {
+            WorldSafeLocsEntry const *ClosestGrave = NULL;
+            Player *plr;
+            for (std::vector<uint64>::iterator itr = ghost_list.begin(); itr != ghost_list.end(); ++itr)
+            {
+                plr = sObjectMgr.GetPlayer(*itr);
+                if (!plr)
+                    continue;
+                if (!ClosestGrave)
+                    ClosestGrave = GetClosestGraveYard(plr->GetPositionX(), plr->GetPositionY(), plr->GetPositionZ(), plr->GetBGTeam());
+
+                plr->NearTeleportTo(ClosestGrave->x, ClosestGrave->y, ClosestGrave->z, plr->GetOrientation());
+            }
+            m_ReviveQueue[m_BgCreatures[Point]].clear();
+        }
         DelCreature(Point);
+    }
 
     WorldSafeLocsEntry const *sg = NULL;
     sg = sWorldSafeLocsStore.LookupEntry(m_CapturingPointTypes[Point].GraveYardId);
@@ -819,7 +871,7 @@ void BattleGroundEY::EventPlayerCapturedFlag(Player *Source, uint32 BgObjectType
     Source->RemoveAurasDueToSpell(BG_EY_NETHERSTORM_FLAG_SPELL);
 
     Source->RemoveAurasWithInterruptFlags(AURA_INTERRUPT_FLAG_ENTER_PVP_COMBAT);
-    if (Source->GetTeam() == ALLIANCE)
+    if (Source->GetBGTeam() == ALLIANCE)
     {
         PlaySoundToAll(BG_EY_SOUND_FLAG_CAPTURED_ALLIANCE);
         team_id = BG_TEAM_ALLIANCE;
@@ -836,7 +888,7 @@ void BattleGroundEY::EventPlayerCapturedFlag(Player *Source, uint32 BgObjectType
 
     SpawnBGObject(BgObjectType, RESPAWN_IMMEDIATELY);
 
-    m_FlagsTimer = BG_EY_FLAG_RESPAWN_TIME;
+    m_FlagsTimer.Reset(BG_EY_FLAG_RESPAWN_TIME);
     m_FlagCapturedBgObjectType = BgObjectType;
 
     WorldPacket data;
@@ -844,7 +896,7 @@ void BattleGroundEY::EventPlayerCapturedFlag(Player *Source, uint32 BgObjectType
     SendPacketToAll(&data);
 
     if (m_TeamPointsCount[team_id] > 0)
-        AddPoints(Source->GetTeam(), BG_EY_FlagPoints[m_TeamPointsCount[team_id] - 1]);
+        AddPoints(Source->GetBGTeam(), BG_EY_FlagPoints[m_TeamPointsCount[team_id] - 1]);
 
     UpdatePlayerScore(Source, SCORE_FLAG_CAPTURES, 1);
 }

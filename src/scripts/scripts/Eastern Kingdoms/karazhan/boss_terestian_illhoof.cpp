@@ -42,7 +42,7 @@ EndScriptData */
 #define SPELL_SHADOW_BOLT           30055                   // Hurls a bolt of dark magic at an enemy, inflicting Shadow damage.
 #define SPELL_SACRIFICE             30115                   // Teleports and adds the debuff
 #define SPELL_BERSERK               32965                   // Increases attack speed by 75%. Periodically casts Shadow Bolt Volley.
-
+#define SPELL_BROKEN_PACT           30065
 #define SPELL_SUMMON_IMP            30066                   // Summons Kil'rek
 
 #define SPELL_FIENDISH_PORTAL       30171                   // Opens portal and summons Fiendish Portal, 2 sec cast
@@ -80,13 +80,18 @@ struct mob_kilrekAI : public ScriptedAI
 
     uint64 TerestianGUID;
 
-    uint32 AmplifyTimer;
+    Timer AmplifyTimer;
 
     void Reset()
     {
+        if (pInstance && pInstance->GetData(DATA_TERESTIAN_EVENT) == DONE)
+        {
+            me->SetVisibility(VISIBILITY_OFF);
+            me->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
+        }
         TerestianGUID = 0;
 
-        AmplifyTimer = 2000;
+        AmplifyTimer.Reset(2000);
     }
 
     void EnterCombat(Unit *who)
@@ -122,18 +127,19 @@ struct mob_kilrekAI : public ScriptedAI
         if (!UpdateVictim() )
             return;
 
-        if (AmplifyTimer < diff)
+        
+        if (AmplifyTimer.Expired(diff))
         {
             m_creature->InterruptNonMeleeSpells(false);
             DoCast(m_creature->getVictim(),SPELL_AMPLIFY_FLAMES);
 
             AmplifyTimer = 10000 + rand()%10000;
-        }else AmplifyTimer -= diff;
+        }
 
         //Chain cast
-        if (!m_creature->IsNonMeleeSpellCast(false) && m_creature->IsWithinDistInMap(m_creature->getVictim(), 30))
+        /*if (!m_creature->IsNonMeleeSpellCast(false) && m_creature->IsWithinDistInMap(m_creature->getVictim(), 30))
             DoCast(m_creature->getVictim(),SPELL_FIREBOLT);
-        else DoMeleeAttackIfReady();
+        else */DoMeleeAttackIfReady();
     }
 };
 
@@ -174,16 +180,25 @@ struct boss_terestianAI : public ScriptedAI
 
     uint64 PortalGUID[2];
 
-    uint32 SacrificeTimer;
-    uint32 ShadowboltTimer;
-    uint32 SummonTimer;
-    uint32 BerserkTimer;
-    uint32 CheckTimer;
+    Timer SacrificeTimer;
+    Timer ShadowboltTimer;
+    Timer SummonTimer;
+    Timer BerserkTimer;
+    Timer CheckTimer;
+    Timer PactTimer;
 
     WorldLocation wLoc;
 
     bool SummonedPortals;
     bool Berserk;
+
+    void SpellHit(Unit* source, const SpellEntry* spell)
+    {
+        if (spell->Id == SPELL_BROKEN_PACT)
+        {
+            PactTimer.Reset(30000);
+        }
+    }
 
     void Reset()
     {
@@ -199,11 +214,11 @@ struct boss_terestianAI : public ScriptedAI
             }
         }
 
-        SacrificeTimer      = 30000;
-        CheckTimer          = 3000;
-        ShadowboltTimer     =  5000;
-        SummonTimer         = 10000;
-        BerserkTimer        = 600000;
+        SacrificeTimer.Reset(30000);
+        CheckTimer.Reset(3000);
+        ShadowboltTimer.Reset(5000);
+        SummonTimer.Reset(10000);
+        BerserkTimer.Reset(600000);
 
         SummonedPortals     = false;
         Berserk             = false;
@@ -272,26 +287,35 @@ struct boss_terestianAI : public ScriptedAI
         if(!UpdateVictim())
             return;
 
-        //Check_Timer
-        if(CheckTimer < diff)
+        
+        if (CheckTimer.Expired(diff))
         {
             if(!m_creature->IsWithinDistInMap(&wLoc, 35.0f))
                 EnterEvadeMode();
             else
                 DoZoneInCombat();
 
-            CheckTimer = 3000;
+            CheckTimer = 1000;
         }
-        else
-            CheckTimer -= diff;
-
-        if(SacrificeTimer < diff)
+        
+        if (PactTimer.Expired(diff))
         {
-            Unit* target = SelectUnit(SELECT_TARGET_RANDOM, 1, GetSpellMaxRange(SPELL_SACRIFICE), true, m_creature->getVictimGUID());
+            if (pInstance)
+            {
+                Creature* Kilrek = (Unit::GetCreature(*m_creature, pInstance->GetData64(DATA_KILREK)));
+                if (Kilrek && !Kilrek->isAlive())
+                    Kilrek->Respawn();
+            }
+            PactTimer = 0;
+        }
+
+        if (SacrificeTimer.Expired(diff))
+        {
+            Unit* target = SelectUnit(SELECT_TARGET_RANDOM, 0, GetSpellMaxRange(SPELL_SACRIFICE), true); // , m_creature->getVictimGUID() PRE NERF can target also tank
             if(target && target->isAlive() && target->GetTypeId() == TYPEID_PLAYER)
             {
                 DoCast(target, SPELL_SACRIFICE, true);
-                Creature* Chains = m_creature->SummonCreature(CREATURE_DEMONCHAINS, target->GetPositionX(), target->GetPositionY(), target->GetPositionZ(), 0, TEMPSUMMON_TIMED_OR_CORPSE_DESPAWN, 21000);
+                Creature* Chains = m_creature->SummonCreature(CREATURE_DEMONCHAINS, -11234.2, -1698.46, 179.24, 0.67621, TEMPSUMMON_TIMED_OR_CORPSE_DESPAWN, 21000);
                 if(Chains)
                 {
                     ((mob_demon_chainAI*)Chains->AI())->SacrificeGUID = target->GetGUID();
@@ -303,20 +327,20 @@ struct boss_terestianAI : public ScriptedAI
                 }
             }
         }
-        else
-            SacrificeTimer -= diff;
+        
 
-        if(ShadowboltTimer < diff)
+        
+        if (ShadowboltTimer.Expired(diff))
         {
             if(Unit *target = SelectUnit(SELECT_TARGET_TOPAGGRO,0, GetSpellMaxRange(SPELL_SHADOW_BOLT), true))
                 DoCast(target, SPELL_SHADOW_BOLT);
 
             ShadowboltTimer = 10000;
         }
-        else
-            ShadowboltTimer -= diff;
+        
 
-        if(SummonTimer < diff)
+        
+        if (SummonTimer.Expired(diff))
         {
             if(!SummonedPortals)
             {
@@ -335,25 +359,20 @@ struct boss_terestianAI : public ScriptedAI
             Creature* Imp = m_creature->SummonCreature(CREATURE_FIENDISHIMP, PortalLocations[random][0], PortalLocations[random][1], PORTAL_Z, 0, TEMPSUMMON_TIMED_OR_CORPSE_DESPAWN, 15000);
 
             if(Imp)
-            {
-                Imp->AddThreat(m_creature->getVictim(), 1.0f);
-                if(Unit *target = SelectUnit(SELECT_TARGET_RANDOM, 1, 200, true, m_creature->getVictimGUID()))
-                    Imp->AI()->AttackStart(target);
-            }
+                Imp->AI()->DoZoneInCombat();
             SummonTimer = 5000;
         }
-        else
-            SummonTimer -= diff;
+        
 
         if(!Berserk)
         {
-            if(BerserkTimer < diff)
+            
+            if (BerserkTimer.Expired(diff))
             {
                 DoCast(m_creature, SPELL_BERSERK);
                 Berserk = true;
             }
-            else
-                BerserkTimer -= diff;
+            
         }
 
         DoMeleeAttackIfReady();
@@ -364,11 +383,11 @@ struct mob_fiendish_impAI : public ScriptedAI
 {
     mob_fiendish_impAI(Creature *c) : ScriptedAI(c) {}
 
-    uint32 FireboltTimer;
+    Timer FireboltTimer;
 
     void Reset()
     {
-        FireboltTimer = 2000;
+        FireboltTimer.Reset(2000);
     }
 
     void EnterCombat(Unit *who) {}
@@ -379,13 +398,12 @@ struct mob_fiendish_impAI : public ScriptedAI
         if (!UpdateVictim() )
             return;
 
-        if(FireboltTimer < diff)
+        if (FireboltTimer.Expired(diff))
         {
             DoCast(m_creature->getVictim(), SPELL_FIREBOLT);
             FireboltTimer = 2200;
         }
-        else
-            FireboltTimer -= diff;
+        
 
         DoMeleeAttackIfReady();
     }

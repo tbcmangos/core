@@ -279,7 +279,7 @@ void AuctionHouseMgr::LoadAuctionItems()
     {
         BarGoLink bar(1);
         bar.step();
-        sLog.outString("");
+        sLog.outString();
         sLog.outString(">> Loaded 0 auction items");
         return;
     }
@@ -329,7 +329,7 @@ void AuctionHouseMgr::LoadAuctions()
     {
         BarGoLink bar(1);
         bar.step();
-        sLog.outString("");
+        sLog.outString();
         sLog.outString(">> Loaded 0 auctions. DB table `auctionhouse` is empty.");
         return;
     }
@@ -341,7 +341,7 @@ void AuctionHouseMgr::LoadAuctions()
     {
         BarGoLink bar(1);
         bar.step();
-        sLog.outString("");
+        sLog.outString();
         sLog.outString(">> Loaded 0 auctions. DB table `auction` is empty.");
         return;
     }
@@ -351,7 +351,7 @@ void AuctionHouseMgr::LoadAuctions()
     {
         BarGoLink bar(1);
         bar.step();
-        sLog.outString("");
+        sLog.outString();
         sLog.outString(">> Loaded 0 auctions. DB table `auctionhouse` is empty.");
         return;
     }
@@ -687,11 +687,7 @@ int AuctionEntry::CompareAuctionEntry(uint32 column, const AuctionEntry *auc, Pl
             int32 loc_idx = viewPlayer->GetSession()->GetSessionDbLocaleIndex();
 
             std::string name1 = itemProto1->Name1;
-            sObjectMgr.GetItemLocaleStrings(itemProto1->ItemId, loc_idx, &name1);
-
             std::string name2 = itemProto2->Name1;
-            sObjectMgr.GetItemLocaleStrings(itemProto2->ItemId, loc_idx, &name2);
-
             std::wstring wname1, wname2;
             Utf8toWStr(name1, wname1);
             Utf8toWStr(name2, wname2);
@@ -805,20 +801,18 @@ void WorldSession::BuildListAuctionItems(std::vector<AuctionEntry*> const& aucti
             if (inventoryType != 0xffffffff && proto->InventoryType != inventoryType)
                 continue;
 
-            if (quality != 0xffffffff && proto->Quality < quality)
+            if (quality != 0xffffffff && proto->Quality != quality)
                 continue;
 
             if (levelmin != 0x00 && (proto->RequiredLevel < levelmin || (levelmax != 0x00 && proto->RequiredLevel > levelmax)))
                 continue;
 
-            if (usable != 0x00 && !_player->CanUseItem(item))
+            if (usable != 0x00 && !_player->CanUseItem(proto))
                 continue;
 
             std::string name = proto->Name1;
             if (name.empty())
                 continue;
-
-            sObjectMgr.GetItemLocaleStrings(proto->ItemId, loc_idx, &name);
 
             if (!wsearchedname.empty() && !Utf8FitTo(name, wsearchedname))
                 continue;
@@ -864,7 +858,7 @@ void WorldSession::BuildListAuctionItems(AuctionHouseObject::AuctionEntryMap con
             if (inventoryType != 0xffffffff && proto->InventoryType != inventoryType)
                 continue;
 
-            if (quality != 0xffffffff && proto->Quality < quality)
+            if (quality != 0xffffffff && proto->Quality != quality)
                 continue;
 
             if (levelmin != 0x00 && (proto->RequiredLevel < levelmin || (levelmax != 0x00 && proto->RequiredLevel > levelmax)))
@@ -876,8 +870,6 @@ void WorldSession::BuildListAuctionItems(AuctionHouseObject::AuctionEntryMap con
             std::string name = proto->Name1;
             if (name.empty())
                 continue;
-
-            sObjectMgr.GetItemLocaleStrings(proto->ItemId, loc_idx, &name);
 
             if (!wsearchedname.empty() && !Utf8FitTo(name, wsearchedname))
                 continue;

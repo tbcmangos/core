@@ -31,37 +31,17 @@
 #include <map>
 #include <string>
 
-enum ChannelDBCFlags
-    {
-        CHANNEL_DBC_FLAG_NONE       = 0x00000,
-        CHANNEL_DBC_FLAG_INITIAL    = 0x00001,              // General, Trade, LocalDefense, LFG
-        CHANNEL_DBC_FLAG_ZONE_DEP   = 0x00002,              // General, Trade, LocalDefense, GuildRecruitment
-        CHANNEL_DBC_FLAG_GLOBAL     = 0x00004,              // WorldDefense
-        CHANNEL_DBC_FLAG_TRADE      = 0x00008,              // Trade
-        CHANNEL_DBC_FLAG_CITY_ONLY  = 0x00010,              // Trade, GuildRecruitment
-        CHANNEL_DBC_FLAG_CITY_ONLY2 = 0x00020,              // Trade, GuildRecruitment
-        CHANNEL_DBC_FLAG_DEFENSE    = 0x10000,              // LocalDefense, WorldDefense
-        CHANNEL_DBC_FLAG_GUILD_REQ  = 0x20000,              // GuildRecruitment
-        CHANNEL_DBC_FLAG_LFG        = 0x40000               // LookingForGroup
-    };
-
-enum ChannelFlags
-    {
-        CHANNEL_FLAG_NONE       = 0x00,
-        CHANNEL_FLAG_CUSTOM     = 0x01,
-        // 0x02
-        CHANNEL_FLAG_TRADE      = 0x04,
-        CHANNEL_FLAG_NOT_LFG    = 0x08,
-        CHANNEL_FLAG_GENERAL    = 0x10,
-        CHANNEL_FLAG_CITY       = 0x20,
-        CHANNEL_FLAG_LFG        = 0x40,
-        CHANNEL_FLAG_VOICE      = 0x80
-        // General                  0x18 = 0x10 | 0x08
-        // Trade                    0x3C = 0x20 | 0x10 | 0x08 | 0x04
-        // LocalDefence             0x18 = 0x10 | 0x08
-        // GuildRecruitment         0x38 = 0x20 | 0x10 | 0x08
-        // LookingForGroup          0x50 = 0x40 | 0x10
-    };
+enum ChannelIds
+{
+    CHANNEL_ID_CUSTOM           = 0,
+    CHANNEL_ID_GENERAL          = 1,
+    CHANNEL_ID_TRADE            = 2,
+    CHANNEL_ID_WORLD            = 3, // CUSTOM, send to client as 0
+    CHANNEL_ID_LOCALDEFENSE     = 22,
+    CHANNEL_ID_WORLDDEFENSE     = 23,
+    CHANNEL_ID_GUILDRECRUITMENT = 25,
+    CHANNEL_ID_LFG              = 26,
+};
 
 class Channel
 {
@@ -244,18 +224,19 @@ class Channel
         }
 
     public:
-        Channel(const std::string& name, uint32 channel_id);
+        Channel(const std::string& name);
         std::string GetName() const { return m_name; }
-        uint32 GetChannelId() const { return m_channelId; }
-        bool IsConstant() const { return m_channelId != 0; }
+        uint32 GetChannelId() const // this function returns ID to be send to client, must comply with dbc ids
+        {
+            return m_channelId == CHANNEL_ID_WORLD ? CHANNEL_ID_CUSTOM : m_channelId;
+        }
+        bool IsConstant() const { return m_channelId != CHANNEL_ID_CUSTOM; }
         bool IsAnnounce() const { return m_announce; }
-        bool IsLFG() const { return m_flags & CHANNEL_FLAG_LFG; }
+        bool IsLFG() const { return m_channelId == CHANNEL_ID_LFG; }
         std::string GetPassword() const { return m_password; }
         void SetPassword(const std::string& npassword) { m_password = npassword; }
         void SetAnnounce(bool nannounce) { m_announce = nannounce; }
         uint32 GetNumPlayers() const { return players.size(); }
-        uint8 GetFlags() const { return m_flags; }
-        bool HasFlag(uint8 flag) { return m_flags & flag; }
 
         void Join(uint64 p, const char *pass);
         void Leave(uint64 p, bool send = true);

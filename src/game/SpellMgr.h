@@ -214,7 +214,7 @@ enum ProcFlagsEx
    PROC_EX_ABSORB              = 0x0000400,
    PROC_EX_REFLECT             = 0x0000800,
    PROC_EX_INTERRUPT           = 0x0001000,                 // Melle hit result can be Interrupt (not used)
-   PROC_EX_RESERVED1           = 0x0002000,
+   PROC_EX_NETHER_PROTECTION   = 0x0002000,
    PROC_EX_RESERVED2           = 0x0004000,
    PROC_EX_RESERVED3           = 0x0008000,
    PROC_EX_EX_TRIGGER_ALWAYS   = 0x0010000,                 // If set trigger always (no matter another flags) used for drop charges
@@ -412,10 +412,11 @@ enum AttributesCu
     SPELL_ATTR_CU_FIXED_DAMAGE          = 0x00020000, // ignore all %dmg done, %dmg taken auras
     SPELL_ATTR_CU_NO_SPELL_DMG_COEFF    = 0x00040000, // to those spells won't be applied and bonuses from spell dmg
     SPELL_ATTR_CU_TREAT_AS_WELL_FED     = 0x00080000,
-    SPELL_ATTR_CU_NO_SCROLL_STACK       = 0x00100000  // for spells which can't stack with scrolls (must be also applied to scroll spells)
+    SPELL_ATTR_CU_NO_SCROLL_STACK       = 0x00100000, // for spells which can't stack with scrolls (must be also applied to scroll spells)
+    SPELL_ATTR_CU_BLOCK_STEALTH         = 0x00200000  // simplification, faerie-fire-alike spells
 };
 
-#define SPELL_FAKE_DELAY 200LL
+#define SPELL_FAKE_DELAY 150LL
 
 typedef std::map<int32, std::vector<int32> > SpellLinkedMap;
 
@@ -510,6 +511,24 @@ class HELLGROUND_IMPORT_EXPORT SpellMgr
             return itr->second;
         }
 
+        uint32 GetSpellGreaterVersion(uint32 spell_id)
+        {
+            switch (spell_id)
+            {
+            case 20217: // BoK
+                return 25898;
+            case 20914: // BoS IV
+                return 25899; // GBoS I
+            case 27168: // BoS V
+                return 27169; // GBoS II
+            case 27841: // Spirit IV
+                return 27681;
+            case 2531: // Spirit V
+                return 32999;
+            }
+            return 0;
+        }
+
         uint32 GetFirstSpellInChain(uint32 spell_id) const
         {
             if (SpellChainNode const* node = GetSpellChainNode(spell_id))
@@ -567,7 +586,7 @@ class HELLGROUND_IMPORT_EXPORT SpellMgr
         bool IsRankSpellDueToSpell(SpellEntry const *spellInfo_1,uint32 spellId_2) const;
 
         static bool canStackSpellRanks(SpellEntry const *spellInfo);
-        static bool IsNoStackSpellDueToSpell(uint32 spellId_1, uint32 spellId_2, bool sameCaster);
+        static uint8 IsNoStackSpellDueToSpell(SpellEntry const* newSpell, SpellEntry const* oldSpell, bool sameCaster, uint8 effect = 3);
         static bool IsSpecialStackCase(SpellEntry const *spellInfo_1, SpellEntry const *spellInfo_2, bool sameCaster, bool recur = true);
         static bool IsSpecialNoStackCase(SpellEntry const *spellInfo_1, SpellEntry const *spellInfo_2, bool sameCaster, bool recur = true);
 
@@ -665,6 +684,7 @@ class HELLGROUND_IMPORT_EXPORT SpellMgr
         // Different spell properties
         static uint32 GetSpellCastTime(SpellEntry const* spellInfo, Spell const* spell = NULL);
         static SpellSpecific GetSpellSpecific(uint32);
+        static SpellSpecific GetSpellSpecific(SpellEntry const*);
 
         static float GetSpellRadiusForHostile(SpellRadiusEntry const*);
         static float GetSpellRadiusForFriend(SpellRadiusEntry const*);
@@ -689,7 +709,7 @@ class HELLGROUND_IMPORT_EXPORT SpellMgr
 
         static bool IsElementalShield(SpellEntry const *spellInfo);
 
-        static uint32 CalculatePowerCost(SpellEntry const * spellInfo, Unit const * caster, SpellSchoolMask schoolMask);
+        static uint32 CalculatePowerCost(SpellEntry const * spellInfo, Unit const * caster, SpellSchoolMask schoolMask, Spell* spell);
         static int32 CompareAuraRanks(uint32 spellId_1, uint32 effIndex_1, uint32 spellId_2, uint32 effIndex_2);
         static bool IsSingleFromSpellSpecificPerCaster(SpellSpecific spellSpec1, SpellSpecific spellSpec2);
         static bool IsSingleFromSpellSpecificPerTarget(SpellSpecific spellSpec1, SpellSpecific spellSpec2);
@@ -712,7 +732,7 @@ class HELLGROUND_IMPORT_EXPORT SpellMgr
         static bool IsSingleTargetSpells(SpellEntry const *spellInfo1, SpellEntry const *spellInfo2);
 
         static bool IsAuraAddedBySpell(uint32 auraType, uint32 spellId);
-
+        static bool IsAuraCountdownContinueOffline(uint32 spellId, uint32 effIndex);
         static bool IsSpellAllowedInLocation(SpellEntry const *spellInfo,uint32 map_id,uint32 zone_id,uint32 area_id);
 
         static bool IsAreaOfEffectSpell(SpellEntry const *spellInfo);
@@ -730,7 +750,9 @@ class HELLGROUND_IMPORT_EXPORT SpellMgr
 
         static SpellSchoolMask GetSpellSchoolMask(SpellEntry const* spellInfo);
 
-        static uint32 GetSpellMechanicMask(SpellEntry const* spellInfo, int32 effect);
+        static uint32 GetSpellMechanicMask(SpellEntry const* spellInfo);
+        static uint32 GetEffectMechanicMask(SpellEntry const* spellInfo, int32 effect);
+        static Mechanics GetSpellMechanic(SpellEntry const* spellInfo);
         static Mechanics GetEffectMechanic(SpellEntry const* spellInfo, int32 effect);
 
         // Diminishing Returns interaction with spells
@@ -743,6 +765,7 @@ class HELLGROUND_IMPORT_EXPORT SpellMgr
         static bool IsPartialyResistable(SpellEntry const* spellInfo);
         static bool SpellIgnoreLOS(SpellEntry const* spellInfo, uint8 effIdx);
         static bool isSpellBreakStealth(SpellEntry const* spellInfo);
+        static bool IsNotIgnoreTriggeredSpell(SpellEntry const* spellInfo);
 
         static bool IsPrimaryProfessionSkill(uint32 skill);
         static bool IsProfessionSkill(uint32 skill);

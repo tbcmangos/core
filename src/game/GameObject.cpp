@@ -59,7 +59,7 @@ GameObject::GameObject() : WorldObject()
     m_usetimes = 0;
     m_spellId = 0;
     m_charges = 5;
-    m_cooldownTime = 0;
+    m_cooldownTime.Reset(0);
     m_goInfo = NULL;
     m_goData = NULL;
 
@@ -207,13 +207,11 @@ bool GameObject::Create(uint32 guidlow, uint32 name_id, Map *map, float x, float
     return true;
 }
 
-void GameObject::Update(uint32 update_diff, uint32 p_time)
+void GameObject::Update(uint32 update_diff, uint32 /*p_time*/)
 {
+    m_cooldownTime.Update(update_diff);
     if (IS_MO_TRANSPORT(GetGUID()))
-    {
-        //((Transport*)this)->Update(p_time);
         return;
-    }
 
     if (m_respawnTime > 0)
     {
@@ -244,7 +242,7 @@ void GameObject::Update(uint32 update_diff, uint32 p_time)
                 {
                     // Arming Time for GAMEOBJECT_TYPE_TRAP (6)
                     if (Unit* owner = GetOwner())
-                        m_cooldownTime = time(NULL) + GetGOInfo()->trap.startDelay;
+                        m_cooldownTime.Reset(GetGOInfo()->trap.startDelay*IN_MILISECONDS);
                     m_lootState = GO_READY;
                     break;
                 }
@@ -289,7 +287,7 @@ void GameObject::Update(uint32 update_diff, uint32 p_time)
                 Unit* owner = GetOwner();
                 Unit* ok = NULL;                            // pointer to appropriate target if found any
 
-                if (m_cooldownTime >= time(NULL))
+                if (!m_cooldownTime.Passed())
                     return;
 
                 bool IsBattleGroundTrap = false;
@@ -346,13 +344,13 @@ void GameObject::Update(uint32 update_diff, uint32 p_time)
                 else                                                                 // creature spawned traps
                 {
                     CastSpell((Unit*)NULL, goInfo->trap.spellId);
-                    m_cooldownTime = time(NULL) + goInfo->trap.cooldown;
+                    m_cooldownTime.Reset(goInfo->trap.cooldown*IN_MILISECONDS);
                 }
 
                 if (ok)
                 {
                     CastSpell(ok, goInfo->trap.spellId);
-                    m_cooldownTime = time(NULL) + (goInfo->trap.cooldown ? goInfo->trap.cooldown : 4);  // default 4 sec cooldown??
+                    m_cooldownTime.Reset((goInfo->trap.cooldown ? goInfo->trap.cooldown : 4)*IN_MILISECONDS);  // default 4 sec cooldown??
                     SendCustomAnimation();
 
                     if (NeedDespawn)
@@ -378,12 +376,11 @@ void GameObject::Update(uint32 update_diff, uint32 p_time)
                     if(!GetGOInfo()->door.autoCloseTime)
                         return;
 
-                    if(m_cooldownTime > time(NULL))
+                    if(!m_cooldownTime.Passed())
                         return;
 
                     SetGoState(GetGOInfo()->door.startOpen ? GO_STATE_ACTIVE : GO_STATE_READY);
                     SetLootState(GO_READY);
-                    m_cooldownTime = 0;
                     break;
                 }
                 case GAMEOBJECT_TYPE_BUTTON:
@@ -391,25 +388,26 @@ void GameObject::Update(uint32 update_diff, uint32 p_time)
                     if(!GetGOInfo()->button.autoCloseTime)
                         return;
 
-                    if(m_cooldownTime > time(NULL))
+                    if(!m_cooldownTime.Passed())
                         return;
 
                     SetGoState(GetGOInfo()->button.startOpen ? GO_STATE_ACTIVE : GO_STATE_READY);
                     SetLootState(GO_READY);
-                    m_cooldownTime = 0;
                     break;
                 }
                 case GAMEOBJECT_TYPE_GOOBER:
-                    if (m_cooldownTime < time(NULL))
+                    if (m_cooldownTime.Passed())
                     {
                         RemoveFlag(GAMEOBJECT_FLAGS, GO_FLAG_IN_USE);
 
                         SetLootState(GO_JUST_DEACTIVATED);
-                        m_cooldownTime = 0;
                     }
                     break;
                 case GAMEOBJECT_TYPE_CHEST:
-                    if(loot.isLooted())
+                    if (loot.HasLooters())
+                        break;
+
+                    if(loot.isLooted() || m_cooldownTime.Passed())
                     {
                         if ((GetUseCount() >= GetGOInfo()->chest.maxSuccessOpens) ||
                             ((GetUseCount() >= GetGOInfo()->chest.minSuccessOpens) && (GetUseCount() >= irand(GetGOInfo()->chest.minSuccessOpens, GetGOInfo()->chest.maxSuccessOpens))))
@@ -431,9 +429,12 @@ void GameObject::Update(uint32 update_diff, uint32 p_time)
                         for(; i != m_unique_users.end(); i++)
                         {
                             Unit* caster = Unit::GetUnit(*this, uint64(*i));
-                            if (!(caster && caster->GetCurrentSpell(CURRENT_CHANNELED_SPELL)))
+                            if (!caster || !caster->GetCurrentSpell(CURRENT_CHANNELED_SPELL))
+                                // if someone is stoped channeling deactivate
                             {
                                 m_lootState = GO_JUST_DEACTIVATED;
+                                if (GetOwnerGUID() == (*i))
+                                    caster->ToPlayer()->RemoveSpellCooldown(GetSpellId());
                                 break;
                             }
                         }
@@ -481,6 +482,10 @@ void GameObject::Update(uint32 update_diff, uint32 p_time)
                             }
                         }
                     }
+                    m_unique_users.clear();
+
+                    if (Player* target = ObjectAccessor::GetPlayer(GetOwnerGUID()))
+                        target->RemoveSpellCooldown(GetSpellId()); // cancel cooldown when iterrupted
                     break;
                 }
             }
@@ -520,9 +525,9 @@ void GameObject::Delete(bool setGoState)
 
     SetUInt32Value(GAMEOBJECT_FLAGS, GetGOInfo()->flags);
 
-    uint16 poolid = sPoolMgr.IsPartOfAPool<GameObject>(GetGUIDLow());
+    uint16 poolid = sPoolMgr.IsPartOfAPool(GetGUIDLow());
     if (poolid)
-        sPoolMgr.UpdatePool<GameObject>(poolid, GetGUIDLow());
+        sPoolMgr.UpdatePool(poolid);
     else
         AddObjectToRemoveList();
 }
@@ -826,9 +831,9 @@ void GameObject::Respawn()
     m_respawnTime = 0;
     SendSpawnAnimation();
 
-    uint16 poolid = sPoolMgr.IsPartOfAPool<GameObject>(GetGUIDLow());
+    uint16 poolid = sPoolMgr.IsPartOfAPool(GetGUIDLow());
     if (poolid)
-        sPoolMgr.UpdatePool<GameObject>(poolid, GetGUIDLow());
+        sPoolMgr.UpdatePool(poolid);
     else
         GetMap()->Add(this);
 
@@ -885,6 +890,9 @@ void GameObject::Despawn()
     }
     else
     {
+        if (loot.HasLooters())
+            loot.ReleaseAll();
+
         SendObjectDeSpawnAnim(GetGUID());
         m_respawnTime = m_spawnedByDefault ? time(NULL) + m_respawnDelayTime : 0;
 
@@ -964,7 +972,7 @@ GameObject* GameObject::LookupFishingHoleAround(float range)
 
 void GameObject::ResetDoorOrButton()
 {
-    m_cooldownTime = 0;
+    m_cooldownTime.Reset(0);
 }
 
 void GameObject::UseDoorOrButton(uint32 time_to_restore, bool alternative /* = false */)
@@ -978,7 +986,7 @@ void GameObject::UseDoorOrButton(uint32 time_to_restore, bool alternative /* = f
     SwitchDoorOrButton();
     SetLootState(GO_ACTIVATED);
 
-    m_cooldownTime = time(NULL) + time_to_restore;
+    m_cooldownTime.Reset(time_to_restore*IN_MILISECONDS);
 }
 
 void GameObject::SetGoArtKit(uint32 kit)
@@ -1005,14 +1013,13 @@ void GameObject::Use(Unit* user)
     // by default spell caster is user
     Unit* spellCaster = user;
     uint32 spellId = 0;
-
     Player *pPlayer = user->GetCharmerOrOwnerPlayerOrPlayerItself();
     if (pPlayer)
     {
         if (sScriptMgr.OnGameObjectUse(pPlayer, this))
             return;
     }
-
+    
     GetMap()->ScriptsStart(sGameObjectScripts, GetDBTableGUIDLow(), user, this);
 
     switch (GetGoType())
@@ -1025,7 +1032,7 @@ void GameObject::Use(Unit* user)
                 SetGoState(GO_STATE_ACTIVE);
             else                                                    //if open -> close
                 SetGoState(GO_STATE_READY);
-            m_cooldownTime = time(NULL) + GetAutoCloseTime();
+            m_cooldownTime.Reset(GetAutoCloseTime()*IN_MILISECONDS);
             Activate();
             break;
         case GAMEOBJECT_TYPE_QUESTGIVER:                    //2
@@ -1045,6 +1052,7 @@ void GameObject::Use(Unit* user)
             pPlayer->SendLoot(GetGUID(), LOOT_SKINNING);
             //SetFlag(GAMEOBJECT_FLAGS, GO_FLAG_IN_USE);
             SetLootState(GO_ACTIVATED);
+            m_cooldownTime.Reset(80000);// after 80 sec despawn
             AddUse();
 
             if (GetGOInfo()->chest.eventId)
@@ -1165,10 +1173,8 @@ void GameObject::Use(Unit* user)
 
                 SetLootState(GO_ACTIVATED); // or SetLootState(GO_JUST_DEACTIVATED);
                 SetFlag(GAMEOBJECT_FLAGS, GO_FLAG_IN_USE);
-                m_cooldownTime = time(NULL) + info->goober.cooldown;
+                m_cooldownTime.Reset(info->goober.cooldown*IN_MILISECONDS);
             }
-
-            GetMap()->ScriptsStart(sGameObjectScripts, GetDBTableGUIDLow(), pPlayer, this);
 
             if (uint32 trapEntry = info->goober.linkedTrapId)
                 TriggeringLinkedGameObject(trapEntry, user);
@@ -1341,10 +1347,6 @@ void GameObject::Use(Unit* user)
             }
 
             spellId = info->spellcaster.spellId;
-
-            AddUse();
-            if(info->spellcaster.charges && m_usetimes >= info->spellcaster.charges)
-                m_lootState = GO_JUST_DEACTIVATED;
             break;
         }
         case GAMEOBJECT_TYPE_MEETINGSTONE:                  // 23
@@ -1462,7 +1464,12 @@ void GameObject::Use(Unit* user)
     // spell target is user of GO
     SpellCastTargets targets;
     targets.setUnitTarget(user);
-
+    if (GetGoType() == GAMEOBJECT_TYPE_SPELLCASTER && spell->CheckCast(true) == SPELL_CAST_OK)
+    {
+        AddUse();
+        if (GetGOInfo()->spellcaster.charges && m_usetimes >= GetGOInfo()->spellcaster.charges)
+            m_lootState = GO_JUST_DEACTIVATED;
+    }
     spell->prepare(&targets);
 }
 
@@ -1473,7 +1480,7 @@ void GameObject::CastSpell(Unit* target, uint32 spell)
     if (!trigger) return;
 
     trigger->SetVisibility(VISIBILITY_OFF); //should this be true?
-
+    if (target) target->SendCombatStats(1 << COMBAT_STATS_TEST, "spell %u is being casted by go", NULL, spell);
     if(spell == 7353) // cozy fire, TODO: find general rule?
     {
         if (Unit *owner = GetOwner())
@@ -1485,12 +1492,12 @@ void GameObject::CastSpell(Unit* target, uint32 spell)
         return;
     }
 
-    if (target)
+    /*if (target)
     {
         const SpellEntry* spellInfo = sSpellStore.LookupEntry(spell);
         if (SpellMgr::isSpellBreakStealth(spellInfo))
             target->RemoveAurasWithInterruptFlags(AURA_INTERRUPT_FLAG_CAST);
-    }
+    }*/
 
     if (Unit *owner = GetOwner())
     {
@@ -1500,7 +1507,7 @@ void GameObject::CastSpell(Unit* target, uint32 spell)
     else
     {
         trigger->setFaction(14);
-        trigger->CastSpell(target, spell, true, 0, 0, target != nullptr ? target->GetGUID() : NULL);
+        trigger->CastSpell(target, spell, true, 0, 0, target != nullptr ? target->GetGUID() : 0);
     }
     //trigger->setDeathState(JUST_DIED);
     //trigger->RemoveCorpse();
@@ -1523,22 +1530,6 @@ void GameObject::CastSpell(GameObject* target, uint32 spell)
         trigger->setFaction(14);
         trigger->CastSpell(target, spell, true, 0, 0, target != nullptr ? target->GetGUID() : 0);
     }
-}
-
-// overwrite WorldObject function for proper name localization
-const char* GameObject::GetNameForLocaleIdx(int32 loc_idx) const
-{
-    if (loc_idx >= 0)
-    {
-        GameObjectLocale const *cl = sObjectMgr.GetGameObjectLocale(GetEntry());
-        if (cl)
-        {
-            if (cl->Name.size() > loc_idx && !cl->Name[loc_idx].empty())
-                return cl->Name[loc_idx].c_str();
-        }
-    }
-
-    return GetName();
 }
 
 void GameObject::UpdateRotationFields(float rotation2 /*=0.0f*/, float rotation3 /*=0.0f*/)

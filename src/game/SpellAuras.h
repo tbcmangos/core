@@ -37,8 +37,6 @@ struct CasterModifiers
     int32 AdvertisedBenefit;
     float DamagePercentDone;
     float CoefficientPtc;
-    int32 FlatDamageVersus;
-    SpellModList SpellModDot;
     bool Apply;
 };
 
@@ -295,7 +293,7 @@ class HELLGROUND_IMPORT_EXPORT Aura
         bool IsPassive() const { return m_isPassive; }
         bool IsPersistent() const { return m_isPersistent; }
         bool IsDeathPersistent() const { return m_isDeathPersist; }
-        bool IsRemovedOnShapeLost() const { return m_isRemovedOnShapeLost && GetId() != 6788 && GetId() != 12328; }
+        bool IsRemovedOnShapeLost() const { return m_isRemovedOnShapeLost; }
         bool IsInUse() const { return m_in_use;}
         bool StackNotByCaster()
         {
@@ -324,6 +322,9 @@ class HELLGROUND_IMPORT_EXPORT Aura
                 return true;
 
             if (GetSpellProto()->SpellFamilyName == SPELLFAMILY_SHAMAN && this->GetSpellProto()->SpellIconID == 1677) // Grounding Totem
+                return true;
+
+            if (GetSpellProto()->Id == 36817 || GetSpellProto()->Id == 37204 || GetSpellProto()->Id == 37205 || GetSpellProto()->Id == 37206)
                 return true;
 
             return false;
