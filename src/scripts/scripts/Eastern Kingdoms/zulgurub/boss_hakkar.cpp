@@ -1,6 +1,6 @@
 /* 
  * Copyright (C) 2006-2008 ScriptDev2 <https://scriptdev2.svn.sourceforge.net/>
- * Copyright (C) 2008-2014 Hellground <http://hellground.net/>
+ * Copyright (C) 2008-2015 Hellground <http://hellground.net/>
  * 
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -54,23 +54,23 @@ struct boss_hakkarAI : public ScriptedAI
 
     ScriptedInstance *pInstance;
 
-    uint32 BloodSiphon_Timer;
-    uint32 CorruptedBlood_Timer;
-    uint32 CauseInsanity_Timer;
-    uint32 WillOfHakkar_Timer;
-    uint32 Enrage_Timer;
+    int32 BloodSiphon_Timer;
+    int32 CorruptedBlood_Timer;
+    int32 CauseInsanity_Timer;
+    int32 WillOfHakkar_Timer;
+    int32 Enrage_Timer;
 
-    uint32 CheckJeklik_Timer;
-    uint32 CheckVenoxis_Timer;
-    uint32 CheckMarli_Timer;
-    uint32 CheckThekal_Timer;
-    uint32 CheckArlokk_Timer;
+    int32 CheckJeklik_Timer;
+    int32 CheckVenoxis_Timer;
+    int32 CheckMarli_Timer;
+    int32 CheckThekal_Timer;
+    int32 CheckArlokk_Timer;
 
-    uint32 AspectOfJeklik_Timer;
-    uint32 AspectOfVenoxis_Timer;
-    uint32 AspectOfMarli_Timer;
-    uint32 AspectOfThekal_Timer;
-    uint32 AspectOfArlokk_Timer;
+    int32 AspectOfJeklik_Timer;
+    int32 AspectOfVenoxis_Timer;
+    int32 AspectOfMarli_Timer;
+    int32 AspectOfThekal_Timer;
+    int32 AspectOfArlokk_Timer;
 
     bool Enraged;
 
@@ -115,155 +115,150 @@ struct boss_hakkarAI : public ScriptedAI
         if (!UpdateVictim())
             return;
 
-        //BloodSiphon_Timer
-        if (BloodSiphon_Timer < diff)
+        BloodSiphon_Timer -= diff;
+        if (BloodSiphon_Timer <= diff)
         {
             DoCast(m_creature->getVictim(),SPELL_BLOODSIPHON);
-            BloodSiphon_Timer = 90000;
+            BloodSiphon_Timer += 90000;
         }
-        else
-            BloodSiphon_Timer -= diff;
+        
 
-        //CorruptedBlood_Timer
-        if (CorruptedBlood_Timer < diff)
+        CorruptedBlood_Timer -= diff;
+        if (CorruptedBlood_Timer <= diff)
         {
             DoCast(m_creature->getVictim(),SPELL_CORRUPTEDBLOOD);
-            CorruptedBlood_Timer = 30000 + rand()%15000;
+            CorruptedBlood_Timer += 30000 + rand()%15000;
         }
-        else
-            CorruptedBlood_Timer -= diff;
+        
 
-        //CauseInsanity_Timer
-        /*if (CauseInsanity_Timer < diff)
+        /*
+        CauseInsanity_Timer -= diff;
+        if (CauseInsanity_Timer <= diff)
         {
         if (Unit* target = SelectUnit(SELECT_TARGET_RANDOM,0))
         DoCast(target,SPELL_CAUSEINSANITY);
 
-        CauseInsanity_Timer = 35000 + rand()%8000;
-        }else CauseInsanity_Timer -= diff;*/
+        CauseInsanity_Timer += 35000 + rand()%8000;
+        }*/
 
-        //WillOfHakkar_Timer
-        if (WillOfHakkar_Timer < diff)
+        WillOfHakkar_Timer -= diff;
+        if (WillOfHakkar_Timer <= diff)
         {
             if (Unit* target = SelectUnit(SELECT_TARGET_RANDOM,0,GetSpellMaxRange(SPELL_WILLOFHAKKAR), true))
                 DoCast(target,SPELL_WILLOFHAKKAR);
 
-            WillOfHakkar_Timer = 25000 + rand()%10000;
+            WillOfHakkar_Timer += 25000 + rand()%10000;
         }
-        else
-            WillOfHakkar_Timer -= diff;
+        
 
-        if (!Enraged && Enrage_Timer < diff)
+        Enrage_Timer -= diff;
+        if (!Enraged && Enrage_Timer <= diff)
         {
             DoCast(m_creature, SPELL_ENRAGE);
             Enraged = true;
         }
-        else
-            Enrage_Timer -= diff;
+        
 
-        //Checking if Jeklik is dead. If not we cast her Aspect
-        if(CheckJeklik_Timer < diff)
+        CheckJeklik_Timer -= diff;
+        if(CheckJeklik_Timer <= diff)
         {
             if(pInstance)
             {
                 if(pInstance->GetData(DATA_JEKLIKEVENT) != DONE)
                 {
-                    if (AspectOfJeklik_Timer < diff)
+                    AspectOfJeklik_Timer -= diff;
+                    if (AspectOfJeklik_Timer <= diff)
                     {
                         DoCast(m_creature->getVictim(),SPELL_ASPECT_OF_JEKLIK);
-                        AspectOfJeklik_Timer = 10000 + rand()%4000;
+                        AspectOfJeklik_Timer += 10000 + rand()%4000;
                     }
-                    else
-                        AspectOfJeklik_Timer -= diff;
                 }
             }
-            CheckJeklik_Timer = 1000;
+            CheckJeklik_Timer += 1000;
         }
-        else
-            CheckJeklik_Timer -= diff;
-
+        
+        CheckVenoxis_Timer -= diff;
         //Checking if Venoxis is dead. If not we cast his Aspect
-        if(CheckVenoxis_Timer < diff)
+        if(CheckVenoxis_Timer <= diff)
         {
             if(pInstance)
             {
                 if(pInstance->GetData(DATA_VENOXISEVENT) != DONE)
                 {
-                    if (AspectOfVenoxis_Timer < diff)
+                    AspectOfVenoxis_Timer -= diff;
+                    if (AspectOfVenoxis_Timer <= diff)
                     {
                         DoCast(m_creature->getVictim(),SPELL_ASPECT_OF_VENOXIS);
-                        AspectOfVenoxis_Timer = 8000;
+                        AspectOfVenoxis_Timer += 8000;
                     }
-                    else
-                        AspectOfVenoxis_Timer -= diff;
                 }
             }
-            CheckVenoxis_Timer = 1000;
+            CheckVenoxis_Timer += 1000;
         }
-        else
-            CheckVenoxis_Timer -= diff;
+        
 
+        CheckMarli_Timer -= diff;
         //Checking if Marli is dead. If not we cast her Aspect
-        if(CheckMarli_Timer < diff)
+        if(CheckMarli_Timer <= diff)
         {
             if(pInstance)
             {
                 if (pInstance->GetData(DATA_MARLIEVENT) != DONE)
                 {
-                    if (AspectOfMarli_Timer < diff)
+                    AspectOfMarli_Timer -= diff;
+                    if (AspectOfMarli_Timer <= diff)
                     {
                         DoCast(m_creature->getVictim(),SPELL_ASPECT_OF_MARLI);
-                        AspectOfMarli_Timer = 10000;
-                    }else AspectOfMarli_Timer -= diff;
+                        AspectOfMarli_Timer += 10000;
+                    }
 
                 }
             }
-            CheckMarli_Timer = 1000;
+            CheckMarli_Timer += 1000;
         }
-        else
-            CheckMarli_Timer -= diff;
+        
 
+        CheckThekal_Timer -= diff;
         //Checking if Thekal is dead. If not we cast his Aspect
-        if(CheckThekal_Timer < diff)
+        if(CheckThekal_Timer <= diff)
         {
             if(pInstance)
             {
                 if(pInstance->GetData(DATA_THEKALEVENT) != DONE)
                 {
-                    if (AspectOfThekal_Timer < diff)
+                    AspectOfThekal_Timer -= diff;
+                    if (AspectOfThekal_Timer <= diff)
                     {
                         DoCast(m_creature,SPELL_ASPECT_OF_THEKAL);
-                        AspectOfThekal_Timer = 15000;
-                    }else AspectOfThekal_Timer -= diff;
+                        AspectOfThekal_Timer += 15000;
+                    }
                 }
             }
-            CheckThekal_Timer = 1000;
+            CheckThekal_Timer += 1000;
         }
-        else
-            CheckThekal_Timer -= diff;
+        
 
+        CheckArlokk_Timer -= diff;
         //Checking if Arlokk is dead. If yes we cast her Aspect
-        if(CheckArlokk_Timer < diff)
+        if(CheckArlokk_Timer <= diff)
         {
             if(pInstance)
             {
                 if(pInstance->GetData(DATA_ARLOKKEVENT) != DONE)
                 {
-                    if (AspectOfArlokk_Timer < diff)
+                    AspectOfArlokk_Timer -= diff;
+                    if (AspectOfArlokk_Timer <= diff)
                     {
                         DoCast(m_creature,SPELL_ASPECT_OF_ARLOKK);
                         DoResetThreat();
 
-                        AspectOfArlokk_Timer = 10000 + rand()%5000;
+                        AspectOfArlokk_Timer += 10000 + rand()%5000;
                     }
-                    else
-                        AspectOfArlokk_Timer -= diff;
                 }
             }
-            CheckArlokk_Timer = 1000;
+            CheckArlokk_Timer += 1000;
         }
-        else
-            CheckArlokk_Timer -= diff;
+        
 
         DoMeleeAttackIfReady();
     }

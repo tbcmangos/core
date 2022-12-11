@@ -1,6 +1,6 @@
 /*
  * Copyright (C) 2009-2012 /dev/rsa for MaNGOS <http://getmangos.com/>
- * Copyright (C) 2008-2014 Hellground <http://hellground.net/>
+ * Copyright (C) 2008-2017 Hellground <http://wow-hellground.com/>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -97,6 +97,7 @@ public:
     void DropActionHigherThen(UnitActionPriority priority);
 
     void DropAllStates();
+    void DropAllControlledStates();
 
     void PushAction(UnitActionId actionId);
     void PushAction(UnitActionId actionId, UnitActionPriority priority);

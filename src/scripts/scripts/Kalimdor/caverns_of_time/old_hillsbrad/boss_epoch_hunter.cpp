@@ -1,6 +1,6 @@
 /* 
  * Copyright (C) 2006-2008 ScriptDev2 <https://scriptdev2.svn.sourceforge.net/>
- * Copyright (C) 2008-2014 Hellground <http://hellground.net/>
+ * Copyright (C) 2008-2015 Hellground <http://hellground.net/>
  * 
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -57,24 +57,22 @@ struct boss_epoch_hunterAI : public ScriptedAI
     boss_epoch_hunterAI(Creature *creature) : ScriptedAI(creature)
     {
         pInstance = (creature->GetInstanceData());
-        HeroicMode = me->GetMap()->IsHeroic();
     }
 
     ScriptedInstance *pInstance;
 
-    bool HeroicMode;
     bool Intro;
     bool Next;
 
     std::list<uint64> attackers;
 
     uint8 Wave;
-    uint32 IntroTimer;
-    uint32 NextTimer;
-    uint32 SandBreath_Timer;
-    uint32 ImpendingDeath_Timer;
-    uint32 WingBuffet_Timer;
-    uint32 Mda_Timer;
+    Timer IntroTimer;
+    Timer NextTimer;
+    Timer SandBreath_Timer;
+    Timer ImpendingDeath_Timer;
+    Timer WingBuffet_Timer;
+    Timer Mda_Timer;
     uint64 ThrallGUID;
 
     void Reset()
@@ -82,12 +80,12 @@ struct boss_epoch_hunterAI : public ScriptedAI
         Intro = true;
         Next = true;
         Wave = 0;
-        IntroTimer = 45000;
-        NextTimer = 51000;
-        SandBreath_Timer = 25000;
-        ImpendingDeath_Timer = 30000;
-        WingBuffet_Timer = 35000;
-        Mda_Timer = 40000;
+        IntroTimer.Reset(45000);
+        NextTimer.Reset(51000);
+        SandBreath_Timer.Reset(25000);
+        ImpendingDeath_Timer.Reset(30000);
+        WingBuffet_Timer.Reset(35000);
+        Mda_Timer.Reset(40000);
         attackers.clear();
         me->SetReactState(REACT_PASSIVE);
         me->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
@@ -97,12 +95,13 @@ struct boss_epoch_hunterAI : public ScriptedAI
         if (!tmpMap)
             return;
 
-        if (Creature* Thrall = tmpMap->GetCreature(tmpMap->GetCreatureGUID(NPC_THRALL)))
+        if (Creature* Thrall = tmpMap->GetCreature(pInstance->GetData64(DATA_THRALL)))
             ThrallGUID = Thrall->GetGUID();
     }
 
     void EnterCombat(Unit *who)
     {
+        pInstance->SetData(DATA_EPOCH_DEATH, IN_PROGRESS);
         DoScriptText(RAND(SAY_AGGRO1, SAY_AGGRO2), me);
     }
 
@@ -118,6 +117,7 @@ struct boss_epoch_hunterAI : public ScriptedAI
         me->DeleteThreatList();
         me->CombatStop(true);
         me->ForcedDespawn();
+        pInstance->SetData(DATA_EPOCH_DEATH, NOT_STARTED);
     }
 
     void JustDied(Unit *victim)
@@ -291,7 +291,7 @@ struct boss_epoch_hunterAI : public ScriptedAI
     {
         if (Intro)
         {
-            if (IntroTimer < diff)
+            if (IntroTimer.Expired(diff))
             {
                 if (attackers.empty())
                     NextWave();
@@ -331,16 +331,14 @@ struct boss_epoch_hunterAI : public ScriptedAI
 
                 IntroTimer = 5000;
             }
-            else
-                IntroTimer -= diff;
+            
 
             if (Next)
             {
-                if (NextTimer <= diff) 
+                if (NextTimer.Expired(diff))
                 {
                     NextWave();
                 }
-                else NextTimer -= diff;
             }
         }
 
@@ -348,8 +346,7 @@ struct boss_epoch_hunterAI : public ScriptedAI
         if (!UpdateVictim() )
             return;
 
-        //Sand Breath
-        if (SandBreath_Timer < diff)
+        if (SandBreath_Timer.Expired(diff))
         {
             if (me->IsNonMeleeSpellCast(false))
                 me->InterruptNonMeleeSpells(false);
@@ -360,33 +357,28 @@ struct boss_epoch_hunterAI : public ScriptedAI
 
             SandBreath_Timer = 25000+rand()%5000;
         }
-        else
-            SandBreath_Timer -= diff;
-
-        if(ImpendingDeath_Timer < diff)
+        
+        if (ImpendingDeath_Timer.Expired(diff))
         {
             if(Unit *target = SelectUnit(SELECT_TARGET_RANDOM, 0 , GetSpellMaxRange(SPELL_IMPENDING_DEATH), true))
                 DoCast(target,SPELL_IMPENDING_DEATH);
             ImpendingDeath_Timer = 30000+rand()%5000;
         }
-        else
-            ImpendingDeath_Timer -= diff;
 
-        if(WingBuffet_Timer < diff)
+        if (WingBuffet_Timer.Expired(diff))
         {
             DoCast(me,SPELL_WING_BUFFET);
             WingBuffet_Timer = 25000+rand()%10000;
         }
-        else
-            WingBuffet_Timer -= diff;
+        
 
-        if(Mda_Timer < diff)
+
+        if (Mda_Timer.Expired(diff))
         {
             DoCast(me,SPELL_MAGIC_DISRUPTION_AURA);
             Mda_Timer = 15000;
         }
-        else
-            Mda_Timer -= diff;
+        
 
         DoMeleeAttackIfReady();
     }

@@ -1,7 +1,7 @@
 /*
  * Copyright (C) 2005-2008 MaNGOS <http://getmangos.com/>
  * Copyright (C) 2008 TrinityCore <http://www.trinitycore.org/>
- * Copyright (C) 2008-2014 Hellground <http://hellground.net/>
+ * Copyright (C) 2008-2017 Hellground <http://wow-hellground.com/>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -46,7 +46,6 @@
 #include "WorldSocketMgr.h"
 #include "Log.h"
 #include "DBCStores.h"
-#include "luaengine/HookMgr.h"
 
 #if defined(__GNUC__)
 #pragma pack(1)
@@ -140,9 +139,6 @@ int WorldSocket::SendPacket(const WorldPacket& pct)
 
     if (closing_)
         return -1;
-
-    //if (!sHookMgr->OnPacketSend(m_Session, *const_cast<WorldPacket*>(&pct)))
-    //    return 0;
 
     if (iSendPacket(pct) == -1)
     {
@@ -776,8 +772,7 @@ int WorldSocket::HandleAuthSession(WorldPacket& recvPacket)
                                 "FROM account_punishment "
                                 "WHERE account_id = '%u' "
                                 "AND punishment_type_id = '%u' "
-                                "AND active = 1 "
-                                "AND (expiration_date > UNIX_TIMESTAMP() OR expiration_date = punishment_date)",
+                                "AND active = 1 ",
                                 id, PUNISHMENT_BAN);
 
     if (banresult) // if account banned
@@ -791,9 +786,8 @@ int WorldSocket::HandleAuthSession(WorldPacket& recvPacket)
     }
 
     // Check locked state for server
-    sWorld.UpdateRequiredPermissions();
     uint64 minimumPermissions = sWorld.GetMinimumPermissionMask();
-    sLog.outDebug("Allowed permission mask: %u Player permission mask: %u", minimumPermissions, permissionMask);
+    sLog.outDebug("Allowed permission mask: %lu Player permission mask: %lu", minimumPermissions, permissionMask);
     if (!(permissionMask & minimumPermissions))
     {
         WorldPacket Packet(SMSG_AUTH_RESPONSE, 1);
@@ -961,8 +955,8 @@ int WorldSocket::HandlePing(WorldPacket& recvPacket)
                 if (m_Session && !m_Session->HasPermissions(PERM_GMT))
                 {
                     sLog.outLog(LOG_DEFAULT, "ERROR: WorldSocket::HandlePing: Player kicked for "
-                                    "overspeeded pings address = %s",
-                                    GetRemoteAddress().c_str());
+                                    "overspeeded pings address = %s diff %lu",
+                                    GetRemoteAddress().c_str(), diff_time.msec());
 
                     return -1;
                 }
@@ -1095,7 +1089,7 @@ uint32 WorldSocket::IPToLocation(const std::string& IP)
 
     QueryResultAutoPtr result = GameDataDatabase.PQuery(
         "SELECT locId FROM blocks "
-        "WHERE endIpNum >= %u order by endIpNum limit 1;",addressAsNumber,addressAsNumber);
+        "WHERE endIpNum >= %u order by endIpNum limit 1;", addressAsNumber);
     
     if (!result)
     {

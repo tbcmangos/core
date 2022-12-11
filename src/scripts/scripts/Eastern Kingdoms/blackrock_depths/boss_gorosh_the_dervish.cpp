@@ -1,6 +1,6 @@
 /* 
  * Copyright (C) 2006-2008 ScriptDev2 <https://scriptdev2.svn.sourceforge.net/>
- * Copyright (C) 2008-2014 Hellground <http://hellground.net/>
+ * Copyright (C) 2008-2015 Hellground <http://hellground.net/>
  * 
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -52,23 +52,22 @@ struct boss_gorosh_the_dervishAI : public ScriptedAI
         if (!UpdateVictim() )
             return;
 
-        //WhirlWind_Timer
-        if (WhirlWind_Timer < diff)
+        WhirlWind_Timer -= diff;
+        if (WhirlWind_Timer <= diff)
         {
             DoCast(me,SPELL_WHIRLWIND);
             WhirlWind_Timer = 15000;
         }
-        else
-            WhirlWind_Timer -= diff;
+        
 
-        //MortalStrike_Timer
-        if (MortalStrike_Timer < diff)
+        MortalStrike_Timer -= diff;
+        if (MortalStrike_Timer <= diff)
         {
             DoCast(me->getVictim(),SPELL_MORTALSTRIKE);
             MortalStrike_Timer = 15000;
         }
-        else
-            MortalStrike_Timer -= diff;
+
+          
 
         DoMeleeAttackIfReady();
     }

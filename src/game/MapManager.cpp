@@ -1,7 +1,7 @@
 /*
  * Copyright (C) 2005-2008 MaNGOS <http://getmangos.com/>
  * Copyright (C) 2008 TrinityCore <http://www.trinitycore.org/>
- * Copyright (C) 2008-2014 Hellground <http://hellground.net/>
+ * Copyright (C) 2008-2017 Hellground <http://wow-hellground.com/>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -228,8 +228,7 @@ void MapManager::DeleteInstance(uint32 mapid, uint32 instanceId)
 typedef std::list<std::pair<Map*, uint32> > DelayedMapList;
 void MapManager::Update(uint32 diff)
 {
-    DiffRecorder diffRecorder(__FUNCTION__, sWorld.getConfig(CONFIG_MIN_LOG_UPDATE));
-
+    DiffRecorder dr(sWorld.getConfig(CONFIG_MIN_LOG_UPDATE));
     DelayedMapList delayedUpdate;
     for (MapMapType::iterator iter=i_maps.begin(); iter != i_maps.end();)
     {
@@ -243,41 +242,36 @@ void MapManager::Update(uint32 diff)
         else
         {
             Map::UpdateHelper helper(iter->second);
-            if (helper.ProcessUpdate())
-                helper.Update(delayedUpdate);
+            helper.Update(delayedUpdate);
 
             ++iter;
         }
     }
-
+    dr.RecordTimeFor("MapManager-general");
     m_updater.wait();
-
-    diffRecorder.RecordTimeFor("UpdateMaps");
+    if (dr.RecordTimeFor("MapManager-wait"))
+        sLog.outLog(LOG_DIFF, "last updated map %u", m_updater.GetLastMapId());
 
     for (DelayedMapList::iterator iter = delayedUpdate.begin(); iter != delayedUpdate.end(); ++iter)
         iter->first->DelayedUpdate(iter->second);
-
     delayedUpdate.clear();
-
-    diffRecorder.RecordTimeFor("Delayed update");
-
+    dr.RecordTimeFor("MapManager-delayed");
     for (TransportSet::iterator iter = m_Transports.begin(); iter != m_Transports.end(); ++iter)
     {
         WorldObject::UpdateHelper helper(*iter);
         helper.Update(diff);
     }
-
-     diffRecorder.RecordTimeFor("UpdateTransports");
+    dr.RecordTimeFor("MapManager-transports", 60);
 }
 
-bool MapManager::ExistMapAndVMap(uint32 mapid, float x,float y)
+bool MapManager::ExistMap(uint32 mapid, float x,float y)
 {
     GridPair p = Hellground::ComputeGridPair(x,y);
 
     int gx=63-p.x_coord;
     int gy=63-p.y_coord;
 
-    return GridMap::ExistMap(mapid,gx,gy) && GridMap::ExistVMap(mapid,gx,gy);
+    return GridMap::ExistMap(mapid,gx,gy);
 }
 
 bool MapManager::IsValidMAP(uint32 mapid)

@@ -1,7 +1,7 @@
 /*
  * Copyright (C) 2005-2008 MaNGOS <http://getmangos.com/>
  * Copyright (C) 2008 TrinityCore <http://www.trinitycore.org/>
- * Copyright (C) 2008-2014 Hellground <http://hellground.net/>
+ * Copyright (C) 2008-2017 Hellground <http://wow-hellground.com/>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -158,7 +158,7 @@ void LootStore::LoadLootTable()
         Verify();                                           // Checks validity of the loot store
 
         sLog.outString();
-        sLog.outString(">> Loaded %u loot definitions (%d templates)", count, m_LootTemplates.size());
+        sLog.outString(">> Loaded %u loot definitions (%lu templates)", count, m_LootTemplates.size());
     }
     else
     {
@@ -279,7 +279,7 @@ bool LootStoreItem::IsValid(LootStore const& store, uint32 entry) const
     {
         if (needs_quest)
             sLog.outLog(LOG_DB_ERR, "Table '%s' entry %d item %d: quest chance will be treated as non-quest chance", store.GetName(), entry, itemid);
-        else if (chance == 0)                              // no chance for the reference
+        else if (!chance && !group)                              // no chance for the reference
         {
             sLog.outLog(LOG_DB_ERR, "Table '%s' entry %d item %d: zero chance is specified for a reference, skipped", store.GetName(), entry, itemid);
             return false;
@@ -393,9 +393,11 @@ void Loot::AddItem(LootStoreItem const & item)
 
 bool Loot::IsPlayerAllowedToLoot(Player *player, WorldObject *object)
 {
-    return players_allowed_to_loot.empty() ?
-        player->IsWithinDistInMap(object, sWorld.getConfig(CONFIG_GROUP_XP_DISTANCE), false) :
-        players_allowed_to_loot.find(player->GetGUID()) != players_allowed_to_loot.end();
+    if (players_allowed_to_loot.empty())
+    {
+        return object? player->IsWithinDistInMap(object, sWorld.getConfig(CONFIG_GROUP_XP_DISTANCE), false) : true;
+    }
+    return players_allowed_to_loot.find(player->GetGUID()) != players_allowed_to_loot.end();
 }
 
 void Loot::setCreatureGUID(Creature *pCreature)
@@ -491,7 +493,7 @@ void Loot::FillLootFromDB(Creature *pCreature, Player* pLootOwner)
         //set variable to true even if we don't load anything so new loot won't be generated
         m_lootLoadedFromDB = true;
 
-        sLog.outLog(LOG_BOSS, ss.str().c_str());
+        sLog.outLog(LOG_BOSS, "%s", ss.str().c_str());
 
         // make body visible to loot
         pCreature->setDeathState(JUST_DIED);
@@ -520,7 +522,7 @@ void Loot::removeItemFromSavedLoot(LootItem *item)
     {
         // log only for raids
         if (pMap->IsRaid())
-            sLog.outLog(LOG_BOSS, "Loot::removeItemFromSavedLoot: pCreature not found !! guid: %u, instanceid: %u) ", m_creatureGUID, pMap->GetInstanceId());
+            sLog.outLog(LOG_BOSS, "Loot::removeItemFromSavedLoot: pCreature not found!! guid: %lu, instanceid: %u) ", m_creatureGUID, pMap->GetInstanceId());
         return;
     }
 
@@ -628,7 +630,7 @@ void Loot::saveLootToDB(Player *owner)
             continue;
 
         ItemPrototype const *item_proto = ObjectMgr::GetItemPrototype(item->itemid);
-        if (!item_proto || item_proto->Flags & ITEM_FLAGS_PARTY_LOOT)
+        if (!item_proto || item->freeforall)
             continue;
 
         if (item_proto->Quality >= ITEM_QUALITY_RARE)
@@ -658,7 +660,7 @@ void Loot::saveLootToDB(Player *owner)
         }
     }
 
-    sLog.outLog(LOG_BOSS, ss.str().c_str());
+    sLog.outLog(LOG_BOSS, "%s", ss.str().c_str());
     RealmDataDatabase.CommitTransaction();
 }
 
@@ -708,9 +710,7 @@ void Loot::FillNotNormalLootFor(Player* pl)
     if (qmapitr == PlayerFFAItems.end())
         FillFFALoot(pl);
 
-    qmapitr = PlayerNonQuestNonFFAConditionalItems.find(plguid);
-    if (qmapitr == PlayerNonQuestNonFFAConditionalItems.end())
-        FillNonQuestNonFFAConditionalLoot(pl);
+    FillNonQuestNonFFAConditionalLoot(pl);
 }
 
 QuestItemList* Loot::FillFFALoot(Player* player)
@@ -773,31 +773,20 @@ QuestItemList* Loot::FillQuestLoot(Player* player)
     return ql;
 }
 
-QuestItemList* Loot::FillNonQuestNonFFAConditionalLoot(Player* player)
+void Loot::FillNonQuestNonFFAConditionalLoot(Player* player)
 {
-    QuestItemList *ql = new QuestItemList();
-
     for (uint8 i = 0; i < items.size(); ++i)
     {
         LootItem &item = items[i];
         if (!item.is_looted && !item.freeforall && item.conditionId && item.AllowedForPlayer(player))
         {
-            ql->push_back(QuestItem(i));
             if (!item.is_counted)
             {
-                ++unlootedCount;
+                ++unlootedCount; // only reason for this function
                 item.is_counted=true;
             }
         }
     }
-    if (ql->empty())
-    {
-        delete ql;
-        return NULL;
-    }
-
-    PlayerNonQuestNonFFAConditionalItems[player->GetGUIDLow()] = ql;
-    return ql;
 }
 
 //===================================================
@@ -867,6 +856,16 @@ void Loot::NotifyQuestItemRemoved(uint8 questIndex)
     }
 }
 
+void Loot::ReleaseAll()
+{
+    for (std::set<uint64>::iterator i = PlayersLooting.begin(); i != PlayersLooting.end(); i++)
+    {
+        if (Player* pl = ObjectAccessor::FindPlayer(*i))
+            pl->SendLootRelease(pl->GetLootGUID());
+    }
+    PlayersLooting.clear();
+}
+
 void Loot::generateMoneyLoot(uint32 minAmount, uint32 maxAmount)
 {
     if (maxAmount > 0)
@@ -891,7 +890,7 @@ void Loot::setItemLooted(LootItem *pLootItem, Player* looter)
         m_mapID.nMapId,m_mapID.nInstanceId,pLootItem->itemid,looter->GetName(),looter->GetGUIDLow());
 }
 
-LootItem* Loot::LootItemInSlot(uint32 lootSlot, Player* player, QuestItem **qitem, QuestItem **ffaitem, QuestItem **conditem)
+LootItem* Loot::LootItemInSlot(uint32 lootSlot, Player* player, QuestItem **qitem, QuestItem **ffaitem)
 {
     LootItem* item = NULL;
     bool is_looted = true;
@@ -926,24 +925,6 @@ LootItem* Loot::LootItemInSlot(uint32 lootSlot, Player* player, QuestItem **qite
                         is_looted = ffaitem2->is_looted;
                         break;
                     }
-            }
-        }
-        else if (item->conditionId)
-        {
-            QuestItemMap::const_iterator itr = PlayerNonQuestNonFFAConditionalItems.find(player->GetGUIDLow());
-            if (itr != PlayerNonQuestNonFFAConditionalItems.end())
-            {
-                for (QuestItemList::iterator iter=itr->second->begin(); iter!= itr->second->end(); ++iter)
-                {
-                    if (iter->index==lootSlot)
-                    {
-                        QuestItem *conditem2 = (QuestItem*)&(*iter);
-                        if (conditem)
-                            *conditem = conditem2;
-                        is_looted = conditem2->is_looted;
-                        break;
-                    }
-                }
             }
         }
     }
@@ -1031,7 +1012,8 @@ ByteBuffer& operator<<(ByteBuffer& b, LootView const& lv)
     uint8 slot_type = 0; // 0 - get, 1 - look only, 2 - master selection
     for (uint8 i = 0; i < l.items.size(); ++i)
     {
-        if (!l.items[i].is_looted && !l.items[i].freeforall && !l.items[i].conditionId && l.items[i].AllowedForPlayer(lv.viewer))
+        if (!l.items[i].is_looted && !l.items[i].freeforall && (l.items[i].AllowedForPlayer(lv.viewer) ||
+            (lv.permission == MASTER_PERMISSION && l.items[i].conditionId && l.items[i].is_counted))) // ML can see conditionals if only anyone is allowed to loot it
         {
             if (lv.permission == ALL_PERMISSION)
                 slot_type = 0;
@@ -1082,26 +1064,9 @@ ByteBuffer& operator<<(ByteBuffer& b, LootView const& lv)
         }
     }
 
-    QuestItemMap const& lootPlayerNonQuestNonFFAConditionalItems = l.GetPlayerNonQuestNonFFAConditionalItems();
-    QuestItemMap::const_iterator nn_itr = lootPlayerNonQuestNonFFAConditionalItems.find(lv.viewer->GetGUIDLow());
-    if (nn_itr != lootPlayerNonQuestNonFFAConditionalItems.end())
-    {
-        QuestItemList *conditional_list =  nn_itr->second;
-        for (QuestItemList::iterator ci = conditional_list->begin() ; ci != conditional_list->end(); ++ci)
-        {
-            LootItem &item = l.items[ci->index];
-            if (!ci->is_looted && !item.is_looted)
-            {
-                b << uint8(ci->index) << item;
-                b << uint8(0);                              // allow loot
-                ++itemsShown;
-            }
-        }
-    }
-
     //update number of items shown
     b.put<uint8>(count_pos,itemsShown);
-
+    lv.viewer->SendCombatStats(1 << COMBAT_STATS_LOOTING, "sending lootview with %u items", NULL, itemsShown);
     return b;
 }
 

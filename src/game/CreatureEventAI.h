@@ -1,7 +1,7 @@
 /*
  * Copyright (C) 2005-2009 MaNGOS <http://getmangos.com/>
  * Copyright (C) 2008-2009 TrinityCore <http://www.trinitycore.org/>
- * Copyright (C) 2008-2014 Hellground <http://hellground.net/>
+ * Copyright (C) 2008-2017 Hellground <http://wow-hellground.com/>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -627,6 +627,7 @@ class HELLGROUND_IMPORT_EXPORT CreatureEventAI : public CreatureAI
         void UpdateAI(const uint32 diff);
         void ReceiveEmote(Player* pPlayer, uint32 text_emote);
         static int Permissible(const Creature *);
+        void GetDebugInfo(ChatHandler& reader);
 
         bool ProcessEvent(CreatureEventAIHolder& pHolder, Unit* pActionInvoker = NULL);
         void ProcessAction(CreatureEventAI_Action const& action, uint32 rnd, uint32 EventId, Unit* pActionInvoker);
@@ -645,13 +646,14 @@ class HELLGROUND_IMPORT_EXPORT CreatureEventAI : public CreatureAI
 
                                                             //Holder for events (stores enabled, time, and eventid)
         std::list<CreatureEventAIHolder> CreatureEventAIList;
-        uint32 EventUpdateTime;                             //Time between event updates
+        Timer EventUpdateTime;                             //Time between event updates
         uint32 EventDiff;                                   //Time between the last event call
         bool bEmptyList;
 
         //Variables used by Events themselves
         uint8 Phase;                                        // Current phase, max 32 phases
         bool CombatMovementEnabled;                         // If we allow targeted movment gen (movement twoards top threat)
+        bool AllowConditionalMovement;                      // Allow moving when in los even if combat movement not enabled
         bool MeleeEnabled;                                  // If we allow melee auto attack
         float AttackDistance;                               // Distance to attack from
         float AttackAngle;                                  // Angle of attack

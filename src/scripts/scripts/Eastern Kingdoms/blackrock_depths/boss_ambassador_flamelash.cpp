@@ -1,6 +1,6 @@
 /* 
  * Copyright (C) 2006-2008 ScriptDev2 <https://scriptdev2.svn.sourceforge.net/>
- * Copyright (C) 2008-2014 Hellground <http://hellground.net/>
+ * Copyright (C) 2008-2015 Hellground <http://hellground.net/>
  * 
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -32,8 +32,8 @@ struct boss_ambassador_flamelashAI : public ScriptedAI
 {
     boss_ambassador_flamelashAI(Creature *c) : ScriptedAI(c) {}
 
-    uint32 FireBlast_Timer;
-    uint32 Spirit_Timer;
+    int32 FireBlast_Timer;
+    int32 Spirit_Timer;
     int Rand;
     int RandX;
     int RandY;
@@ -73,27 +73,25 @@ struct boss_ambassador_flamelashAI : public ScriptedAI
         if (!UpdateVictim() )
             return;
 
-        //FireBlast_Timer
-        if (FireBlast_Timer < diff)
+        FireBlast_Timer -= diff;
+        if (FireBlast_Timer <= diff)
         {
             DoCast(me->getVictim(),SPELL_FIREBLAST);
-            FireBlast_Timer = 7000;
+            FireBlast_Timer += 7000;
         }
-        else
-            FireBlast_Timer -= diff;
+        
 
-        //Spirit_Timer
-        if (Spirit_Timer < diff)
+        Spirit_Timer -= diff;
+        if (Spirit_Timer <= diff)
         {
             SummonSpirits(me->getVictim());
             SummonSpirits(me->getVictim());
             SummonSpirits(me->getVictim());
             SummonSpirits(me->getVictim());
 
-            Spirit_Timer = 30000;
+            Spirit_Timer += 30000;
         }
-        else
-            Spirit_Timer -= diff;
+        
 
         DoMeleeAttackIfReady();
     }

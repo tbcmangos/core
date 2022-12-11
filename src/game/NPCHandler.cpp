@@ -1,7 +1,7 @@
 /*
  * Copyright (C) 2005-2008 MaNGOS <http://getmangos.com/>
  * Copyright (C) 2008 TrinityCore <http://www.trinitycore.org/>
- * Copyright (C) 2008-2014 Hellground <http://hellground.net/>
+ * Copyright (C) 2008-2017 Hellground <http://wow-hellground.com/>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -56,7 +56,7 @@ void WorldSession::HandleTabardVendorActivateOpcode(WorldPacket & recv_data)
     }
 
     // remove fake death
-    if (GetPlayer()->hasUnitState(UNIT_STAT_DIED))
+    if (GetPlayer()->HasFlag(UNIT_FIELD_FLAGS_2, UNIT_FLAG2_FEIGN_DEATH))
         GetPlayer()->RemoveSpellsCausingAura(SPELL_AURA_FEIGN_DEATH);
 
     SendTabardVendorActivate(guid);
@@ -87,7 +87,7 @@ void WorldSession::HandleBankerActivateOpcode(WorldPacket & recv_data)
     }
 
     // remove fake death
-    if (GetPlayer()->hasUnitState(UNIT_STAT_DIED))
+    if (GetPlayer()->HasFlag(UNIT_FIELD_FLAGS_2, UNIT_FLAG2_FEIGN_DEATH))
         GetPlayer()->RemoveSpellsCausingAura(SPELL_AURA_FEIGN_DEATH);
 
     SendShowBank(guid);
@@ -128,7 +128,7 @@ void WorldSession::SendTrainerList(uint64 guid, const std::string& strTitle)
     }
 
     // remove fake death
-    if (GetPlayer()->hasUnitState(UNIT_STAT_DIED))
+    if (GetPlayer()->HasFlag(UNIT_FIELD_FLAGS_2, UNIT_FLAG2_FEIGN_DEATH))
         GetPlayer()->RemoveSpellsCausingAura(SPELL_AURA_FEIGN_DEATH);
 
     // trainer list loaded at check;
@@ -160,6 +160,8 @@ void WorldSession::SendTrainerList(uint64 guid, const std::string& strTitle)
 
     // reputation discount
     float fDiscountMod = _player->GetReputationPriceDiscount(unit);
+    if (_player->getLevel() <= sWorld.getConfig(CONFIG_TRAINER_DISCOUNT_MAX_LEVEL) && unit->GetCreatureInfo()->trainer_type == TRAINER_TYPE_CLASS)
+        fDiscountMod *= sWorld.getConfig(_player->GetTeam() == ALLIANCE ? RATE_TRAINER_ALLIANCE : RATE_TRAINER_HORDE);
 
     uint32 count = 0;
     for (TrainerSpellMap::const_iterator itr = trainer_spells->spellList.begin(); itr != trainer_spells->spellList.end(); ++itr)
@@ -214,7 +216,7 @@ void WorldSession::HandleTrainerBuySpellOpcode(WorldPacket & recv_data)
     }
 
     // remove fake death
-    if (GetPlayer()->hasUnitState(UNIT_STAT_DIED))
+    if (GetPlayer()->HasFlag(UNIT_FIELD_FLAGS_2, UNIT_FLAG2_FEIGN_DEATH))
         GetPlayer()->RemoveSpellsCausingAura(SPELL_AURA_FEIGN_DEATH);
 
     if (!unit->isCanTrainingOf(_player,true))
@@ -235,8 +237,12 @@ void WorldSession::HandleTrainerBuySpellOpcode(WorldPacket & recv_data)
         return;
 
     // apply reputation discount
-    uint32 nSpellCost = uint32(floor(trainer_spell->spellCost * _player->GetReputationPriceDiscount(unit)));
-
+    float fDiscountMod = _player->GetReputationPriceDiscount(unit);
+    if (_player->getLevel() <= sWorld.getConfig(CONFIG_TRAINER_DISCOUNT_MAX_LEVEL) && unit->GetCreatureInfo()->trainer_type == TRAINER_TYPE_CLASS)
+        fDiscountMod *= sWorld.getConfig(_player->GetTeam() == ALLIANCE ? RATE_TRAINER_ALLIANCE : RATE_TRAINER_HORDE);
+    uint32 nSpellCost = uint32(floor(trainer_spell->spellCost * fDiscountMod));
+    if (sWorld.getConfig(CONFIG_HAPPY_TESTING))
+        nSpellCost = 0;
     // check money requirement
     if (_player->GetMoney() < nSpellCost)
         return;
@@ -276,12 +282,13 @@ void WorldSession::HandleGossipHelloOpcode(WorldPacket & recv_data)
     }
 
     GetPlayer()->RemoveAurasWithInterruptFlags(AURA_INTERRUPT_FLAG_TALK);
-    // remove fake death
-    //if(GetPlayer()->hasUnitState(UNIT_STAT_DIED))
-    //    GetPlayer()->RemoveSpellsCausingAura(SPELL_AURA_FEIGN_DEATH);
 
-    if (unit->isArmorer() || unit->isCivilian() || unit->isQuestGiver() || unit->isServiceProvider())
-        unit->StopMoving();
+    if (!unit->isInCombat() && unit->GetUInt32Value(UNIT_NPC_FLAGS) != 0 && (unit->isArmorer() || unit->isCivilian() || unit->isQuestGiver() || unit->isServiceProvider()))
+    {
+        unit->SetFacingTo(unit->GetAngle(GetPlayer()));
+        unit->GetMotionMaster()->MoveDistract(20 * IN_MILISECONDS);
+        unit->SendCombatStats(1 << COMBAT_STATS_TEST, "distract movement", NULL);
+    }
 
     // If spirit guide, no need for gossip menu, just put player into resurrect queue
     if (unit->isSpiritGuide())
@@ -303,9 +310,9 @@ void WorldSession::HandleGossipHelloOpcode(WorldPacket & recv_data)
     }
 }
 
-/*void WorldSession::HandleGossipSelectOptionOpcode(WorldPacket & recv_data)
+void WorldSession::HandleGossipSelectOptionOpcode(WorldPacket & recv_data)
 {
-    CHECK_PACKET_SIZE(recv_data,8+4+4);
+    CHECK_PACKET_SIZE(recv_data, 8 + 4 + 4);
 
     sLog.outDebug("WORLD: CMSG_GOSSIP_SELECT_OPTION");
 
@@ -319,34 +326,54 @@ void WorldSession::HandleGossipHelloOpcode(WorldPacket & recv_data)
     if (_player->PlayerTalkClass->GossipOptionCoded(option))
     {
         // recheck
-        CHECK_PACKET_SIZE(recv_data,8+4+1);
-        sLog.outDebug("reading string");
+        CHECK_PACKET_SIZE(recv_data, 8 + 4 + 1);
+        sLog.outBasic("reading string");
         recv_data >> code;
-        sLog.outDebug("string read: %s", code.c_str());
+        sLog.outBasic("string read: %s", code.c_str());
     }
 
-    Creature *unit = GetPlayer()->GetNPCIfCanInteractWith(guid, UNIT_NPC_FLAG_NONE);
-    if (!unit)
+    Creature *unit = NULL;
+    GameObject *go = NULL;
+
+    uint32 sender = _player->PlayerTalkClass->GossipOptionSender(option);
+    uint32 action = _player->PlayerTalkClass->GossipOptionAction(option);
+
+    if (IS_CREATURE_GUID(guid))
     {
-        sLog.outDebug("WORLD: HandleGossipSelectOptionOpcode - Unit (GUID: %u) not found or you can't interact with him.", uint32(GUID_LOPART(guid)));
+        unit = GetPlayer()->GetNPCIfCanInteractWith(guid, UNIT_NPC_FLAG_NONE);
+        if (!unit)
+        {
+            sLog.outDebug("WORLD: HandleGossipSelectOptionOpcode - Unit (GUID: %u) not found or you can't interact with him.", uint32(GUID_LOPART(guid)));
+            return;
+        }
+    }
+    else if (IS_GAMEOBJECT_GUID(guid))
+    {
+        go = _player->GetMap()->GetGameObject(guid);
+        if (!go)
+        {
+            sLog.outDebug("WORLD: HandleGossipSelectOptionOpcode - GameObject (GUID: %u) not found.", uint32(GUID_LOPART(guid)));
+            return;
+        }
+    }
+    else
+    {
+        sLog.outDebug("WORLD: HandleGossipSelectOptionOpcode - unsupported GUID type for highguid %u. lowpart %u.", uint32(GUID_HIPART(guid)), uint32(GUID_LOPART(guid)));
         return;
     }
 
     // remove fake death
-    if (GetPlayer()->hasUnitState(UNIT_STAT_DIED))
+    if (GetPlayer()->HasFlag(UNIT_FIELD_FLAGS_2, UNIT_FLAG2_FEIGN_DEATH))
         GetPlayer()->RemoveSpellsCausingAura(SPELL_AURA_FEIGN_DEATH);
 
-    if (!code.empty())
+    if (unit)
     {
-        if (!Script->GossipSelectWithCode(_player, unit, _player->PlayerTalkClass->GossipOptionSender (option), _player->PlayerTalkClass->GossipOptionAction(option), code.c_str()))
-            unit->OnGossipSelect (_player, option);
+        if (!sScriptMgr.OnGossipSelect(_player, unit, sender, action, code.empty() ? NULL : code.c_str()))
+            unit->OnGossipSelect(_player, option);
     }
     else
-    {
-        if (!Script->GossipSelect (_player, unit, _player->PlayerTalkClass->GossipOptionSender (option), _player->PlayerTalkClass->GossipOptionAction (option)))
-           unit->OnGossipSelect (_player, option);
-    }
-}*/
+        sScriptMgr.OnGossipSelect(_player, go, sender, action, code.empty() ? NULL : code.c_str());
+}
 
 void WorldSession::HandleSpiritHealerActivateOpcode(WorldPacket & recv_data)
 {
@@ -366,7 +393,7 @@ void WorldSession::HandleSpiritHealerActivateOpcode(WorldPacket & recv_data)
     }
 
     // remove fake death
-    if (GetPlayer()->hasUnitState(UNIT_STAT_DIED))
+    if (GetPlayer()->HasFlag(UNIT_FIELD_FLAGS_2, UNIT_FLAG2_FEIGN_DEATH))
         GetPlayer()->RemoveSpellsCausingAura(SPELL_AURA_FEIGN_DEATH);
 
     SendSpiritResurrect();
@@ -420,7 +447,7 @@ void WorldSession::HandleBinderActivateOpcode(WorldPacket & recv_data)
     }
 
     // remove fake death
-    if (GetPlayer()->hasUnitState(UNIT_STAT_DIED))
+    if (GetPlayer()->HasFlag(UNIT_FIELD_FLAGS_2, UNIT_FLAG2_FEIGN_DEATH))
         GetPlayer()->RemoveSpellsCausingAura(SPELL_AURA_FEIGN_DEATH);
 
     SendBindPoint(unit);
@@ -490,7 +517,7 @@ void WorldSession::HandleListStabledPetsOpcode(WorldPacket & recv_data)
     }
 
     // remove fake death
-    if (GetPlayer()->hasUnitState(UNIT_STAT_DIED))
+    if (GetPlayer()->HasFlag(UNIT_FIELD_FLAGS_2, UNIT_FLAG2_FEIGN_DEATH))
         GetPlayer()->RemoveSpellsCausingAura(SPELL_AURA_FEIGN_DEATH);
 
     // remove mounts this fix bug where getting pet from stable while mounted deletes pet.
@@ -572,7 +599,7 @@ void WorldSession::HandleStablePet(WorldPacket & recv_data)
     }
 
     // remove fake death
-    if (GetPlayer()->hasUnitState(UNIT_STAT_DIED))
+    if (GetPlayer()->HasFlag(UNIT_FIELD_FLAGS_2, UNIT_FLAG2_FEIGN_DEATH))
         GetPlayer()->RemoveSpellsCausingAura(SPELL_AURA_FEIGN_DEATH);
 
     Pet *pet = _player->GetPet();
@@ -636,7 +663,7 @@ void WorldSession::HandleUnstablePet(WorldPacket & recv_data)
     }
 
     // remove fake death
-    if (GetPlayer()->hasUnitState(UNIT_STAT_DIED))
+    if (GetPlayer()->HasFlag(UNIT_FIELD_FLAGS_2, UNIT_FLAG2_FEIGN_DEATH))
         GetPlayer()->RemoveSpellsCausingAura(SPELL_AURA_FEIGN_DEATH);
 
     WorldPacket data(SMSG_STABLE_RESULT, 200);              // guess size
@@ -694,7 +721,7 @@ void WorldSession::HandleBuyStableSlot(WorldPacket & recv_data)
     }
 
     // remove fake death
-    if (GetPlayer()->hasUnitState(UNIT_STAT_DIED))
+    if (GetPlayer()->HasFlag(UNIT_FIELD_FLAGS_2, UNIT_FLAG2_FEIGN_DEATH))
         GetPlayer()->RemoveSpellsCausingAura(SPELL_AURA_FEIGN_DEATH);
 
     WorldPacket data(SMSG_STABLE_RESULT, 200);
@@ -740,15 +767,19 @@ void WorldSession::HandleStableSwapPet(WorldPacket & recv_data)
     }
 
     // remove fake death
-    if (GetPlayer()->hasUnitState(UNIT_STAT_DIED))
+    if (GetPlayer()->HasFlag(UNIT_FIELD_FLAGS_2, UNIT_FLAG2_FEIGN_DEATH))
         GetPlayer()->RemoveSpellsCausingAura(SPELL_AURA_FEIGN_DEATH);
 
     WorldPacket data(SMSG_STABLE_RESULT, 200);              // guess size
 
     Pet* pet = _player->GetPet();
 
-    if (!pet || pet->getPetType()!=HUNTER_PET)
+    if (!pet || pet->getPetType() != HUNTER_PET || !pet->isAlive())
+    {
+        data << uint8(0x06);
+        SendPacket(&data);
         return;
+    }
 
     // find swapped pet slot in stable
     QueryResultAutoPtr result = RealmDataDatabase.PQuery("SELECT slot,entry FROM character_pet WHERE owner = '%u' AND id = '%u'",
@@ -762,7 +793,7 @@ void WorldSession::HandleStableSwapPet(WorldPacket & recv_data)
     uint32 petentry = fields[1].GetUInt32();
 
     // move alive pet to slot or delele dead pet
-    _player->RemovePet(pet,pet->isAlive() ? PetSaveMode(slot) : PET_SAVE_AS_DELETED);
+    _player->RemovePet(pet,PetSaveMode(slot));
 
     // summon unstabled pet
     Pet *newpet = new Pet;
@@ -796,7 +827,7 @@ void WorldSession::HandleRepairItemOpcode(WorldPacket & recv_data)
     }
 
     // remove fake death
-    if (GetPlayer()->hasUnitState(UNIT_STAT_DIED))
+    if (GetPlayer()->HasFlag(UNIT_FIELD_FLAGS_2, UNIT_FLAG2_FEIGN_DEATH))
         GetPlayer()->RemoveSpellsCausingAura(SPELL_AURA_FEIGN_DEATH);
 
     // reputation discount

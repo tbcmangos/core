@@ -1,6 +1,6 @@
 /* 
  * Copyright (C) 2006-2008 ScriptDev2 <https://scriptdev2.svn.sourceforge.net/>
- * Copyright (C) 2008-2014 Hellground <http://hellground.net/>
+ * Copyright (C) 2008-2015 Hellground <http://hellground.net/>
  * 
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -85,6 +85,7 @@ struct boss_high_king_maulgarAI : public BossAI
         events.ScheduleEvent(EVENT_WHIRLWIND, 30000);
 
         ForceSpellCast(me, SPELL_DUAL_WIELD);
+        JustReachedHome(); // respawn adds
     }
 
     void KilledUnit()
@@ -143,7 +144,7 @@ struct boss_high_king_maulgarAI : public BossAI
                 case EVENT_ARCING_SMASH:
                 {
                     AddSpellToCast(SPELL_ARCING_SMASH);
-                    events.ScheduleEvent(eventId, 10000);
+                    events.ScheduleEvent(eventId, urand(6000,10000));
                     break;
                 }
                 case EVENT_WHIRLWIND:
@@ -155,13 +156,19 @@ struct boss_high_king_maulgarAI : public BossAI
                 case EVENT_MIGHTY_BLOW:
                 {
                     AddSpellToCast(SPELL_MIGHTY_BLOW);
-                    events.ScheduleEvent(eventId, urand(30000, 40000));
+                    events.ScheduleEvent(eventId, urand(20000, 40000));
                     break;
                 }
                 case EVENT_CHARGE_HKM:
                 {
+                    if (m_creature->HasAura(SPELL_WHIRLWIND, 0))
+                    {
+                        //delay when whirlwinding
+                        events.ScheduleEvent(eventId, 1000);
+                        break;
+                    }
                     AddSpellToCast(SPELL_BERSERKER_C, CAST_RANDOM);
-                    events.ScheduleEvent(eventId, 20000);
+                    events.ScheduleEvent(eventId, urand(10000,20000));
                     break;
                 }
                 case EVENT_ROAR:
@@ -253,7 +260,7 @@ struct boss_olm_the_summonerAI : public BossAI
                 case EVENT_DARK_DECAY:
                 {
                     AddSpellToCast(SPELL_DARK_DECAY);
-                    events.ScheduleEvent(eventId, 20000);
+                    events.ScheduleEvent(eventId, urand(5000,9000));
                     break;
                 }
                 case EVENT_SUMMON:
@@ -265,7 +272,7 @@ struct boss_olm_the_summonerAI : public BossAI
                 case EVENT_DEATH_COIL:
                 {
                     AddSpellToCast(SPELL_DEATH_COIL, CAST_RANDOM);
-                    events.ScheduleEvent(eventId, 20000);
+                    events.ScheduleEvent(eventId, urand(10000,15000));
                     break;
                 }
             }

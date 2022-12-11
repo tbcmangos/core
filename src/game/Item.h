@@ -1,7 +1,7 @@
 /*
  * Copyright (C) 2005-2008 MaNGOS <http://getmangos.com/>
  * Copyright (C) 2008 TrinityCore <http://www.trinitycore.org/>
- * Copyright (C) 2008-2014 Hellground <http://hellground.net/>
+ * Copyright (C) 2008-2017 Hellground <http://wow-hellground.com/>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -119,8 +119,10 @@ enum InventoryResult
     EQUIP_ERR_TOO_MUCH_GOLD                      = 77,
     EQUIP_ERR_NOT_DURING_ARENA_MATCH             = 78,
     EQUIP_ERR_CANNOT_TRADE_THAT                  = 79,
-    EQUIP_ERR_PERSONAL_ARENA_RATING_TOO_LOW      = 80
+    EQUIP_ERR_PERSONAL_ARENA_RATING_TOO_LOW      = 80,
     // probably exist more
+
+    EQUIP_ERR_DEBUG_SPECIAL                      = 100
 };
 
 enum BuyFailure
@@ -247,7 +249,6 @@ class HELLGROUND_IMPORT_EXPORT Item : public Object
         bool IsEquipped() const;
 
         uint32 GetSkill();
-        uint32 GetSpell();
 
         // RandomPropertyId (signed but stored as unsigned)
         int32 GetItemRandomPropertyId() const { return GetInt32Value(ITEM_FIELD_RANDOM_PROPERTIES_ID); }

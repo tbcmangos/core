@@ -1,6 +1,6 @@
 /* 
  * Copyright (C) 2006-2008 ScriptDev2 <https://scriptdev2.svn.sourceforge.net/>
- * Copyright (C) 2008-2014 Hellground <http://hellground.net/>
+ * Copyright (C) 2008-2015 Hellground <http://hellground.net/>
  * 
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -42,19 +42,19 @@ struct npc_cairne_bloodhoofAI : public ScriptedAI
 {
     npc_cairne_bloodhoofAI(Creature* c) : ScriptedAI(c) {}
 
-    uint32 BerserkerCharge_Timer;
-    uint32 Cleave_Timer;
-    uint32 MortalStrike_Timer;
-    uint32 Thunderclap_Timer;
-    uint32 Uppercut_Timer;
+    Timer BerserkerCharge_Timer;
+    Timer Cleave_Timer;
+    Timer MortalStrike_Timer;
+    Timer Thunderclap_Timer;
+    Timer Uppercut_Timer;
 
     void Reset()
     {
-        BerserkerCharge_Timer = 30000;
-        Cleave_Timer = 5000;
-        MortalStrike_Timer = 10000;
-        Thunderclap_Timer = 15000;
-        Uppercut_Timer = 10000;
+        BerserkerCharge_Timer.Reset(30000);
+        Cleave_Timer.Reset(5000);
+        MortalStrike_Timer.Reset(10000);
+        Thunderclap_Timer.Reset(15000);
+        Uppercut_Timer.Reset(10000);
     }
 
     void EnterCombat(Unit *who) {}
@@ -64,37 +64,37 @@ struct npc_cairne_bloodhoofAI : public ScriptedAI
         if(!UpdateVictim())
             return;
 
-        if( BerserkerCharge_Timer < diff )
+        if (BerserkerCharge_Timer.Expired(diff))
         {
             Unit* target = SelectUnit(SELECT_TARGET_RANDOM,0,GetSpellMaxRange(SPELL_BERSERKER_CHARGE), true);
             if( target )
                 DoCast(target,SPELL_BERSERKER_CHARGE);
             BerserkerCharge_Timer = 25000;
-        }else BerserkerCharge_Timer -= diff;
+        }
 
-        if( Uppercut_Timer < diff )
+        if (Uppercut_Timer.Expired(diff))
         {
             DoCast(m_creature->getVictim(),SPELL_UPPERCUT);
             Uppercut_Timer = 20000;
-        }else Uppercut_Timer -= diff;
+        }
 
-        if( Thunderclap_Timer < diff )
+        if (Thunderclap_Timer.Expired(diff))
         {
             DoCast(m_creature->getVictim(),SPELL_THUNDERCLAP);
             Thunderclap_Timer = 15000;
-        }else Thunderclap_Timer -= diff;
+        }
 
-        if( MortalStrike_Timer < diff )
+        if (MortalStrike_Timer.Expired(diff))
         {
             DoCast(m_creature->getVictim(),SPELL_MORTAL_STRIKE);
             MortalStrike_Timer = 15000;
-        }else MortalStrike_Timer -= diff;
+        }
 
-        if( Cleave_Timer < diff )
+        if (Cleave_Timer.Expired(diff))
         {
             DoCast(m_creature->getVictim(),SPELL_CLEAVE);
             Cleave_Timer = 7000;
-        }else Cleave_Timer -= diff;
+        }
 
         DoMeleeAttackIfReady();
     }

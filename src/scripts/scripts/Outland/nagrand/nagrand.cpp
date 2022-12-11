@@ -1,6 +1,6 @@
 /* 
  * Copyright (C) 2006-2008 ScriptDev2 <https://scriptdev2.svn.sourceforge.net/>
- * Copyright (C) 2008-2014 Hellground <http://hellground.net/>
+ * Copyright (C) 2008-2015 Hellground <http://hellground.net/>
  * 
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -40,10 +40,12 @@ go_maghar_prison
 npc_maghar_prisoner
 npc_warmaul_pyre
 npc_fel_cannon
+npc_rethhedron_the_subduer
 EndContentData */
 
 #include "precompiled.h"
 #include "escort_ai.h"
+#include "GuardAI.h"
 
 /*######
 ## mob_shattered_rumbler - this should be done with ACID
@@ -140,14 +142,14 @@ struct mob_lumpAI : public ScriptedAI
         bReset = false;
     }
 
-    uint32 Reset_Timer;
-    uint32 Spear_Throw_Timer;
+    Timer Reset_Timer;
+    Timer Spear_Throw_Timer;
     bool bReset;
 
     void Reset()
     {
-        Reset_Timer = 60000;
-        Spear_Throw_Timer = 2000;
+        Reset_Timer.Reset(60000);
+        Spear_Throw_Timer.Reset(2000);
 
         me->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
     }
@@ -191,14 +193,13 @@ struct mob_lumpAI : public ScriptedAI
         //check if we waiting for a reset
         if (bReset)
         {
-            if (Reset_Timer < diff)
+            if (Reset_Timer.Expired(diff))
             {
                 EnterEvadeMode();
                 bReset = false;
                 me->setFaction(1711);               //hostile
                 return;
             }
-            else Reset_Timer -= diff;
         }
 
         //Return since we have no target
@@ -206,11 +207,11 @@ struct mob_lumpAI : public ScriptedAI
             return;
 
         //Spear_Throw_Timer
-        if (Spear_Throw_Timer < diff)
+        if (Spear_Throw_Timer.Expired(diff))
         {
             DoCast(me->getVictim(), SPELL_SPEAR_THROW);
             Spear_Throw_Timer = 20000;
-        }else Spear_Throw_Timer -= diff;
+        }
 
         DoMeleeAttackIfReady();
     }
@@ -573,14 +574,14 @@ struct mob_sparrowhawkAI : public ScriptedAI
 
     mob_sparrowhawkAI(Creature *creature) : ScriptedAI(creature) {}
 
-    uint32 Check_Timer;
+    Timer Check_Timer;
     uint64 PlayerGUID;
     bool fleeing;
 
     void Reset()
     {
         me->RemoveAurasDueToSpell(SPELL_SPARROWHAWK_NET);
-        Check_Timer = 1000;
+        Check_Timer.Reset(1000);
         PlayerGUID = 0;
         fleeing = false;
     }
@@ -608,7 +609,7 @@ struct mob_sparrowhawkAI : public ScriptedAI
 
     void UpdateAI(const uint32 diff)
     {
-        if(Check_Timer < diff)
+        if(Check_Timer.Expired(diff))
         {
             if(PlayerGUID)
             {
@@ -627,13 +628,13 @@ struct mob_sparrowhawkAI : public ScriptedAI
                 }
                 else if(fleeing)
                 {
-                    me->GetMotionMaster()->MovementExpired(false);
+                    me->GetMotionMaster()->MovementExpired();
                     PlayerGUID = 0;
                     fleeing = false;
                 }
             }
             Check_Timer = 1000;
-        } else Check_Timer -= diff;
+        }
 
         if (PlayerGUID)
             return;
@@ -830,15 +831,15 @@ struct npc_nagrand_captiveAI : public npc_escortAI
 {
     npc_nagrand_captiveAI(Creature* creature) : npc_escortAI(creature) { Reset(); }
 
-    uint32 ChainLightningTimer;
-    uint32 HealTimer;
-    uint32 FrostShockTimer;;
+    Timer ChainLightningTimer;
+    Timer HealTimer;
+    Timer FrostShockTimer;;
 
     void Reset()
     {
-        ChainLightningTimer = 1000;
-        HealTimer = 0;
-        FrostShockTimer = 6000;
+        ChainLightningTimer.Reset(1000);
+        HealTimer.Reset(1);
+        FrostShockTimer.Reset(6000);
     }
 
     void EnterCombat(Unit* /*who*/)
@@ -926,32 +927,26 @@ struct npc_nagrand_captiveAI : public npc_escortAI
         if (!me->getVictim())
             return;
 
-        if (ChainLightningTimer <= diff)
+        if (ChainLightningTimer.Expired(diff))
         {
             DoCast(me->getVictim(), SPELL_CHAIN_LIGHTNING);
             ChainLightningTimer = urand(7000, 14000);
         }
-        else
-            ChainLightningTimer -= diff;
 
         if (me->GetHealth()*100 < me->GetMaxHealth()*30)
         {
-            if (HealTimer <= diff)
+            if (HealTimer.Expired(diff))
             {
                 DoCast(me, SPELL_HEALING_WAVE);
                 HealTimer = 5000;
             }
-            else
-                HealTimer -= diff;
         }
 
-        if (FrostShockTimer <= diff)
+        if (FrostShockTimer.Expired(diff))
         {
             DoCast(me->getVictim(), SPELL_FROST_SHOCK);
             FrostShockTimer = urand(7500, 15000);
         }
-        else
-            FrostShockTimer -= diff;
 
         DoMeleeAttackIfReady();
     }
@@ -1013,7 +1008,7 @@ struct npc_multiphase_disurbanceAI : public ScriptedAI
 {
     npc_multiphase_disurbanceAI(Creature *creature) : ScriptedAI(creature){}
 
-    uint32 despawnTimer;
+    Timer despawnTimer;
 
     void Reset()
     {
@@ -1022,15 +1017,10 @@ struct npc_multiphase_disurbanceAI : public ScriptedAI
 
     void UpdateAI(const uint32 diff)
     {
-        if (despawnTimer)
+        if (despawnTimer.Expired(diff))
         {
-            if (despawnTimer <= diff)
-            {
-                me->ForcedDespawn();
-                despawnTimer = 0;
-            }
-            else
-                despawnTimer -= diff;
+            me->ForcedDespawn();
+            despawnTimer = 0;
         }
     }
 
@@ -1310,20 +1300,17 @@ struct npc_warmaul_pyreAI : public ScriptedAI
 {
     npc_warmaul_pyreAI(Creature* creature) : ScriptedAI(creature) {}
 
-    bool Event;
-
-    std::list<Creature*> SaboteurList;
-    ObjectGuid PlayerGUID;
-    uint32 StepsTimer;
+    std::list<uint64> SaboteurList;
+    uint64 PlayerGUID;
+    Timer StepsTimer;
     uint32 Steps;
     uint32 CorpseCount;
     uint32 MoveCount;
 
     void Reset()
     {
-        Event = false;
         PlayerGUID = 0;
-        StepsTimer = 0;
+        StepsTimer.Reset(1);
         Steps = 0;
         CorpseCount = 0;
         MoveCount = 1;
@@ -1332,10 +1319,16 @@ struct npc_warmaul_pyreAI : public ScriptedAI
 
     void EnterCombat(Unit *who) {}
 
-    void DoSpawn()
+    void IsSummonedBy(Unit* summoner)
     {
-        me->SummonCreature(NPC_SABOTEUR, Z[0].x, Z[0].y, Z[0].z, 0.6f, TEMPSUMMON_CORPSE_DESPAWN, 60000);
-        me->SummonCreature(NPC_SABOTEUR, Z[1].x, Z[1].y, Z[1].z, 3.8f, TEMPSUMMON_CORPSE_DESPAWN, 60000);
+        if (Player* plr = summoner->ToPlayer())
+        {
+            if (plr->GetQuestStatus(9932) == QUEST_STATUS_INCOMPLETE)
+            {
+                StepsTimer.Reset(1);
+                PlayerGUID = plr->GetGUID();
+            }
+        }
     }
 
     void DoSummon()
@@ -1371,26 +1364,10 @@ struct npc_warmaul_pyreAI : public ScriptedAI
     void JustSummoned(Creature* summoned)
     {
         if (summoned->GetEntry() == NPC_SABOTEUR)
+        {
             summoned->SetWalk(true);
-    }
-
-    void MoveInLineOfSight(Unit *who)
-    {
-        if (Player* plr = who->ToPlayer())
-            if (plr->GetQuestStatus(9932) == QUEST_STATUS_INCOMPLETE && me->IsWithinDistInMap(plr, 3.0f))
-            {
-                PlayerGUID = who->GetObjectGuid();
-                Event = true;                     // this is not the best way to start the event :)
-            }
-    }
-
-    void Started()
-    {
-        SaboteurList.clear();
-
-        Hellground::AllCreaturesOfEntryInRange check(me, NPC_SABOTEUR, 25.0f);
-        Hellground::ObjectListSearcher<Creature, Hellground::AllCreaturesOfEntryInRange> searcher(SaboteurList, check);
-        Cell::VisitGridObjects(me, searcher, 25.0f);
+            SaboteurList.push_back(summoned->GetGUID());
+        }
     }
 
     Creature* GetSaboteur(uint8 ListNum)
@@ -1400,16 +1377,16 @@ struct npc_warmaul_pyreAI : public ScriptedAI
 
         uint8 Num = 1;
 
-        for (std::list<Creature*>::iterator itr = SaboteurList.begin(); itr != SaboteurList.end(); ++itr)
+        for (std::list<uint64>::iterator itr = SaboteurList.begin(); itr != SaboteurList.end(); ++itr)
         {
             if (ListNum && ListNum != Num)
             {
                 ++Num;
                 continue;
             }
-
-            if ((*itr)->isAlive() && (*itr)->IsWithinDistInMap(me, 25.0f))
-                return (*itr);
+            if (Unit* Saboteur = m_creature->GetUnit(*itr))
+                if (Saboteur->isAlive() && Saboteur->IsWithinDistInMap(me, 40.0f))
+                    return Saboteur->ToCreature();
         }
 
         return NULL;
@@ -1420,122 +1397,123 @@ struct npc_warmaul_pyreAI : public ScriptedAI
         switch (Steps)
         {
             case 1:
-                DoSpawn();
+                SaboteurList.clear();
+                me->SummonCreature(NPC_SABOTEUR, Z[0].x, Z[0].y, Z[0].z, 0.6f, TEMPSUMMON_CORPSE_DESPAWN, 60000);
+                me->SummonCreature(NPC_SABOTEUR, Z[1].x, Z[1].y, Z[1].z, 3.8f, TEMPSUMMON_CORPSE_DESPAWN, 60000);
                 return 4000;
 
             case 2:
-                Started();
-                return 2900;
-
-            case 3:
                 if (Creature* Saboteur = GetSaboteur(2))
                     DoScriptText(SAY_SABOTEUR1, Saboteur);
                 return 5000;
 
-            case 4:
+            case 3:
                 if (Creature* Saboteur = GetSaboteur(1))
                     DoScriptText(SAY_SABOTEUR2, Saboteur);
                 return 5000;
 
-            case 5:
+            case 4:
                 if (Creature* Saboteur = GetSaboteur(2))
                     DoScriptText(SAY_SABOTEUR3, Saboteur);
                 return 5000;
 
-            case 6:
+            case 5:
                 if (Creature* Saboteur = GetSaboteur(1))
                     DoScriptText(SAY_SABOTEUR4, Saboteur);
                 return 4000;
 
-            case 7:
+            case 6:
                 Move();
                 return 6000;
 
-            case 8:
+            case 7:
                 DoSummon();
                 return 2000;
 
-            case 9:
+            case 8:
                 if (Creature* Saboteur = GetSaboteur(2))
                     DoScriptText(SAY_SABOTEUR5, Saboteur);
                 return 2000;
 
-            case 10:
+            case 9:
                 Move();
                 return 7000;
 
-            case 11:
+            case 10:
                 DoSummon();
                 return 2000;
 
-            case 12:
+            case 11:
                 if (Creature* Saboteur = GetSaboteur(1))
                     DoScriptText(SAY_SABOTEUR6, Saboteur);
                 return 2000;
 
-            case 13:
+            case 12:
                 Move();
                 return 7000;
 
-            case 14:
+            case 13:
                 DoSummon();
                 return 2000;
 
-            case 15:
+            case 14:
                 if (Creature* Saboteur = GetSaboteur(2))
                     DoScriptText(SAY_SABOTEUR7, Saboteur);
                 return 3000;
 
-            case 16:
+            case 15:
                 if (Creature* Saboteur = GetSaboteur(1))
                     DoScriptText(SAY_SABOTEUR7, Saboteur);
                 return 2000;
 
-            case 17:
+            case 16:
                 Move();
                 return 7000;
 
-            case 18:
+            case 17:
                 DoSummon();
                 return 2000;     
 
-            case 19:
+            case 18:
                 if (Creature* Saboteur = GetSaboteur(2))
                     DoScriptText(SAY_SABOTEUR8, Saboteur);
                 return 3000;           
 
-            case 21:
+            case 19:
                 if (Creature* Saboteur = GetSaboteur(1))
                     DoScriptText(SAY_SABOTEUR9, Saboteur);
                 return 2000; 
 
-            case 22:
+            case 20:
                 Move();
                 return 7000;
 
-            case 23:
+            case 21:
                 DoSummon();
                 return 2000;
 
-            case 24:
+            case 22:
                 if (Creature* Saboteur = GetSaboteur(2))
                     DoScriptText(SAY_SABOTEUR10, Saboteur);
                 return 2000; 
 
-            case 25:
+            case 23:
                 Move();
                 return 7000;
 
-            case 26:
+            case 24:
                 if (Player* player = me->GetPlayer(PlayerGUID))
                     if (me->IsWithinDistInMap(player, 15.0f))
                         ((Player*) player)->KilledMonster(18395, me->GetObjectGuid());
                 return 2000;
 
-            case 27:
-                for (std::list<Creature*>::iterator itr = SaboteurList.begin(); itr != SaboteurList.end(); ++itr)
-                    (*itr)->ForcedDespawn();
-                Reset();
+            case 25:
+                for (std::list<uint64>::iterator itr = SaboteurList.begin(); itr != SaboteurList.end(); ++itr)
+                {
+                    if (Unit* Saboteur = m_creature->GetUnit(*itr))
+                        Saboteur->Kill(Saboteur);
+                }
+                me->DisappearAndDie();
 
             default:
                 return 0;
@@ -1544,14 +1522,8 @@ struct npc_warmaul_pyreAI : public ScriptedAI
 
     void UpdateAI(const uint32 diff)
     {
-
-        if (StepsTimer <= diff)
-        {
-            if (Event)
-                StepsTimer = NextStep(++Steps);
-        }
-        else
-            StepsTimer -= diff;
+        if (StepsTimer.Expired(diff))
+            StepsTimer = NextStep(++Steps);
     }
 };
 
@@ -1610,11 +1582,106 @@ struct npc_fel_cannonAI : public ScriptedAI
         return;
     }
 };
+
 CreatureAI* GetAI_npc_fel_cannon(Creature *creature)
 {
     return new npc_fel_cannonAI (creature);
 }
 
+#define QUEST_SUBDUE_THE_SUBDUER 11090
+#define SPELL_SOUL_CANNON 41291
+
+struct npc_rethhedron_the_subduerAI : public ScriptedAI
+{
+    npc_rethhedron_the_subduerAI(Creature* c) : ScriptedAI(c) {};
+
+    uint8 doing_event;
+    uint64 player;
+
+    void Reset()
+    {
+        doing_event = 0;
+        m_creature->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
+        player = 0;
+    }
+
+    void DamageTaken(Unit *done_by, uint32 &damage)
+    {
+        if (doing_event && (m_creature->GetHealth() - damage) * 100 <= m_creature->GetMaxHealth())
+        {
+            if (damage >= m_creature->GetHealth())
+                damage = 0;
+            else
+                damage = m_creature->GetHealth() - m_creature->GetMaxHealth() / 100;
+            if (doing_event == 1)
+            {
+                player = done_by->GetCharmerOrOwnerOrOwnGUID();
+                m_creature->Yell("I'll be back!", LANG_UNIVERSAL, 0);
+                doing_event = 2;
+                m_creature->GetMotionMaster()->MovePoint(666, -1527.0f, 9790.0f, 199.0f);
+                m_creature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
+            }
+        }
+    }
+
+    void MovementInform(uint32 type, uint32 id)
+    {
+        if (type == POINT_MOTION_TYPE && id == 666)
+        {
+            if (Player* ppl = m_creature->GetPlayer(player))
+                ppl->GroupEventHappens(QUEST_SUBDUE_THE_SUBDUER,me);
+            m_creature->DisappearAndDie();
+        }
+    }
+
+    void SpellHit(Unit* caster, const SpellEntry* se)
+    {
+        if (doing_event == 0 && se->Id == SPELL_SOUL_CANNON)
+            doing_event = 1;
+    }
+
+    // TODO: UpdateAI, combat is not scripted at all
+};
+
+CreatureAI* GetAI_npc_rethhedron_the_subduer(Creature *creature)
+{
+    return new npc_rethhedron_the_subduerAI(creature);
+}
+
+struct npc_haala_guardAI : public GuardAI
+{
+    npc_haala_guardAI(Creature* c) : GuardAI(c) {}
+
+    void EnterEvadeMode()
+    {
+        // normal enter evade except removing auras
+        if (!me->isAlive())
+            return;
+
+        me->DeleteThreatList();
+        me->CombatStop(true);
+        if (me->IsInEvadeMode())
+            return;
+
+        me->LoadCreaturesAddon();
+        me->SetLootRecipient(NULL);
+        me->SetReactState(REACT_AGGRESSIVE);
+        me->SetLastHitPos(me->GetHomePosition());
+
+        me->GetMotionMaster()->MoveTargetedHome();
+
+        if (CreatureGroup *formation = me->GetFormation())
+            formation->EvadeFormation(me);
+
+        Reset();
+        ResetGuard();
+    }
+};
+
+CreatureAI* GetAI_npc_haala_guard(Creature *creature)
+{
+    return new npc_haala_guardAI(creature);
+}
 
 void AddSC_nagrand()
 {
@@ -1706,4 +1773,15 @@ void AddSC_nagrand()
     newscript->Name="npc_fel_cannon";
     newscript->GetAI = &GetAI_npc_fel_cannon;
     newscript->RegisterSelf();
+
+    newscript = new Script;
+    newscript->Name="npc_rethhedron_the_subduer";
+    newscript->GetAI = &GetAI_npc_rethhedron_the_subduer;
+    newscript->RegisterSelf();
+
+    newscript = new Script;
+    newscript->Name = "npc_haala_guard";
+    newscript->GetAI = &GetAI_npc_haala_guard;
+    newscript->RegisterSelf();
+    
 }

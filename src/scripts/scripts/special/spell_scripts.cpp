@@ -1,6 +1,6 @@
 /* 
  * Copyright (C) 2006-2008 ScriptDev2 <https://scriptdev2.svn.sourceforge.net/>
- * Copyright (C) 2008-2014 Hellground <http://hellground.net/>
+ * Copyright (C) 2008-2015 Hellground <http://hellground.net/>
  * 
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -65,6 +65,7 @@ bool Spell_deep_wounds(Unit *pCaster, Unit* pUnit, Item* pItem, GameObject* pGam
 
     if (Aura *deepWounds = pUnit->GetAuraByCasterSpell(12721, pCaster->GetGUID()))
     {
+        deepWounds->GetModifier()->m_amount = deepWoundsDotBasePoints0;
         deepWounds->SetAuraDuration(deepWounds->GetAuraMaxDuration());
         deepWounds->UpdateAuraDuration();
 
@@ -160,24 +161,6 @@ bool Spell_strong_fetish(Unit *caster, Unit* pUnit, Item* pItem, GameObject* pGa
     return true;
 }
 
-bool Spell_coax_marmot(Unit *caster, Unit* pUnit, Item* pItem, GameObject* pGameObject, SpellEntry const *pSpell, uint32 effectIndex)
-{
-    if (caster->GetTypeId() != TYPEID_PLAYER)
-        return true;
-
-    if (Player* player = caster->ToPlayer())
-    {
-        if (player->GetQuestStatus(10720) == QUEST_STATUS_INCOMPLETE)
-        {
-            if (Creature* marmot = GetClosestCreatureWithEntry(player, 22189, 15.0f))
-                player->CastSpell(marmot, 530, true); // not the correct spell, workaround
-        }
-        return false;
-    }
-
-    return true;
-}
-
 void AddSC_spell_scripts()
 {
     Script *newscript;
@@ -205,10 +188,5 @@ void AddSC_spell_scripts()
     newscript = new Script;
     newscript->Name = "strong_fetish";
     newscript->pSpellHandleEffect = &Spell_strong_fetish;
-    newscript->RegisterSelf();
-
-    newscript = new Script;
-    newscript->Name = "coax_marmot";
-    newscript->pSpellHandleEffect = &Spell_coax_marmot;
     newscript->RegisterSelf();
 }

@@ -1,6 +1,6 @@
 /* 
  * Copyright (C) 2006-2008 ScriptDev2 <https://scriptdev2.svn.sourceforge.net/>
- * Copyright (C) 2008-2014 Hellground <http://hellground.net/>
+ * Copyright (C) 2008-2015 Hellground <http://hellground.net/>
  * 
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -63,28 +63,22 @@ struct boss_talon_king_ikissAI : public ScriptedAI
 
     ScriptedInstance* pInstance;
 
-    bool HeroicMode;
-
-    uint32 ArcaneVolley_Timer;
-    uint32 Sheep_Timer;
-    uint32 Blink_Timer;
-    uint32 Slow_Timer;
+    Timer ArcaneVolley_Timer;
+    Timer Sheep_Timer;
+    Timer Slow_Timer;
 
     WorldLocation wLoc;
 
     bool ManaShield;
-    bool Blink;
+    uint8 Blink;
     bool Intro;
 
     void Reset()
     {
-        HeroicMode = m_creature->GetMap()->IsHeroic();
-
-        ArcaneVolley_Timer = 5000;
-        Sheep_Timer = 8000;
-        Blink_Timer = 35000;
-        Slow_Timer = 15000+rand()%15000;
-        Blink = false;
+        ArcaneVolley_Timer.Reset(5000);
+        Sheep_Timer.Reset(8000);
+        Slow_Timer.Reset(15000 + rand() % 15000);
+        Blink = 0;
         Intro = false;
         ManaShield = false;
 
@@ -118,8 +112,18 @@ struct boss_talon_king_ikissAI : public ScriptedAI
     {
         DoScriptText(RAND(SAY_AGGRO_1, SAY_AGGRO_2, SAY_AGGRO_3), m_creature);
 
-        if(pInstance)
+        if (pInstance)
+        {
             pInstance->SetData(DATA_IKISSEVENT, IN_PROGRESS);
+            if (pInstance->GetData(DATA_DARKWEAVEREVENT) != DONE)
+            {
+                Player* moron = who->GetCharmerOrOwnerPlayerOrPlayerItself();
+                if (moron)
+                    me->Kill(moron);
+
+                EnterEvadeMode();
+            }
+        }
     }
 
     void JustDied(Unit* Killer)
@@ -140,22 +144,21 @@ struct boss_talon_king_ikissAI : public ScriptedAI
         if (!UpdateVictim())
             return;
 
-        if (Blink)
+        if (Blink & 0x1)
         {
             DoCast(m_creature,HeroicMode ? H_SPELL_ARCANE_EXPLOSION : SPELL_ARCANE_EXPLOSION);
             m_creature->CastSpell(m_creature,SPELL_ARCANE_BUBBLE,true);
-            Blink = false;
+            Blink++;
         }
 
-        if (ArcaneVolley_Timer < diff)
+        if (ArcaneVolley_Timer.Expired(diff))
         {
             DoCast(m_creature,HeroicMode ? H_SPELL_ARCANE_VOLLEY : SPELL_ARCANE_VOLLEY);
             ArcaneVolley_Timer = 10000+rand()%5000;
         }
-        else
-            ArcaneVolley_Timer -= diff;
+        
 
-        if (Sheep_Timer < diff)
+        if (Sheep_Timer.Expired(diff))
         {
             Unit *target = NULL;
             target = SelectUnit(SELECT_TARGET_RANDOM,0, 60, true, m_creature->getVictimGUID());
@@ -164,8 +167,7 @@ struct boss_talon_king_ikissAI : public ScriptedAI
                 DoCast(target,HeroicMode ? H_SPELL_POLYMORPH : SPELL_POLYMORPH); //don't see any difference between them
             Sheep_Timer = 15000+rand()%2500;
         }
-        else
-            Sheep_Timer -= diff;
+
 
         //may not be correct time to cast
         if (!ManaShield && ((m_creature->GetHealth()*100) / m_creature->GetMaxHealth() < 20))
@@ -176,16 +178,14 @@ struct boss_talon_king_ikissAI : public ScriptedAI
 
         if (HeroicMode)
         {
-            if (Slow_Timer < diff)
+            if (Slow_Timer.Expired(diff))
             {
-                DoCast(m_creature,H_SPELL_SLOW);
-                Slow_Timer = 15000+rand()%25000;
+                DoCast(m_creature, H_SPELL_SLOW);
+                Slow_Timer = 15000 + rand() % 25000;
             }
-            else
-                Slow_Timer -= diff;
         }
 
-        if (Blink_Timer < diff)
+        if ((m_creature->HealthBelowPct(80) && Blink == 0) || (m_creature->HealthBelowPct(50) && Blink == 2) || (m_creature->HealthBelowPct(20) && Blink == 4))
         {
             DoScriptText(EMOTE_ARCANE_EXP, m_creature);
 
@@ -200,14 +200,12 @@ struct boss_talon_king_ikissAI : public ScriptedAI
                 DoTeleportTo(target->GetPositionX(),target->GetPositionY(),target->GetPositionZ());
 
                 DoCast(target,SPELL_BLINK_TELEPORT);
-                Blink = true;
+                Blink++;
             }
-            Blink_Timer = 35000+rand()%5000;
         }
-        else
-            Blink_Timer -= diff;
+        
 
-        if (!Blink)
+        if (!(Blink & 0x1))
             DoMeleeAttackIfReady();
     }
 };

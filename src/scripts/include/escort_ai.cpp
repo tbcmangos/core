@@ -1,6 +1,6 @@
 /*
  * Copyright (C) 2006-2009 ScriptDev2 <https://scriptdev2.svn.sourceforge.net/>
- * Copyright (C) 2008-2014 Hellground <http://hellground.net/>
+ * Copyright (C) 2008-2015 Hellground <http://hellground.net/>
  * 
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -242,6 +242,7 @@ void npc_escortAI::UpdateAI(const uint32 uiDiff)
             {
                 if (DespawnAtEnd)
                 {
+                    SendDebug("EscortAI despawning at far end");
                     if (CanReturnToStart)
                     {
                         float fRetX, fRetY, fRetZ;
@@ -282,9 +283,10 @@ void npc_escortAI::UpdateAI(const uint32 uiDiff)
 
             if (!HasEscortState(STATE_ESCORT_PAUSED))
             {
+                me->GetMotionMaster()->StopControlledMovement();
                 me->GetMotionMaster()->MovePoint(CurrentWP->id, CurrentWP->x, CurrentWP->y, CurrentWP->z);
                 debug_log("TSCR: EscortAI start waypoint %u (%f, %f, %f).", CurrentWP->id, CurrentWP->x, CurrentWP->y, CurrentWP->z);
-
+                SendDebug("EscortAI Started moving towards %u (%f %f %f)", CurrentWP->id, CurrentWP->x, CurrentWP->y, CurrentWP->z);
                 WaypointStart(CurrentWP->id);
 
                 WPWaitTimer = 0;
@@ -302,7 +304,7 @@ void npc_escortAI::UpdateAI(const uint32 uiDiff)
             if (DespawnAtFar && !IsPlayerOrGroupInRange())
             {
                 debug_log("TSCR: EscortAI failed because player/group was to far away or not found");
-
+                SendDebug("EscortAI escort failed, too far away");
                 if (CanInstantRespawn)
                 {
                     me->setDeathState(JUST_DIED);
@@ -336,6 +338,7 @@ void npc_escortAI::MovementInform(uint32 uiMoveType, uint32 uiPointId)
     if (uiMoveType != POINT_MOTION_TYPE || !HasEscortState(STATE_ESCORT_ESCORTING) || me->isInCombat())
         return;
 
+    SendDebug("EscortAI MovementInform(%u %u), currentwp %u", uiMoveType, uiPointId, CurrentWP->id);
     //Combat start position reached, continue waypoint movement
     if (uiPointId == POINT_LAST_POINT)
     {
@@ -346,7 +349,7 @@ void npc_escortAI::MovementInform(uint32 uiMoveType, uint32 uiPointId)
         else if (!IsRunning && !me->IsWalking())
             me->SetWalk(true);
 
-        me->GetUnitStateMgr().InitDefaults(false);
+        me->GetUnitStateMgr().InitDefaults(true);
         RemoveEscortState(STATE_ESCORT_INCOMBAT);
 
         if (!WPWaitTimer)
@@ -369,7 +372,6 @@ void npc_escortAI::MovementInform(uint32 uiMoveType, uint32 uiPointId)
         }
 
         debug_log("TSCR: EscortAI Waypoint %u reached", CurrentWP->id);
-
         //Call WP function
         WaypointReached(CurrentWP->id);
 
@@ -381,6 +383,8 @@ void npc_escortAI::MovementInform(uint32 uiMoveType, uint32 uiPointId)
 
 void npc_escortAI::AddWaypoint(uint32 id, float x, float y, float z, uint32 WaitTimeMs)
 {
+    if (id == 0)
+        WaypointList.clear(); // wipe old ones, just in case
     Escort_Waypoint t(id, x, y, z, WaitTimeMs);
 
     WaypointList.push_back(t);
@@ -476,7 +480,7 @@ void npc_escortAI::Start(bool bIsActiveAttacker, bool bRun, uint64 uiPlayerGUID,
     //disable npcflags
     me->SetUInt32Value(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_NONE);
 
-    debug_log("TSCR: EscortAI started with %u waypoints. ActiveAttacker = %d, Run = %d, PlayerGUID = %u", WaypointList.size(), IsActiveAttacker, IsRunning, PlayerGUID);
+    debug_log("TSCR: EscortAI started with %lu waypoints. ActiveAttacker = %d, Run = %d, PlayerGUID = %lu", WaypointList.size(), IsActiveAttacker, IsRunning, PlayerGUID);
 
     CurrentWP = WaypointList.begin();
 
@@ -498,4 +502,11 @@ void npc_escortAI::SetEscortPaused(bool bPaused)
         AddEscortState(STATE_ESCORT_PAUSED);
     else
         RemoveEscortState(STATE_ESCORT_PAUSED);
+}
+
+void npc_escortAI::GetDebugInfo(ChatHandler& reader)
+{
+    std::ostringstream str;
+    str << "WP timer " << WPWaitTimer << " Escort state " << EscortState << " In combat " << me->isInCombat();
+    reader.SendSysMessage(str.str().c_str());
 }

@@ -1,6 +1,6 @@
 /* 
  * Copyright (C) 2006-2008 ScriptDev2 <https://scriptdev2.svn.sourceforge.net/>
- * Copyright (C) 2008-2014 Hellground <http://hellground.net/>
+ * Copyright (C) 2008-2015 Hellground <http://hellground.net/>
  * 
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -37,12 +37,12 @@ struct boss_rasfrostAI : public ScriptedAI
 {
     boss_rasfrostAI(Creature *c) : ScriptedAI(c) {}
 
-    uint32 IceArmor_Timer;
-    uint32 Frostbolt_Timer;
-    uint32 Freeze_Timer;
-    uint32 Fear_Timer;
-    uint32 ChillNova_Timer;
-    uint32 FrostVolley_Timer;
+    int32 IceArmor_Timer;
+    int32 Frostbolt_Timer;
+    int32 Freeze_Timer;
+    int32 Fear_Timer;
+    int32 ChillNova_Timer;
+    int32 FrostVolley_Timer;
 
     void Reset()
     {
@@ -65,51 +65,51 @@ struct boss_rasfrostAI : public ScriptedAI
         if (!UpdateVictim())
             return;
 
-        //IceArmor_Timer
-        if (IceArmor_Timer < diff)
+        IceArmor_Timer -= diff;
+        if (IceArmor_Timer <= diff)
         {
             DoCast(m_creature, SPELL_ICEARMOR);
-            IceArmor_Timer = 180000;
-        }else IceArmor_Timer -= diff;
+            IceArmor_Timer += 180000;
+        }
 
-        //Frostbolt_Timer
-        if (Frostbolt_Timer < diff)
+        Frostbolt_Timer -= diff;
+        if (Frostbolt_Timer <= diff)
         {
             Unit* target = NULL;
             target = SelectUnit(SELECT_TARGET_RANDOM,0, GetSpellMaxRange(SPELL_FROSTBOLT), true);
             if (target)
                 DoCast(target,SPELL_FROSTBOLT);
 
-            Frostbolt_Timer = 8000;
-        }else Frostbolt_Timer -= diff;
+            Frostbolt_Timer += 8000;
+        }
 
-        //Freeze_Timer
-        if (Freeze_Timer < diff)
+        Freeze_Timer -= diff;
+        if (Freeze_Timer <= diff)
         {
             DoCast(m_creature->getVictim(),SPELL_FREEZE);
-            Freeze_Timer = 24000;
-        }else Freeze_Timer -= diff;
+            Freeze_Timer += 24000;
+        }
 
-        //Fear_Timer
-        if (Fear_Timer < diff)
+        Fear_Timer -= diff;
+        if (Fear_Timer <= diff)
         {
             DoCast(m_creature->getVictim(),SPELL_FEAR);
-            Fear_Timer = 30000;
-        }else Fear_Timer -= diff;
+            Fear_Timer += 30000;
+        }
 
-        //ChillNova_Timer
-        if (ChillNova_Timer < diff)
+        ChillNova_Timer -= diff;
+        if (ChillNova_Timer <= diff)
         {
             DoCast(m_creature->getVictim(),SPELL_CHILLNOVA);
-            ChillNova_Timer = 14000;
-        }else ChillNova_Timer -= diff;
+            ChillNova_Timer += 14000;
+        }
 
-        //FrostVolley_Timer
-        if (FrostVolley_Timer < diff)
+        FrostVolley_Timer -= diff;
+        if (FrostVolley_Timer <= diff)
         {
             DoCast(m_creature->getVictim(),SPELL_FROSTVOLLEY);
-            FrostVolley_Timer = 15000;
-        }else FrostVolley_Timer -= diff;
+            FrostVolley_Timer += 15000;
+        }
 
         DoMeleeAttackIfReady();
     }

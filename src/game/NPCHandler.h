@@ -1,7 +1,7 @@
 /*
  * Copyright (C) 2005-2008 MaNGOS <http://getmangos.com/>
  * Copyright (C) 2008 TrinityCore <http://www.trinitycore.org/>
- * Copyright (C) 2008-2014 Hellground <http://hellground.net/>
+ * Copyright (C) 2008-2017 Hellground <http://wow-hellground.com/>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -65,17 +65,5 @@ struct GossipText
     GossipTextOption Options[MAX_GOSSIP_TEXT_OPTIONS];
 };
 
-struct PageTextLocale
-{
-    std::vector<std::string> Text;
-};
-
-struct NpcTextLocale
-{
-    NpcTextLocale() { Text_0.resize(8); Text_1.resize(8); }
-
-    std::vector<std::vector<std::string> > Text_0;
-    std::vector<std::vector<std::string> > Text_1;
-};
 #endif
 

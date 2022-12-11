@@ -1,6 +1,6 @@
 /* 
  * Copyright (C) 2006-2008 ScriptDev2 <https://scriptdev2.svn.sourceforge.net/>
- * Copyright (C) 2008-2014 Hellground <http://hellground.net/>
+ * Copyright (C) 2008-2015 Hellground <http://hellground.net/>
  * 
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -33,8 +33,6 @@ mob_spirit_of_azuregos
 EndContentData */
 
 #include "precompiled.h"
-#include "World.h"
-#include "WorldPacket.h"
 
 /*######
 ## mobs_spitelashes
@@ -173,9 +171,7 @@ bool GossipSelect_npc_loramus_thalipedes(Player *player, Creature *_Creature, ui
 #define SAY_RIZZLE_FINAL -1000247
 
 #define GOSSIP_GET_MOONSTONE "Hand over the Southfury moonstone and I'll let you go."
-
-//next message must be send to player when Rizzle jump into river, not implemented
-#define MSG_ESCAPE_NOTICE "     Rizzle Sprysprocket takes the Southfury moonstone and escapes into the river. Follow her!"
+#define MSG_ESCAPE_NOTICE "takes the Southfury moonstone and escapes into the river. Follow her!"
 
 float WPs[58][4] =
 {
@@ -244,11 +240,10 @@ struct mob_rizzle_sprysprocketAI : public ScriptedAI
 {
     mob_rizzle_sprysprocketAI(Creature *c) : ScriptedAI(c) {}
 
-    uint32 spellEscape_Timer;
-    uint32 Teleport_Timer;
-    uint32 Check_Timer;
-    uint32 Grenade_Timer;
-    uint32 Must_Die_Timer;
+    int32 Teleport_Timer;
+    Timer Check_Timer;
+    Timer Grenade_Timer;
+    int32 Must_Die_Timer;
     uint32 CurrWP;
 
     uint64 PlayerGUID;
@@ -260,10 +255,9 @@ struct mob_rizzle_sprysprocketAI : public ScriptedAI
 
     void Reset()
     {
-        spellEscape_Timer = 1300;
         Teleport_Timer = 3500;
-        Check_Timer = 10000;
-        Grenade_Timer = 30000;
+        Check_Timer.Reset(1000);
+        Grenade_Timer.Reset(30000);
         Must_Die_Timer = 3000;
         CurrWP = 0;
 
@@ -287,38 +281,35 @@ struct mob_rizzle_sprysprocketAI : public ScriptedAI
 
     void UpdateAI(const uint32 diff)
     {
-        if(Must_Die)
-            if(Must_Die_Timer < diff)
+        if (Must_Die)
+        {
+            Must_Die_Timer -= diff;
+            if (Must_Die_Timer <= diff)
             {
                 Despawn();
                 return;
-            } else Must_Die_Timer -= diff;
-
+            }
+        }
         if(!Escape)
         {
             if(!PlayerGUID)
                 return;
 
-            if(spellEscape_Timer < diff)
+            Teleport_Timer -= diff;
+            if(Teleport_Timer <= diff)
             {
-                DoCast(m_creature, SPELL_RIZZLE_ESCAPE, false);
-                spellEscape_Timer = 10000;
-            } else spellEscape_Timer -= diff;
-
-            if(Teleport_Timer < diff)
-            {
-                DoTeleportTo(3706.39, -3969.15, 35.9118, 0);
+                DoCast(m_creature, SPELL_RIZZLE_ESCAPE, true);
 
                 //begin swimming and summon depth charges
-                Player* player = Unit::GetPlayer(PlayerGUID);
-                SendText(MSG_ESCAPE_NOTICE, player);
+                me->TextEmote(MSG_ESCAPE_NOTICE, PlayerGUID);
                 DoCast(m_creature, SPELL_PERIODIC_DEPTH_CHARGE);
                 m_creature->SetLevitate(true);
                 m_creature->SetSpeed(MOVE_RUN, 0.85f, true);
+                m_creature->SetSpeed(MOVE_FLIGHT, 0.85f, true);
                 m_creature->GetMotionMaster()->MovementExpired();
                 m_creature->GetMotionMaster()->MovePoint(CurrWP, WPs[CurrWP][0], WPs[CurrWP][1], WPs[CurrWP][2]);
                 Escape = true;
-            } else Teleport_Timer -= diff;
+            } 
 
             return;
         }
@@ -329,7 +320,8 @@ struct mob_rizzle_sprysprocketAI : public ScriptedAI
             ContinueWP = false;
         }
 
-        if(Grenade_Timer < diff)
+
+        if(Grenade_Timer.Expired(diff))
         {
             Player *player = (Player *)Unit::GetUnit((*m_creature), PlayerGUID);
             if(player && Reached == false)
@@ -337,10 +329,11 @@ struct mob_rizzle_sprysprocketAI : public ScriptedAI
                DoScriptText(SAY_RIZZLE_GRENADE, m_creature, player);
                DoCast(player, SPELL_RIZZLE_FROST_GRENADE, true);
             }
-            Grenade_Timer = 30000;
-        } else Grenade_Timer -= diff;
 
-        if(Check_Timer < diff)
+            Grenade_Timer = 30000;
+        } 
+
+        if(Check_Timer.Expired(diff))
         {
             Unit *player = m_creature->GetUnit(PlayerGUID);
             if(!player)
@@ -349,26 +342,20 @@ struct mob_rizzle_sprysprocketAI : public ScriptedAI
                 return;
             }
 
-            if(m_creature->IsWithinDistInMap(player, 10) && m_creature->GetPositionX() > player->GetPositionX() && !Reached)
+            if (((me->GetDistance(player) < 5) || (me->GetDistance(player) < 15 && me->GetPositionX() - 3 < player->GetPositionX())) && !Reached)
             {
                 DoScriptText(SAY_RIZZLE_FINAL, m_creature);
-                m_creature->SetUInt32Value(UNIT_NPC_FLAGS, 1);
+                m_creature->SetUInt32Value(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_GOSSIP);
                 m_creature->setFaction(35);
                 m_creature->RemoveAurasDueToSpell(SPELL_PERIODIC_DEPTH_CHARGE);
+                me->CombatStop();
+                player->CombatStop();
                 Reached = true;
             }
 
-            Check_Timer = 1000;
-        } else Check_Timer -= diff;
+            Check_Timer = 500;
+        } 
 
-    }
-
-    void SendText(const char *text, Player* player)
-    {
-        WorldPacket data(SMSG_SERVER_MESSAGE, 0);              // guess size
-        data << text;
-        if(player)
-            player->GetSession()->SendPacket(&data);
     }
 
     void AttackStart(Unit *who)
@@ -437,7 +424,7 @@ struct mob_depth_chargeAI : public ScriptedAI
     mob_depth_chargeAI(Creature *c) : ScriptedAI(c) {}
 
     bool we_must_die;
-    uint32 must_die_timer;
+    int32 must_die_timer;
 
     void Reset()
     {
@@ -449,13 +436,16 @@ struct mob_depth_chargeAI : public ScriptedAI
 
     void UpdateAI(const uint32 diff)
     {
-        if(we_must_die)
-            if(must_die_timer < diff)
+        if (we_must_die)
+        {
+            must_die_timer -= diff;
+            if (must_die_timer <= diff)
             {
                 m_creature->DealDamage(m_creature, m_creature->GetHealth(), DIRECT_DAMAGE, SPELL_SCHOOL_MASK_NORMAL, NULL, false);
                 m_creature->RemoveCorpse();
-            } else must_die_timer -= diff;
-        return;
+            }
+            return;
+        }
     }
 
     void MoveInLineOfSight(Unit *who)

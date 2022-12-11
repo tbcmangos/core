@@ -1,6 +1,6 @@
 /*
  * Copyright (C) 2006-2008 ScriptDev2 <https://scriptdev2.svn.sourceforge.net/>
- * Copyright (C) 2008-2014 Hellground <http://hellground.net/>
+ * Copyright (C) 2008-2015 Hellground <http://hellground.net/>
  * 
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -35,6 +35,7 @@
 #include "sc_instance.h"
 #include "CombatAI.h"
 #include "PassiveAI.h"
+#include "Chat.h"
 
 #ifdef WIN32
 #include <windows.h>

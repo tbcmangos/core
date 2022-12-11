@@ -1,7 +1,7 @@
 /*
  * Copyright (C) 2006-2009 ScriptDev2 <https://scriptdev2.svn.sourceforge.net/>
  * Copyright (C) 2008-2010 TrinityCore <http://www.trinitycore.org/>
- * Copyright (C) 2008-2014 Hellground <http://hellground.net/>
+ * Copyright (C) 2008-2015 Hellground <http://hellground.net/>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -53,7 +53,7 @@ struct npc_ameAI : public npc_escortAI
 {
     npc_ameAI(Creature *c) : npc_escortAI(c) {}
 
-    uint32 DEMORALIZINGSHOUT_Timer;
+    Timer DEMORALIZINGSHOUT_Timer;
 
     void WaypointReached(uint32 i)
     {
@@ -91,7 +91,7 @@ struct npc_ameAI : public npc_escortAI
 
     void Reset()
     {
-      DEMORALIZINGSHOUT_Timer = 5000;
+        DEMORALIZINGSHOUT_Timer.Reset(5000);
     }
 
     void JustSummoned(Creature* summoned)
@@ -111,11 +111,11 @@ struct npc_ameAI : public npc_escortAI
         if (!UpdateVictim())
             return;
 
-        if (DEMORALIZINGSHOUT_Timer <= diff)
+        if (DEMORALIZINGSHOUT_Timer.Expired(diff))
         {
             DoCast(me->getVictim(),SPELL_DEMORALIZINGSHOUT);
             DEMORALIZINGSHOUT_Timer = 70000;
-        } else DEMORALIZINGSHOUT_Timer -= diff;
+        } 
 
     }
 };
@@ -235,17 +235,17 @@ struct npc_ringoAI : public FollowerAI
 {
     npc_ringoAI(Creature* pCreature) : FollowerAI(pCreature) { }
 
-    uint32 m_uiFaintTimer;
+    Timer m_uiFaintTimer;
     uint32 m_uiEndEventProgress;
-    uint32 m_uiEndEventTimer;
+    Timer m_uiEndEventTimer;
 
     uint64 SpraggleGUID;
 
     void Reset()
     {
-        m_uiFaintTimer = urand(30000, 60000);
+        m_uiFaintTimer.Reset(urand(30000, 60000));
         m_uiEndEventProgress = 0;
-        m_uiEndEventTimer = 1000;
+        m_uiEndEventTimer.Reset(1000);
         SpraggleGUID = 0;
     }
 
@@ -306,7 +306,7 @@ struct npc_ringoAI : public FollowerAI
         {
             if (HasFollowState(STATE_FOLLOW_POSTEVENT))
             {
-                if (m_uiEndEventTimer <= uiDiff)
+                if (m_uiEndEventTimer.Expired(uiDiff))
                 {
                     Unit *pSpraggle = Unit::GetUnit(*me, SpraggleGUID);
                     if (!pSpraggle || !pSpraggle->isAlive())
@@ -358,20 +358,16 @@ struct npc_ringoAI : public FollowerAI
 
                     ++m_uiEndEventProgress;
                 }
-                else
-                    m_uiEndEventTimer -= uiDiff;
             }
             else if (HasFollowState(STATE_FOLLOW_INPROGRESS))
             {
                 if (!HasFollowState(STATE_FOLLOW_PAUSED))
                 {
-                    if (m_uiFaintTimer <= uiDiff)
+                    if (m_uiFaintTimer.Expired(uiDiff))
                     {
                         SetFaint();
                         m_uiFaintTimer = urand(60000, 120000);
                     }
-                    else
-                        m_uiFaintTimer -= uiDiff;
                 }
             }
 

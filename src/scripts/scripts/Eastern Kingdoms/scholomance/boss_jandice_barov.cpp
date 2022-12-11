@@ -1,6 +1,6 @@
 /* 
  * Copyright (C) 2006-2008 ScriptDev2 <https://scriptdev2.svn.sourceforge.net/>
- * Copyright (C) 2008-2014 Hellground <http://hellground.net/>
+ * Copyright (C) 2008-2015 Hellground <http://hellground.net/>
  * 
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -35,10 +35,10 @@ struct boss_jandicebarovAI : public ScriptedAI
 {
     boss_jandicebarovAI(Creature *c) : ScriptedAI(c) {}
 
-    uint32 CurseOfBlood_Timer;
-    uint32 Illusion_Timer;
-    //uint32 Illusioncounter;
-    uint32 Invisible_Timer;
+    int32 CurseOfBlood_Timer;
+    int32 Illusion_Timer;
+    //int32 Illusioncounter;
+    int32 Invisible_Timer;
     bool Invisible;
     int Rand;
     int RandX;
@@ -80,36 +80,38 @@ struct boss_jandicebarovAI : public ScriptedAI
 
     void UpdateAI(const uint32 diff)
     {
-        if (Invisible && Invisible_Timer < diff)
-        {
-            //Become visible again
-            m_creature->setFaction(14);
-            m_creature->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
-            m_creature->SetUInt32Value(UNIT_FIELD_DISPLAYID,11073);     //Jandice Model
-            Invisible = false;
-        } else if (Invisible)
+        if (Invisible)
         {
             Invisible_Timer -= diff;
-            //Do nothing while invisible
-            return;
+            if (Invisible_Timer <= diff)
+            {
+                //Become visible again
+                m_creature->setFaction(14);
+                m_creature->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
+                m_creature->SetUInt32Value(UNIT_FIELD_DISPLAYID, 11073);     //Jandice Model
+                Invisible = false;
+            }
+                //Do nothing while invisible
+                return;
+            
         }
 
         //Return since we have no target
         if (!UpdateVictim())
             return;
 
-        //CurseOfBlood_Timer
-        if (CurseOfBlood_Timer < diff)
+        CurseOfBlood_Timer -= diff;
+        if (CurseOfBlood_Timer <= diff)
         {
             //Cast
             DoCast(m_creature->getVictim(),SPELL_CURSEOFBLOOD);
 
             //45 seconds
-            CurseOfBlood_Timer = 30000;
-        }else CurseOfBlood_Timer -= diff;
+            CurseOfBlood_Timer += 30000;
+        }
 
-        //Illusion_Timer
-        if (!Invisible && Illusion_Timer < diff)
+        Illusion_Timer -= diff;
+        if (Illusion_Timer <= diff)
         {
 
             //Inturrupt any spell casting
@@ -128,15 +130,15 @@ struct boss_jandicebarovAI : public ScriptedAI
                     SummonIllusions(target);
             }
             Invisible = true;
-            Invisible_Timer = 3000;
+            Invisible_Timer += 3000;
 
             //25 seconds until we should cast this agian
-            Illusion_Timer = 25000;
-        }else Illusion_Timer -= diff;
+            Illusion_Timer += 25000;
+        }
 
 
-        //            //Illusion_Timer
-        //            if (Illusion_Timer < diff)
+        //            Illusion_Timer -= diff;
+        //            if (Illusion_Timer <= diff)
         //            {
         //                  //Cast
         //                DoCast(m_creature->getVictim(),SPELL_ILLUSION);
@@ -144,16 +146,15 @@ struct boss_jandicebarovAI : public ScriptedAI
         //                  //3 Illusion will be summoned
         //                  if (Illusioncounter < 3)
         //                  {
-        //                    Illusion_Timer = 500;
+        //                    Illusion_Timer += 500;
         //                    Illusioncounter++;
         //                  }
         //                  else {
         //                      //15 seconds until we should cast this again
-        //                      Illusion_Timer = 15000;
+        //                      Illusion_Timer += 15000;
         //                      Illusioncounter=0;
         //                  }
-        //
-        //            }else Illusion_Timer -= diff;
+        //            }
 
         DoMeleeAttackIfReady();
     }

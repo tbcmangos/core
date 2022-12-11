@@ -1,7 +1,7 @@
 /*
  * Copyright (C) 2005-2008 MaNGOS <http://getmangos.com/>
  * Copyright (C) 2008 TrinityCore <http://www.trinitycore.org/>
- * Copyright (C) 2008-2014 Hellground <http://hellground.net/>
+ * Copyright (C) 2008-2017 Hellground <http://wow-hellground.com/>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -161,7 +161,7 @@ enum AuraType
     SPELL_AURA_ADD_TARGET_TRIGGER = 109,
     SPELL_AURA_MOD_POWER_REGEN_PERCENT = 110,
     SPELL_AURA_ADD_CASTER_HIT_TRIGGER = 111,
-    SPELL_AURA_override_CLASS_SCRIPTS = 112,
+    SPELL_AURA_OVERRIDE_CLASS_SCRIPTS = 112,
     SPELL_AURA_MOD_RANGED_DAMAGE_TAKEN = 113,
     SPELL_AURA_MOD_RANGED_DAMAGE_TAKEN_PCT = 114,
     SPELL_AURA_MOD_HEALING = 115,

@@ -1,6 +1,6 @@
 /* 
  * Copyright (C) 2006-2008 ScriptDev2 <https://scriptdev2.svn.sourceforge.net/>
- * Copyright (C) 2008-2014 Hellground <http://hellground.net/>
+ * Copyright (C) 2008-2015 Hellground <http://hellground.net/>
  * 
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -66,12 +66,10 @@ struct boss_harbinger_skyrissAI : public ScriptedAI
     boss_harbinger_skyrissAI(Creature *c) : ScriptedAI(c), summons(me)
     {
         pInstance = (c->GetInstanceData());
-        HeroicMode = me->GetMap()->IsHeroic();
         Intro = false;
     }
 
     ScriptedInstance *pInstance;
-    bool HeroicMode;
 
     bool Intro;
     bool IsImage33;
@@ -79,11 +77,11 @@ struct boss_harbinger_skyrissAI : public ScriptedAI
 
     SummonList summons;
     uint32 Intro_Phase;
-    uint32 Intro_Timer;
-    uint32 MindRend_Timer;
-    uint32 Fear_Timer;
-    uint32 Domination_Timer;
-    uint32 ManaBurn_Timer;
+    Timer Intro_Timer;
+    Timer MindRend_Timer;
+    Timer Fear_Timer;
+    Timer Domination_Timer;
+    Timer ManaBurn_Timer;
 
     void Reset()
     {
@@ -94,11 +92,11 @@ struct boss_harbinger_skyrissAI : public ScriptedAI
         IsImage66 = false;
 
         Intro_Phase = 1;
-        Intro_Timer = 5000;
-        MindRend_Timer = 3000;
-        Fear_Timer = 15000;
-        Domination_Timer = 30000;
-        ManaBurn_Timer = 25000;
+        Intro_Timer.Reset(5000);
+        MindRend_Timer.Reset(3000);
+        Fear_Timer.Reset(15000);
+        Domination_Timer.Reset(30000);
+        ManaBurn_Timer.Reset(25000);
     }
 
     void MoveInLineOfSight(Unit *who)
@@ -214,7 +212,7 @@ struct boss_harbinger_skyrissAI : public ScriptedAI
             if( !pInstance )
                 return;
 
-            if( Intro_Timer < diff )
+            if (Intro_Timer.Expired(diff))
             {
                 switch( Intro_Phase )
                 {
@@ -242,7 +240,7 @@ struct boss_harbinger_skyrissAI : public ScriptedAI
                         Intro = true;
                         break;
                 }
-            }else Intro_Timer -=diff;
+            }
         }
 
         if( !UpdateVictim() )
@@ -259,7 +257,7 @@ struct boss_harbinger_skyrissAI : public ScriptedAI
             IsImage33 = true;
         }
 
-        if( MindRend_Timer < diff )
+        if (MindRend_Timer.Expired(diff))
         {
             if( Unit* target = SelectUnit(SELECT_TARGET_RANDOM,1, GetSpellMaxRange(SPELL_MIND_REND), true, me->getVictimGUID()))
                 DoCast(target,HeroicMode ? H_SPELL_MIND_REND : SPELL_MIND_REND);
@@ -267,9 +265,9 @@ struct boss_harbinger_skyrissAI : public ScriptedAI
                 DoCast(me->getVictim(),HeroicMode ? H_SPELL_MIND_REND : SPELL_MIND_REND);
 
             MindRend_Timer = 8000;
-        }else MindRend_Timer -=diff;
+        }
 
-        if( Fear_Timer < diff )
+        if (Fear_Timer.Expired(diff))
         {
             if( me->IsNonMeleeSpellCast(false) )
                 return;
@@ -282,9 +280,9 @@ struct boss_harbinger_skyrissAI : public ScriptedAI
                 DoCast(me->getVictim(),SPELL_FEAR);
 
             Fear_Timer = 25000;
-        }else Fear_Timer -=diff;
+        }
 
-        if( Domination_Timer < diff )
+        if (Domination_Timer.Expired(diff))
         {
             if( me->IsNonMeleeSpellCast(false) )
                 return;
@@ -297,20 +295,17 @@ struct boss_harbinger_skyrissAI : public ScriptedAI
                 DoCast(me->getVictim(),HeroicMode ? H_SPELL_DOMINATION : SPELL_DOMINATION);
 
             Domination_Timer = 16000+rand()%16000;
-        }else Domination_Timer -=diff;
+        }
 
-        if( HeroicMode )
+        if (HeroicMode && ManaBurn_Timer.Expired(diff))
         {
-            if( ManaBurn_Timer < diff )
-            {
-                if( me->IsNonMeleeSpellCast(false) )
-                    return;
+            if( me->IsNonMeleeSpellCast(false) )
+                return;
 
-                if( Unit* target = SelectUnit(SELECT_TARGET_RANDOM,1, GetSpellMaxRange(H_SPELL_MANA_BURN), true, me->getVictimGUID()) )
-                    DoCast(target,H_SPELL_MANA_BURN);
+            if( Unit* target = SelectUnit(SELECT_TARGET_RANDOM,1, GetSpellMaxRange(H_SPELL_MANA_BURN), true, me->getVictimGUID()) )
+                DoCast(target,H_SPELL_MANA_BURN);
 
-                ManaBurn_Timer = 16000+rand()%16000;
-            }else ManaBurn_Timer -=diff;
+            ManaBurn_Timer = 16000+rand()%16000;
         }
 
         DoMeleeAttackIfReady();
@@ -330,17 +325,15 @@ struct boss_harbinger_skyriss_illusionAI : public ScriptedAI
     boss_harbinger_skyriss_illusionAI(Creature *c) : ScriptedAI(c)
     {
         pInstance = (c->GetInstanceData());
-        HeroicMode = me->GetMap()->IsHeroic();
     }
 
-    uint32 MindRend_Timer;
+    Timer MindRend_Timer;
 
     ScriptedInstance *pInstance;
-    bool HeroicMode;
 
     void Reset()
     {
-        MindRend_Timer = 5000;
+        MindRend_Timer.Reset(5000);
     }
 
     void UpdateAI(const uint32 diff)
@@ -348,7 +341,7 @@ struct boss_harbinger_skyriss_illusionAI : public ScriptedAI
         if(!UpdateVictim())
             return;
 
-        if( MindRend_Timer < diff )
+        if (MindRend_Timer.Expired(diff))
         {
             if(Unit* target = SelectUnit(SELECT_TARGET_RANDOM,1, GetSpellMaxRange(SPELL_MIND_REND_IMAGE), true, me->getVictimGUID()))
                 DoCast(target,HeroicMode ? H_SPELL_MIND_REND_IMAGE : SPELL_MIND_REND_IMAGE);
@@ -356,7 +349,7 @@ struct boss_harbinger_skyriss_illusionAI : public ScriptedAI
                 DoCast(me->getVictim(),HeroicMode ? H_SPELL_MIND_REND_IMAGE : SPELL_MIND_REND_IMAGE);
 
             MindRend_Timer = 15000+rand()%6000;
-        }else MindRend_Timer -=diff;
+        }
 
         DoMeleeAttackIfReady();
     }

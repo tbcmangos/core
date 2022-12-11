@@ -1,7 +1,7 @@
 /*
  * Copyright (C) 2005-2008 MaNGOS <http://getmangos.com/>
  * Copyright (C) 2008 TrinityCore <http://www.trinitycore.org/>
- * Copyright (C) 2008-2014 Hellground <http://hellground.net/>
+ * Copyright (C) 2008-2017 Hellground <http://wow-hellground.com/>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -62,7 +62,9 @@ bool FleeingMovementGenerator<UNIT>::_getPoint(UNIT &unit, Position &dest)
         angle += RAND(M_PI/4.0f, M_PI/2.0f, -M_PI/4.0f, -M_PI/2.0f, M_PI*3/4.0f, -M_PI*3/4.0f, M_PI);
 
     // destination point
-    unit.GetValidPointInAngle(dest, 8.0f, angle, true, true);
+    unit.GetPosition(dest);
+    dest.z = _startZ;
+    unit.GetValidPointInAngle(dest, 8.0f, angle, false);
     return true;
 }
 
@@ -73,7 +75,7 @@ void FleeingMovementGenerator<UNIT>::Initialize(UNIT &unit)
         _angle = pFright->GetAngle(&unit);
     else
         _angle = unit.GetOrientation();
-
+    _startZ = unit.GetPositionZ();
     _nextCheckTime.Reset(0);
 
     unit.InterruptNonMeleeSpells(false);

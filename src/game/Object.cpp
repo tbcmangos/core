@@ -1,7 +1,7 @@
 /*
  * Copyright (C) 2005-2009 MaNGOS <http://getmangos.com/>
  * Copyright (C) 2008-2009 TrinityCore <http://www.trinitycore.org/>
- * Copyright (C) 2008-2014 Hellground <http://hellground.net/>
+ * Copyright (C) 2008-2017 Hellground <http://wow-hellground.com/>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -50,7 +50,6 @@
 #include "OutdoorPvPMgr.h"
 
 #include "movement/packet_builder.h"
-#include "luaengine/HookMgr.h"
 
 uint32 GuidHigh2TypeId(uint32 guid_hi)
 {
@@ -376,6 +375,9 @@ void Object::BuildValuesUpdate(uint8 updatetype, ByteBuffer * data, UpdateMask *
     if (!target)
         return;
 
+    if (isType(TYPEMASK_UNIT) && updateMask->GetBit(UNIT_FIELD_HEALTH))
+        updateMask->SetBit(UNIT_FIELD_MAXHEALTH); //always update max when updating actual
+
     bool IsActivateToQuest = false;
     if (updatetype == UPDATETYPE_CREATE_OBJECT || updatetype == UPDATETYPE_CREATE_OBJECT2)
     {
@@ -437,13 +439,22 @@ void Object::BuildValuesUpdate(uint8 updatetype, ByteBuffer * data, UpdateMask *
                 {
                     *data << (m_uint32Values[ index ] & ~UNIT_FLAG_NOT_SELECTABLE);
                 }
+                // everything as % until in party
+                else if (index == UNIT_FIELD_MAXHEALTH && !target->IsInRaidWith((Unit*)this) && !target->IsInPartyWith((Unit*)this))
+                {
+                    *data << uint32(100);
+                }
+                else if (index == UNIT_FIELD_HEALTH && !target->IsInRaidWith((Unit*)this) && !target->IsInPartyWith((Unit*)this))
+                {
+                    *data << uint32(ceil(float(m_uint32Values[index])*100.f / float(m_uint32Values[index + 6])));
+                }
                 // use modelid_a if not gm, _h if gm for CREATURE_FLAG_EXTRA_TRIGGER creatures
                 else if (index == UNIT_FIELD_DISPLAYID && GetTypeId() == TYPEID_UNIT)
                 {
                     const CreatureInfo* cinfo = ((Creature*)this)->GetCreatureInfo();
                     if (cinfo->flags_extra & CREATURE_FLAG_EXTRA_TRIGGER)
                     {
-                        if (target->isGameMaster())
+                        if (target->isGMTriggersVisible())
                         {
                             if (cinfo->Modelid_A2)
                                 *data << cinfo->Modelid_A1;
@@ -907,7 +918,7 @@ WorldObject::WorldObject()
     m_positionX(0.0f), m_positionY(0.0f), m_positionZ(0.0f), m_orientation(0.0f),
     mSemaphoreTeleport(false)
     , m_map(NULL), m_zoneScript(NULL)
-    , m_activeBy(0), IsTempWorldObject(false)
+    , m_activeBy(0), IsTempWorldObject(false), m_updateTracker(0)
 {
     mSemaphoreTeleport  = false;
 }
@@ -1189,7 +1200,31 @@ bool WorldObject::IsWithinLOS(const float ox, const float oy, const float oz) co
     float x,y,z;
     GetPosition(x,y,z);
     VMAP::IVMapManager *vMapManager = VMAP::VMapFactory::createOrGetVMapManager();
-    return vMapManager->isInLineOfSight(GetMapId(), x, y, z +2.0f, ox, oy, oz +2.0f);
+    bool result = vMapManager->isInLineOfSight(GetMapId(), x, y, z +2.0f, ox, oy, oz +2.0f);
+    
+
+    uint8 prec = sWorld.getConfig(CONFIG_VMAP_GROUND);
+    if (prec && result) // if not result then no reason to check
+    {
+        const TerrainInfo* ti = GetTerrain();
+        if (!ti)
+            return true;
+        float beginh = ti->GetHeight(x, y, z, false);
+        if (beginh == VMAP_INVALID_HEIGHT_VALUE)
+            return true;
+        float endh = ti->GetHeight(ox, oy, oz, false);
+        if (endh == VMAP_INVALID_HEIGHT_VALUE)
+            return true;
+
+        float tolerance = sWorld.getConfig(CONFIG_VMAP_GROUND_TOLERANCE);
+        for (uint8 i = 1; i < prec; i++)
+        {
+            float height = ti->GetHeight(x + (i*(ox - x)) / prec, y + (i*(ox - y)) / prec, std::max(z, oz), false);
+            if (height == VMAP_INVALID_HEIGHT_VALUE || height > tolerance + z + (i*(oz - z)) / prec)
+                return false;
+        }
+    }
+    return result;
 }
 
 bool WorldObject::IsInRange(WorldObject const* obj, float minRange, float maxRange, bool is3D /* = true */) const
@@ -1358,83 +1393,59 @@ void Object::ForceValuesUpdateAtIndex(uint32 i)
     }
 }
 
-namespace Hellground
-{
-    class MonsterChatBuilder
-    {
-        public:
-            MonsterChatBuilder(WorldObject const& obj, ChatMsg msgtype, int32 textId, uint32 language, uint64 targetGUID, bool withoutPrename = false)
-                : i_object(obj), i_msgtype(msgtype), i_textId(textId), i_language(language), i_targetGUID(targetGUID), i_withoutPrename(withoutPrename) {}
-            void operator()(WorldPacket& data, int32 loc_idx)
-            {
-                char const* text = sObjectMgr.GetHellgroundString(i_textId, loc_idx);
-                // TODO: i_object.GetName() also must be localized?
-                i_object.BuildMonsterChat(&data, i_msgtype, text, i_language, i_object.GetNameForLocaleIdx(loc_idx), i_targetGUID, i_withoutPrename);
-            }
-
-        private:
-            WorldObject const& i_object;
-            ChatMsg i_msgtype;
-            int32 i_textId;
-            uint32 i_language;
-            uint64 i_targetGUID;
-            bool i_withoutPrename;
-    };
-}                                                           // namespace Hellground
-
 void WorldObject::MonsterSay(int32 textId, uint32 language, uint64 TargetGuid)
 {
     float range = sWorld.getConfig(CONFIG_LISTEN_RANGE_SAY);
-    Hellground::MonsterChatBuilder say_build(*this, CHAT_MSG_MONSTER_SAY, textId, language, TargetGuid);
-    Hellground::LocalizedPacketDo<Hellground::MonsterChatBuilder> say_do(say_build);
-    Hellground::CameraDistWorker<Hellground::LocalizedPacketDo<Hellground::MonsterChatBuilder> > say_worker(this, range, say_do);
-    TypeContainerVisitor<Hellground::CameraDistWorker<Hellground::LocalizedPacketDo<Hellground::MonsterChatBuilder> >, WorldTypeMapContainer > message(say_worker);
-    //cell_lock->Visit(cell_lock, message, *GetMap());
-    Cell::VisitWorldObjects(this, say_worker, range);
+
+    WorldPacket data(SMSG_MESSAGECHAT, 200);
+    BuildMonsterChat(&data, CHAT_MSG_MONSTER_SAY, textId, language, GetName(), TargetGuid);
+    Hellground::PacketBroadcaster visitor(*this, &data, 0, range);
+    Cell::VisitWorldObjects(this, visitor, range);
 }
 
 void WorldObject::MonsterYell(int32 textId, uint32 language, uint64 TargetGuid)
 {
     float range = sWorld.getConfig(CONFIG_LISTEN_RANGE_YELL);
-    Hellground::MonsterChatBuilder say_build(*this, CHAT_MSG_MONSTER_YELL, textId, language, TargetGuid);
-    Hellground::LocalizedPacketDo<Hellground::MonsterChatBuilder> say_do(say_build);
-    Hellground::CameraDistWorker<Hellground::LocalizedPacketDo<Hellground::MonsterChatBuilder> > say_worker(this, range, say_do);
-    Cell::VisitWorldObjects(this, say_worker, range);
+
+    WorldPacket data(SMSG_MESSAGECHAT, 200);
+    BuildMonsterChat(&data, CHAT_MSG_MONSTER_YELL, textId, language, GetName(), TargetGuid);
+    Hellground::PacketBroadcaster visitor(*this, &data, 0, range);
+    Cell::VisitWorldObjects(this, visitor, range);
 }
 
 void WorldObject::MonsterYellToZone(int32 textId, uint32 language, uint64 TargetGuid)
 {
-    Hellground::MonsterChatBuilder say_build(*this, CHAT_MSG_MONSTER_YELL, textId, language, TargetGuid);
-    Hellground::LocalizedPacketDo<Hellground::MonsterChatBuilder> say_do(say_build);
+    WorldPacket data(SMSG_MESSAGECHAT, 200);
+    BuildMonsterChat(&data, CHAT_MSG_MONSTER_YELL, textId, language, GetName(), TargetGuid);
 
     uint32 zoneid = GetZoneId();
 
     Map::PlayerList const& pList = GetMap()->GetPlayers();
     for (Map::PlayerList::const_iterator itr = pList.begin(); itr != pList.end(); ++itr)
         if (itr->getSource()->GetCachedZone()==zoneid)
-            say_do(itr->getSource());
+            itr->getSource()->SendPacketToSelf(&data);
 }
 
 void WorldObject::MonsterTextEmote(int32 textId, uint64 TargetGuid, bool IsBossEmote, bool withoutPrename)
 {
     float range = sWorld.getConfig(IsBossEmote ? CONFIG_LISTEN_RANGE_YELL : CONFIG_LISTEN_RANGE_TEXTEMOTE);
-    Hellground::MonsterChatBuilder say_build(*this, IsBossEmote ? CHAT_MSG_RAID_BOSS_EMOTE : CHAT_MSG_MONSTER_EMOTE, textId, LANG_UNIVERSAL, TargetGuid, withoutPrename);
-    Hellground::LocalizedPacketDo<Hellground::MonsterChatBuilder> say_do(say_build);
-    Hellground::CameraDistWorker<Hellground::LocalizedPacketDo<Hellground::MonsterChatBuilder> > say_worker(this, range, say_do);
-    Cell::VisitWorldObjects(this, say_worker, range);
+    WorldPacket data(SMSG_MESSAGECHAT, 200);
+    BuildMonsterChat(&data, IsBossEmote ? CHAT_MSG_RAID_BOSS_EMOTE : CHAT_MSG_MONSTER_EMOTE, textId, LANG_UNIVERSAL, GetName(), TargetGuid);
+    Hellground::PacketBroadcaster visitor(*this, &data, 0, range);
+    Cell::VisitWorldObjects(this, visitor, range);
 }
 
 void WorldObject::MonsterTextEmoteToZone(int32 textId, uint64 TargetGuid, bool IsBossEmote, bool withoutPrename)
 {
-    Hellground::MonsterChatBuilder say_build(*this, IsBossEmote ? CHAT_MSG_RAID_BOSS_EMOTE : CHAT_MSG_MONSTER_EMOTE, textId, LANG_UNIVERSAL, TargetGuid, withoutPrename);
-    Hellground::LocalizedPacketDo<Hellground::MonsterChatBuilder> say_do(say_build);
+    WorldPacket data(SMSG_MESSAGECHAT, 200);
+    BuildMonsterChat(&data, IsBossEmote ? CHAT_MSG_RAID_BOSS_EMOTE : CHAT_MSG_MONSTER_EMOTE, textId, LANG_UNIVERSAL, GetName(), TargetGuid);
 
     uint32 zoneid = GetZoneId();
 
     Map::PlayerList const& pList = GetMap()->GetPlayers();
     for (Map::PlayerList::const_iterator itr = pList.begin(); itr != pList.end(); ++itr)
-        if (itr->getSource()->GetCachedZone()==zoneid)
-            say_do(itr->getSource());
+        if (itr->getSource()->GetCachedZone() == zoneid)
+            itr->getSource()->SendPacketToSelf(&data);
 }
 
 void WorldObject::MonsterWhisper(int32 textId, uint64 receiver, bool IsBossWhisper)
@@ -1443,11 +1454,10 @@ void WorldObject::MonsterWhisper(int32 textId, uint64 receiver, bool IsBossWhisp
     if (!player || !player->GetSession())
         return;
 
-    uint32 loc_idx = player->GetSession()->GetSessionDbLocaleIndex();
-    char const* text = sObjectMgr.GetHellgroundString(textId, loc_idx);
+    char const* text = sObjectMgr.GetHellgroundStringForDBCLocale(textId);
 
     WorldPacket data(SMSG_MESSAGECHAT, 200);
-    BuildMonsterChat(&data,IsBossWhisper ? CHAT_MSG_RAID_BOSS_WHISPER : CHAT_MSG_MONSTER_WHISPER, text, LANG_UNIVERSAL, GetNameForLocaleIdx(loc_idx), receiver);
+    BuildMonsterChat(&data,IsBossWhisper ? CHAT_MSG_RAID_BOSS_WHISPER : CHAT_MSG_MONSTER_WHISPER, text, LANG_UNIVERSAL, GetName(), receiver);
 
     player->SendPacketToSelf(&data);
 }
@@ -1455,12 +1465,8 @@ void WorldObject::MonsterWhisper(int32 textId, uint64 receiver, bool IsBossWhisp
 void WorldObject::BuildMonsterChat(WorldPacket *data, uint8 msgtype, int32 iTextEntry, uint32 language, char const* name, uint64 targetGuid, bool withoutPrename) const
 {
     char const* text = 0;
-    if(GetTypeId() == TYPEID_PLAYER)
-    {
-        uint32 loc_idx = ((Player*)this)->GetSession()->GetSessionDbLocaleIndex();
-        text = sObjectMgr.GetHellgroundString(iTextEntry,loc_idx);
-    } else
-        text = sObjectMgr.GetHellgroundStringForDBCLocale(iTextEntry);
+
+    text = sObjectMgr.GetHellgroundStringForDBCLocale(iTextEntry);
     BuildMonsterChat(data, msgtype, text, language, name, targetGuid, withoutPrename);
     if(GetTypeId() == TYPEID_PLAYER)
         data->put(5, (uint64)0);  // BAD HACK
@@ -1556,9 +1562,6 @@ Creature* WorldObject::SummonCreature(uint32 id, float x, float y, float z, floa
     if (GetTypeId()==TYPEID_UNIT && ((Creature*)this)->IsAIEnabled)
         ((Creature*)this)->AI()->JustSummoned(pCreature);
 
-    if (Unit* summoner = ToUnit())
-        sHookMgr->OnSummoned(pCreature, summoner);
-
     if (pCreature->IsAIEnabled)
     {
         pCreature->AI()->JustRespawned();
@@ -1597,7 +1600,7 @@ Pet* Player::SummonPet(uint32 entry, float x, float y, float z, float ang, PetTy
     if (petType == SUMMON_PET && pet->LoadPetFromDB(this, entry, 0, false, x, y, z, ang))
     {
         // Remove Demonic Sacrifice auras (known pet)
-        Unit::AuraList const& auraClassScripts = GetAurasByType(SPELL_AURA_override_CLASS_SCRIPTS);
+        Unit::AuraList const& auraClassScripts = GetAurasByType(SPELL_AURA_OVERRIDE_CLASS_SCRIPTS);
         for (Unit::AuraList::const_iterator itr = auraClassScripts.begin();itr!=auraClassScripts.end();)
         {
             if ((*itr)->GetModifier()->m_miscvalue==2228)
@@ -1657,7 +1660,12 @@ Pet* Player::SummonPet(uint32 entry, float x, float y, float z, float ang, PetTy
     pet->SetUInt32Value(UNIT_FIELD_FACTIONTEMPLATE, getFaction());
 
     // this enables pet details window (Shift+P)
-    pet->GetCharmInfo()->SetPetNumber(pet_number, false);
+    CreatureInfo const *cinfo = pet->GetCreatureInfo();
+    if (petType==HUNTER_PET || (petType==SUMMON_PET && cinfo->type == CREATURE_TYPE_DEMON && getClass() == CLASS_WARLOCK))
+        pet->GetCharmInfo()->SetPetNumber(pet_number, true);
+    else
+        pet->GetCharmInfo()->SetPetNumber(pet_number, false);
+    //pet->GetCharmInfo()->SetPetNumber(pet_number, false);
 
     map->Add((Creature*)pet);
 
@@ -1682,14 +1690,16 @@ Pet* Player::SummonPet(uint32 entry, float x, float y, float z, float ang, PetTy
             pet->InitPetCreateSpells();
             pet->SavePetToDB(PET_SAVE_AS_CURRENT);
             SetPet(pet);
-            PetSpellInitialize();
+            DelayedPetSpellInitialize();
             break;
     }
+    if (GetTypeId() == TYPEID_PLAYER && (getClass() == CLASS_HUNTER || getClass() == CLASS_WARLOCK) && pet->isControlled() && !pet->isTemporarySummoned() && (petType == SUMMON_PET || petType == HUNTER_PET))
+        SetLastPetNumber(pet_number);
 
     if (petType == SUMMON_PET)
     {
         // Remove Demonic Sacrifice auras (known pet)
-        Unit::AuraList const& auraClassScripts = GetAurasByType(SPELL_AURA_override_CLASS_SCRIPTS);
+        Unit::AuraList const& auraClassScripts = GetAurasByType(SPELL_AURA_OVERRIDE_CLASS_SCRIPTS);
         for (Unit::AuraList::const_iterator itr = auraClassScripts.begin();itr!=auraClassScripts.end();)
         {
             if ((*itr)->GetModifier()->m_miscvalue==2228)
@@ -1904,10 +1914,7 @@ bool WorldObject::UpdateHelper::ProcessUpdate(Creature* creature)
 {
     if (!creature->IsInWorld() || creature->isSpiritService())
         return false;
-
-    uint32 minUpdateTime = sWorld.getConfig(CONFIG_INTERVAL_MAPUPDATE);
-
-    return creature->m_updateTracker.timeElapsed() >= minUpdateTime;
+    return true;
 }
 
 bool WorldObject::UpdateHelper::ProcessUpdate(WorldObject* obj)
@@ -1940,39 +1947,26 @@ void WorldObject::GetRandomPoint(float x, float y, float z, float distance, floa
 }
 
 // this will find point in LOS before collision occur
-void WorldObject::GetValidPointInAngle(Position &pos, float dist, float angle, bool meAsSourcePos, bool ignoreLOSOffset, float allowHeightDifference) const
+void WorldObject::GetValidPointInAngle(Position &pos, float dist, float angle, bool meAsSourcePos, float allowHeightDifference) const
 {
     angle += GetOrientation();
 
     if (meAsSourcePos)
         GetPosition(pos);
 
-    pos.z += 2.0f;
-
     Position dest;
-    dest.x = pos.x + dist * cos(angle);
-    dest.y = pos.y + dist * sin(angle);
+    dest.x = pos.x + (dist+1) * cos(angle);
+    dest.y = pos.y + (dist+1) * sin(angle);
+    // try 2yds more, then backout 2yds for collision prevention
 
     TerrainInfo const* _map = GetTerrain();
-    float ground = _map->GetHeight(dest.x, dest.y, MAX_HEIGHT, true);
+    float ground = _map->GetHeight(dest.x, dest.y, MAX_HEIGHT, false);
     float floor = _map->GetHeight(dest.x, dest.y, pos.z, true);
     dest.z = fabs(ground - pos.z) <= fabs(floor - pos.z) ? ground : floor;
-
-    // collision occurred
-    bool result = false;
-    if (ignoreLOSOffset)
-        result = VMAP::VMapFactory::createOrGetVMapManager()->getObjectHitPos(GetMapId(), pos.x, pos.y, pos.z +0.5f, dest.x, dest.y, dest.z +1.0f, dest.x, dest.y, dest.z, -0.5f);
-    else
-        result = VMAP::VMapFactory::createOrGetVMapManager()->getObjectHitPos(GetMapId(), pos.x, pos.y, pos.z +3.0f, dest.x, dest.y, dest.z +7.0f, dest.x, dest.y, dest.z, -0.5f);
-
-    if (result)
-    {
-        // move back a bit
-        dest.x -= 0.25f * cos(angle);
-        dest.y -= 0.25f * sin(angle);
-        dist = sqrt((pos.x - dest.x)*(pos.x - dest.x) + (pos.y - dest.y)*(pos.y - dest.y));
-    }
-
+    
+    VMAP::VMapFactory::createOrGetVMapManager()->getObjectHitPos(GetMapId(), pos.x, pos.y, pos.z + 2.0f, dest.x, dest.y, dest.z + 2.0f, dest.x, dest.y, dest.z, -1.5f);
+    dist = sqrt((pos.x - dest.x)*(pos.x - dest.x) + (pos.y - dest.y)*(pos.y - dest.y));
+    
     float step = dist / 10.0f;
     for (int j = 0; j < 10; ++j)
     {
@@ -1981,7 +1975,7 @@ void WorldObject::GetValidPointInAngle(Position &pos, float dist, float angle, b
         {
             dest.x -= step * cos(angle);
             dest.y -= step * sin(angle);
-            ground = _map->GetHeight(dest.x, dest.y, MAX_HEIGHT, true);
+            ground = _map->GetHeight(dest.x, dest.y, MAX_HEIGHT, false);
             floor = _map->GetHeight(dest.x, dest.y, pos.z, true);
             dest.z = fabs(ground - pos.z) <= fabs(floor - pos.z) ? ground : floor;
         }
@@ -1991,7 +1985,7 @@ void WorldObject::GetValidPointInAngle(Position &pos, float dist, float angle, b
             break;
         }
     }
-
+    pos.z += 2.0f; //test
     Hellground::NormalizeMapCoord(pos.x);
     Hellground::NormalizeMapCoord(pos.y);
     UpdateAllowedPositionZ(pos.x, pos.y, pos.z);
@@ -2004,7 +1998,7 @@ void WorldObject::UpdateGroundPositionZ(float x, float y, float &z) const
         z = new_z + 0.06f;                                  // just to be sure that we are not a few pixel under the surface
 }
 
-void WorldObject::UpdateAllowedPositionZ(float x, float y, float &z) const
+void WorldObject::UpdateAllowedPositionZ(float x, float y, float &z, bool IgnoreLos) const
 {
     switch (GetTypeId())
     {
@@ -2018,7 +2012,7 @@ void WorldObject::UpdateAllowedPositionZ(float x, float y, float &z) const
                 float ground_z = z;
                 float max_z = CanSwim
                     ? GetTerrain()->GetWaterOrGroundLevel(x, y, z, &ground_z, !((Unit const*)this)->HasAuraType(SPELL_AURA_WATER_WALK))
-                    : ((ground_z = GetTerrain()->GetHeight(x, y, z, true)));
+                    : ((ground_z = GetTerrain()->GetHeight(x, y, z, !IgnoreLos)));
                 if (max_z > INVALID_HEIGHT)
                 {
                     if (z > max_z)
@@ -2065,5 +2059,5 @@ void WorldObject::UpdateAllowedPositionZ(float x, float y, float &z) const
                 z = ground_z;
             break;
         }
-    }
+    }                                                                                  
 }

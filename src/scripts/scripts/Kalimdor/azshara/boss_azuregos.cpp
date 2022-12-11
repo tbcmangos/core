@@ -1,6 +1,6 @@
 /* 
  * Copyright (C) 2006-2008 ScriptDev2 <https://scriptdev2.svn.sourceforge.net/>
- * Copyright (C) 2008-2014 Hellground <http://hellground.net/>
+ * Copyright (C) 2008-2015 Hellground <http://hellground.net/>
  * 
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -40,14 +40,14 @@ struct boss_azuregosAI : public ScriptedAI
 {
     boss_azuregosAI(Creature *c) : ScriptedAI(c) {}
 
-    uint32 MarkOfFrost_Timer;
-    uint32 ManaStorm_Timer;
-    uint32 Chill_Timer;
-    uint32 Breath_Timer;
-    uint32 Teleport_Timer;
-    uint32 Reflect_Timer;
-    uint32 Cleave_Timer;
-    uint32 Enrage_Timer;
+    int32 MarkOfFrost_Timer;
+    int32 ManaStorm_Timer;
+    int32 Chill_Timer;
+    int32 Breath_Timer;
+    int32 Teleport_Timer;
+    int32 Reflect_Timer;
+    int32 Cleave_Timer;
+    int32 Enrage_Timer;
     bool Enraged;
 
     void Reset()
@@ -71,7 +71,8 @@ struct boss_azuregosAI : public ScriptedAI
         if (!UpdateVictim() )
             return;
 
-        if(Teleport_Timer < diff)
+        Teleport_Timer -= diff;
+        if(Teleport_Timer <= diff)
         {
             DoScriptText(SAY_TELEPORT, m_creature);
             std::list<HostileReference*>& m_threatlist = m_creature->getThreatManager().getThreatList();
@@ -86,63 +87,57 @@ struct boss_azuregosAI : public ScriptedAI
             }
 
             DoResetThreat();
-            Teleport_Timer = 30000;
+            Teleport_Timer += 30000;
         }
-        else
-            Teleport_Timer -= diff;
+        
 
-        //        //MarkOfFrost_Timer
-        //        if (MarkOfFrost_Timer < diff)
+        //        MarkOfFrost_Timer -= diff;
+        //        if (MarkOfFrost_Timer <= diff)
         //        {
         //            DoCast(m_creature->getVictim(),SPELL_MARKOFFROST);
-        //            MarkOfFrost_Timer = 25000;
-        //        }else MarkOfFrost_Timer -= diff;
+        //            MarkOfFrost_Timer += 25000;
+        //        }
 
-        //Chill_Timer
-        if (Chill_Timer < diff)
+        Chill_Timer -= diff;
+        if (Chill_Timer <= diff)
         {
             DoCast(m_creature->getVictim(),SPELL_CHILL);
-            Chill_Timer = 13000 + rand()%12000;
+            Chill_Timer += 13000 + rand()%12000;
         }
-        else
-            Chill_Timer -= diff;
+        
 
-        //Breath_Timer
-        if (Breath_Timer < diff)
+        Breath_Timer -= diff;
+        if (Breath_Timer <= diff)
         {
             DoCast(m_creature->getVictim(),SPELL_FROSTBREATH);
-            Breath_Timer = 10000 + rand()%5000;
+            Breath_Timer += 10000 + rand()%5000;
         }
-        else
-            Breath_Timer -= diff;
+        
 
-        //ManaStorm_Timer
-        if (ManaStorm_Timer < diff)
+        ManaStorm_Timer -= diff;
+        if (ManaStorm_Timer <= diff)
         {
             if (Unit* target = SelectUnit(SELECT_TARGET_RANDOM,0, 60, true))
                 DoCast(target,SPELL_MANASTORM);
-            ManaStorm_Timer = 7500 + rand()%5000;
+            ManaStorm_Timer += 7500 + rand()%5000;
         }
-        else
-            ManaStorm_Timer -= diff;
+        
 
-        //Reflect_Timer
-        if (Reflect_Timer < diff)
+        Reflect_Timer -= diff;
+        if (Reflect_Timer <= diff)
         {
             DoCast(m_creature,SPELL_REFLECT);
-            Reflect_Timer = 20000 + rand()%15000;
+            Reflect_Timer += 20000 + rand()%15000;
         }
-        else
-            Reflect_Timer -= diff;
+        
 
-        //Cleave_Timer
-        if (Cleave_Timer < diff)
+        Cleave_Timer -= diff;
+        if (Cleave_Timer <= diff)
         {
             DoCast(m_creature->getVictim(),SPELL_CLEAVE);
-            Cleave_Timer = 7000;
+            Cleave_Timer += 7000;
         }
-        else
-            Cleave_Timer -= diff;
+        
 
         //Enrage_Timer
         if (m_creature->GetHealth()*100 / m_creature->GetMaxHealth() < 26 && !Enraged)

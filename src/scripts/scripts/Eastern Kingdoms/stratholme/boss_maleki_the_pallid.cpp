@@ -1,6 +1,6 @@
 /* 
  * Copyright (C) 2006-2008 ScriptDev2 <https://scriptdev2.svn.sourceforge.net/>
- * Copyright (C) 2008-2014 Hellground <http://hellground.net/>
+ * Copyright (C) 2008-2015 Hellground <http://hellground.net/>
  * 
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -41,9 +41,9 @@ struct boss_maleki_the_pallidAI : public ScriptedAI
 
     ScriptedInstance* pInstance;
 
-    uint32 Frostbolt_Timer;
-    uint32 IceTomb_Timer;
-    uint32 DrainLife_Timer;
+    int32 Frostbolt_Timer;
+    int32 IceTomb_Timer;
+    int32 DrainLife_Timer;
 
     void Reset()
     {
@@ -70,29 +70,29 @@ struct boss_maleki_the_pallidAI : public ScriptedAI
         if (!UpdateVictim())
             return;
 
-        //Frostbolt
-        if (Frostbolt_Timer < diff)
+        Frostbolt_Timer -= diff;
+        if (Frostbolt_Timer <= diff)
         {
              if (rand()%100 < 90)
                 DoCast(m_creature->getVictim(),SPELL_FROSTBOLT);
-            Frostbolt_Timer = 3500;
-        }else Frostbolt_Timer -= diff;
+            Frostbolt_Timer += 3500;
+        }
 
-        //IceTomb
-        if (IceTomb_Timer < diff)
+        IceTomb_Timer -= diff;
+        if (IceTomb_Timer <= diff)
         {
             if (rand()%100 < 65)
                 DoCast(m_creature->getVictim(),SPELL_ICETOMB);
-            IceTomb_Timer = 28000;
-        }else IceTomb_Timer -= diff;
+            IceTomb_Timer += 28000;
+        }
 
-        //DrainLife
-        if (DrainLife_Timer < diff)
+        DrainLife_Timer -= diff;
+        if (DrainLife_Timer <= diff)
         {
               if (rand()%100 < 55)
                 DoCast(m_creature->getVictim(),SPELL_DRAINLIFE);
-            DrainLife_Timer = 31000;
-        }else DrainLife_Timer -= diff;
+            DrainLife_Timer += 31000;
+        }
 
         DoMeleeAttackIfReady();
     }

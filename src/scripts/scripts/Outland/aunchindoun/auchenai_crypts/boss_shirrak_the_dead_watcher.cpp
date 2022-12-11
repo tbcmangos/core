@@ -1,6 +1,6 @@
 /* 
  * Copyright (C) 2006-2008 ScriptDev2 <https://scriptdev2.svn.sourceforge.net/>
- * Copyright (C) 2008-2014 Hellground <http://hellground.net/>
+ * Copyright (C) 2008-2015 Hellground <http://hellground.net/>
  * 
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -37,28 +37,26 @@ EndScriptData */
 #define N_SPELL_FIERY_BLAST         32302
 #define H_SPELL_FIERY_BLAST         38382
 #define SPELL_FIERY_BLAST           (HeroicMode?H_SPELL_FIERY_BLAST:N_SPELL_FIERY_BLAST)
-#define SPELL_FOCUS_FIRE_VISUAL     42075 //need to find better visual
+#define SPELL_FOCUS_FIRE_VISUAL     32286 //need to find better visual
 
 struct boss_shirrak_the_dead_watcherAI : public ScriptedAI
 {
     boss_shirrak_the_dead_watcherAI(Creature *c) : ScriptedAI(c)
     {
-        HeroicMode = m_creature->GetMap()->IsHeroic();
     }
 
-    uint32 Inhibitmagic_Timer;
-    uint32 Attractmagic_Timer;
-    uint32 Carnivorousbite_Timer;
-    uint32 FocusFire_Timer;
-    bool HeroicMode;
+    Timer Inhibitmagic_Timer;
+    Timer Attractmagic_Timer;
+    Timer Carnivorousbite_Timer;
+    Timer FocusFire_Timer;
     Unit *focusedTarget;
 
     void Reset()
     {
-        Inhibitmagic_Timer = 0;
-        Attractmagic_Timer = 28000;
-        Carnivorousbite_Timer = 10000;
-        FocusFire_Timer = 17000;
+        Inhibitmagic_Timer.Reset(1); //immediate
+        Attractmagic_Timer.Reset(28000);
+        Carnivorousbite_Timer.Reset(10000);
+        FocusFire_Timer.Reset(17000);
         focusedTarget = NULL;
     }
 
@@ -84,7 +82,7 @@ struct boss_shirrak_the_dead_watcherAI : public ScriptedAI
             summoned->CastSpell(summoned,SPELL_FOCUS_FIRE_VISUAL,false);
             summoned->setFaction(m_creature->getFaction());
             summoned->SetLevel(m_creature->getLevel());
-            summoned->addUnitState(UNIT_STAT_ROOT);
+            summoned->GetUnitStateMgr().PushAction(UNIT_ACTION_ROOT);
 
             if(focusedTarget)
                 summoned->AI()->AttackStart(focusedTarget);
@@ -94,7 +92,7 @@ struct boss_shirrak_the_dead_watcherAI : public ScriptedAI
     void UpdateAI(const uint32 diff)
     {
         //Inhibitmagic_Timer
-        if(Inhibitmagic_Timer < diff)
+        if (Inhibitmagic_Timer.Expired(diff))
         {
             float dist;
             Map *map = m_creature->GetMap();
@@ -121,34 +119,31 @@ struct boss_shirrak_the_dead_watcherAI : public ScriptedAI
             }
             Inhibitmagic_Timer = 3500;
         }
-        else
-            Inhibitmagic_Timer -= diff;
+        
 
         //Return since we have no target
         if (!UpdateVictim())
             return;
 
         //Attractmagic_Timer
-        if (Attractmagic_Timer < diff)
+        if (Attractmagic_Timer.Expired(diff))
         {
             DoCast(m_creature,SPELL_ATTRACTMAGIC);
             Attractmagic_Timer = 30000;
             Carnivorousbite_Timer = 1500;
         }
-        else
-            Attractmagic_Timer -= diff;
+        
 
         //Carnivorousbite_Timer
-        if (Carnivorousbite_Timer < diff)
+        if (Carnivorousbite_Timer.Expired(diff))
         {
             DoCast(m_creature,SPELL_CARNIVOROUSBITE);
             Carnivorousbite_Timer = 10000;
         }
-        else
-            Carnivorousbite_Timer -= diff;
+        
 
         //FocusFire_Timer
-        if (FocusFire_Timer < diff)
+        if (FocusFire_Timer.Expired(diff))
         {
             // Summon Focus Fire & Emote
             Unit *target = SelectUnit(SELECT_TARGET_RANDOM,0,60, true, m_creature->getVictimGUID());
@@ -166,8 +161,6 @@ struct boss_shirrak_the_dead_watcherAI : public ScriptedAI
             }
             FocusFire_Timer = 15000+(rand()%5000);
         }
-        else
-            FocusFire_Timer -= diff;
 
         DoMeleeAttackIfReady();
     }
@@ -182,16 +175,14 @@ struct mob_focus_fireAI : public ScriptedAI
 {
     mob_focus_fireAI(Creature *c) : ScriptedAI(c)
     {
-        HeroicMode = m_creature->GetMap()->IsHeroic();
     }
 
-    bool HeroicMode;
-    uint32 FieryBlast_Timer;
+    Timer FieryBlast_Timer;
     bool fiery1, fiery2;
 
     void Reset()
     {
-        FieryBlast_Timer = 3000+(rand()%1000);
+        FieryBlast_Timer.Reset(3000 + (rand() % 1000));
         fiery1 = fiery2 = true;
     }
 
@@ -205,7 +196,7 @@ struct mob_focus_fireAI : public ScriptedAI
             return;
 
         //FieryBlast_Timer
-        if (fiery2 && FieryBlast_Timer < diff)
+        if (fiery2 && FieryBlast_Timer.Expired(diff))
         {
             DoCast(m_creature,SPELL_FIERY_BLAST);
 
@@ -217,8 +208,6 @@ struct mob_focus_fireAI : public ScriptedAI
 
             FieryBlast_Timer = 1000;
         }
-        else
-            FieryBlast_Timer -= diff;
 
         //DoMeleeAttackIfReady();
     }

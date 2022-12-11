@@ -1,6 +1,6 @@
 /*
  * Copyright (C) 2008 TrinityCore <http://www.trinitycore.org/>
- * Copyright (C) 2008-2014 Hellground <http://hellground.net/>
+ * Copyright (C) 2008-2017 Hellground <http://wow-hellground.com/>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -125,8 +125,8 @@ public:
     void SendRemoveWorldStates(Player * plr);
 private:
     bool m_IsLocked;
-    uint32 m_LockTimer;
-    uint32 m_LockTimerUpdate;
+    Timer m_LockTimer;
+    Timer m_LockTimerUpdate;
     uint32 m_AllianceTowersControlled;
     uint32 m_HordeTowersControlled;
     uint32 hours_left, second_digit, first_digit;

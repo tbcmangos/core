@@ -1,7 +1,7 @@
 /*
  * Copyright (C) 2005-2008 MaNGOS <http://getmangos.com/>
  * Copyright (C) 2008 TrinityCore <http://www.trinitycore.org/>
- * Copyright (C) 2008-2014 Hellground <http://hellground.net/>
+ * Copyright (C) 2008-2017 Hellground <http://wow-hellground.com/>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -30,6 +30,7 @@ class Player;
 class Aura;
 struct SpellEntry;
 class WorldObject;
+class ChatHandler;
 
 #define TIME_INTERVAL_LOOK   5000
 #define VISIBILITY_RANGE    10000
@@ -85,7 +86,7 @@ class HELLGROUND_IMPORT_EXPORT CreatureAI : public UnitAI
         Creature *DoSummonFlyer(uint32 uiEntry, WorldObject *obj, float fZ, float fRadius = 5.0f, uint32 uiDespawntime = 30000, TemporarySummonType uiType = TEMPSUMMON_CORPSE_TIMED_DESPAWN);
 
     public:
-        explicit CreatureAI(Creature *c) : UnitAI((Unit*)c), me(c), m_creature(c), m_MoveInLineOfSight_locked(false) {}
+        explicit CreatureAI(Creature *c) : UnitAI((Unit*)c), me(c), m_creature(c), m_MoveInLineOfSight_locked(false), m_debugInfoReceiver(0) {}
 
         virtual ~CreatureAI() {}
 
@@ -145,15 +146,22 @@ class HELLGROUND_IMPORT_EXPORT CreatureAI : public UnitAI
         virtual void OnCharmed(bool apply);
 
         //virtual void SpellClick(Player *player) {}
- 
+        // overriden by petai
+        virtual void ownerOrMeAttackedBy(uint64 guid) {};
         // Called at reaching home after evade
-        virtual void JustReachedHome() {}
+        virtual void JustReachedHome();
  
         void DoZoneInCombat(float max_dist = 200.0f);
  
         // Called at text emote receive from player 
         virtual void ReceiveEmote(Player* pPlayer, uint32 text_emote) {}
         virtual void ReceiveScriptText(WorldObject *pSource, int32 iTextEntry) {}
+
+        // For debugging AI
+        virtual void GetDebugInfo(ChatHandler& reader);
+
+        void ToggleDebug(uint64 target) { m_debugInfoReceiver = target; };
+        void SendDebug(const char* fmt, ...);
 
         ///== Triggered Actions Requested ==================
  
@@ -185,12 +193,14 @@ class HELLGROUND_IMPORT_EXPORT CreatureAI : public UnitAI
         virtual void PassengerBoarded(Unit *who, int8 seatId, bool apply) {}
         bool _EnterEvadeMode();
 
+        std::string m_AIName;
     protected:
         virtual void MoveInLineOfSight(Unit *);
 
 
     private:
         bool m_MoveInLineOfSight_locked;
+        uint64 m_debugInfoReceiver;
 };
 
 enum Permitions

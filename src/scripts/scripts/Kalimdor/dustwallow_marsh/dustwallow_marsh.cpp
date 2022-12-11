@@ -1,6 +1,6 @@
 /* 
  * Copyright (C) 2006-2008 ScriptDev2 <https://scriptdev2.svn.sourceforge.net/>
- * Copyright (C) 2008-2014 Hellground <http://hellground.net/>
+ * Copyright (C) 2008-2015 Hellground <http://hellground.net/>
  * 
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -81,8 +81,8 @@ struct mobs_risen_husk_spiritAI : public ScriptedAI
 {
     mobs_risen_husk_spiritAI(Creature *c) : ScriptedAI(c) {}
 
-    uint32 ConsumeFlesh_Timer;
-    uint32 IntangiblePresence_Timer;
+    int32 ConsumeFlesh_Timer;
+    int32 IntangiblePresence_Timer;
 
     void Reset()
     {
@@ -102,19 +102,21 @@ struct mobs_risen_husk_spiritAI : public ScriptedAI
         if (!UpdateVictim())
             return;
 
-        if( ConsumeFlesh_Timer < diff )
+        ConsumeFlesh_Timer -= diff;
+        if( ConsumeFlesh_Timer <= diff )
         {
             if( m_creature->GetEntry() == 23555 )
                 DoCast(m_creature,SPELL_CONSUME_FLESH);
-            ConsumeFlesh_Timer = 15000;
-        } else ConsumeFlesh_Timer -= diff;
+            ConsumeFlesh_Timer += 15000;
+        } 
 
-        if( IntangiblePresence_Timer < diff )
+        IntangiblePresence_Timer -= diff;
+        if( IntangiblePresence_Timer <= diff )
         {
             if( m_creature->GetEntry() == 23554 )
                 DoCast(m_creature,SPELL_INTANGIBLE_PRESENCE);
-            IntangiblePresence_Timer = 20000;
-        } else IntangiblePresence_Timer -= diff;
+            IntangiblePresence_Timer += 20000;
+        } 
 
         DoMeleeAttackIfReady();
     }
@@ -146,9 +148,37 @@ struct npc_deserter_agitatorAI : public ScriptedAI
 {
     npc_deserter_agitatorAI(Creature *c) : ScriptedAI(c) {}
 
+    int32 reset_timer;
+    
     void Reset()
     {
         m_creature->setFaction(894);
+        reset_timer = 0;
+    }
+
+    void UpdateAI(const uint32 diff)
+    {
+        if (UpdateVictim())
+        {
+            DoMeleeAttackIfReady();
+            return;
+        }
+
+        if (reset_timer)
+        {
+            reset_timer -= diff;
+            if (reset_timer <= diff)
+                Reset();
+        }
+    }
+
+    void DoAction(const int32 param)
+    {
+        if (param == 1)
+        {
+            m_creature->setFaction(1883);
+            reset_timer = 30000;
+        }
     }
 };
 
@@ -161,8 +191,8 @@ bool GossipHello_npc_deserter_agitator(Player *player, Creature *_Creature)
 {
     if (player->GetQuestStatus(11126) == QUEST_STATUS_INCOMPLETE)
     {
-        _Creature->setFaction(1883);
         player->TalkedToCreature(_Creature->GetEntry(), _Creature->GetGUID());
+        _Creature->AI()->DoAction(1);
     }
     else
         player->SEND_GOSSIP_MENU(_Creature->GetNpcTextId(), _Creature->GetGUID());
@@ -272,21 +302,17 @@ struct npc_theramore_combat_dummyAI : public Scripted_NoMovementAI
     npc_theramore_combat_dummyAI(Creature *c) : Scripted_NoMovementAI(c)
     {
     }
-
-    uint64 AttackerGUID;
-    uint32 Check_Timer;
+    Timer Check_Timer;
 
     void Reset()
     {
         m_creature->SetNoCallAssistance(true);
         m_creature->ApplySpellImmune(0, IMMUNITY_STATE, SPELL_AURA_MOD_STUN, true);
-        AttackerGUID = 0;
-        Check_Timer = 0;
+        Check_Timer.Reset(3000);
     }
 
     void EnterCombat(Unit* who)
     {
-        AttackerGUID = ((Player*)who)->GetGUID();
         m_creature->GetUnitStateMgr().PushAction(UNIT_ACTION_STUN, UNIT_ACTION_PRIORITY_END);
     }
 
@@ -296,20 +322,20 @@ struct npc_theramore_combat_dummyAI : public Scripted_NoMovementAI
 
     void UpdateAI(const uint32 diff)
     {
-        Player* attacker = Player::GetPlayer(AttackerGUID);
-
         if (!UpdateVictim())
             return;
 
-        if (attacker && Check_Timer < diff)
+        if (Check_Timer.Expired(diff))
         {
-            if(m_creature->GetDistance2d(attacker) > 12.0f)
+            Player* target;
+            Hellground::AnyPlayerInObjectRangeCheck u_check(m_creature, 12.0f);
+            Hellground::ObjectSearcher<Player,Hellground::AnyPlayerInObjectRangeCheck> searcher(target,u_check);
+            Cell::VisitAllObjects(me, searcher, 12.0f);
+            if (!target)
                 EnterEvadeMode();
 
             Check_Timer = 3000;
         }
-        else
-            Check_Timer -= diff;
     }
 };
 
@@ -393,7 +419,7 @@ struct npc_morokkAI : public npc_escortAI
 
     bool m_bIsSuccess;
 
-    void Reset() {}
+    void Reset() { me->setFaction(FACTION_MOR_RUNNING); }
 
     void WaypointReached(uint32 uiPointId)
     {
@@ -447,7 +473,7 @@ struct npc_morokkAI : public npc_escortAI
 
     void UpdateEscortAI(const uint32 uiDiff)
     {
-        if (!me->getVictim())
+        if (!UpdateVictim())
         {
             if (HasEscortState(STATE_ESCORT_PAUSED))
             {
@@ -550,7 +576,7 @@ struct npc_ogronAI : public npc_escortAI
 
     uint32 m_uiPhase;
     uint32 m_uiPhaseCounter;
-    uint32 m_uiGlobalTimer;
+    int32 m_uiGlobalTimer;
 
     void Reset()
     {
@@ -635,9 +661,10 @@ struct npc_ogronAI : public npc_escortAI
         {
             if (HasEscortState(STATE_ESCORT_PAUSED))
             {
-                if (m_uiGlobalTimer < uiDiff)
+                m_uiGlobalTimer -= uiDiff;
+                if (m_uiGlobalTimer <= uiDiff)
                 {
-                    m_uiGlobalTimer = 5000;
+                    m_uiGlobalTimer =+ 5000;
 
                     switch(m_uiPhase)
                     {
@@ -750,8 +777,6 @@ struct npc_ogronAI : public npc_escortAI
                     }
                         ++m_uiPhaseCounter;
                 }
-                else
-                    m_uiGlobalTimer -= uiDiff;
             }
 
             return;
@@ -820,10 +845,8 @@ struct npc_private_hendelAI : public ScriptedAI
 {
     npc_private_hendelAI(Creature* pCreature) : ScriptedAI(pCreature) { Reset(); }
 
-    std::list<Creature*> lCreatureList;
-
     uint32 m_uiPhaseCounter;
-    uint32 m_uiEventTimer;
+    int32 m_uiEventTimer;
     uint32 m_uiPhase;
     uint64 PlayerGUID;
 
@@ -833,7 +856,6 @@ struct npc_private_hendelAI : public ScriptedAI
         m_uiPhase = 0;
         m_uiEventTimer = 0;
         m_uiPhaseCounter = 0;
-        lCreatureList.clear();
     }
 
     void AttackedBy(Unit* pAttacker)
@@ -873,67 +895,61 @@ struct npc_private_hendelAI : public ScriptedAI
         me->setFaction(FACTION_HOSTILE);
         me->AI()->AttackStart(pPlayer);
 
-        lCreatureList = FindAllCreaturesWithEntry(NPC_SENTRY, 20);
+        std::list<Creature*> lCreatureList = FindAllCreaturesWithEntry(NPC_SENTRY, 20);
 
-        if (!lCreatureList.empty())
+        for(std::list<Creature*>::iterator itr = lCreatureList.begin(); itr != lCreatureList.end(); ++itr)
         {
-            for(std::list<Creature*>::iterator itr = lCreatureList.begin(); itr != lCreatureList.end(); ++itr)
+            if ((*itr)->isAlive())
             {
-                if ((*itr)->isAlive())
-                {
-                    (*itr)->setFaction(FACTION_HOSTILE);
-                    (*itr)->AI()->AttackStart(pPlayer);
-                }
+                (*itr)->setFaction(FACTION_HOSTILE);
+                (*itr)->AI()->AttackStart(pPlayer);
             }
         }
     }
 
     void UpdateAI(const uint32 uiDiff)
     {
-        if (!UpdateVictim() && m_uiPhase)
+        if (!UpdateVictim() && m_uiPhase == PHASE_ATTACK)
         {
-            switch(m_uiPhase)
-            {
-            case PHASE_ATTACK:
-                DoAttackPlayer();
-                break;
-
-            case PHASE_COMPLETE:
-                if (m_uiEventTimer <= uiDiff)
-                {
-                    m_uiEventTimer = 5000;
-
-                    switch (m_uiPhaseCounter)
-                    {
-                    case 0:
-                        DoScriptText(EMOTE_SURRENDER, me);
-                        break;
-                    case 1:
-                        if (Creature* pTervosh = GetClosestCreatureWithEntry(me, NPC_TERVOSH, 10.0f))
-                            DoScriptText(SAY_PROGRESS_1_TER, pTervosh);
-                        break;
-                    case 2:
-                        DoScriptText(SAY_PROGRESS_2_HEN, me);
-                        break;
-                    case 3:
-                        if (Creature* pTervosh = GetClosestCreatureWithEntry(me, NPC_TERVOSH, 10.0f))
-                            DoScriptText(SAY_PROGRESS_3_TER, pTervosh);
-                        break;
-                    case 4:
-                        if (Creature* pTervosh = GetClosestCreatureWithEntry(me, NPC_TERVOSH, 10.0f))
-                                DoScriptText(SAY_PROGRESS_4_TER, pTervosh);
-                        if (Player* pPlayer = Unit::GetPlayer(PlayerGUID))
-                            pPlayer->GroupEventHappens(QUEST_MISSING_DIPLO_PT16, me);
-                        Reset();
-                        break;
-                    }
-                    ++m_uiPhaseCounter;
-                }
-                else
-                    m_uiEventTimer -= uiDiff;
-            }
+            DoAttackPlayer();
+            return;
         }
-        return;
+        if (m_uiPhase == PHASE_COMPLETE)
+        {
+            m_uiEventTimer -= uiDiff;
+            if (m_uiEventTimer <= uiDiff)
+            {
+                m_uiEventTimer += 5000;
+
+                switch (m_uiPhaseCounter)
+                {
+                case 0:
+                    DoScriptText(EMOTE_SURRENDER, me);
+                    break;
+                case 1:
+                    if (Creature* pTervosh = GetClosestCreatureWithEntry(me, NPC_TERVOSH, 10.0f))
+                        DoScriptText(SAY_PROGRESS_1_TER, pTervosh);
+                    break;
+                case 2:
+                    DoScriptText(SAY_PROGRESS_2_HEN, me);
+                    break;
+                case 3:
+                    if (Creature* pTervosh = GetClosestCreatureWithEntry(me, NPC_TERVOSH, 10.0f))
+                        DoScriptText(SAY_PROGRESS_3_TER, pTervosh);
+                    break;
+                case 4:
+                    if (Creature* pTervosh = GetClosestCreatureWithEntry(me, NPC_TERVOSH, 10.0f))
+                            DoScriptText(SAY_PROGRESS_4_TER, pTervosh);
+                    if (Player* pPlayer = Unit::GetPlayer(PlayerGUID))
+                        pPlayer->GroupEventHappens(QUEST_MISSING_DIPLO_PT16, me);
+                    Reset();
+                    break;
+                }
+                ++m_uiPhaseCounter;
+            }
+            return;
+        }
+        DoMeleeAttackIfReady();
     }
 
     void DamageTaken(Unit* pDoneBy, uint32 &uiDamage)
@@ -949,32 +965,18 @@ struct npc_private_hendelAI : public ScriptedAI
             me->DeleteThreatList();
             me->CombatStop(true);
             me->SetWalk(false);
-            me->SetHomePosition(-2892.28f,-3347.81f,31.8609f,0.160719f);
-            me->GetMotionMaster()->MoveTargetedHome();
+            me->GetMotionMaster()->MovePoint(0, -2892.28f, -3347.81f, 31.8609f);
 
             if (Player* pPlayer = Unit::GetPlayer(PlayerGUID))
                 pPlayer->CombatStop(true);
 
-            if (!lCreatureList.empty())
-            {
-                uint16 N = -1;
+            std::list<Creature*> lCreatureList = FindAllCreaturesWithEntry(NPC_SENTRY, 20);
 
-                for(std::list<Creature*>::iterator itr = lCreatureList.begin(); itr != lCreatureList.end(); ++itr)
-                {
-                    if ((*itr)->isAlive())
-                    {
-                        N = N + 1;
-                        (*itr)->RestoreFaction();
-                        (*itr)->RemoveAllAuras();
-                        (*itr)->DeleteThreatList();
-                        (*itr)->CombatStop(true);
-                        (*itr)->SetWalk(false);
-                        (*itr)->GetMotionMaster()->MovePoint(0, m_afEventMoveTo[N].m_fX,  m_afEventMoveTo[N].m_fY,  m_afEventMoveTo[N].m_fZ);
-                        (*itr)->ForcedDespawn(5000);
-                    }
-                }
+            for(std::list<Creature*>::iterator itr = lCreatureList.begin(); itr != lCreatureList.end(); ++itr)
+            {
+                (*itr)->RestoreFaction();
+                (*itr)->AI()->EnterEvadeMode();
             }
-            lCreatureList.clear();
 
             me->ForcedDespawn(60000);
             me->SummonCreature(NPC_TERVOSH, -2876.66f, -3346.96f, 35.6029f, 0.0f, TEMPSUMMON_TIMED_OR_DEAD_DESPAWN, 60000);

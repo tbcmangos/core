@@ -1,7 +1,7 @@
 /*
  * Copyright (C) 2005-2008 MaNGOS <http://getmangos.com/>
  * Copyright (C) 2008 TrinityCore <http://www.trinitycore.org/>
- * Copyright (C) 2008-2014 Hellground <http://hellground.net/>
+ * Copyright (C) 2008-2017 Hellground <http://wow-hellground.com/>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -92,7 +92,7 @@ void DynamicObjectUpdater::VisitHelper(Unit* target)
     if (target->GetTypeId() == TYPEID_UNIT && ((Creature*)target)->isTotem())
         return;
 
-    if (!i_dynobject.IsWithinDistInMap(target, i_dynobject.GetRadius()))
+    if (!i_dynobject.IsWithinExactDistInMap(target, i_dynobject.GetRadius()))
         return;
 
     //Check targets for not_selectable unit flag and remove
@@ -112,10 +112,13 @@ void DynamicObjectUpdater::VisitHelper(Unit* target)
 
     SpellEntry const *spellInfo = sSpellStore.LookupEntry(i_dynobject.GetSpellId());
 
-    if (!SpellMgr::SpellIgnoreLOS(spellInfo, i_dynobject.GetEffIndex()) && !i_dynobject.IsWithinLOSInMap(target))
+    if (!i_dynobject.m_ignore_los && !i_dynobject.IsWithinLOSInMap(target))
         return;
 
     uint32 eff_index  = i_dynobject.GetEffIndex();
+    if (spellInfo->EffectApplyAuraName[eff_index] == SPELL_AURA_NONE)
+        return; // do nothing aura does nothing
+
     if (spellInfo->EffectImplicitTargetB[eff_index] == TARGET_DEST_DYNOBJ_ALLY
         || spellInfo->EffectImplicitTargetB[eff_index] == TARGET_UNIT_AREA_ALLY_DST)
     {
@@ -126,15 +129,15 @@ void DynamicObjectUpdater::VisitHelper(Unit* target)
     {
         if (i_check->IsFriendlyTo(target))
             return;
-
-        i_check->CombatStart(target);
+        
+        i_check->CombatStart(target, !(spellInfo->AttributesEx3 & SPELL_ATTR_EX3_NO_INITIAL_AGGRO));
     }
     else
     {
         if (!i_check->IsHostileTo(target))
             return;
 
-        i_check->CombatStart(target);
+        i_check->CombatStart(target, !(spellInfo->AttributesEx3 & SPELL_ATTR_EX3_NO_INITIAL_AGGRO));
     }
 
     // Check target immune to spell or aura
@@ -227,6 +230,44 @@ bool CannibalizeObjectCheck::operator()(Corpse* u)
         return true;
 
     return false;
+}
+
+bool AnyUnfriendlyUnitInObjectRangeCheck::operator()(Unit* u)
+{
+    if (Player* owner = sObjectAccessor.GetPlayer(i_unit->GetCharmerOrOwnerGUID()))
+    {
+        if (!owner->HaveAtClient(u))
+            return false; // pets should be able to attack stealthed unit if only player detected them
+    }
+    else if (u->m_invisibilityMask && u->m_invisibilityMask & (1 << 10) &&
+        !u->canDetectInvisibilityOf(i_unit))
+        return false;
+
+    if (u->isAlive() && i_unit->IsWithinDistInMap(u, i_range) && !i_unit->IsFriendlyTo(u))
+        return true;
+    else
+        return false;
+}
+
+bool AnyUnfriendlyUnitInPetAttackRangeCheck::operator()(Unit* u)
+{
+    if (Player* owner = sObjectAccessor.GetPlayer(i_unit->GetCharmerOrOwnerGUID()))
+    {
+        if (!owner->HaveAtClient(u))
+            return false; // pets should be able to attack stealthed unit if only player detected them
+    }
+    else if (u->m_invisibilityMask && u->m_invisibilityMask & (1 << 10) &&
+        !u->canDetectInvisibilityOf(i_unit))
+        return false;
+
+    float dist = 20.0f + i_unit->getLevel() - u->getLevel();
+    if (dist < 5.0f) dist = 5.0f;
+    if (dist > 30.0f) dist = 30.0f;
+
+    if (u->isAlive() && i_unit->IsWithinDistInMap(u, dist) && !i_unit->IsFriendlyTo(u))
+        return true;
+    else
+        return false;
 }
 
 template void ObjectUpdater::Visit<GameObject>(GameObjectMapType &);

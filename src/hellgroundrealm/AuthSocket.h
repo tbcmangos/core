@@ -1,6 +1,6 @@
 /*
  * Copyright (C) 2005-2011 MaNGOS <http://getmangos.com/>
- * Copyright (C) 2008-2014 Hellground <http://hellground.net/>
+ * Copyright (C) 2008-2015 Hellground <http://hellground.net/>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -37,6 +37,16 @@
 #ifdef REGEX_NAMESPACE
 typedef std::list<std::pair<REGEX_NAMESPACE::regex, REGEX_NAMESPACE::regex > > PatternList; // <IP pattern, LocalIP pattern>
 #endif
+
+enum eStatus
+{
+    STATUS_CHALLENGE,
+    STATUS_LOGON_PROOF,
+    STATUS_RECON_PROOF,
+    STATUS_AUTHED,
+    STATUS_CLOSED,
+    STATUS_NEVER
+};
 
 /// Handle login commands
 class AuthSocket: public BufferedSocket
@@ -76,7 +86,7 @@ class AuthSocket: public BufferedSocket
         BigNumber K;
         BigNumber _reconnectProof;
 
-        bool _authed;
+        eStatus _authed;
 
         std::string _login;
         std::string _tokenKey;

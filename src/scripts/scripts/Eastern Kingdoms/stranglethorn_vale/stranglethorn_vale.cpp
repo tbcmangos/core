@@ -1,6 +1,6 @@
 /* 
  * Copyright (C) 2006-2008 ScriptDev2 <https://scriptdev2.svn.sourceforge.net/>
- * Copyright (C) 2008-2014 Hellground <http://hellground.net/>
+ * Copyright (C) 2008-2015 Hellground <http://hellground.net/>
  * 
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -41,7 +41,7 @@ struct mob_yennikuAI : public ScriptedAI
         bReset = false;
     }
 
-    uint32 Reset_Timer;
+    int32 Reset_Timer;
     bool bReset;
 
     void Reset()
@@ -76,14 +76,15 @@ struct mob_yennikuAI : public ScriptedAI
     {
         if (bReset)
         {
-            if(Reset_Timer < diff)
+            Reset_Timer -= diff;
+            if(Reset_Timer <= diff)
             {
                 EnterEvadeMode();
                 bReset = false;
                 m_creature->setFaction(28);                     //troll, bloodscalp
                 return;
             }
-            else Reset_Timer -= diff;
+            
 
             if(m_creature->isInCombat() && m_creature->getVictim())
             {

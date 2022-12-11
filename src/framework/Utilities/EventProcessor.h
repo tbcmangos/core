@@ -1,7 +1,7 @@
 /*
  * Copyright (C) 2005-2008 MaNGOS <http://getmangos.com/>
  * Copyright (C) 2008 TrinityCore <http://www.trinitycore.org/>
- * Copyright (C) 2008-2014 Hellground <http://hellground.net/>
+ * Copyright (C) 2008-2015 Hellground <http://hellground.net/>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -49,7 +49,6 @@ class HELLGROUND_IMPORT_EXPORT BasicEvent
         // and get Abort call when deleted
 
         // these can be used for time offset control
-        uint64 m_addTime;                                   // time when the event was added to queue, filled by event handler
         uint64 m_execTime;                                  // planned time of next execution, filled by event handler
 };
 
@@ -61,7 +60,7 @@ class HELLGROUND_IMPORT_EXPORT EventProcessor
         EventProcessor();
         ~EventProcessor();
 
-        void Update(uint32 p_time);
+        uint32 Update(uint32 p_time);
         void KillAllEvents(bool force);
         void AddEvent(BasicEvent* Event, uint64 e_time, bool set_addtime = true);
 
@@ -70,7 +69,6 @@ class HELLGROUND_IMPORT_EXPORT EventProcessor
             return std::any_of(m_events.begin(), m_events.end(), [&type](std::pair<uint64, BasicEvent*> i) { return typeid(*i.second) == typeid(*type); });
         };
 
-        uint64 CalculateTime(uint64 t_offset);
     protected:
         uint64 m_time;
         EventList m_events;

@@ -1,6 +1,6 @@
 /* 
  * Copyright (C) 2006-2009 ScriptDev2 <https://scriptdev2.svn.sourceforge.net/>
- * Copyright (C) 2008-2014 Hellground <http://hellground.net/>
+ * Copyright (C) 2008-2015 Hellground <http://hellground.net/>
  * 
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -35,7 +35,7 @@ struct instance_razorfen_kraul : public ScriptedInstance
     instance_razorfen_kraul(Map *map) : ScriptedInstance(map) {Initialize();};
 
     uint64 DoorWardGUID;
-    uint32 WardCheck_Timer;
+    int32 WardCheck_Timer;
     int WardKeeperAlive;
 
     void Initialize()
@@ -85,13 +85,13 @@ struct instance_razorfen_kraul : public ScriptedInstance
 
     void Update(uint32 diff)
     {
-        if (WardCheck_Timer < diff)
+        WardCheck_Timer -= diff;
+        if (WardCheck_Timer <= diff)
         {
             HandleGameObject(DoorWardGUID, WardKeeperAlive);
             WardKeeperAlive = 0;
-            WardCheck_Timer = 4000;
-        }else
-            WardCheck_Timer -= diff;
+            WardCheck_Timer += 4000;
+        }
     }     
 
     void SetData(uint32 type, uint32 data)

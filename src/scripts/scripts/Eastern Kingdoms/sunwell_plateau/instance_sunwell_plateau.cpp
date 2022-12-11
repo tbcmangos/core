@@ -1,6 +1,6 @@
 /* 
  * Copyright (C) 2006-2008 ScriptDev2 <https://scriptdev2.svn.sourceforge.net/>
- * Copyright (C) 2008-2014 Hellground <http://hellground.net/>
+ * Copyright (C) 2008-2015 Hellground <http://hellground.net/>
  * 
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -29,12 +29,6 @@ EndScriptData */
 
 #define ENCOUNTERS 7
 
-enum GoState
-{
-    CLOSE    = 1,
-    OPEN    = 0
-};
-
 uint32 GauntletNPC[6] =
 {
     25484,
@@ -58,7 +52,7 @@ uint32 GauntletNPC[6] =
 
 struct instance_sunwell_plateau : public ScriptedInstance
 {
-    instance_sunwell_plateau(Map *map) : ScriptedInstance(map) {Initialize();};
+    instance_sunwell_plateau(Map *map) : ScriptedInstance(map), m_gbk(map) {Initialize();};
 
     uint32 Encounters[ENCOUNTERS];
 
@@ -91,11 +85,10 @@ struct instance_sunwell_plateau : public ScriptedInstance
     uint32 KalecgosPhase;
     uint32 GauntletProgress;
     uint32 EredarTwinsIntro;
-
-    uint32 KJCounter;
-    uint32 KJTesting;
+    uint32 HandOfDeceiverCount;
 
     uint32 EredarTwinsAliveInfo[2];
+    GBK_handler m_gbk;
 
     void Initialize()
     {
@@ -110,10 +103,7 @@ struct instance_sunwell_plateau : public ScriptedInstance
         Alythess                = 0;
         Sacrolash               = 0;
         Muru                    = 0;
-        KilJaeden               = 0;
-        KilJaedenController     = 0;
-        Anveena                 = 0;
-        KalecgosKJ              = 0;
+        HandOfDeceiverCount     = 1;
 
         /*** GameObjects ***/
         ForceField  = 0;
@@ -133,8 +123,6 @@ struct instance_sunwell_plateau : public ScriptedInstance
         for(uint8 i = 0; i < ENCOUNTERS; ++i)
             Encounters[i] = NOT_STARTED;
         GauntletProgress = NOT_STARTED;
-        KJCounter = 10;
-        KJTesting = NOT_STARTED;
 
         requiredEncounterToMobs.clear();
     }
@@ -171,15 +159,10 @@ struct instance_sunwell_plateau : public ScriptedInstance
 
     void HandleGameObject(uint64 guid, uint32 state)
     {
-        Player *player = GetPlayerInMap();
-
-        if (!player || !guid)
-        {
-            debug_log("TSCR: Sunwell Plateau: HandleGameObject fail");
+        if (!guid)
             return;
-        }
-
-        if (GameObject *go = GameObject::GetGameObject(*player,guid))
+        
+        if (GameObject *go = instance->GetGameObject(guid))
             go->SetGoState(GOState(state));
     }
 
@@ -258,10 +241,6 @@ struct instance_sunwell_plateau : public ScriptedInstance
             case 25166: Alythess            = creature->GetGUID(); break;
             case 25165: Sacrolash           = creature->GetGUID(); break;
             case 25741: Muru                = creature->GetGUID(); break;
-            case 25315: KilJaeden           = creature->GetGUID(); break;
-            case 25608: KilJaedenController = creature->GetGUID(); break;
-            case 26046: Anveena             = creature->GetGUID(); break;
-            case 25319: KalecgosKJ          = creature->GetGUID(); break;
             case 25038: Felmyst             = creature->GetGUID(); break;
             case 24895:
                 Madrigosa = creature->GetGUID();
@@ -310,37 +289,39 @@ struct instance_sunwell_plateau : public ScriptedInstance
             case 188075: 
                 FireBarrier    = gobj->GetGUID();
                 if(GetData(DATA_FELMYST_EVENT) == DONE)
-                    HandleGameObject(FireBarrier, OPEN);
+                    HandleGameObject(FireBarrier, GO_STATE_ACTIVE);
                 break;
-            case 188119: IceBarrier     = gobj->GetGUID(); break;
+            case 188119: IceBarrier     = gobj->GetGUID();
+                if (GetData(DATA_BRUTALLUS_INTRO_EVENT) == DONE)
+                    HandleGameObject(IceBarrier, GO_STATE_ACTIVE);
+                break;
             // Eredar Twins Up - door 4
             case 187770:
                 Gate[0] = gobj->GetGUID();
                 if(GetData(DATA_EREDAR_TWINS_EVENT) == DONE)
-                    HandleGameObject(Gate[0], OPEN);
+                    HandleGameObject(Gate[0], GO_STATE_ACTIVE);
                 break;
             case 187990: // door 7
-                if(gobj->GetDBTableGUIDLow() == 50110) // M'uru - entrance
+                if (gobj->GetPositionZ() > 60.0f) // M'uru - entrance
+                {
                     Gate[1] = gobj->GetGUID();
+                    if (GetData(DATA_EREDAR_TWINS_EVENT) == DONE)
+                        HandleGameObject(Gate[1], GO_STATE_ACTIVE);
+                }
                 else    // Eredar Twins Down
                 {
                     Gate[2] = gobj->GetGUID();
                     if(GetData(DATA_EREDAR_TWINS_EVENT) == DONE)
-                        HandleGameObject(Gate[2], OPEN);
+                        HandleGameObject(Gate[2], GO_STATE_ACTIVE);
                 }
                 break;
             case 188118: // door 8 - Muru ramp to Kil'jaeden
                 Gate[3] = gobj->GetGUID();
                 if(GetData(DATA_MURU_EVENT) == DONE)
-                    HandleGameObject(Gate[3], OPEN);
+                    HandleGameObject(Gate[3], GO_STATE_ACTIVE);
                 break;
             case 187765:
                 Archonisus = gobj->GetGUID();
-                /*if(GetData(DATA_MURU_EVENT) == DONE && GetData(DATA_KJ_TESTING) != DONE)
-                {
-                    SetData(DATA_KJ_TESTING, IN_PROGRESS);
-                    HandleGameObject(Archonisus, OPEN);
-                }*/
                 break;
         }
     }
@@ -361,8 +342,7 @@ struct instance_sunwell_plateau : public ScriptedInstance
             case DATA_ALYTHESS:                 return EredarTwinsAliveInfo[0];
             case DATA_SACROLASH:                return EredarTwinsAliveInfo[1];
             case DATA_EREDAR_TWINS_INTRO:       return EredarTwinsIntro;
-            case DATA_KJ_TESTING_COUNTER:       return KJCounter;
-            case DATA_KJ_TESTING:               return KJTesting;
+            case DATA_HAND_OF_DECEIVER_COUNT:   return HandOfDeceiverCount;
         }
 
         return 0;
@@ -382,10 +362,6 @@ struct instance_sunwell_plateau : public ScriptedInstance
             case DATA_ALYTHESS:             return Alythess;
             case DATA_SACROLASH:            return Sacrolash;
             case DATA_MURU:                 return Muru;
-            case DATA_KILJAEDEN:            return KilJaeden;
-            case DATA_KILJAEDEN_CONTROLLER: return KilJaedenController;
-            case DATA_ANVEENA:              return Anveena;
-            case DATA_KALECGOS_KJ:          return KalecgosKJ;
             case DATA_PLAYER_GUID:
                 if (Player* Target = GetPlayerInMap())
                     return Target->GetGUID();
@@ -393,6 +369,20 @@ struct instance_sunwell_plateau : public ScriptedInstance
         }
 
         return 0;
+    }
+    
+    GBK_Encounters EncounterForGBK(uint32 enc)
+    {
+        switch (enc)
+        {
+        case DATA_KALECGOS_EVENT:           return GBK_KALECGOS;
+        case DATA_BRUTALLUS_EVENT:          return GBK_BRUTALLUS;
+        case DATA_FELMYST_EVENT:            return GBK_FELMYST;
+        case DATA_EREDAR_TWINS_EVENT:       return GBK_HOT_EREDAR_CHICKS;
+        case DATA_MURU_EVENT:               return GBK_MURU;
+        case DATA_KILJAEDEN_EVENT:          return GBK_KILJAEDEN;
+        }
+        return GBK_NONE;
     }
 
     void SetData(uint32 id, uint32 data)
@@ -404,15 +394,15 @@ struct instance_sunwell_plateau : public ScriptedInstance
                 {
                     if(data == IN_PROGRESS)
                     {
-                        HandleGameObject(ForceField, CLOSE);
-                        HandleGameObject(Collision_1, CLOSE);
-                        HandleGameObject(Collision_2, CLOSE);
+                        HandleGameObject(ForceField, GO_STATE_READY);
+                        HandleGameObject(Collision_1, GO_STATE_READY);
+                        HandleGameObject(Collision_2, GO_STATE_READY);
                     }
                     else
                     {
-                        HandleGameObject(ForceField, OPEN);
-                        HandleGameObject(Collision_1, OPEN);
-                        HandleGameObject(Collision_2, OPEN);
+                        HandleGameObject(ForceField, GO_STATE_ACTIVE);
+                        HandleGameObject(Collision_1, GO_STATE_ACTIVE);
+                        HandleGameObject(Collision_2, GO_STATE_ACTIVE);
                     }
                     Encounters[0] = data;
                 }
@@ -423,10 +413,10 @@ struct instance_sunwell_plateau : public ScriptedInstance
                 switch(data)
                 {
                     case IN_PROGRESS:
-                        HandleGameObject(IceBarrier, CLOSE);
+                        HandleGameObject(IceBarrier, GO_STATE_READY);
                         break;
                     case DONE:
-                        HandleGameObject(IceBarrier, OPEN);
+                        HandleGameObject(IceBarrier, GO_STATE_ACTIVE);
                         break;
                 }
                 break;
@@ -436,7 +426,7 @@ struct instance_sunwell_plateau : public ScriptedInstance
                 break;
             case DATA_FELMYST_EVENT:
                 if(data == DONE)
-                    HandleGameObject(FireBarrier, OPEN);
+                    HandleGameObject(FireBarrier, GO_STATE_ACTIVE);
                 if(Encounters[3] != DONE)
                     Encounters[3] = data;
                 break;
@@ -444,15 +434,15 @@ struct instance_sunwell_plateau : public ScriptedInstance
                 if(Encounters[4] != DONE)
                 {
                     if(data == IN_PROGRESS)
-                        HandleGameObject(Gate[0], CLOSE);
+                        HandleGameObject(Gate[0], GO_STATE_READY);
                     else
-                        HandleGameObject(Gate[0], OPEN);
+                        HandleGameObject(Gate[0], GO_STATE_ACTIVE);
                     Encounters[4] = data;
                 }
                 if(data == DONE)
                 {
-                    HandleGameObject(Gate[0], OPEN);
-                    HandleGameObject(Gate[2], OPEN);
+                    HandleGameObject(Gate[0], GO_STATE_ACTIVE);
+                    HandleGameObject(Gate[2], GO_STATE_ACTIVE);
                     if(Player* pl = GetPlayerInMap())
                     {
                         if(Unit* muru = pl->GetUnit(Muru))
@@ -461,11 +451,6 @@ struct instance_sunwell_plateau : public ScriptedInstance
                             muru->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
                             muru->SetVisibility(VISIBILITY_ON);
                         }
-                        /*if(GetData(DATA_MURU_TESTING) != DONE)
-                        {
-                            SetData(DATA_MURU_TESTING, IN_PROGRESS);
-                            HandleGameObject(Rohendor, OPEN);
-                        }*/
                     }
                 }
                 break;
@@ -475,20 +460,20 @@ struct instance_sunwell_plateau : public ScriptedInstance
                     switch(data)
                     {
                         case IN_PROGRESS:
-                            HandleGameObject(Gate[1], CLOSE);
-                            HandleGameObject(Gate[3], CLOSE);
+                            HandleGameObject(Gate[1], GO_STATE_READY);
+                            HandleGameObject(Gate[3], GO_STATE_READY);
                             break;
                         case NOT_STARTED:
-                            HandleGameObject(Gate[3], CLOSE);
-                            HandleGameObject(Gate[1], OPEN);
+                            HandleGameObject(Gate[3], GO_STATE_READY);
+                            HandleGameObject(Gate[1], GO_STATE_ACTIVE);
                             break;
                     }
                     Encounters[5] = data;
                 }
                 if(data == DONE)
                 {
-                    HandleGameObject(Gate[1], OPEN);
-                    HandleGameObject(Gate[3], OPEN);
+                    HandleGameObject(Gate[1], GO_STATE_ACTIVE);
+                    HandleGameObject(Gate[3], GO_STATE_ACTIVE);
 
                     // prepare KJ testing data here
                 }
@@ -534,40 +519,20 @@ struct instance_sunwell_plateau : public ScriptedInstance
                         pSacrolash->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
                 }
                 break;
-            /*case DATA_KJ_TESTING:
-                if(KJTesting != DONE)
-                {
-                    if(data == FAIL)
-                    {
-                        if(KJCounter)
-                        {
-                            --KJCounter;
-                            SetData(DATA_KJ_TESTING_COUNTER, KJCounter);
-                            if(!KJCounter)
-                                data = DONE;
-                        }
-                    }
-                    KJTesting = data;
-                }
+            case DATA_HAND_OF_DECEIVER_COUNT:
+                HandOfDeceiverCount = data;
                 break;
-            case DATA_KJ_TESTING_COUNTER:
-                KJCounter = data;
-                if(data)
-                {
-                    KJTesting = IN_PROGRESS;
-                    if(Player* pl = GetPlayerInMap())
-                    {
-                        // to be changed!!
-                        if(Unit* muru = pl->GetUnit(Muru))
-                        {
-                            muru->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
-                            muru->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
-                            muru->SetVisibility(VISIBILITY_ON);
-                        }
-                    }
-                }
-                SaveToDB();
-                break;*/
+        }
+
+        GBK_Encounters gbkEnc = EncounterForGBK(id);
+        if (gbkEnc != GBK_NONE)
+        {
+            if (data == DONE)
+                m_gbk.StopCombat(gbkEnc, true);
+            else if (data == NOT_STARTED)
+                m_gbk.StopCombat(gbkEnc, false);
+            else if (data == IN_PROGRESS)
+                m_gbk.StartCombat(gbkEnc);
         }
 
         if(data == DONE || data == FAIL)
@@ -595,9 +560,7 @@ struct instance_sunwell_plateau : public ScriptedInstance
         stream << Encounters[3] << " ";
         stream << Encounters[4] << " ";
         stream << Encounters[5] << " ";
-        stream << Encounters[6] << " ";
-        stream << KJCounter   << " ";
-        stream << KJTesting;
+        stream << Encounters[6];
 
         OUT_SAVE_INST_DATA_COMPLETE;
 
@@ -615,11 +578,26 @@ struct instance_sunwell_plateau : public ScriptedInstance
         OUT_LOAD_INST_DATA(in);
         std::istringstream stream(in);
         stream >> Encounters[0] >> Encounters[1] >> Encounters[2] >> Encounters[3]
-            >> Encounters[4] >> Encounters[5] >> Encounters[6] >> KJCounter >> KJTesting;
+            >> Encounters[4] >> Encounters[5] >> Encounters[6];
         for(uint8 i = 0; i < ENCOUNTERS; ++i)
             if(Encounters[i] == IN_PROGRESS)                // Do not load an encounter as "In Progress" - reset it instead.
                 Encounters[i] = NOT_STARTED;
         OUT_LOAD_INST_DATA_COMPLETE;
+    }
+
+    void OnPlayerDealDamage(Player* plr, uint32 amount)
+    {
+        m_gbk.DamageDone(plr->GetGUIDLow(), amount);
+    }
+
+    void OnPlayerHealDamage(Player* plr, uint32 amount)
+    {
+        m_gbk.HealingDone(plr->GetGUIDLow(), amount);
+    }
+
+    void OnPlayerDeath(Player* plr)
+    {
+        m_gbk.PlayerDied(plr->GetGUIDLow());
     }
 };
 

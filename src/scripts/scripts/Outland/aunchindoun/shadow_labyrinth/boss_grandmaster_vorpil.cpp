@@ -1,6 +1,6 @@
 /* 
  * Copyright (C) 2006-2009 ScriptDev2 <https://scriptdev2.svn.sourceforge.net/>
- * Copyright (C) 2008-2014 Hellground <http://hellground.net/>
+ * Copyright (C) 2008-2015 Hellground <http://hellground.net/>
  * 
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -73,18 +73,16 @@ struct mob_voidtravelerAI : public ScriptedAI
 {
     mob_voidtravelerAI(Creature *c) : ScriptedAI(c)
     {
-        HeroicMode = me->GetMap()->IsHeroic();
     }
 
-    bool HeroicMode;
     uint64 VorpilGUID;
-    uint32 move;
+    Timer MoveTimer;
     bool sacrificed;
 
     void Reset()
     {
         VorpilGUID = 0;
-        move = 0;
+        MoveTimer.Reset(1);
         sacrificed = false;
         me->setActive(true);
     }
@@ -101,7 +99,7 @@ struct mob_voidtravelerAI : public ScriptedAI
         }
         */
 
-        if(move < diff)
+        if (MoveTimer.Expired(diff))
         {
             Unit *Vorpil = Unit::GetUnit(*me, VorpilGUID);
             if(!Vorpil)
@@ -124,7 +122,7 @@ struct mob_voidtravelerAI : public ScriptedAI
             {
                 DoCast(me, SPELL_SACRIFICE, false);
                 sacrificed = true;
-                move = 500;
+                MoveTimer = 500;
                 return;
             }
 
@@ -133,10 +131,8 @@ struct mob_voidtravelerAI : public ScriptedAI
                 me->DealDamage(me, me->GetMaxHealth(), DIRECT_DAMAGE, SPELL_SCHOOL_MASK_NORMAL, NULL, false);
                 return;
             }
-            move = 1000;
+            MoveTimer = 1000;
         }
-        else
-            move -= diff;
     }
 };
 CreatureAI* GetAI_mob_voidtraveler(Creature *_Creature)
@@ -149,27 +145,25 @@ struct boss_grandmaster_vorpilAI : public ScriptedAI
     boss_grandmaster_vorpilAI(Creature *c) : ScriptedAI(c)
     {
         pInstance = (c->GetInstanceData());
-        HeroicMode = me->GetMap()->IsHeroic();
         Intro = false;
     }
 
     ScriptedInstance *pInstance;
     bool Intro, HelpYell;
     bool sumportals;
-    bool HeroicMode;
 
-    uint32 ShadowBoltVolley_Timer;
-    uint32 DrawShadows_Timer;
-    uint32 summonTraveler_Timer;
-    uint32 banish_Timer;
+    Timer ShadowBoltVolley_Timer;
+    Timer DrawShadows_Timer;
+    Timer summonTraveler_Timer;
+    Timer banish_Timer;
     uint64 PortalsGuid[5];
 
     void Reset()
     {
-        ShadowBoltVolley_Timer = 15000;
-        DrawShadows_Timer = 45000;
-        summonTraveler_Timer = 90000;
-        banish_Timer = 17000;
+        ShadowBoltVolley_Timer.Reset(15000);
+        DrawShadows_Timer.Reset(45000);
+        summonTraveler_Timer.Reset(90000);
+        banish_Timer.Reset(17000);
         HelpYell = false;
         destroyPortals();
 
@@ -268,15 +262,14 @@ struct boss_grandmaster_vorpilAI : public ScriptedAI
         if (!UpdateVictim())
             return;
 
-        if (ShadowBoltVolley_Timer < diff)
+        if (ShadowBoltVolley_Timer.Expired(diff))
         {
             DoCast(me,SPELL_SHADOWBOLT_VOLLEY);
             ShadowBoltVolley_Timer = 15000;
         }
-        else
-            ShadowBoltVolley_Timer -= diff;
+        
 
-        if (HeroicMode && banish_Timer < diff)
+        if (HeroicMode && banish_Timer.Expired(diff))
         {
             Unit *target = SelectUnit(SELECT_TARGET_RANDOM,0,30,false);
             if (target)
@@ -285,10 +278,8 @@ struct boss_grandmaster_vorpilAI : public ScriptedAI
                 banish_Timer = 16000;
             }
         }
-        else
-            banish_Timer -= diff;
 
-        if ( DrawShadows_Timer < diff)
+        if (DrawShadows_Timer.Expired(diff))
         {
             Map *map = me->GetMap();
             Map::PlayerList const &PlayerList = map->GetPlayers();
@@ -297,7 +288,7 @@ struct boss_grandmaster_vorpilAI : public ScriptedAI
                     if (i_pl->isAlive() && !i_pl->HasAura(SPELL_BANISH,0) && !i_pl->isGameMaster())
                         i_pl->TeleportTo(me->GetMapId(), VorpilPosition[0],VorpilPosition[1],VorpilPosition[2], 0, TELE_TO_NOT_LEAVE_COMBAT);
 
-            me->Relocate(VorpilPosition[0],VorpilPosition[1],VorpilPosition[2]);
+            me->NearTeleportTo(VorpilPosition[0],VorpilPosition[1],VorpilPosition[2],me->GetOrientation());
             DoCast(me,SPELL_DRAW_SHADOWS,true);
 
             DoCast(me,HeroicMode?H_SPELL_RAIN_OF_FIRE:SPELL_RAIN_OF_FIRE);
@@ -305,10 +296,9 @@ struct boss_grandmaster_vorpilAI : public ScriptedAI
             ShadowBoltVolley_Timer = 6000;
             DrawShadows_Timer = 30000;
         }
-        else
-            DrawShadows_Timer -= diff;
+        
 
-        if ( summonTraveler_Timer < diff)
+        if (summonTraveler_Timer.Expired(diff))
         {
             spawnVoidTraveler();
             summonTraveler_Timer = 10000;
@@ -316,8 +306,6 @@ struct boss_grandmaster_vorpilAI : public ScriptedAI
             if((me->GetHealth()*5) < me->GetMaxHealth())
                 summonTraveler_Timer = 5000;
         }
-        else
-            summonTraveler_Timer -=diff;
 
         DoMeleeAttackIfReady();
     }

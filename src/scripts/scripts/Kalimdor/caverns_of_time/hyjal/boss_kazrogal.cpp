@@ -1,6 +1,6 @@
-/* 
- * Copyright (C) 2008-2014 Hellground <http://hellground.net/>
- * 
+/*
+ * Copyright (C) 2008-2015 Hellground <http://hellground.net/>
+ *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 2 of the License, or
@@ -21,7 +21,7 @@
 #include "hyjal_trash.h"
 
 #define SPELL_CLEAVE   31436
-#define SPELL_WARSTOMP 31480
+#define SPELL_WARSTOMP 38911
 #define SPELL_MARK     31447
 #define SPELL_CRIPPLE  31477
 
@@ -57,12 +57,12 @@ struct boss_kazrogalAI : public hyjal_trashAI
         }
     }
 
-    uint32 CleaveTimer;
-    uint32 WarStompTimer;
-    uint32 MarkTimer;
+    Timer CleaveTimer;
+    Timer WarStompTimer;
+    Timer MarkTimer;
     uint32 MarkTimerBase;
-    uint32 CheckTimer;
-    uint32 CrippleTimer;
+    Timer CheckTimer;
+    Timer CrippleTimer;
 
     bool go;
     uint32 pos;
@@ -70,12 +70,12 @@ struct boss_kazrogalAI : public hyjal_trashAI
     void Reset()
     {
         damageTaken = 0;
-        CleaveTimer = 5000;
-        WarStompTimer = 15000;
-        MarkTimer = 45000;
+        CleaveTimer.Reset(5000);
+        WarStompTimer.Reset(15000);
+        MarkTimer.Reset(45000);
         MarkTimerBase = 45000;
-        CheckTimer = 3000;
-        CrippleTimer = 15000+rand()%10000;
+        CheckTimer.Reset(3000);
+        CrippleTimer.Reset(15000 + rand() % 10000);
 
         if(pInstance && IsEvent)
             pInstance->SetData(DATA_KAZROGALEVENT, NOT_STARTED);
@@ -128,9 +128,9 @@ struct boss_kazrogalAI : public hyjal_trashAI
         }
     }
 
-    void JustDied(Unit *victim)
+    void JustDied(Unit *Killer)
     {
-        hyjal_trashAI::JustDied(victim);
+        hyjal_trashAI::JustDied(Killer);
         if(pInstance && IsEvent)
             pInstance->SetData(DATA_KAZROGALEVENT, DONE);
         DoPlaySoundToSet(m_creature, SOUND_ONDEATH);
@@ -165,42 +165,34 @@ struct boss_kazrogalAI : public hyjal_trashAI
         if (!UpdateVictim() )
             return;
 
-        if(CheckTimer < diff)
+        if (CheckTimer.Expired(diff))
         {
             DoZoneInCombat();
             m_creature->SetSpeed(MOVE_RUN, 3.0);
             CheckTimer = 3000;
         }
-        else
-            CheckTimer -= diff;
 
-        if(CleaveTimer < diff)
+        if (CleaveTimer.Expired(diff))
         {
             DoCast(m_creature->getVictim(), SPELL_CLEAVE);
             CleaveTimer = 6000+rand()%15000;
         }
-        else
-            CleaveTimer -= diff;
 
-        if(WarStompTimer < diff)
+        if (WarStompTimer.Expired(diff))
         {
             DoCast(m_creature, SPELL_WARSTOMP);
             WarStompTimer = 60000;
         }
-        else
-            WarStompTimer -= diff;
 
-        if(CrippleTimer < diff)
+        if (CrippleTimer.Expired(diff))
         {
             if(Unit *target = SelectUnit(SELECT_TARGET_RANDOM, 1, 20, true))
                 DoCast(target, SPELL_CRIPPLE);
 
             CrippleTimer = 20000+rand()%10000;
         }
-        else
-            CrippleTimer -= diff;
 
-        if(MarkTimer < diff)
+        if (MarkTimer.Expired(diff))
         {
             m_creature->CastSpell(m_creature, SPELL_MARK, false);
 
@@ -222,8 +214,6 @@ struct boss_kazrogalAI : public hyjal_trashAI
                     break;
             }
         }
-        else
-            MarkTimer -= diff;
 
         DoMeleeAttackIfReady();
     }

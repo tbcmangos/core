@@ -1,6 +1,6 @@
 /* 
  * Copyright (C) 2006-2008 ScriptDev2 <https://scriptdev2.svn.sourceforge.net/>
- * Copyright (C) 2008-2014 Hellground <http://hellground.net/>
+ * Copyright (C) 2008-2015 Hellground <http://hellground.net/>
  * 
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -91,8 +91,8 @@ struct npc_manaforge_control_consoleAI : public ScriptedAI
 {
     npc_manaforge_control_consoleAI(Creature* creature) : ScriptedAI(creature) {}
 
-    uint32 Event_Timer;
-    uint32 Wave_Timer;
+    Timer Event_Timer;
+    Timer Wave_Timer;
     uint32 Phase;
     bool Wave;
     uint64 someplayer;
@@ -101,7 +101,7 @@ struct npc_manaforge_control_consoleAI : public ScriptedAI
 
     void Reset()
     {
-        Event_Timer = 3000;
+        Event_Timer.Reset(3000);
         Wave_Timer = 0;
         Phase = 1;
         Wave = false;
@@ -250,7 +250,7 @@ struct npc_manaforge_control_consoleAI : public ScriptedAI
         if (!someplayer)
             return;
 
-        if( Event_Timer < diff )
+        if (Event_Timer.Expired(diff))
         {
             switch(Phase)
             {
@@ -286,7 +286,7 @@ struct npc_manaforge_control_consoleAI : public ScriptedAI
                     DoScriptText(EMOTE_COMPLETE, me);
                     Player* player = Unit::GetPlayer(someplayer);
                     if (player)
-                        player->KilledMonster(me->GetEntry(),me->GetGUID());
+                        player->RewardPlayerAndGroupAtEvent(me->GetEntry(), me);
                     DoCast(me,SPELL_DISABLE_VISUAL);
 
                     if (goConsole)
@@ -297,15 +297,12 @@ struct npc_manaforge_control_consoleAI : public ScriptedAI
                     someplayer = 0;
                     break;
             }
-        } else Event_Timer -= diff;
+        }
 
         if (Wave)
         {
-            if (Wave_Timer < diff)
-            {
+            if (Wave_Timer.Expired(diff))
                 DoWaveSpawnForCreature(me);
-            }
-            else Wave_Timer -= diff;
         }
     }
 };
@@ -405,7 +402,7 @@ struct npc_commander_dawnforgeAI : public ScriptedAI
 
     uint32 Phase;
     uint32 PhaseSubphase;
-    uint32 Phase_Timer;
+    Timer Phase_Timer;
     bool isEvent;
 
     float angle_dawnforge;
@@ -419,7 +416,7 @@ struct npc_commander_dawnforgeAI : public ScriptedAI
 
         Phase = 1;
         PhaseSubphase = 0;
-        Phase_Timer = 4000;
+        Phase_Timer.Reset(4000);
         isEvent = false;
     }
 
@@ -523,11 +520,8 @@ struct npc_commander_dawnforgeAI : public ScriptedAI
             return;
 
         //Phase timing
-        if (Phase_Timer >= diff)
-        {
-            Phase_Timer -= diff;
+        if (!Phase_Timer.Expired(diff))
             return;
-        }
 
         Unit* ardonis = Unit::GetUnit(*me,ardonisGUID);
         Unit* pathaleon = Unit::GetUnit(*me,pathaleonGUID);
@@ -816,8 +810,8 @@ struct mob_phase_hunterAI : public ScriptedAI
     uint64 PlayerGUID;
     uint32 Health;
     uint32 Level;
-    uint32 PhaseSlipVulnerabilityTimer;
-    uint32 ManaBurnTimer;
+    Timer PhaseSlipVulnerabilityTimer;
+    Timer ManaBurnTimer;
 
     void Reset()
     {
@@ -827,7 +821,7 @@ struct mob_phase_hunterAI : public ScriptedAI
 
         WeakPercent = 25 + (rand()%16); // 25-40
         PlayerGUID = 0;
-        ManaBurnTimer = 5000 + (rand()%3 * 1000); // 5-8 sec cd
+        ManaBurnTimer.Reset(5000 + (rand() % 3 * 1000)); // 5-8 sec cd
     }
 
     void EnterCombat(Unit* who)
@@ -855,7 +849,7 @@ struct mob_phase_hunterAI : public ScriptedAI
         if (!UpdateVictim())
             return;
 
-        if (ManaBurnTimer < diff) // cast Mana Burn
+        if (ManaBurnTimer.Expired(diff)) // cast Mana Burn
         {
             if (me->getVictim()->GetCreateMana() > 0)
             {
@@ -863,7 +857,6 @@ struct mob_phase_hunterAI : public ScriptedAI
                 ManaBurnTimer = 8000 + (rand()%10 * 1000); // 8-18 sec cd
             }
         }
-        else ManaBurnTimer -= diff;
 
         if (PlayerGUID) // start: support for quest 10190
         {
@@ -1011,11 +1004,11 @@ struct mob_talbukAI : public ScriptedAI
 {
     mob_talbukAI(Creature* creature) : ScriptedAI(creature) {}
 
-    uint32 Tagged_Timer;
+    Timer Tagged_Timer;
 
     void Reset()
     {
-        Tagged_Timer = 60000;
+        Tagged_Timer.Reset(60000);
     }
 
     void EnterCombat(Unit* who) {}
@@ -1027,15 +1020,13 @@ struct mob_talbukAI : public ScriptedAI
 
         if (me->HasAura(SPELL_SLEEP_VISUAL,0)) // Sleep Visual
         {
-            if (Tagged_Timer < diff) // Remove every effect caused by aura and reset creature.
+            if (Tagged_Timer.Expired(diff)) // Remove every effect caused by aura and reset creature.
             {
                 me->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
                 me->clearUnitState(UNIT_STAT_STUNNED);
                 me->RemoveAurasDueToSpell(SPELL_SLEEP_VISUAL);
                 EnterEvadeMode();
             }
-            else
-                Tagged_Timer -= diff;
         }
 
         DoMeleeAttackIfReady();
@@ -1100,6 +1091,9 @@ float ethereum_NPC[2][7] =
 
 bool GOUse_go_ethereum_prison(Player* player, GameObject* go)
 {
+    if (go->getLootState() != GO_READY)
+        return true;
+
     uint32 entry;
     switch(rand()%2)
     {
@@ -1126,7 +1120,7 @@ bool GOUse_go_ethereum_prison(Player* player, GameObject* go)
         break;
     }
 
-    go->UseDoorOrButton(5*MINUTE*IN_MILISECONDS);
+    go->UseDoorOrButton(5*MINUTE);
 
     return true;
 }
@@ -1139,30 +1133,23 @@ struct npc_warp_chaserAI : public ScriptedAI
 {
     npc_warp_chaserAI(Creature* creature) : ScriptedAI(creature) {}
 
-    Unit* summonedZeppit;
 
     void JustDied(Unit* slayer)
     {
-        if(slayer->GetTypeId()==TYPEID_PLAYER && ((Player*)(slayer))->GetQuestStatus(10924)==QUEST_STATUS_INCOMPLETE)
-        {
-            if(me->IsWithinMeleeRange(slayer))
-            {
-                summonedZeppit = FindCreature(22484, MELEE_RANGE + 5, me);
-                // to avoid leeching by other players:
-                if (summonedZeppit && summonedZeppit->GetOwner()==slayer)
-                {
-                    // create item needed to complete the quest
-                    summonedZeppit->CastSpell(summonedZeppit, 39244, true);
-                }
-            }
-        }
+        Player* plr = slayer->GetCharmerOrOwnerPlayerOrPlayerItself();
+        if (!plr)
+            return;
+        Unit* zeppit = plr->GetMiniPet();
+        if (!zeppit || zeppit->GetEntry() != 22484)
+            return;
+        
+        zeppit->CastSpell(zeppit, 39244, true);
     }
 
     void EnterCombat(Unit* who) {}
 
     void Reset()
     {
-        summonedZeppit = NULL;
     }
 };
 
@@ -1235,11 +1222,11 @@ struct mob_dr_boomAI : public ScriptedAI
 
     std::vector<uint64> targetGUID;
 
-    uint32 SummonTimer;
+    Timer SummonTimer;
 
     void Reset()
     {
-        SummonTimer = 2000;
+        SummonTimer.Reset(2000);
 
         std::list<Creature*> temp = FindAllCreaturesWithEntry(BOOM_BOT_TARGET, 30.0f);
 
@@ -1251,7 +1238,7 @@ struct mob_dr_boomAI : public ScriptedAI
 
     void UpdateAI(const uint32 diff)
     {
-        if (SummonTimer <= diff)
+        if (SummonTimer.Expired(diff))
         {
             if (targetGUID.size())
             {
@@ -1266,8 +1253,6 @@ struct mob_dr_boomAI : public ScriptedAI
 
             SummonTimer = 2000;
         }
-        else
-            SummonTimer -= diff;
 
         if (!UpdateVictim())
             return;
@@ -1359,7 +1344,7 @@ struct npc_maxx_a_million_escortAI : public npc_escortAI
 {
     npc_maxx_a_million_escortAI(Creature* creature) : npc_escortAI(creature) {Reset();}
 
-    uint32 m_uiSubEventTimer;
+    Timer m_uiSubEventTimer;
     uint8 m_uiSubEvent;
 
     void Reset()
@@ -1416,32 +1401,27 @@ struct npc_maxx_a_million_escortAI : public npc_escortAI
         }
     }
 
-    void UpdateEscortAI(const uint32 uiDiff)
+    void UpdateEscortAI(const uint32 diff)
     {
-        if (m_uiSubEventTimer)
+        if (m_uiSubEventTimer.Expired(diff))
         {
-            if (m_uiSubEventTimer <= uiDiff)
+            switch (m_uiSubEvent)
             {
-                switch (m_uiSubEvent)
-                {
-                    case 1:
-                        if (Unit* pAlley = FindCreature(NPC_BOT_SPECIALIST_ALLEY, INTERACTION_DISTANCE*2, me))
-                            DoScriptText(SAY_ALLEY_FAREWELL, pAlley);
-                        break;
-                    case 2:
-                        if (GameObject* pGO = FindGameObject(GO_DRAENEI_MACHINE, INTERACTION_DISTANCE, me))
-                        {
-                           // if (Player* pPlayer = GetPlayerForEscort())
-                                //pGO->DestroyForPlayer(GetPlayerForEscort());
-                            me->SetUInt32Value(UNIT_NPC_EMOTESTATE, EMOTE_STATE_AT_EASE);
-                        }
-                        break;
-                }
-                m_uiSubEventTimer = 0;
-                m_uiSubEvent = 0;
+                case 1:
+                    if (Unit* pAlley = FindCreature(NPC_BOT_SPECIALIST_ALLEY, INTERACTION_DISTANCE*2, me))
+                        DoScriptText(SAY_ALLEY_FAREWELL, pAlley);
+                    break;
+                case 2:
+                    if (GameObject* pGO = FindGameObject(GO_DRAENEI_MACHINE, INTERACTION_DISTANCE, me))
+                    {
+                       // if (Player* pPlayer = GetPlayerForEscort())
+                            //pGO->DestroyForPlayer(GetPlayerForEscort());
+                        me->SetUInt32Value(UNIT_NPC_EMOTESTATE, EMOTE_STATE_AT_EASE);
+                    }
+                    break;
             }
-            else
-                m_uiSubEventTimer -= uiDiff;
+            m_uiSubEventTimer = 0;
+            m_uiSubEvent = 0;
         }
 
         if (UpdateVictim())
@@ -1489,12 +1469,12 @@ struct npc_scrapped_reaverAI : public ScriptedAI
     bool Ambush;
 
     SummonList zaxxis;
-    uint32 ZaxxTimer;
+    Timer ZaxxTimer;
 
     void Reset()
     {
         Ambush = false;
-        ZaxxTimer = 10000;
+        ZaxxTimer.Reset(10000);
         me->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_ATTACKABLE_2);
     }
 
@@ -1545,7 +1525,7 @@ struct npc_scrapped_reaverAI : public ScriptedAI
 
         if (Ambush)
         {
-            if (ZaxxTimer <= diff)
+            if (ZaxxTimer.Expired(diff))
             {
                 SpawnZaxx();
 
@@ -1554,7 +1534,6 @@ struct npc_scrapped_reaverAI : public ScriptedAI
 
                 ZaxxTimer = 24000;
             }
-            else ZaxxTimer -= diff;
         }
     }
 };
@@ -1620,9 +1599,9 @@ struct npc_drijyaAI : public npc_escortAI
     bool SummonDestroyer;
 
     uint32 Count;
-    uint32 SpawnTimer;
-    uint32 StartSpawnTimer;
-    uint32 DestroyingTimer;
+    Timer SpawnTimer;
+    Timer StartSpawnTimer;
+    Timer DestroyingTimer;
 
     void Reset()
     {
@@ -1631,52 +1610,20 @@ struct npc_drijyaAI : public npc_escortAI
         SummonTrooper = false;
         SummonDestroyer = false;
         Count = 0;
-        SpawnTimer = 3500;
-        StartSpawnTimer = 15000;
-        DestroyingTimer = 60000;
+        SpawnTimer.Reset(3500);
+        StartSpawnTimer.Reset(15000);
+        DestroyingTimer.Reset(60000);
     }
 
     void AttackedBy(Unit* who) {}
     void AttackStart(Unit* who) {}
 
-    void SpawnImp()
-    {
-        ++Count;
-        me->SummonCreature(NPC_IMP, S[0].x, S[0].y, S[0].z, 0.0f, TEMPSUMMON_TIMED_DESPAWN_OUT_OF_COMBAT, 10000);
-    }
-
-    void SpawnTrooper()
-    {
-        ++Count;
-        me->SummonCreature(NPC_TROOPER, S[0].x, S[0].y, S[0].z, 0.0f, TEMPSUMMON_TIMED_DESPAWN_OUT_OF_COMBAT, 10000);
-    }
-
-    void SpawnDestroyer()
-    {
-        me->SummonCreature(NPC_DESTROYER, S[1].x, S[1].y, S[1].z, 2.5f, TEMPSUMMON_TIMED_DESPAWN_OUT_OF_COMBAT, 10000);
-    }
-
     void JustSummoned(Creature* summoned)
     {
-        if (summoned->GetEntry() == NPC_IMP)
-        {
-            if (Player* player = GetPlayerForEscort())
-                summoned->AI()->AttackStart(player); 
-        }
-        if (summoned->GetEntry() == NPC_TROOPER)
-        {
-            if(Player* player = GetPlayerForEscort())
-                summoned->AI()->AttackStart(player);
-        }
-        else
-        {
-            if (summoned->GetEntry() == NPC_DESTROYER)
-            {
-                if (Player* player = GetPlayerForEscort())
-                    summoned->AI()->AttackStart(player);
-            }
-        }
-     }
+        if (Player* player = GetPlayerForEscort())
+            summoned->AddThreat(player, 0.0f);
+        summoned->AI()->AttackStart(me); 
+    }
 
     void WaypointReached(uint32 i)
     {
@@ -1747,9 +1694,9 @@ struct npc_drijyaAI : public npc_escortAI
     {
         if (SummonImp)
         {
-            if (StartSpawnTimer <= diff) 
+            if (StartSpawnTimer.Expired(diff))
             {
-                if (SpawnTimer <= diff)
+                if (SpawnTimer.Expired(diff))
                 {
                     if (Count >= MAX_IMP)
                     {
@@ -1758,52 +1705,48 @@ struct npc_drijyaAI : public npc_escortAI
                         StartSpawnTimer = 15000;
                     }
                     SpawnTimer = 3500;
-                    SpawnImp();
+                    ++Count;
+                    me->SummonCreature(NPC_IMP, S[0].x, S[0].y, S[0].z, 0.0f, TEMPSUMMON_TIMED_DESPAWN_OUT_OF_COMBAT, 10000);
                 }
-                else SpawnTimer -= diff;
             }
-            else StartSpawnTimer -= diff;
         }
 
         if (SummonTrooper)
         {
-            if (StartSpawnTimer <= diff)
+            if (StartSpawnTimer.Expired(diff))
             {
-                if (SpawnTimer <= diff)
+                if (SpawnTimer.Expired(diff))
                 {
                     if (Count >= MAX_TROOPER)
                     {
                         SummonTrooper = false;
                         StartSpawnTimer = 15000;
                     }
-                     SpawnTimer = 3500;
-                     SpawnTrooper();
+                    SpawnTimer = 3500;
+                    ++Count;
+                    me->SummonCreature(NPC_TROOPER, S[0].x, S[0].y, S[0].z, 0.0f, TEMPSUMMON_TIMED_DESPAWN_OUT_OF_COMBAT, 10000);
                 }
-                else SpawnTimer -= diff;
             }
-            else StartSpawnTimer -= diff;
         }
 
         if (SummonDestroyer)
         {
-            if (StartSpawnTimer <= diff)
+            if (StartSpawnTimer.Expired(diff))
             {
-                SpawnDestroyer();
+                me->SummonCreature(NPC_DESTROYER, S[1].x, S[1].y, S[1].z, 2.5f, TEMPSUMMON_TIMED_DESPAWN_OUT_OF_COMBAT, 10000);
                 SummonDestroyer = false;
                 StartSpawnTimer = 15000;
             }
-            else StartSpawnTimer -= diff;
         }
 
         if (Destroy)
         {
-            if (DestroyingTimer <= diff)
+            if (DestroyingTimer.Expired(diff))
             {
                 SetEscortPaused(false);
                 Destroy = false;
                 DestroyingTimer = 60000;
             }
-            else DestroyingTimer -= diff;
         }
 
         DoMeleeAttackIfReady();
@@ -1856,15 +1799,15 @@ struct npc_captured_vanguardAI : public npc_escortAI
 
     bool CantStart;
 
-    uint32 GlaiveTimer;
-    uint32 HamstringTimer;
-    uint32 EndTimer;
+    Timer GlaiveTimer;
+    Timer HamstringTimer;
+    Timer EndTimer;
 
     void Reset()
     {
         CantStart = false;
-        GlaiveTimer = urand(4000, 8000);
-        HamstringTimer = urand(8000, 13000);
+        GlaiveTimer.Reset(urand(4000, 8000));
+        HamstringTimer.Reset(urand(8000, 13000));
         EndTimer = 0;
     }
 
@@ -1908,7 +1851,7 @@ struct npc_captured_vanguardAI : public npc_escortAI
 
         if (CantStart)
         {
-            if (EndTimer <= diff)
+            if (EndTimer.Expired(diff))
             {
                 if (HasEscortState(STATE_ESCORT_ESCORTING))
                 {
@@ -1920,27 +1863,22 @@ struct npc_captured_vanguardAI : public npc_escortAI
                     me->ForcedDespawn(1500);
                 }
            }
-           else EndTimer -= diff;
         }
 
         if (!me->getVictim())
             return;
         
-        if (GlaiveTimer < diff)
+        if (GlaiveTimer.Expired(diff))
         {
             DoCast(me->getVictim(), SPELL_GLAIVE);
             GlaiveTimer = urand(5000, 9000);
         }
-        else
-            GlaiveTimer -= diff;
 
-        if (HamstringTimer < diff)
+        if (HamstringTimer.Expired(diff))
         {
             DoCast(me->getVictim(), SPELL_HAMSTRING);
             HamstringTimer = urand(10000, 16000);
         }
-        else
-            HamstringTimer -= diff;
 
         DoMeleeAttackIfReady();
     }
@@ -2049,7 +1987,7 @@ struct npc_protectorate_demolitionistAI : public npc_escortAI
 {
     npc_protectorate_demolitionistAI(Creature* creature) : npc_escortAI(creature) { Reset(); }
 
-    uint32 EventTimer;
+    Timer EventTimer;
     uint8 EventStage;
 
     void Reset()
@@ -2138,38 +2076,33 @@ struct npc_protectorate_demolitionistAI : public npc_escortAI
     {
         npc_escortAI::UpdateAI(diff);
 
-        if (EventTimer)
+        if (EventTimer.Expired(diff))
         {
-            if (EventTimer <= diff)
+            switch (EventStage)
             {
-                switch (EventStage)
-                {
-                    case 0:
-                        me->SummonCreature(NPC_ARCHON, 3875.69f, 2308.72f, 115.80f, 1.48f, TEMPSUMMON_TIMED_DESPAWN_OUT_OF_COMBAT, 10000);
-                        EventTimer = 8000;
-                        break;
-                    case 1:
-                        me->SummonCreature(NPC_NEXUS_STALKER, 3884.06f, 2325.22f, 111.37f, 3.45f, TEMPSUMMON_TIMED_DESPAWN_OUT_OF_COMBAT, 10000);
-                        me->SummonCreature(NPC_NEXUS_STALKER, 3861.54f, 2320.44f, 111.48f, 0.32f, TEMPSUMMON_TIMED_DESPAWN_OUT_OF_COMBAT, 10000);
-                        EventTimer = 16000;
-                        break;
-                    case 2:
-                        me->SetUInt32Value(UNIT_NPC_EMOTESTATE, EMOTE_STATE_NONE);
-                        DoScriptText(SAY_FINISH_1, me);
-                        SetRun();
-                        SetEscortPaused(false);
-                        EventTimer = 0;
-                        break;
-                    case 3:
-                        DoCast(me, SPELL_ETHEREAL_TELEPORT);
-                        me->ForcedDespawn(1000);
-                        EventTimer = 0;
-                        break;
-                }
-                ++EventStage;
+                case 0:
+                    me->SummonCreature(NPC_ARCHON, 3875.69f, 2308.72f, 115.80f, 1.48f, TEMPSUMMON_TIMED_DESPAWN_OUT_OF_COMBAT, 10000);
+                    EventTimer = 8000;
+                    break;
+                case 1:
+                    me->SummonCreature(NPC_NEXUS_STALKER, 3884.06f, 2325.22f, 111.37f, 3.45f, TEMPSUMMON_TIMED_DESPAWN_OUT_OF_COMBAT, 10000);
+                    me->SummonCreature(NPC_NEXUS_STALKER, 3861.54f, 2320.44f, 111.48f, 0.32f, TEMPSUMMON_TIMED_DESPAWN_OUT_OF_COMBAT, 10000);
+                    EventTimer = 16000;
+                    break;
+                case 2:
+                    me->SetUInt32Value(UNIT_NPC_EMOTESTATE, EMOTE_STATE_NONE);
+                    DoScriptText(SAY_FINISH_1, me);
+                    SetRun();
+                    SetEscortPaused(false);
+                    EventTimer = 0;
+                    break;
+                case 3:
+                    DoCast(me, SPELL_ETHEREAL_TELEPORT);
+                    me->ForcedDespawn(1000);
+                    EventTimer = 0;
+                    break;
             }
-            else
-                EventTimer -= diff;
+            ++EventStage;
         }
     }
 };
@@ -2216,8 +2149,8 @@ struct npc_saeedAI : public npc_escortAI
     std::list<Creature*> DefendersList;
     std::list<Creature*> AvengersList;
     std::list<Creature*> RegeneratorsList;
-    uint32 CleaveTimer;
-    uint32 EventTimer;
+    Timer CleaveTimer;
+    Timer EventTimer;
     uint8 EventStage;
 
     void Reset()
@@ -2229,7 +2162,7 @@ struct npc_saeedAI : public npc_escortAI
         }
 
         Check = false;
-        CleaveTimer = 20000;
+        CleaveTimer.Reset(20000);
     }
 
     void DoSpawnDimensius()
@@ -2255,6 +2188,7 @@ struct npc_saeedAI : public npc_escortAI
             summoned->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
             DoScriptText(SAY_DIMENSIUS_1, summoned);
             summoned->AI()->AttackStart(me);
+            summoned->LowerPlayerDamageReq(summoned->GetMaxHealth() / 4);
         }
     }
 
@@ -2439,46 +2373,41 @@ struct npc_saeedAI : public npc_escortAI
             }
         }
 
-        if (EventTimer)
+        if (EventTimer.Expired(diff))
         {
-            if (EventTimer <= diff)
+            switch (EventStage)
             {
-                switch (EventStage)
-                {
-                    case 0:
-                        PlayEmote();
-                        EventTimer = 5000;
-                        break;
-                    case 1:
-                        JustStarted();
-                        SetEscortPaused(false);
-                        EventTimer = 0;
-                        break;
-                    case 2:
-                        DoScriptText(SAY_SAEED_4, me);
-                        EventTimer = 5000;
-                        break;
-                    case 3:
-                        CleanEmote();
-                        DoSpawnDimensius();
-                        EventTimer = 0;
-                        break;
-                }
-
-                ++EventStage;
+                case 0:
+                    PlayEmote();
+                    EventTimer = 5000;
+                    break;
+                case 1:
+                    JustStarted();
+                    SetEscortPaused(false);
+                    EventTimer = 0;
+                    break;
+                case 2:
+                    DoScriptText(SAY_SAEED_4, me);
+                    EventTimer = 5000;
+                    break;
+                case 3:
+                    CleanEmote();
+                    DoSpawnDimensius();
+                    EventTimer = 0;
+                    break;
             }
-            else EventTimer -= diff;
+
+            ++EventStage;
         }
 
         if (!UpdateVictim())
             return;
 
-        if (CleaveTimer <= diff)
+        if (CleaveTimer.Expired(diff))
         {
             DoCast(me->getVictim(), SPELL_CLEAVE);
             CleaveTimer = 20000;
         }
-        else CleaveTimer -= diff;
 
         DoMeleeAttackIfReady();
     }
@@ -2550,19 +2479,19 @@ struct npc_dimensiusAI : public ScriptedAI
     bool DoSpawns;
 
     SummonList spawns;
-    uint32 VaultTimer;
-    uint32 SpiraltTimer;
-    uint32 StartTimer;
-    uint32 ShadowRainTimer;
+    Timer VaultTimer;
+    Timer SpiraltTimer;
+    Timer StartTimer;
+    Timer ShadowRainTimer;
     uint32 SpawnsCount;
 
     void Reset() 
     {
         CanSpawn = true;
         DoSpawns = false;
-        VaultTimer = 15000;
-        SpiraltTimer = 2000;
-        ShadowRainTimer = 10000;
+        VaultTimer.Reset(15000);
+        SpiraltTimer.Reset(2000);
+        ShadowRainTimer.Reset(10000);
         SpawnsCount = 0;
     }
 
@@ -2672,24 +2601,22 @@ struct npc_dimensiusAI : public ScriptedAI
             else DoSpawn();
         }
 
-        if (SpiraltTimer <= diff)
+        if (SpiraltTimer.Expired(diff))
         {
             DoCast(me->getVictim(), SPELL_SPIRAL);
 
             SpiraltTimer = 13000;
         }
-        else SpiraltTimer -= diff;
 
-        if (VaultTimer <= diff)
+        if (VaultTimer.Expired(diff))
         {
             if (Unit* target = SelectUnit(SELECT_TARGET_RANDOM, 0, 40.0f))
                 DoCast(target, SPELL_VAULT);
 
             VaultTimer = 20000;
         }
-        else VaultTimer -= diff;
 
-        if (ShadowRainTimer <= diff)
+        if (ShadowRainTimer.Expired(diff))
         {
             if (me->HasAura(37450))
             {
@@ -2699,7 +2626,6 @@ struct npc_dimensiusAI : public ScriptedAI
                 
             ShadowRainTimer = 10000;
         }
-        else ShadowRainTimer -= diff;
 
         DoMeleeAttackIfReady();
     }
@@ -2740,16 +2666,16 @@ struct npc_king_salhadaarAI : public ScriptedAI
     SummonList summons;
     std::list<uint64> Balls;
     uint32 Count;
-    uint32 FluxTimer;
-    uint32 StasisTimer;
+    Timer FluxTimer;
+    Timer StasisTimer;
     
     void Reset()
     {
 
         me->setFaction(FACTION_FRIENDLY);
         Count = 0;
-        FluxTimer = 6000;
-        StasisTimer = 22000;
+        FluxTimer.Reset(6000);
+        StasisTimer.Reset(22000);
         Spawn = true;
 
         Creature* ball;
@@ -2834,22 +2760,20 @@ struct npc_king_salhadaarAI : public ScriptedAI
         if (!UpdateVictim())
             return;
 
-        if (FluxTimer <= diff)
+        if (FluxTimer.Expired(diff))
         {
             DoCast(me->getVictim(), SPELL_FLUX);
 
             FluxTimer = 12000;
         }
-        else FluxTimer -= diff;
 
-        if (StasisTimer <= diff)
+        if (StasisTimer.Expired(diff))
         {
             if (Unit *target = SelectUnit(SELECT_TARGET_RANDOM, 0, 40.0f))
                 DoCast(target, SPELL_STASIS);
 
             StasisTimer = 22000;
         }
-        else StasisTimer -= diff;
 
         DoMeleeAttackIfReady();
     }
@@ -3021,7 +2945,7 @@ struct npc_doctor_vomisaAI : public ScriptedAI
 
     ObjectGuid X6000GUID;
     ObjectGuid NegatronGUID;
-    uint32 CheckTimer;
+    Timer CheckTimer;
 
     void Reset() 
     {
@@ -3060,7 +2984,7 @@ struct npc_doctor_vomisaAI : public ScriptedAI
 
     void UpdateAI(const uint32 diff)
     {
-        if (CheckTimer <= diff)
+        if (CheckTimer.Expired(diff))
         {
             if (Creature* negatron = GetClosestCreatureWithEntry(me, NPC_NEGATRON, 100.0f, true))
                 return;
@@ -3079,7 +3003,6 @@ struct npc_doctor_vomisaAI : public ScriptedAI
 
             CheckTimer = 5000;
         }
-        else CheckTimer -= diff;
 
         DoMeleeAttackIfReady();
     }
@@ -3104,6 +3027,76 @@ bool QuestAccept_npc_doctor_vomisa(Player* player, Creature* creature, const Que
     if (quest->GetQuestId() == QUEST_YOU_ROBOT)
         CAST_AI(npc_doctor_vomisaAI, creature->AI())->RockAndRool();
 
+    return true;
+}
+
+/*######
+## npc_doomsaw
+######*/
+
+#define SPELL_SAW          36194
+
+struct npc_doomsawAI : public ScriptedAI
+{
+    npc_doomsawAI(Creature* c) : ScriptedAI(c) {}
+
+    void IsSummonedBy(Unit *summoner)
+    {
+        me->SetReactState(REACT_PASSIVE);
+        float x, y, z;
+        me->SetWalk(true);
+        me->SetSpeed(MOVE_WALK, 1.7);
+        me->GetNearPoint(x, y, z, 0, 20, summoner->GetAngle(me));
+        me->UpdateAllowedPositionZ(x, y, z);
+        me->GetMotionMaster()->MovePoint(1, x, y, z);
+        me->CastSpell(me, SPELL_SAW, true);
+    }
+
+    void UpdateAI(const uint32 diff)
+    {
+    }
+};
+
+CreatureAI* GetAI_npc_doomsaw(Creature* _Creature)
+{
+    return new npc_doomsawAI(_Creature);
+}
+
+struct npc_ethereum_jailorAI : public ScriptedAI
+{
+    npc_ethereum_jailorAI(Creature* c) : ScriptedAI(c){}
+
+    std::vector<ScriptPointMove> points;
+
+    void JustRespawned()
+    {
+        if (points.empty())
+        {
+            points = pSystemMgr.GetPointMoveList(m_creature->GetEntry());
+            if (points.empty())
+                return;
+        }
+
+        uint8 target = urand(0, points.size() - 1);
+        m_creature->SetPosition(points[target].fX, points[target].fY, points[target].fZ, frand(0, 2 * M_PI));
+        m_creature->SetHomePosition(points[target].fX, points[target].fY, points[target].fZ, frand(0, 2 * M_PI));
+        m_creature->SetLastHitPos(m_creature->GetHomePosition());
+    }
+
+};
+
+CreatureAI* GetAI_npc_ethereum_jailor(Creature* _Creature)
+{
+    return new npc_ethereum_jailorAI(_Creature);
+}
+
+#define QUEST_SPECIAL_DELIVERY 10280
+bool AreaTrigger_at_haramad_transporter(Player* player, AreaTriggerEntry const* at)
+{
+    if (player->isAlive() && player->GetQuestStatus(QUEST_SPECIAL_DELIVERY) == QUEST_STATUS_INCOMPLETE)
+    {
+        player->TeleportTo(530, -1874, 5427, -10.4, 0.1);
+    }
     return true;
 }
 
@@ -3267,6 +3260,21 @@ void AddSC_netherstorm()
     newscript->GetAI = &GetAI_npc_doctor_vomisa;
     newscript->pGossipHello =  &GossipHello_npc_doctor_vomisa;
     newscript->pQuestAcceptNPC = &QuestAccept_npc_doctor_vomisa;
+    newscript->RegisterSelf();
+
+    newscript = new Script;
+    newscript->Name = "npc_doomsaw";
+    newscript->GetAI = &GetAI_npc_doomsaw;
+    newscript->RegisterSelf(); 
+
+    newscript = new Script;
+    newscript->Name = "npc_ethereum_jailor";
+    newscript->GetAI = &GetAI_npc_ethereum_jailor;
+    newscript->RegisterSelf();
+
+    newscript = new Script;
+    newscript->Name = "at_haramad_transporter";
+    newscript->pAreaTrigger = &AreaTrigger_at_haramad_transporter;
     newscript->RegisterSelf();
 }
 

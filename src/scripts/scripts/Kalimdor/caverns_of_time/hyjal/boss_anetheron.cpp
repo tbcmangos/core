@@ -1,5 +1,5 @@
 /* 
- * Copyright (C) 2008-2014 Hellground <http://hellground.net/>
+ * Copyright (C) 2008-2015 Hellground <http://hellground.net/>
  * 
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -62,10 +62,10 @@ struct boss_anetheronAI : public hyjal_trashAI
         pos = 0;
     }
 
-    uint32 SwarmTimer;
-    uint32 SleepTimer;
-    uint32 CheckTimer;
-    uint32 InfernoTimer;
+    Timer SwarmTimer;
+    Timer SleepTimer;
+    Timer CheckTimer;
+    Timer InfernoTimer;
     bool go;
     uint32 pos;
 
@@ -74,10 +74,10 @@ struct boss_anetheronAI : public hyjal_trashAI
         ClearCastQueue();
 
         damageTaken = 0;
-        SwarmTimer = 10000;
-        SleepTimer = 60000;
-        InfernoTimer = 60000;
-        CheckTimer = 3000;
+        SwarmTimer.Reset(10000);
+        SleepTimer.Reset(60000);
+        InfernoTimer.Reset(60000);
+        CheckTimer.Reset(3000);
 
         if(pInstance && IsEvent)
             pInstance->SetData(DATA_ANETHERONEVENT, NOT_STARTED);
@@ -131,9 +131,9 @@ struct boss_anetheronAI : public hyjal_trashAI
         }
     }
 
-    void JustDied(Unit *victim)
+    void JustDied(Unit *Killer)
     {
-        hyjal_trashAI::JustDied(victim);
+        hyjal_trashAI::JustDied(Killer);
         if(pInstance && IsEvent)
             pInstance->SetData(DATA_ANETHERONEVENT, DONE);
 
@@ -166,25 +166,25 @@ struct boss_anetheronAI : public hyjal_trashAI
             }
         }
 
-        //back to victim target facing
-        if (!UpdateVictim())
+        if (!m_creature->isInCombat())
             return;
 
-        if(CheckTimer < diff)
+        if (CheckTimer.Expired(diff))
         {
             DoZoneInCombat();
-            if(!m_creature->IsNonMeleeSpellCast(true))
-            {
-                if(m_creature->GetSelection() != m_creature->getVictimGUID())
-                    m_creature->SetSelection(m_creature->getVictimGUID());
-            }
             m_creature->SetSpeed(MOVE_RUN, 3.0);
             CheckTimer = 2000;
         }
-        else
-            CheckTimer -= diff;
 
-        if(SwarmTimer < diff)
+        SwarmTimer.Update(diff);
+        SleepTimer.Update(diff);
+        InfernoTimer.Update(diff);
+
+        // do not update victim when casting
+        if (m_creature->IsNonMeleeSpellCast(true) || !UpdateVictim())
+            return;
+
+        if (SwarmTimer.Passed())
         {
             if(Unit* target = SelectUnit(SELECT_TARGET_RANDOM,0,65,true))
             {
@@ -204,10 +204,8 @@ struct boss_anetheronAI : public hyjal_trashAI
                 }
             }
         }
-        else
-            SwarmTimer -= diff;
 
-        if(SleepTimer < diff)
+        if (SleepTimer.Passed())
         {
             DoCast(m_creature, SPELL_SLEEP, true);
 
@@ -225,10 +223,9 @@ struct boss_anetheronAI : public hyjal_trashAI
                     break;
             }
         }
-        else
-            SleepTimer -= diff;
+        
 
-        if(InfernoTimer < diff)
+        if (InfernoTimer.Passed())
         {
             if(Unit *target = SelectUnit(SELECT_TARGET_RANDOM,0,200,true))
             {
@@ -249,8 +246,7 @@ struct boss_anetheronAI : public hyjal_trashAI
                 InfernoTimer = 60000;
             }
         }
-        else
-            InfernoTimer -= diff;
+        
 
         CastNextSpellIfAnyAndReady();
         DoMeleeAttackIfReady();
@@ -272,16 +268,16 @@ struct mob_towering_infernalAI : public ScriptedAI
         pInstance = (c->GetInstanceData());
     }
 
-    uint32 CheckTimer;
-    uint32 WaitTimer;
+    Timer CheckTimer;
+    Timer WaitTimer;
     ScriptedInstance* pInstance;
 
     void Reset()
     {
         m_creature->setFaction(1720);
         m_creature->ApplySpellImmune(2, IMMUNITY_MECHANIC, MECHANIC_BANISH, true);
-        CheckTimer = 5000;
-        WaitTimer = 3500;
+        CheckTimer.Reset(5000);
+        WaitTimer.Reset(3500);
     }
 
     void JustRespawned()
@@ -301,7 +297,8 @@ struct mob_towering_infernalAI : public ScriptedAI
 
     void UpdateAI(const uint32 diff)
     {
-        if(CheckTimer < diff)
+        
+        if (CheckTimer.Expired(diff))
         {
             if(pInstance)
             {
@@ -315,18 +312,14 @@ struct mob_towering_infernalAI : public ScriptedAI
             }
             CheckTimer = 2000;
         }
-        else
-            CheckTimer -= diff;
+        
 
         //Return since we have no target
         if (!UpdateVictim())
             return;
 
-        if(WaitTimer > diff)
-        {
-            WaitTimer -= diff;
+        if (!WaitTimer.Expired(diff)) //FIXME: not sure if that will work :p
             return;
-        }
 
         DoMeleeAttackIfReady();
     }

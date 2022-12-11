@@ -1,6 +1,6 @@
 /* 
  * Copyright (C) 2006-2008 ScriptDev2 <https://scriptdev2.svn.sourceforge.net/>
- * Copyright (C) 2008-2014 Hellground <http://hellground.net/>
+ * Copyright (C) 2008-2015 Hellground <http://hellground.net/>
  * 
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -58,9 +58,9 @@ struct boss_ayamissAI : public ScriptedAI
 
     ScriptedInstance * pInstance;
     Unit *pTarget;
-    uint32 STINGERSPRAY_Timer;
-    uint32 POISONSTINGER_Timer;
-    uint32 SUMMONSWARMER_Timer;
+    int32 STINGERSPRAY_Timer;
+    int32 POISONSTINGER_Timer;
+    int32 SUMMONSWARMER_Timer;
     uint32 phase;
 
     void Reset()
@@ -111,29 +111,29 @@ struct boss_ayamissAI : public ScriptedAI
             phase=2;
         }
 
-        //STINGERSPRAY_Timer
-        if (STINGERSPRAY_Timer < diff)
+        STINGERSPRAY_Timer -= diff;
+        if (STINGERSPRAY_Timer <= diff)
         {
             DoCast(m_creature->getVictim(),SPELL_STINGERSPRAY);
-            STINGERSPRAY_Timer = 30000;
+            STINGERSPRAY_Timer += 30000;
         }
-        else STINGERSPRAY_Timer -= diff;
+        
 
-        //POISONSTINGER_Timer (only in phase1)
-        if (phase==1 && POISONSTINGER_Timer < diff)
+        POISONSTINGER_Timer -= diff;
+        if (phase==1 && POISONSTINGER_Timer <= diff)
         {
             DoCast(m_creature->getVictim(),SPELL_POISONSTINGER);
-            POISONSTINGER_Timer = 3500;
+            POISONSTINGER_Timer += 3500;
         }
-        else POISONSTINGER_Timer -= diff;
+        
 
-        //SUMMONSWARMER_Timer
-        if (SUMMONSWARMER_Timer < diff)
+        SUMMONSWARMER_Timer -= diff;
+        if (SUMMONSWARMER_Timer <= diff)
         {
             DoCast(m_creature->getVictim(),SPELL_SUMMONSWARMER);
-            SUMMONSWARMER_Timer = 60000;
+            SUMMONSWARMER_Timer += 60000;
         }
-        else SUMMONSWARMER_Timer -= diff;
+
 
         //melee in phase 2 only
         if (phase!=1)

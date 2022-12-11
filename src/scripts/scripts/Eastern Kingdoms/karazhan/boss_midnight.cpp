@@ -1,6 +1,6 @@
 /* 
  * Copyright (C) 2006-2008 ScriptDev2 <https://scriptdev2.svn.sourceforge.net/>
- * Copyright (C) 2008-2014 Hellground <http://hellground.net/>
+ * Copyright (C) 2008-2015 Hellground <http://hellground.net/>
  * 
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -41,12 +41,19 @@ EndScriptData */
 
 #define SPELL_SHADOWCLEAVE          29832
 #define SPELL_INTANGIBLE_PRESENCE   29833
-#define SPELL_BERSERKER_CHARGE      26561                   //Only when mounted
+#define SPELL_BERSERKER_CHARGE      29847                   //Only when mounted
+#define SPELL_KNOCKDOWN             29711
 
 #define MOUNTED_DISPLAYID           16040
 
 //Attumen (TODO: Use the summoning spell instead of creature id. It works , but is not convenient for us)
 #define SUMMON_ATTUMEN 15550
+
+bool attumancheckPosition(WorldObject* obj) // returns false if outside of "proper" zone
+{
+    if (!obj) return true;
+    return obj->GetPositionY() < (obj->GetPositionX()*(-2.154f) - 25849);
+}
 
 struct boss_midnightAI : public ScriptedAI
 {
@@ -60,6 +67,7 @@ struct boss_midnightAI : public ScriptedAI
     uint8 Phase;
     uint32 Mount_Timer;
     uint32 CheckTimer;
+    Timer knockdownTimer;
 
     ScriptedInstance *pInstance;
     WorldLocation wLoc;
@@ -70,6 +78,7 @@ struct boss_midnightAI : public ScriptedAI
         Attumen = 0;
         Mount_Timer = 0;
         CheckTimer = 3000;
+        knockdownTimer = 5000;
 
         m_creature->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
         m_creature->SetVisibility(VISIBILITY_ON);
@@ -102,7 +111,7 @@ struct boss_midnightAI : public ScriptedAI
 
         if (CheckTimer < diff)
         {
-            if (!m_creature->IsWithinDistInMap(&wLoc, 50.0f))
+            if (!m_creature->IsWithinDistInMap(&wLoc, 50.0f) || !attumancheckPosition(m_creature) || !attumancheckPosition(me->getVictim()))
                 EnterEvadeMode();
             else
                 DoZoneInCombat();
@@ -166,6 +175,13 @@ struct boss_midnightAI : public ScriptedAI
             }
         }
 
+        if (Phase < 3 && knockdownTimer.Expired(diff))
+        {
+            DoCast(me->getVictim(), SPELL_KNOCKDOWN);
+            knockdownTimer = urand(15000, 20000);
+        }
+            
+
         DoMeleeAttackIfReady();
     }
 
@@ -192,6 +208,8 @@ struct boss_midnightAI : public ScriptedAI
         //pAttumen->Relocate(newX,newY,newZ,-angle);
         //pAttumen->SendMonsterMove(newX, newY, newZ, 0, true, 1000);
         Mount_Timer = 1000;
+        ((ScriptedAI*)(pAttumen->ToCreature()->AI()))->DoResetThreat();
+        
     }
 
     void SetMidnight(Creature *, uint64);                   //Below ..
@@ -214,10 +232,13 @@ struct boss_attumenAI : public ScriptedAI
         RandomYellTimer = urand(30000, 61000);         //Occasionally yell
         ChargeTimer = 20000;
         ResetTimer = 0;
+        checkTimer.Reset(5000);
     }
 
     ScriptedInstance *pInstance;
 
+    Timer knockdownTimer;
+    Timer checkTimer;
     uint64 Midnight;
     uint8 Phase;
     uint32 CleaveTimer;
@@ -228,6 +249,7 @@ struct boss_attumenAI : public ScriptedAI
 
     void Reset()
     {
+        knockdownTimer = 5000;
         ResetTimer = 2000;
     }
 
@@ -270,6 +292,13 @@ struct boss_attumenAI : public ScriptedAI
         if (!UpdateVictim())
             return;
 
+        if (checkTimer.Expired(diff))
+        {
+            if (!attumancheckPosition(m_creature) || !attumancheckPosition(me->getVictim()))
+                m_creature->ForcedDespawn();
+            checkTimer = 5000;
+        }
+
         if (m_creature->HasFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE | UNIT_FLAG_NOT_SELECTABLE ))
             return;
 
@@ -309,6 +338,12 @@ struct boss_attumenAI : public ScriptedAI
             }
             else
                 ChargeTimer -= diff;
+
+            if (knockdownTimer.Expired(diff))
+            {
+                AddSpellToCast(SPELL_KNOCKDOWN);
+                knockdownTimer = urand(15000, 20000);
+            }
         }
         else
         {

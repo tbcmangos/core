@@ -1,6 +1,6 @@
 /* 
  * Copyright (C) 2006-2008 ScriptDev2 <https://scriptdev2.svn.sourceforge.net/>
- * Copyright (C) 2008-2014 Hellground <http://hellground.net/>
+ * Copyright (C) 2008-2015 Hellground <http://hellground.net/>
  * 
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -166,7 +166,7 @@ struct mobs_scourge_archerAI : public ScriptedAI
     mobs_scourge_archerAI(Creature *c) : ScriptedAI(c) 
     {}
 
-    uint32 Shoot_Timer;
+    Timer Shoot_Timer;
 
     void MoveInLineOfSight(Unit * unit)
     {
@@ -177,12 +177,17 @@ struct mobs_scourge_archerAI : public ScriptedAI
             AttackStart(unit);
     }
 
+    void Reset()
+    {
+        Shoot_Timer.Reset(1);
+    }
+
     void UpdateAI(const uint32 diff)
     {
         if(!me->getVictim())
             return;
 
-        if (Shoot_Timer <= diff)
+        if (Shoot_Timer.Expired(diff))
         {
             if(Unit * target = GetClosestCreatureWithEntry(me, RAND(NPC_INJURED_PEASANT, NPC_PLAGUED_PEASANT) , 50))
             {
@@ -190,7 +195,7 @@ struct mobs_scourge_archerAI : public ScriptedAI
                 Shoot_Timer = 2000;
             }
         }
-        else Shoot_Timer -= diff;
+         
 
         CastNextSpellIfAnyAndReady();    
     }
@@ -205,8 +210,8 @@ struct trigger_epic_staffAI : public TriggerAI
 {
     trigger_epic_staffAI(Creature *c) : TriggerAI(c) { }
 
-    uint32 Summon_Timer;
-    uint32 Summon_Footsoldier_Timer;
+    Timer Summon_Timer;
+    Timer Summon_Footsoldier_Timer;
     uint32 Summon_Counter;
     uint32 Counter;
     uint32 FailCounter;
@@ -214,8 +219,8 @@ struct trigger_epic_staffAI : public TriggerAI
 
     void Reset()
     {
-        Summon_Timer = 0;
-        Summon_Footsoldier_Timer = 0;
+        Summon_Timer.Reset(1);
+        Summon_Footsoldier_Timer.Reset(1);
         Summon_Counter = 0;
         Counter = 0;
         FailCounter = 0;
@@ -224,7 +229,7 @@ struct trigger_epic_staffAI : public TriggerAI
 
     void UpdateAI(const uint32 diff)
     {
-        if (Summon_Footsoldier_Timer < diff)
+        if (Summon_Footsoldier_Timer.Expired(diff))
         {
             for(int i = 0; i<3; i++)
             {
@@ -234,9 +239,8 @@ struct trigger_epic_staffAI : public TriggerAI
             }
             Summon_Footsoldier_Timer = 20000;
         }
-        else Summon_Footsoldier_Timer -= diff;
-
-        if (Summon_Timer <= diff && Summon_Counter < 6)
+        
+        if (Summon_Counter < 6 && Summon_Timer.Expired(diff))
         {
             for(int i = 0; i < 9; i++)
             {
@@ -253,7 +257,7 @@ struct trigger_epic_staffAI : public TriggerAI
             Summon_Timer = 40000;
             Summon_Counter++;
         }
-        else Summon_Timer -= diff;
+        
 
         if ((Counter >= 50 || FailCounter >= 15) && Summon_Counter < 7)
         {
@@ -355,12 +359,16 @@ struct mobs_peasantsAI : public ScriptedAI
     {
     }
 
-    uint32 DeathsDoor_Timer;
+    Timer DeathsDoor_Timer;
     uint64 Summoner;
 
     void EnterEvadeMode()
     {
         return;
+    }
+    void Reset()
+    {
+        DeathsDoor_Timer.Reset(1);
     }
 
     void AttackStart(Unit * unit)
@@ -370,13 +378,13 @@ struct mobs_peasantsAI : public ScriptedAI
 
     void UpdateAI(const uint32 diff)
     {
-        if (DeathsDoor_Timer <= diff)
+        if (DeathsDoor_Timer.Expired(diff))
         {
             if(!urand(0, 9))
                 AddSpellToCast(me, SPELL_DEATHS_DOOR, true);
             DeathsDoor_Timer = 15000;
         }
-        else DeathsDoor_Timer -= diff;
+        
 
         CastNextSpellIfAnyAndReady();    
     }
@@ -404,17 +412,22 @@ struct mobs_plagued_peasantAI : public mobs_peasantsAI
 {
     mobs_plagued_peasantAI(Creature *c) : mobs_peasantsAI(c) { }
 
-    uint32 SeethingPlague_Timer;
+    Timer SeethingPlague_Timer;
+
+    void Reset()
+    {
+        SeethingPlague_Timer.Reset(1);
+    }
 
     void UpdateAI(const uint32 diff)
     {
-        if (SeethingPlague_Timer <= diff)
+        if (SeethingPlague_Timer.Expired(diff))
         {
             if(!urand(0, 2))
                 AddSpellToCast(me, SPELL_SEETHING_PLAGUE, true);
             SeethingPlague_Timer = 10000;
         }
-        else SeethingPlague_Timer -= diff;
+        
 
         mobs_peasantsAI::UpdateAI(diff);
     }
@@ -423,6 +436,50 @@ struct mobs_plagued_peasantAI : public mobs_peasantsAI
 CreatureAI* GetAI_mobs_plagued_peasant(Creature *_Creature)
 {
     return new mobs_plagued_peasantAI (_Creature);
+}
+
+/*######
+## npc_betinabigglezink
+######*/
+
+#define GOSSIP_BETINA_RUNE "Betina, I'd like replacement Rune of the Dawn please!"
+#define GOSSIP_BETINA_SEAL "Betina, I'd like replacement Seal of the Dawn please!"
+
+bool GossipHello_npc_betinabigglezink(Player *player, Creature *_Creature)
+{
+    if (_Creature->isQuestGiver())
+        player->PrepareQuestMenu(_Creature->GetGUID());
+    
+    if (player->GetQuestRewardStatus(5213) && !player->HasItemCount(19812, 1) && !player->HasItemCount(13209,1))
+    {
+        player->ADD_GOSSIP_ITEM(0, GOSSIP_BETINA_RUNE, GOSSIP_SENDER_MAIN, GOSSIP_SENDER_INFO);
+        player->ADD_GOSSIP_ITEM(0, GOSSIP_BETINA_SEAL, GOSSIP_SENDER_MAIN, GOSSIP_SENDER_INFO + 1);
+    }
+
+    player->SEND_GOSSIP_MENU(_Creature->GetNpcTextId(), _Creature->GetGUID());
+    return true;
+}
+
+bool GossipSelect_npc_betinabigglezink(Player *player, Creature *_Creature, uint32 sender, uint32 action)
+{
+    uint32 entry = 0;
+    if (action == GOSSIP_SENDER_INFO)
+        entry = 19812;
+    else if (action == GOSSIP_SENDER_INFO + 1)
+        entry = 13209;
+
+    if (entry != 0)
+    {
+        ItemPosCountVec dest;
+        uint8 msg = player->CanStoreNewItem(NULL_BAG, NULL_SLOT, dest, entry, 1);
+        if (msg == EQUIP_ERR_OK)
+        {
+            Item* item = player->StoreNewItem(dest, entry, true);
+            player->SendNewItem(item, 1, true, false, true);
+        }
+        player->CLOSE_GOSSIP_MENU();
+    }
+    return true;
 }
 
 void AddSC_eastern_plaguelands()
@@ -452,7 +509,7 @@ void AddSC_eastern_plaguelands()
     newscript->pGossipSelect = &GossipSelect_npc_tirion_fordring;
     newscript->RegisterSelf();
 
-    newscript = new Script;
+    newscript = new Script;                          
     newscript->Name="mobs_scourge_archer";
     newscript->GetAI = &GetAI_mobs_scourge_archer;
     newscript->RegisterSelf();
@@ -475,5 +532,11 @@ void AddSC_eastern_plaguelands()
     newscript = new Script;
     newscript->Name="trigger_epic_staff";
     newscript->GetAI = &GetAI_trigger_epic_staff;
+    newscript->RegisterSelf();
+    newscript = new Script;
+
+    newscript->Name="npc_betinabigglezink";
+    newscript->pGossipHello = &GossipHello_npc_betinabigglezink;
+    newscript->pGossipSelect = &GossipSelect_npc_betinabigglezink;
     newscript->RegisterSelf();
 }

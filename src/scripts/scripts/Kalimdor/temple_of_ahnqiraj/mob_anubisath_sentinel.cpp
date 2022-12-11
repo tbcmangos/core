@@ -1,6 +1,6 @@
 /* 
  * Copyright (C) 2006-2008 ScriptDev2 <https://scriptdev2.svn.sourceforge.net/>
- * Copyright (C) 2008-2014 Hellground <http://hellground.net/>
+ * Copyright (C) 2008-2015 Hellground <http://hellground.net/>
  * 
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -279,6 +279,9 @@ struct aqsentinelAI : public ScriptedAI
             sent->SetHealth(h);
             ((aqsentinelAI *)sent->AI())->GainSentinelAbility(ability);
         }
+        // summon obsidian shard
+        m_creature->SummonGameObject(181068, m_creature->GetPositionX(), m_creature->GetPositionY(),
+            m_creature->GetPositionZ(), 0, 0, 0, 0, 0, 0);
     }
 
     Unit *GetHatedManaUser()

@@ -1,6 +1,6 @@
 /* 
  * Copyright (C) 2006-2008 ScriptDev2 <https://scriptdev2.svn.sourceforge.net/>
- * Copyright (C) 2008-2014 Hellground <http://hellground.net/>
+ * Copyright (C) 2008-2015 Hellground <http://hellground.net/>
  * 
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -38,13 +38,13 @@ struct boss_kruulAI : public ScriptedAI
 {
     boss_kruulAI(Creature *c) : ScriptedAI(c) {}
 
-    uint32 ShadowVolley_Timer;
-    uint32 Cleave_Timer;
-    uint32 ThunderClap_Timer;
-    uint32 TwistedReflection_Timer;
-    uint32 VoidBolt_Timer;
-    uint32 Rage_Timer;
-    uint32 Hound_Timer;
+    int32 ShadowVolley_Timer;
+    int32 Cleave_Timer;
+    int32 ThunderClap_Timer;
+    int32 TwistedReflection_Timer;
+    int32 VoidBolt_Timer;
+    int32 Rage_Timer;
+    int32 Hound_Timer;
     int Rand;
     int RandX;
     int RandY;
@@ -99,73 +99,73 @@ struct boss_kruulAI : public ScriptedAI
         if (!UpdateVictim() )
             return;
 
-        //ShadowVolley_Timer
-        if (ShadowVolley_Timer < diff)
+        ShadowVolley_Timer -= diff;
+        if (ShadowVolley_Timer <= diff)
         {
             if (rand()%100 < 46)
             {
                 DoCast(m_creature->getVictim(),SPELL_SHADOWVOLLEY);
             }
 
-            ShadowVolley_Timer = 5000;
-        }else ShadowVolley_Timer -= diff;
+            ShadowVolley_Timer += 5000;
+        }
 
-        //Cleave_Timer
-        if (Cleave_Timer < diff)
+        Cleave_Timer -= diff;
+        if (Cleave_Timer <= diff)
         {
             if (rand()%100 < 50)
             {
                 DoCast(m_creature->getVictim(),SPELL_CLEAVE);
             }
 
-            Cleave_Timer = 10000;
-        }else Cleave_Timer -= diff;
+            Cleave_Timer += 10000;
+        }
 
-        //ThunderClap_Timer
-        if (ThunderClap_Timer < diff)
+        ThunderClap_Timer -= diff;
+        if (ThunderClap_Timer <= diff)
         {
             if (rand()%100 < 20)
             {
                 DoCast(m_creature->getVictim(),SPELL_THUNDERCLAP);
             }
 
-            ThunderClap_Timer = 12000;
-        }else ThunderClap_Timer -= diff;
+            ThunderClap_Timer += 12000;
+        }
 
-        //TwistedReflection_Timer
-        if (TwistedReflection_Timer < diff)
+        TwistedReflection_Timer -= diff;
+        if (TwistedReflection_Timer <= diff)
         {
             DoCast(m_creature->getVictim(),SPELL_TWISTEDREFLECTION);
-            TwistedReflection_Timer = 30000;
-        }else TwistedReflection_Timer -= diff;
+            TwistedReflection_Timer += 30000;
+        }
 
-        //VoidBolt_Timer
-        if (VoidBolt_Timer < diff)
+        VoidBolt_Timer -= diff;
+        if (VoidBolt_Timer <= diff)
         {
             if (rand()%100 < 40)
             {
                 DoCast(m_creature->getVictim(),SPELL_VOIDBOLT);
             }
 
-            VoidBolt_Timer = 18000;
-        }else VoidBolt_Timer -= diff;
+            VoidBolt_Timer += 18000;
+        }
 
-        //Rage_Timer
-        if (Rage_Timer < diff)
+        Rage_Timer -= diff;
+        if (Rage_Timer <= diff)
         {
             DoCast(m_creature,SPELL_RAGE);
-            Rage_Timer = 70000;
-        }else Rage_Timer -= diff;
+            Rage_Timer += 70000;
+        }
 
-        //Hound_Timer
-        if (Hound_Timer < diff)
+        Hound_Timer -= diff;
+        if (Hound_Timer <= diff)
         {
             SummonHounds(m_creature->getVictim());
             SummonHounds(m_creature->getVictim());
             SummonHounds(m_creature->getVictim());
 
-            Hound_Timer = 45000;
-        }else Hound_Timer -= diff;
+            Hound_Timer += 45000;
+        }
 
         DoMeleeAttackIfReady();
     }

@@ -1,6 +1,6 @@
 /* 
  * Copyright (C) 2006-2008 ScriptDev2 <https://scriptdev2.svn.sourceforge.net/>
- * Copyright (C) 2008-2014 Hellground <http://hellground.net/>
+ * Copyright (C) 2008-2015 Hellground <http://hellground.net/>
  * 
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -40,10 +40,6 @@
 #define DATA_ALYTHESS               15
 #define DATA_SACROLASH              16
 #define DATA_MURU                   17
-#define DATA_KILJAEDEN              18
-#define DATA_KILJAEDEN_CONTROLLER   19
-#define DATA_ANVEENA                20
-#define DATA_KALECGOS_KJ            21
 
 /*** GameObjects ***/
 #define DATA_GO_FORCEFIELD          21
@@ -59,9 +55,7 @@
 #define DATA_KALECGOS_PHASE         29
 #define DATA_BRUTALLUS_TRIGGER      30
 #define DATA_EREDAR_TWINS_INTRO     31
-
-#define DATA_KJ_TESTING_COUNTER     50
-#define DATA_KJ_TESTING             51
+#define DATA_HAND_OF_DECEIVER_COUNT 32
 
 #define SISTER_DEATH                1
 

@@ -1,6 +1,6 @@
 /* 
  * Copyright (C) 2006-2008 ScriptDev2 <https://scriptdev2.svn.sourceforge.net/>
- * Copyright (C) 2008-2014 Hellground <http://hellground.net/>
+ * Copyright (C) 2008-2015 Hellground <http://hellground.net/>
  * 
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -38,9 +38,9 @@ struct boss_gahzrankaAI : public ScriptedAI
         pInstance = (ScriptedInstance*)c->GetInstanceData();
     }
 
-    uint32 Frostbreath_Timer;
-    uint32 MassiveGeyser_Timer;
-    uint32 Slam_Timer;
+    int32 Frostbreath_Timer;
+    int32 MassiveGeyser_Timer;
+    int32 Slam_Timer;
     ScriptedInstance * pInstance;
 
     void Reset()
@@ -49,7 +49,10 @@ struct boss_gahzrankaAI : public ScriptedAI
         MassiveGeyser_Timer = 25000;
         Slam_Timer = 17000;
 
-        pInstance->SetData(DATA_GAHZRANKAEVENT, NOT_STARTED);
+        if (pInstance->GetData(DATA_GAHZRANKAEVENT) == DONE)
+            m_creature->ForcedDespawn();
+        else
+            pInstance->SetData(DATA_GAHZRANKAEVENT, NOT_STARTED);
     }
 
     void EnterCombat(Unit *who)
@@ -68,34 +71,31 @@ struct boss_gahzrankaAI : public ScriptedAI
         if (!UpdateVictim())
             return;
 
-        //Frostbreath_Timer
-        if (Frostbreath_Timer < diff)
+        Frostbreath_Timer -= diff;
+        if (Frostbreath_Timer <= diff)
         {
             DoCast(m_creature->getVictim(),SPELL_FROSTBREATH);
-            Frostbreath_Timer = 7000 + rand()%4000;
+            Frostbreath_Timer += 7000 + rand()%4000;
         }
-        else
-            Frostbreath_Timer -= diff;
+        
 
-        //MassiveGeyser_Timer
-        if (MassiveGeyser_Timer < diff)
+        MassiveGeyser_Timer -= diff;
+        if (MassiveGeyser_Timer <= diff)
         {
             DoCast(m_creature->getVictim(),SPELL_MASSIVEGEYSER);
             DoResetThreat();
 
-            MassiveGeyser_Timer = 22000 + rand()%10000;
+            MassiveGeyser_Timer += 22000 + rand()%10000;
         }
-        else
-            MassiveGeyser_Timer -= diff;
+        
 
-        //Slam_Timer
-        if (Slam_Timer < diff)
+        Slam_Timer -= diff;
+        if (Slam_Timer <= diff)
         {
             DoCast(m_creature->getVictim(),SPELL_SLAM);
-            Slam_Timer = 12000 + rand()%8000;
+            Slam_Timer += 12000 + rand()%8000;
         }
-        else
-            Slam_Timer -= diff;
+        
 
         DoMeleeAttackIfReady();
     }

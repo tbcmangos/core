@@ -1,7 +1,7 @@
 /*
  * Copyright (C) 2005-2009 MaNGOS <http://getmangos.com/>
  * Copyright (C) 2008-2009 TrinityCore <http://www.trinitycore.org/>
- * Copyright (C) 2008-2014 Hellground <http://hellground.net/>
+ * Copyright (C) 2008-2015 Hellground <http://hellground.net/>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -25,9 +25,9 @@
 #include "Database/DatabaseEnv.h"
 
 #if PLATFORM == PLATFORM_WINDOWS
-HELLGROUND_IMPORT_EXPORT DatabaseType GameDataDatabase;                              ///< Accessor to the world database
-HELLGROUND_IMPORT_EXPORT DatabaseType RealmDataDatabase;                             ///< Accessor to the character database
-HELLGROUND_IMPORT_EXPORT DatabaseType AccountsDatabase;                              ///< Accessor to the realm/login database
+HELLGROUND_IMPORT_EXPORT DatabaseType GameDataDatabase;                              /// Accessor to the world database
+HELLGROUND_IMPORT_EXPORT DatabaseType RealmDataDatabase;                             /// Accessor to the character database
+HELLGROUND_IMPORT_EXPORT DatabaseType AccountsDatabase;                              /// Accessor to the realm/login database
 #endif
 
 SystemMgr::SystemMgr()
@@ -38,25 +38,6 @@ SystemMgr& SystemMgr::Instance()
 {
     static SystemMgr pSysMgr;
     return pSysMgr;
-}
-
-void SystemMgr::LoadVersion()
-{
-    //Get Version information
-    QueryResultAutoPtr pResult = GameDataDatabase.PQuery("SELECT script_version FROM version LIMIT 1");
-
-    if (pResult)
-    {
-        Field* pFields = pResult->Fetch();
-
-        outstring_log("TSCR: Database version is: %s", pFields[0].GetString());
-        outstring_log("");
-    }
-    else
-    {
-        error_log("TSCR: Missing `version`.`script_version` information.");
-        outstring_log("");
-    }
 }
 
 void SystemMgr::LoadScriptTexts()
@@ -113,81 +94,15 @@ void SystemMgr::LoadScriptTexts()
             ++uiCount;
         } while (pResult->NextRow());
 
-        outstring_log("");
+        outstring_log();
         outstring_log(">> Loaded %u additional Script Texts data.", uiCount);
     }
     else
     {
         BarGoLink bar(1);
         bar.step();
-        outstring_log("");
+        outstring_log();
         outstring_log(">> Loaded 0 additional Script Texts data. DB table `script_texts` is empty.");
-    }
-}
-
-void SystemMgr::LoadScriptTextsCustom()
-{
-    outstring_log("TSCR: Loading Custom Texts...");
-    LoadHellgroundStrings(GameDataDatabase,"custom_texts",TEXT_SOURCE_RANGE*2,1+(TEXT_SOURCE_RANGE*3));
-
-    QueryResultAutoPtr pResult = GameDataDatabase.PQuery("SELECT entry, sound, type, language, emote FROM custom_texts");
-
-    outstring_log("TSCR: Loading Custom Texts additional data...");
-
-    if (pResult)
-    {
-        BarGoLink bar(pResult->GetRowCount());
-        uint32 uiCount = 0;
-
-        do
-        {
-            bar.step();
-            Field* pFields = pResult->Fetch();
-            StringTextData pTemp;
-
-            int32 iId              = pFields[0].GetInt32();
-            pTemp.uiSoundId        = pFields[1].GetUInt32();
-            pTemp.uiType           = pFields[2].GetUInt32();
-            pTemp.uiLanguage       = pFields[3].GetUInt32();
-            pTemp.uiEmote          = pFields[4].GetUInt32();
-
-            if (iId >= 0)
-            {
-                error_db_log("TSCR: Entry %i in table `custom_texts` is not a negative value.", iId);
-                continue;
-            }
-
-            if (iId > TEXT_SOURCE_RANGE*2 || iId <= TEXT_SOURCE_RANGE*3)
-            {
-                error_db_log("TSCR: Entry %i in table `custom_texts` is out of accepted entry range for table.", iId);
-                continue;
-            }
-
-            if (pTemp.uiSoundId)
-            {
-                if (!GetSoundEntriesStore()->LookupEntry(pTemp.uiSoundId))
-                    error_db_log("TSCR: Entry %i in table `custom_texts` has soundId %u but sound does not exist.", iId, pTemp.uiSoundId);
-            }
-
-            if (!GetLanguageDescByID(pTemp.uiLanguage))
-                error_db_log("TSCR: Entry %i in table `custom_texts` using Language %u but Language does not exist.", iId, pTemp.uiLanguage);
-
-            if (pTemp.uiType > CHAT_TYPE_ZONE_YELL)
-                error_db_log("TSCR: Entry %i in table `custom_texts` has Type %u but this Chat Type does not exist.", iId, pTemp.uiType);
-
-            m_mTextDataMap[iId] = pTemp;
-            ++uiCount;
-        } while (pResult->NextRow());
-
-        outstring_log("");
-        outstring_log(">> Loaded %u additional Custom Texts data.", uiCount);
-    }
-    else
-    {
-        BarGoLink bar(1);
-        bar.step();
-        outstring_log("");
-        outstring_log(">> Loaded 0 additional Custom Texts data. DB table `custom_texts` is empty.");
     }
 }
 
@@ -205,7 +120,7 @@ void SystemMgr::LoadScriptWaypoints()
         uiCreatureCount = pResult->GetRowCount();
     }
 
-    outstring_log("TSCR: Loading Script Waypoints for %u creature(s)...", uiCreatureCount);
+    outstring_log("TSCR: Loading Script Waypoints for %lu creature(s)...", uiCreatureCount);
 
     pResult = GameDataDatabase.PQuery("SELECT entry, pointid, location_x, location_y, location_z, waittime FROM script_waypoint ORDER BY pointid");
 
@@ -243,14 +158,14 @@ void SystemMgr::LoadScriptWaypoints()
             ++uiNodeCount;
         } while (pResult->NextRow());
 
-        outstring_log("");
+        outstring_log();
         outstring_log(">> Loaded %u Script Waypoint nodes.", uiNodeCount);
     }
     else
     {
         BarGoLink bar(1);
         bar.step();
-        outstring_log("");
+        outstring_log();
         outstring_log(">> Loaded 0 Script Waypoints. DB table `script_waypoint` is empty.");
     }
 }

@@ -1,6 +1,6 @@
 /* 
  * Copyright (C) 2006-2008 ScriptDev2 <https://scriptdev2.svn.sourceforge.net/>
- * Copyright (C) 2008-2014 Hellground <http://hellground.net/>
+ * Copyright (C) 2008-2015 Hellground <http://hellground.net/>
  * 
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -26,8 +26,8 @@ struct guardAI : public ScriptedAI
 {
     guardAI(Creature *c) : ScriptedAI(c) {}
 
-    uint32 GlobalCooldown;                                  //This variable acts like the global cooldown that players have (1.5 seconds)
-    uint32 BuffTimer;                                       //This variable keeps track of buffs
+    Timer GlobalCooldown;                                  //This variable acts like the global cooldown that players have (1.5 seconds)
+    Timer BuffTimer;                                       //This variable keeps track of buffs
 
     void Reset();
 

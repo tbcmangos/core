@@ -1,6 +1,6 @@
 /*
  * Copyright (C) 2008 TrinityCore <http://www.trinitycore.org/>
- * Copyright (C) 2008-2014 Hellground <http://hellground.net/>
+ * Copyright (C) 2008-2017 Hellground <http://wow-hellground.com/>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -156,10 +156,10 @@ bool OutdoorPvPTF::Update(uint32 diff)
     if (m_IsLocked)
     {
         // lock timer is down, release lock
-        if (m_LockTimer < diff)
+        if (m_LockTimer.Expired(diff))
         {
             m_LockTimer = TF_LOCK_TIME;
-            m_LockTimerUpdate = 0;
+            m_LockTimerUpdate = TF_LOCK_TIME_UPDATE;
             m_IsLocked = false;
             SendUpdateWorldState(TF_UI_TOWERS_CONTROLLED_DISPLAY, uint32(1));
             SendUpdateWorldState(TF_UI_LOCKED_DISPLAY_NEUTRAL,uint32(0));
@@ -169,10 +169,10 @@ bool OutdoorPvPTF::Update(uint32 diff)
         else
         {
             // worldstateui update timer is down, update ui with new time data
-            if (m_LockTimerUpdate < diff)
+            if (m_LockTimerUpdate.Expired(diff))
             {
                 m_LockTimerUpdate = TF_LOCK_TIME_UPDATE;
-                uint32 minutes_left = m_LockTimer / 60000;
+                uint32 minutes_left = m_LockTimer.GetTimeLeft() / 60000;
                 hours_left = minutes_left / 60;
                 minutes_left -= hours_left * 60;
                 second_digit = minutes_left % 10;
@@ -181,8 +181,8 @@ bool OutdoorPvPTF::Update(uint32 diff)
                 SendUpdateWorldState(TF_UI_LOCKED_TIME_MINUTES_FIRST_DIGIT,first_digit);
                 SendUpdateWorldState(TF_UI_LOCKED_TIME_MINUTES_SECOND_DIGIT,second_digit);
                 SendUpdateWorldState(TF_UI_LOCKED_TIME_HOURS,hours_left);
-            } else m_LockTimerUpdate -= diff;
-            m_LockTimer -= diff;
+            }
+
         }
     }
     return changed;
@@ -217,7 +217,7 @@ bool OutdoorPvPTF::SetupOutdoorPvP()
 
     m_IsLocked = false;
     m_LockTimer = TF_LOCK_TIME;
-    m_LockTimerUpdate = 0;
+    m_LockTimerUpdate = TF_LOCK_TIME_UPDATE;
     hours_left = 6;
     second_digit = 0;
     first_digit = 0;

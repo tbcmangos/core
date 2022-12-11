@@ -1,6 +1,6 @@
 /* 
  * Copyright (C) 2006-2008 ScriptDev2 <https://scriptdev2.svn.sourceforge.net/>
- * Copyright (C) 2008-2014 Hellground <http://hellground.net/>
+ * Copyright (C) 2008-2015 Hellground <http://hellground.net/>
  * 
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -34,8 +34,8 @@ struct boss_mothersmolderwebAI : public ScriptedAI
 {
     boss_mothersmolderwebAI(Creature *c) : ScriptedAI(c) {}
 
-    uint32 Crystalize_Timer;
-    uint32 MothersMilk_Timer;
+    int32 Crystalize_Timer;
+    int32 MothersMilk_Timer;
 
     void Reset()
     {
@@ -57,19 +57,19 @@ struct boss_mothersmolderwebAI : public ScriptedAI
         if (!UpdateVictim() )
             return;
 
-        //Crystalize_Timer
-        if( Crystalize_Timer < diff )
+        Crystalize_Timer -= diff;
+        if( Crystalize_Timer <= diff )
         {
             DoCast(m_creature,SPELL_CRYSTALIZE);
-            Crystalize_Timer = 15000;
-        }else Crystalize_Timer -= diff;
+            Crystalize_Timer += 15000;
+        }
 
-        //MothersMilk_Timer
-        if( MothersMilk_Timer < diff )
+        MothersMilk_Timer -= diff;
+        if( MothersMilk_Timer <= diff )
         {
             DoCast(m_creature,SPELL_MOTHERSMILK);
-            MothersMilk_Timer = 5000+rand()%7500;
-        }else MothersMilk_Timer -= diff;
+            MothersMilk_Timer += 5000+rand()%7500;
+        }
 
         DoMeleeAttackIfReady();
     }

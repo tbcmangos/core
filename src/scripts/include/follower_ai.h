@@ -1,6 +1,6 @@
 /*
  * Copyright (C) 2006-2009 ScriptDev2 <https://scriptdev2.svn.sourceforge.net/>
- * Copyright (C) 2008-2014 Hellground <http://hellground.net/>
+ * Copyright (C) 2008-2015 Hellground <http://hellground.net/>
  * 
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -40,6 +40,8 @@ class FollowerAI : public ScriptedAI
         ~FollowerAI() {}
 
         //virtual void WaypointReached(uint32 uiPointId) = 0;
+
+        bool IsEscorted() { return HasFollowState(STATE_FOLLOW_INPROGRESS); }
 
         void MovementInform(uint32 uiMotionType, uint32 uiPointId);
 

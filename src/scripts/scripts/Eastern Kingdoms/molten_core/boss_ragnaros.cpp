@@ -1,6 +1,6 @@
 /* 
  * Copyright (C) 2006-2008 ScriptDev2 <https://scriptdev2.svn.sourceforge.net/>
- * Copyright (C) 2008-2014 Hellground <http://hellground.net/>
+ * Copyright (C) 2008-2015 Hellground <http://hellground.net/>
  * 
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -42,6 +42,7 @@ EndScriptData */
 
 #define SPELL_SONSOFFLAME_DUMMY     21108                   //Server side effect
 #define SPELL_RAGSUBMERGE           21107                   //Stealth aura
+#define SPELL_RAGSUBMERGE2          20567
 #define SPELL_RAGEMERGE             20568
 #define SPELL_MELTWEAPON            21388
 #define SPELL_ELEMENTALFIRE         20564
@@ -98,14 +99,14 @@ struct boss_ragnarosAI : public Scripted_NoMovementAI
     }
 
     ScriptedInstance * pInstance;
-    uint32 WrathOfRagnaros_Timer;
-    uint32 HandOfRagnaros_Timer;
-    uint32 LavaBurst_Timer;
-    uint32 MagmaBurst_Timer;
-    uint32 ElementalFire_Timer;
-    uint32 Erruption_Timer;
-    uint32 Submerge_Timer;
-    uint32 Attack_Timer;
+    int32 WrathOfRagnaros_Timer;
+    int32 HandOfRagnaros_Timer;
+    int32 LavaBurst_Timer;
+    int32 MagmaBurst_Timer;
+    int32 ElementalFire_Timer;
+    int32 Erruption_Timer;
+    int32 Submerge_Timer;
+    int32 Attack_Timer;
     uint32 Summon_Timer;
     Creature *Summoned;
     bool HasYelledMagmaBurst;
@@ -162,6 +163,7 @@ struct boss_ragnarosAI : public Scripted_NoMovementAI
     {
         if(pInstance->GetData(DATA_MAJORDOMO_EXECUTUS_EVENT) == DONE && pInstance->GetData(DATA_SUMMON_RAGNAROS) == DONE && me->GetVisibility() == VISIBILITY_OFF)
         {
+            Summon_Timer -= diff;
             if(Summon_Timer <= diff)
             {
                 me->SetVisibility(VISIBILITY_ON);
@@ -174,20 +176,22 @@ struct boss_ragnarosAI : public Scripted_NoMovementAI
                 }
 
             }
-            else Summon_Timer -= diff;
+            
             return;
         }
 
-        if (WasBanished && Attack_Timer < diff)
-        {
-            //Become unbanished again
-            m_creature->setFaction(14);
-            m_creature->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
-            DoCast(m_creature,SPELL_RAGEMERGE);
-            WasBanished = false;
-        } else if (WasBanished)
+        if (WasBanished)
         {
             Attack_Timer -= diff;
+            if (Attack_Timer <= diff)
+            {
+                //Become unbanished again
+                m_creature->setFaction(14);
+                m_creature->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
+                m_creature->RemoveAurasDueToSpellByCancel(SPELL_RAGSUBMERGE);
+                DoCast(m_creature, SPELL_RAGEMERGE);
+                WasBanished = false;
+            }
             //Do nothing while banished
             return;
         }
@@ -196,8 +200,8 @@ struct boss_ragnarosAI : public Scripted_NoMovementAI
         if (!UpdateVictim())
             return;
 
-        //WrathOfRagnaros_Timer
-        if (WrathOfRagnaros_Timer < diff)
+        WrathOfRagnaros_Timer -= diff;
+        if (WrathOfRagnaros_Timer <= diff)
         {
             DoCast(m_creature->getVictim(),SPELL_WRATHOFRAGNAROS);
 
@@ -206,11 +210,11 @@ struct boss_ragnarosAI : public Scripted_NoMovementAI
                 DoScriptText(SAY_WRATH, m_creature);
             }
 
-            WrathOfRagnaros_Timer = 30000;
-        }else WrathOfRagnaros_Timer -= diff;
+            WrathOfRagnaros_Timer += 30000;
+        }
 
-        //HandOfRagnaros_Timer
-        if (HandOfRagnaros_Timer < diff)
+        HandOfRagnaros_Timer -= diff;
+        if (HandOfRagnaros_Timer <= diff)
         {
             DoCast(m_creature,SPELL_HANDOFRAGNAROS);
 
@@ -219,31 +223,32 @@ struct boss_ragnarosAI : public Scripted_NoMovementAI
                 DoScriptText(SAY_HAND, m_creature);
             }
 
-            HandOfRagnaros_Timer = 25000;
-        }else HandOfRagnaros_Timer -= diff;
+            HandOfRagnaros_Timer += 25000;
+        }
 
-        //LavaBurst_Timer
-        if (LavaBurst_Timer < diff)
+        LavaBurst_Timer -= diff;
+        if (LavaBurst_Timer <= diff)
         {
             DoCast(m_creature->getVictim(),SPELL_LAVABURST);
             LavaBurst_Timer = 10000;
-        }else LavaBurst_Timer -= diff;
+        }
 
-        //Erruption_Timer
-        if (LavaBurst_Timer < diff)
+        Erruption_Timer -= diff;
+        if (LavaBurst_Timer <= diff)
         {
             DoCast(m_creature->getVictim(),SPELL_ERRUPTION);
-            Erruption_Timer = 20000 + rand()%25000;
-        }else Erruption_Timer -= diff;
+            Erruption_Timer += 20000 + rand()%25000;
+        }
 
-        //ElementalFire_Timer
-        if (ElementalFire_Timer < diff)
+        ElementalFire_Timer -= diff;
+        if (ElementalFire_Timer <= diff)
         {
             DoCast(m_creature->getVictim(),SPELL_ELEMENTALFIRE);
-            ElementalFire_Timer = 10000 + rand()%4000;
-        }else ElementalFire_Timer -= diff;
+            ElementalFire_Timer += 10000 + rand()%4000;
+        }
 
         //Submerge_Timer
+        Submerge_Timer -= diff;
         if (!WasBanished && Submerge_Timer <= diff)
         {
             //Creature spawning and ragnaros becomming unattackable
@@ -252,7 +257,6 @@ struct boss_ragnarosAI : public Scripted_NoMovementAI
 
             m_creature->InterruptNonMeleeSpells(false);
             //Root self
-            DoCast(m_creature,23973);
             m_creature->setFaction(35);
             m_creature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
             m_creature->HandleEmoteCommand(EMOTE_ONESHOT_SUBMERGE);
@@ -280,7 +284,7 @@ struct boss_ragnarosAI : public Scripted_NoMovementAI
                 HasSubmergedOnce = true;
                 WasBanished = true;
                 DoCast(m_creature,SPELL_RAGSUBMERGE);
-                Attack_Timer = 90000;
+                Attack_Timer += 90000;
 
             }else
             {
@@ -297,14 +301,12 @@ struct boss_ragnarosAI : public Scripted_NoMovementAI
                             ((CreatureAI*)Summoned->AI())->AttackStart(target);
                     }
                 }
-
                 WasBanished = true;
                 DoCast(m_creature,SPELL_RAGSUBMERGE);
-                Attack_Timer = 90000;
+                Attack_Timer += 90000;
             }
-
-            Submerge_Timer = 180000;
-        }else Submerge_Timer -= diff;
+            Submerge_Timer += 180000;
+        }
 
         //If we are within range melee the target
         if( m_creature->IsWithinMeleeRange(m_creature->getVictim()))
@@ -317,8 +319,8 @@ struct boss_ragnarosAI : public Scripted_NoMovementAI
             }
         }else
         {
-            //MagmaBurst_Timer
-            if (MagmaBurst_Timer < diff)
+            MagmaBurst_Timer -= diff;
+            if (MagmaBurst_Timer <= diff)
             {
                 DoCast(m_creature->getVictim(),SPELL_MAGMABURST);
 
@@ -329,8 +331,8 @@ struct boss_ragnarosAI : public Scripted_NoMovementAI
                     HasYelledMagmaBurst = true;
                 }
 
-                MagmaBurst_Timer = 2500;
-            }else MagmaBurst_Timer -= diff;
+                MagmaBurst_Timer += 2500;
+            }
         }
     }
 };

@@ -1,7 +1,7 @@
 /*
  * Copyright (C) 2005-2008 MaNGOS <http://getmangos.com/>
  * Copyright (C) 2008 TrinityCore <http://www.trinitycore.org/>
- * Copyright (C) 2008-2014 Hellground <http://hellground.net/>
+ * Copyright (C) 2008-2017 Hellground <http://wow-hellground.com/>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -39,8 +39,9 @@
 #include "GridNotifiers.h"
 #include "GridNotifiersImpl.h"
 #include "CellImpl.h"
-
-#define COMMAND_COOLDOWN 2
+#include "vmap/VMapFactory.h"
+#include "BattleGroundMgr.h"
+#include "GuildMgr.h"
 
 bool ChatHandler::HandleWPToFileCommand(const char* args)
 {
@@ -291,6 +292,14 @@ bool ChatHandler::HandleDebugSendOpcodeCommand(const char* /*args*/)
     return true;
 }
 
+bool ChatHandler::HandleDebugSendPetSpellInitCommand(const char* args)
+{
+    Player* plr = getSelectedPlayer();
+    if (plr)
+        plr->PetSpellInitialize();
+    return true;
+}
+
 bool ChatHandler::HandleDebugUpdateWorldStateCommand(const char* args)
 {
     char* w = strtok((char*)args, " ");
@@ -365,6 +374,57 @@ bool ChatHandler::HandleDebugPlaySoundCommand(const char* args)
 
     PSendSysMessage(LANG_YOU_HEAR_SOUND, dwSoundId);
     return true;
+}
+
+bool ChatHandler::HandleDebugPlayRangeSound(const char* args)
+{
+    if (!*args)
+    {
+        SendSysMessage(LANG_BAD_VALUE);
+        SetSentErrorMessage(true);
+        return false;
+    }
+
+    uint32 affected = 0;
+    uint32 max = 0;
+    uint32 dwSoundId = atoi(strtok((char*)args, " "));
+    float range = atoi((char*)strtok(NULL, " "));
+
+    if (!sSoundEntriesStore.LookupEntry(dwSoundId))
+    {
+        PSendSysMessage(LANG_SOUND_NOT_EXIST, dwSoundId);
+        SetSentErrorMessage(true);
+        return false;
+    }
+
+    if (m_session->GetPlayer())
+        if (Map* map = m_session->GetPlayer()->GetMap())
+        {
+            Position homepos;
+            m_session->GetPlayer()->GetPosition(homepos);
+
+            Map::PlayerList const &PlayerList = ((Map*)map)->GetPlayers();
+
+            for (InstanceMap::PlayerList::const_iterator i = PlayerList.begin(); i != PlayerList.end(); ++i)
+            {
+                if (Player* i_pl = i->getSource())
+                    if (i_pl && i_pl->IsInWorld())
+                    {
+                        max++;
+                        if (range == 0 || i_pl->GetDistance2d(homepos.x, homepos.y) < range)
+                        {
+                            i_pl->PlayDirectSound(dwSoundId, i_pl);
+                            affected++;
+                        }
+                    }
+            }
+            PSendSysMessage("Played soundID = %u in range %f for %u out of %u players.", dwSoundId, range, affected, max);
+            return true;
+        }
+
+
+    return false;
+
 }
 
 //Send notification in channel
@@ -625,13 +685,13 @@ bool ChatHandler::HandleDebugGetItemState(const char* args)
 
             if (item->GetOwnerGUID() != player->GetGUID())
             {
-                PSendSysMessage("queue(%d): for the an item (guid %d), the owner's guid (%d) and player's guid (%d) don't match!", i, item->GetGUIDLow(), GUID_LOPART(item->GetOwnerGUID()), player->GetGUIDLow());
+                PSendSysMessage("queue(%lu): for the an item (guid %u), the owner's guid (%u) and player's guid (%u) don't match!", i, item->GetGUIDLow(), GUID_LOPART(item->GetOwnerGUID()), player->GetGUIDLow());
                 error = true; continue;
             }
 
             if (item->GetQueuePos() != i)
             {
-                PSendSysMessage("queue(%d): for the an item (guid %d), the queuepos doesn't match it's position in the queue!", i, item->GetGUIDLow());
+                PSendSysMessage("queue(%lu): for the an item (guid %u), the queuepos doesn't match it's position in the queue!", i, item->GetGUIDLow());
                 error = true; continue;
             }
 
@@ -640,13 +700,13 @@ bool ChatHandler::HandleDebugGetItemState(const char* args)
 
             if (test == NULL)
             {
-                PSendSysMessage("queue(%d): the bag(%d) and slot(%d) values for the item with guid %d are incorrect, the player doesn't have an item at that position!", i, item->GetBagSlot(), item->GetSlot(), item->GetGUIDLow());
+                PSendSysMessage("queue(%lu): the bag(%d) and slot(%d) values for the item with guid %d are incorrect, the player doesn't have an item at that position!", i, item->GetBagSlot(), item->GetSlot(), item->GetGUIDLow());
                 error = true; continue;
             }
 
             if (test != item)
             {
-                PSendSysMessage("queue(%d): the bag(%d) and slot(%d) values for the item with guid %d are incorrect, the item with guid %d is there instead!", i, item->GetBagSlot(), item->GetSlot(), item->GetGUIDLow(), test->GetGUIDLow());
+                PSendSysMessage("queue(%lu): the bag(%d) and slot(%d) values for the item with guid %d are incorrect, the item with guid %d is there instead!", i, item->GetBagSlot(), item->GetSlot(), item->GetGUIDLow(), test->GetGUIDLow());
                 error = true; continue;
             }
         }
@@ -684,13 +744,13 @@ bool ChatHandler::HandleDebugThreatList(const char * /*args*/)
         return false;
 
     Player *pOwner = m_session->GetPlayer();
-    if (!pOwner || pOwner->HasSpellCooldown(COMMAND_COOLDOWN))
+    if (!pOwner || pOwner->GetCooldownMgr().HasSpellCooldown(COMMAND_COOLDOWN))
         return false;
 
     uint32 max_count = 0;
     if (!m_session->HasPermissions(PERM_GMT_DEV))
     {
-        pOwner->AddSpellCooldown(COMMAND_COOLDOWN, 0, time(NULL) +10);
+        pOwner->GetCooldownMgr().AddSpellCooldown(COMMAND_COOLDOWN, 10000);
         max_count = 3;
     }
 
@@ -840,7 +900,7 @@ bool ChatHandler::HandleDebugGetInstanceData64Command(const char *args)
 
     uint32 _id = uint32(atoi(id));
 
-    PSendSysMessage("Result: %u", pInstance->GetData64(_id));
+    PSendSysMessage("Result: %lu", pInstance->GetData64(_id));
     return true;
 }
 
@@ -967,18 +1027,301 @@ bool ChatHandler::HandleDebugShowCombatStats(const char* args)
     if(!target)
         return false;
 
-    if(strcmp(args, "on") == 0)
+    uint32 flags = atoi(args);
+
+    if (flags)
     {
-        target->SetGMToSendCombatStats(m_session->GetPlayer()->GetGUID());
-        PSendSysMessage("Combat stats for unit %s (%d) enabled", target->GetName(), target->GetGUID());
+        target->SetGMToSendCombatStats(m_session->GetPlayer()->GetGUID(), flags);
+        PSendSysMessage("Combat stats for unit %s (%lu) enabled with 0x%08X flags", target->GetName(), target->GetGUID(), flags);
     }
-    else if(strcmp(args, "off") == 0)
+    else if(strcmp(args, "on") == 0)
     {
-        target->SetGMToSendCombatStats(0);
-        PSendSysMessage("Combat stats for unit %s (%d) disabled", target->GetName(), target->GetGUID());
+        target->SetGMToSendCombatStats(m_session->GetPlayer()->GetGUID(), -1);
+        PSendSysMessage("Combat stats for unit %s (%lu) enabled", target->GetName(), target->GetGUID());
+    }
+    else if(strcmp(args, "off") == 0 || strcmp(args, "0") == 0)
+    {
+        target->SetGMToSendCombatStats(0, 0);
+        PSendSysMessage("Combat stats for unit %s (%lu) disabled", target->GetName(), target->GetGUID());
     }
     else
         return false;
+
+    return true;
+}
+
+// Sends chat message of boss emote type
+bool ChatHandler::HandleDebugBossEmoteCommand(const char* args)
+{
+    if (!args || !*args)
+    {
+        SendSysMessage(LANG_BAD_VALUE);
+        SetSentErrorMessage(true);
+        return false;
+    }
+
+    Player *pPlayer = m_session->GetPlayer();
+
+    if (!pPlayer)
+        return false;
+
+    WorldPacket data(SMSG_MESSAGECHAT, 200);
+    pPlayer->BuildMonsterChat(&data, CHAT_MSG_RAID_BOSS_EMOTE, args, LANG_UNIVERSAL, pPlayer->GetName(), 0, true);
+    pPlayer->BroadcastPacketInRange(&data, sWorld.getConfig(CONFIG_LISTEN_RANGE_YELL), true);
+
+    return true;
+}
+
+bool ChatHandler::HandleDebugVmapsCommand(const char* args)
+{
+    Player *pPlayer = m_session->GetPlayer();
+    Unit* target = getSelectedUnit();
+    if (!target || target == pPlayer)
+    {
+        SendSysMessage(LANG_NO_SELECTION);
+        SetSentErrorMessage(true);
+        return false;
+    }
+    VMAP::IVMapManager* mgr = VMAP::VMapFactory::createOrGetVMapManager();
+    if (!mgr)
+        return false;
+
+    mgr->SetHitModelName("<unknown>", 0);
+    bool los = mgr->isInLineOfSight2(pPlayer->GetMapId(),
+        pPlayer->GetPositionX(), pPlayer->GetPositionY(), pPlayer->GetPositionZ() + 2.0f,
+        target->GetPositionX(), target->GetPositionY(), target->GetPositionZ() + 2.0f,true);
+
+    if (los)
+        SendSysMessage("No collision detected");
+    else
+        PSendSysMessage("Detected collision with %s",mgr->GetHitModelName());
+
+    return true;
+}
+
+bool ChatHandler::HandleDebugSendBattlegroundOpcodes(const char* args)
+{
+    Player *pPlayer = m_session->GetPlayer();
+    BattleGround* bg = sBattleGroundMgr.GetBattleGround(pPlayer->GetInstanceId(), BATTLEGROUND_TYPE_NONE);
+    bool done = false;
+
+    WorldPacket data;
+    if (strcmp(args, "join") == 0)
+    {
+        sBattleGroundMgr.BuildPlayerJoinedBattleGroundPacket(&data, pPlayer);
+        m_session->SendPacket(&data);
+        done = true;
+    }
+    else if (strcmp(args, "leave") == 0)
+    {
+        sBattleGroundMgr.BuildPlayerLeftBattleGroundPacket(&data, pPlayer);
+        m_session->SendPacket(&data);
+        done = true;
+    }
+    else if (strcmp(args, "log") == 0)
+    {
+        if (!bg)
+        {
+            SendSysMessage("No such BG");
+            SetSentErrorMessage(true);
+            return false;
+        }
+        sBattleGroundMgr.BuildPvpLogDataPacket(&data,bg);
+        m_session->SendPacket(&data);
+        done = true;
+    }
+    else if (strcmp(args, "status") == 0)
+    {
+        if (!bg)
+        {
+            SendSysMessage("No such BG");
+            SetSentErrorMessage(true);
+            return false;
+        }
+        sBattleGroundMgr.BuildBattleGroundStatusPacket(&data, bg, pPlayer->GetTeam(), 0, STATUS_IN_PROGRESS, 0, bg->GetStartTime());
+        m_session->SendPacket(&data);
+        done = true;
+    }
+    else if (strcmp(args, "none") == 0)
+    {
+        if (!bg)
+        {
+            SendSysMessage("No such BG");
+            SetSentErrorMessage(true);
+            return false;
+        }
+        sBattleGroundMgr.BuildBattleGroundStatusPacket(&data, bg, pPlayer->GetTeam(), 0, STATUS_NONE, 0, bg->GetStartTime());
+        m_session->SendPacket(&data);
+        done = true;
+    }
+
+    if (done)
+    {
+        SendSysMessage(LANG_DONE);
+        return true;
+    }
+    return false;
+}
+
+bool ChatHandler::HandleDebugCooldownsCommand(const char* args)
+{
+    Player* plr = getSelectedPlayer();
+    if (!plr)
+    {
+        SendSysMessage(LANG_NO_PLAYER);
+        SetSentErrorMessage(true);
+        return false;
+    }
+    PSendSysMessage("Cooldowns for player %s:",plr->GetName());
+    SendSysMessage(plr->GetCooldownMgr().SendCooldownsDebug().c_str());
+    return true;
+}
+
+bool ChatHandler::HandleDebugJoinBG(const char* args)
+{
+    Player* plr = getSelectedPlayer();
+    if (!plr)
+    {
+        SendSysMessage(LANG_NO_PLAYER);
+        SetSentErrorMessage(true);
+        return false;
+    }
+
+    if (!args)
+        return false;
+
+    std::string typestr = strtok((char*)args, " ");
+    char* sidestr = strtok(NULL, " ");
+
+    if (!sidestr)
+        return false;
+
+    uint32 team;
+
+    if (sidestr[0] == 'A' || sidestr[0] == 'a')
+        team = ALLIANCE;
+    else
+        team = HORDE;
+
+    BattleGroundTypeId type = BATTLEGROUND_TYPE_NONE;
+    if (typestr == "AV")
+        type = BATTLEGROUND_AV;
+    else if (typestr == "AB")
+        type = BATTLEGROUND_AB;
+    else if (typestr == "WS" || typestr == "WSG")
+        type = BATTLEGROUND_WS;
+    else if (typestr == "EY" || typestr == "EOTS")
+        type = BATTLEGROUND_EY;
+
+    if (type == BATTLEGROUND_TYPE_NONE)
+        return false;
+
+    Player* _player = m_session->GetPlayer();
+    BattleGroundQueueTypeId bgQueueTypeId = BattleGroundMgr::BGQueueTypeId(type, 0);
+    BattleGroundBracketId bgBracketId = _player->GetBattleGroundBracketIdFromLevel(type);
+    BattleGround* bg = sBattleGroundMgr.GetBattleGroundTemplate(type);
+    if (!bg)
+        return false;
+    // check if already in queue
+    if (_player->GetBattleGroundQueueIndex(bgQueueTypeId) < PLAYER_MAX_BATTLEGROUND_QUEUES)
+        return false;
+    // check if has free queue slots
+    if (!_player->HasFreeBattleGroundQueueId())
+        return false;
+
+    uint32 queueSlot = _player->AddBattleGroundQueueId(bgQueueTypeId);
+    _player->SetBattleGroundEntryPoint(_player->GetMapId(), _player->GetPositionX(), _player->GetPositionY(), _player->GetPositionZ(), _player->GetOrientation());
+    WorldPacket data;
+    // send status packet (in queue)
+    sBattleGroundMgr.BuildBattleGroundStatusPacket(&data, bg, team, queueSlot, STATUS_WAIT_QUEUE, 0, 0);
+    m_session->SendPacket(&data);
+
+    GroupQueueInfo * ginfo = sBattleGroundMgr.m_BattleGroundQueues[bgQueueTypeId].AddGroup(_player, type, bgBracketId, 0, false, false, 0, 0, 0, team);
+    sBattleGroundMgr.m_BattleGroundQueues[bgQueueTypeId].AddPlayer(_player, ginfo);
+    sBattleGroundMgr.ScheduleQueueUpdate(bgQueueTypeId, type, bgBracketId);
+
+    return true;
+}
+
+bool ChatHandler::HandleDebugMapCommand(const char* args)
+{
+    if (!m_session)
+        return false;
+
+    Map* map = m_session->GetPlayer()->GetMap();
+    SendSysMessage(map->getDebugData().c_str());
+
+    return true;
+}
+
+bool ChatHandler::HandleDebugCellCommand(const char* args)
+{
+    if (!m_session)
+        return false;
+
+    Map* map = m_session->GetPlayer()->GetMap();
+    CellPair pair = Hellground::ComputeCellPair(m_session->GetPlayer()->GetPositionX(), m_session->GetPlayer()->GetPositionY()).normalize();
+    char* posx = strtok((char*)args, " ");
+    char* posy = strtok(NULL, " ");
+    if (posx && posy)
+    {
+        uint32 x, y;
+        x = atoi(posx);
+        y = atoi(posy);
+        if (x > TOTAL_NUMBER_OF_CELLS_PER_MAP || y > TOTAL_NUMBER_OF_CELLS_PER_MAP)
+            return false;
+        pair.x_coord = x;
+        pair.y_coord = y;
+    }
+    
+    struct checker
+    {
+        bool operator()(WorldObject* obj)
+        {
+            return obj->GetTypeId() == TYPEID_UNIT;
+        }
+    } Check;
+    std::list<Unit*> unitlist;
+    Hellground::UnitListSearcher<checker> searcher(unitlist, Check);
+    TypeContainerVisitor<Hellground::UnitListSearcher<checker>, GridTypeMapContainer> visitor(searcher);
+    Cell cell(pair);
+    cell.SetNoCreate();
+    map->Visit(cell, visitor);
+
+    std::ostringstream str;
+    str << "Objects on cell " << pair.x_coord << " " << pair.y_coord << ":\n";
+    for (std::list<Unit*>::iterator itr = unitlist.begin(); itr != unitlist.end(); itr++)
+    {
+        str << (*itr)->GetName() << " (" << (*itr)->GetEntry() << "," << (*itr)->GetGUIDLow() << "); ";
+    }
+    SendSysMessage(str.str().c_str());
+    return true;
+}
+
+bool ChatHandler::HandleDebugGuildKill(const char* args)
+{
+    if (!args) return false;
+    char* token = strtok((char*)args, " ");
+    uint32 boss = atoi(token);
+    if (!boss)
+        return false;
+    if (boss == GBK_ANTISPAMINLOGSINATOR)
+    {
+        sGuildMgr.UpdateWeek();
+        return true;
+    }
+
+    token = strtok(NULL, " ");
+    if (!token) return false;
+    uint32 mstime = atoi(token);
+    token = strtok(NULL, " ");
+    if (!token) return false;
+    uint32 guild = atoi(token);
+
+    if (boss >= GBK_TOTAL)
+        return false;
+    
+    sGuildMgr.BossKilled(boss, guild, mstime);
 
     return true;
 }

@@ -1,6 +1,6 @@
 /* 
  * Copyright (C) 2006-2008 ScriptDev2 <https://scriptdev2.svn.sourceforge.net/>
- * Copyright (C) 2008-2014 Hellground <http://hellground.net/>
+ * Copyright (C) 2008-2015 Hellground <http://hellground.net/>
  * 
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -41,8 +41,8 @@ struct boss_ramstein_the_gorgerAI : public ScriptedAI
 
     ScriptedInstance* pInstance;
 
-    uint32 Trample_Timer;
-    uint32 Knockout_Timer;
+    int32 Trample_Timer;
+    int32 Knockout_Timer;
     std::list<uint64> summons;
 
     void Reset()
@@ -83,19 +83,19 @@ struct boss_ramstein_the_gorgerAI : public ScriptedAI
         if (!UpdateVictim())
             return;
 
-        //Trample
-        if (Trample_Timer < diff)
+        Trample_Timer -= diff;
+        if (Trample_Timer <= diff)
         {
             DoCast(m_creature,SPELL_TRAMPLE);
-            Trample_Timer = 7000;
-        }else Trample_Timer -= diff;
+            Trample_Timer += 7000;
+        }
 
-        //Knockout
-        if (Knockout_Timer < diff)
+        Knockout_Timer -= diff; 
+        if (Knockout_Timer <= diff)
         {
             DoCast(m_creature->getVictim(),SPELL_KNOCKOUT);
-            Knockout_Timer = 10000;
-        }else Knockout_Timer -= diff;
+            Knockout_Timer += 10000;
+        }
 
         DoMeleeAttackIfReady();
     }

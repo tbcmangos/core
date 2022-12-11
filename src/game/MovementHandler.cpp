@@ -1,7 +1,7 @@
 /*
  * Copyright (C) 2005-2008 MaNGOS <http://getmangos.com/>
  * Copyright (C) 2008 TrinityCore <http://www.trinitycore.org/>
- * Copyright (C) 2008-2014 Hellground <http://hellground.net/>
+ * Copyright (C) 2008-2017 Hellground <http://wow-hellground.com/>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -28,12 +28,13 @@
 #include "Player.h"
 #include "MapManager.h"
 #include "Transports.h"
-#include "BattleGround.h"
+#include "BattleGroundMgr.h"
 #include "WaypointMovementGenerator.h"
 #include "InstanceSaveMgr.h"
 #include "AntiCheat.h"
 #include "ObjectMgr.h"
 #include "Language.h"
+#include "Spell.h"
 
 void WorldSession::HandleMoveWorldportAckOpcode(WorldPacket & /*recv_data*/)
 {
@@ -138,6 +139,12 @@ void WorldSession::HandleMoveWorldportAckOpcode()
         {
             if (_player->IsInvitedForBattleGroundInstance(_player->GetBattleGroundId()))
                 bg->AddPlayer(_player);
+            else if (_player->isGameMaster()) // add pvp minimap button
+            {
+                WorldPacket data;
+                sBattleGroundMgr.BuildBattleGroundStatusPacket(&data, bg, _player->GetTeam(), 0, STATUS_IN_PROGRESS, 0, bg->GetStartTime());
+                SendPacket(&data);
+            }
         }
     }
 
@@ -218,11 +225,10 @@ void WorldSession::HandleMovementOpcodes(WorldPacket & recv_data)
 
     MovementInfo movementInfo;
     recv_data >> movementInfo;
-
     /*----------------*/
     if (recv_data.size() != recv_data.rpos())
     {
-        sLog.outLog(LOG_DEFAULT, "ERROR: MovementHandler: player %s (guid %d, account %u) sent a packet (opcode %u) that is %u bytes larger than it should be. Kicked as cheater.", _player->GetName(), _player->GetGUIDLow(), _player->GetSession()->GetAccountId(), recv_data.GetOpcode(), recv_data.size() - recv_data.rpos());
+        sLog.outLog(LOG_DEFAULT, "ERROR: MovementHandler: player %s (guid %d, account %u) sent a packet (opcode %u) that is %lu bytes larger than it should be. Kicked as cheater.", _player->GetName(), _player->GetGUIDLow(), _player->GetSession()->GetAccountId(), recv_data.GetOpcode(), recv_data.size() - recv_data.rpos());
         KickPlayer();
         return;
     }
@@ -234,8 +240,12 @@ void WorldSession::HandleMovementOpcodes(WorldPacket & recv_data)
     if (opcode == MSG_MOVE_FALL_LAND && plMover && !plMover->IsTaxiFlying())
         plMover->HandleFallDamage(movementInfo);
 
+    // we dont want to switch to walk when MC other player
+    if (!_player->IsSelfMover() && plMover)
+        movementInfo.RemoveMovementFlag(MOVEFLAG_WALK_MODE);
+
     /* process position-change */
-    HandleMoverRelocation(movementInfo);
+    bool result = HandleMoverRelocation(movementInfo);
 
     if (plMover)
         plMover->UpdateFallInformationIfNeed(movementInfo, opcode);
@@ -244,10 +254,21 @@ void WorldSession::HandleMovementOpcodes(WorldPacket & recv_data)
     data << mover->GetPackGUID();                 // write guid
     movementInfo.Write(data);                     // write data
     mover->BroadcastPacketExcept(&data, _player);
+
+    if (!result)
+    {
+        WorldPacket data(SMSG_FORCE_MOVE_ROOT, mover->GetPackGUID().size() + 4);
+        data << mover->GetPackGUID();
+        data << mover->GetUnitStateMgr().GetCounter(UNIT_ACTION_ROOT);
+        SendPacket(&data);
+       // sLog.outLog(LOG_CHEAT, "Player %s (GUID:%u) moving when rooted, position %f %f %f %u",
+       //     _player->GetName(), _player->GetGUIDLow(), movementInfo.pos.x, movementInfo.pos.y, movementInfo.pos.z, _player->GetMapId());
+    }
 }
 
-void WorldSession::HandleMoverRelocation(MovementInfo& movementInfo)
+bool WorldSession::HandleMoverRelocation(MovementInfo& movementInfo)
 {
+    bool movingGood = true;
     uint32 mstime = WorldTimer::getMSTime();
     if ( m_clientTimeDelay == 0 )
         m_clientTimeDelay = mstime - movementInfo.time;
@@ -258,8 +279,39 @@ void WorldSession::HandleMoverRelocation(MovementInfo& movementInfo)
 
     if (Player *plMover = mover->ToPlayer())
     {
-        if (sWorld.getConfig(CONFIG_ENABLE_PASSIVE_ANTICHEAT) && !plMover->hasUnitState(UNIT_STAT_LOST_CONTROL | UNIT_STAT_NOT_MOVE) && !plMover->GetSession()->HasPermissions(PERM_GMT_DEV) && plMover->m_AC_timer == 0)
-            sWorld.m_ac.execute(new ACRequest(plMover, plMover->m_movementInfo, movementInfo));
+        plMover->m_desiredPosition = movementInfo.pos;
+        if (mover->hasUnitState(UNIT_STAT_ROOT))
+        {
+            if (mover->m_movementInfo.pos != movementInfo.pos) // allow rotating in roots
+            {
+                if (Spell* current = mover->GetCurrentSpell(CURRENT_GENERIC_SPELL))
+                    current->SetPossiblePos(movementInfo.pos);
+                if (Spell* current = mover->GetCurrentSpell(CURRENT_AUTOREPEAT_SPELL))
+                    current->SetPossiblePos(movementInfo.pos);
+                
+                movementInfo.pos.x = mover->m_movementInfo.pos.x;
+                movementInfo.pos.y = mover->m_movementInfo.pos.y;
+                movementInfo.pos.z = mover->m_movementInfo.pos.z;
+                movingGood = false;
+            }
+        }
+
+        if (sWorld.getConfig(CONFIG_ENABLE_PASSIVE_ANTICHEAT) && !plMover->hasUnitState(UNIT_STAT_LOST_CONTROL | UNIT_STAT_NOT_MOVE) && !plMover->GetSession()->HasPermissions(PERM_GMT_DEV))
+        {
+            if (plMover->m_AC_timer == 0 || // time up OR moved long distance and timer is NOT on long interval(caused by teleport)
+                (plMover->m_AC_timer < 2500 && (abs(plMover->m_movementInfo.pos.x - movementInfo.pos.x) > 15 || abs(plMover->m_movementInfo.pos.y - movementInfo.pos.y) > 15)))
+            {
+
+                sWorld.m_ac.execute(new ACRequest(plMover, plMover->m_movementInfo, movementInfo));
+                if (!plMover->isForcedAC()) // check every packet
+                {
+                    if (urand(0, 10))
+                        plMover->m_AC_timer = 1000;
+                    else
+                        plMover->m_AC_timer = 100;
+                }
+            }
+        }
 
         if (movementInfo.HasMovementFlag(MOVEFLAG_ONTRANSPORT))
         {
@@ -283,19 +335,20 @@ void WorldSession::HandleMoverRelocation(MovementInfo& movementInfo)
             plMover->SetTransport(NULL);
             movementInfo.ClearTransportData();
         }
-
+        
         if (movementInfo.HasMovementFlag(MOVEFLAG_SWIMMING) != plMover->IsInWater())
         {
             // now client not include swimming flag in case jumping under water
             plMover->SetInWater(!plMover->IsInWater() || plMover->GetTerrain()->IsInWater(movementInfo.GetPos()->x, movementInfo.GetPos()->y, movementInfo.GetPos()->z));
         }
     }
-
+    
     mover->m_movementInfo = movementInfo;
     mover->SetPosition(movementInfo.GetPos()->x, movementInfo.GetPos()->y, movementInfo.GetPos()->z, movementInfo.GetPos()->o);
-
     if (mover->GetObjectGuid().IsPlayer())
         mover->ToPlayer()->HandleFallUnderMap(movementInfo.GetPos()->z);
+    
+    return movingGood;
 }
 
 void WorldSession::HandleForceSpeedChangeAck(WorldPacket &recv_data)

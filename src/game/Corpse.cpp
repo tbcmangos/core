@@ -1,7 +1,7 @@
 /*
  * Copyright (C) 2005-2008 MaNGOS <http://getmangos.com/>
  * Copyright (C) 2008 TrinityCore <http://www.trinitycore.org/>
- * Copyright (C) 2008-2014 Hellground <http://hellground.net/>
+ * Copyright (C) 2008-2017 Hellground <http://wow-hellground.com/>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -229,7 +229,7 @@ bool Corpse::isVisibleForInState(Player const* player, WorldObject const* viewPo
     if (m_type == CORPSE_BONES && player->GetSession()->IsAccountFlagged(ACC_HIDE_BONES))
         return false;
 
-    if (!IsInWorld() || !player->IsInWorld())
+    if (!IsInWorld() || !player->IsInWorld() || !viewPoint->GetMap())
         return false;
 
     return IsWithinDistInMap(viewPoint, viewPoint->GetMap()->GetVisibilityDistance(const_cast<Corpse*>(this), const_cast<Player*>(player)) + (inVisibleList ? World::GetVisibleObjectGreyDistance() : 0.0f), false);

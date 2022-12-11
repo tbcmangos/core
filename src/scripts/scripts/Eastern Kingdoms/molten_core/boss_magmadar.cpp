@@ -1,6 +1,6 @@
 /* 
  * Copyright (C) 2006-2008 ScriptDev2 <https://scriptdev2.svn.sourceforge.net/>
- * Copyright (C) 2008-2014 Hellground <http://hellground.net/>
+ * Copyright (C) 2008-2015 Hellground <http://hellground.net/>
  * 
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -43,9 +43,9 @@ struct boss_magmadarAI : public ScriptedAI
     }
 
     ScriptedInstance * pInstance;
-    uint32 Frenzy_Timer;
-    uint32 Panic_Timer;
-    uint32 Lavabomb_Timer;
+    int32 Frenzy_Timer;
+    int32 Panic_Timer;
+    int32 Lavabomb_Timer;
 
     void Reset()
     {
@@ -76,29 +76,29 @@ struct boss_magmadarAI : public ScriptedAI
         if (!UpdateVictim())
             return;
 
-        //Frenzy_Timer
-        if (Frenzy_Timer < diff)
+        Frenzy_Timer -= diff;
+        if (Frenzy_Timer <= diff)
         {
             DoScriptText(EMOTE_FRENZY, m_creature);
             DoCast(m_creature,SPELL_FRENZY);
-            Frenzy_Timer = 15000;
-        }else Frenzy_Timer -= diff;
+            Frenzy_Timer += 15000;
+        }
 
-        //Panic_Timer
-        if (Panic_Timer < diff)
+        Panic_Timer -= diff;
+        if (Panic_Timer <= diff)
         {
             DoCast(m_creature->getVictim(),SPELL_PANIC);
-            Panic_Timer = 35000;
-        }else Panic_Timer -= diff;
+            Panic_Timer += 35000;
+        }
 
-        //Lavabomb_Timer
-        if (Lavabomb_Timer < diff)
+        Lavabomb_Timer -= diff;
+        if (Lavabomb_Timer <= diff)
         {
             if( Unit* target = SelectUnit(SELECT_TARGET_RANDOM,0) )
                 DoCast(target,SPELL_LAVABOMB_ALT);
 
-            Lavabomb_Timer = 12000;
-        }else Lavabomb_Timer -= diff;
+            Lavabomb_Timer += 12000;
+        }
 
         DoMeleeAttackIfReady();
     }

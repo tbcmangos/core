@@ -1,6 +1,6 @@
 /* 
  * Copyright (C) 2006-2008 ScriptDev2 <https://scriptdev2.svn.sourceforge.net/>
- * Copyright (C) 2008-2014 Hellground <http://hellground.net/>
+ * Copyright (C) 2008-2015 Hellground <http://hellground.net/>
  * 
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -46,12 +46,14 @@ EndScriptData */
 #define ASHTONGUE_RUSE                39527
 #define QUEST_RUSEOFTHEASHTONGUE      10946
 
-static float waypoint[6][3] =
+static float waypoint[8][3] =
 {
     {340.15, 58.65, 17.71},
     {388.09, 31.54, 20.18},
     {388.18, -32.85, 20.18},
     {340.29, -60.19, 17.72},
+    {262.60, -42.05, 20.18},
+    {262.71, 40.57, 20.18},
     {332, 0.01, 39}, // better not use the same xy coord
     {331, 0.01, -2.59}
 };
@@ -89,23 +91,22 @@ struct boss_alarAI : public ScriptedAI
     ScriptedInstance *pInstance;
 
     WaitEventType WaitEvent;
-    uint32 WaitTimer;
+    Timer WaitTimer;
 
     bool AfterMoving;
 
-    uint32 Platforms_Move_Timer;
-    uint32 DiveBomb_Timer;
-    uint32 MeltArmor_Timer;
-    uint32 Charge_Timer;
-    uint32 FlamePatch_Timer;
-    uint32 Berserk_Timer;
+    Timer Platforms_Move_Timer;
+    Timer DiveBomb_Timer;
+    Timer MeltArmor_Timer;
+    Timer Charge_Timer;
+    Timer FlamePatch_Timer;
+    Timer Berserk_Timer;
 
     float DefaultMoveSpeedRate;
 
     bool Phase1;
-    bool ForceMove;
-    uint32 ForceTimer;
-    uint32 checkTimer;
+    Timer ForceTimer;
+    Timer checkTimer;
 
     WorldLocation wLoc;
 
@@ -116,19 +117,18 @@ struct boss_alarAI : public ScriptedAI
         if(pInstance && pInstance->GetData(DATA_ALAREVENT) != DONE)
             pInstance->SetData(DATA_ALAREVENT, NOT_STARTED);
 
-        Berserk_Timer = 1200000;
-        Platforms_Move_Timer = 0;
+        Berserk_Timer.Reset(1200000);
+        Platforms_Move_Timer.Reset(1);
 
         Phase1 = true;
 
         WaitEvent = WE_NONE;
         WaitTimer = 0;
         AfterMoving = false;
-        ForceMove = false;
-        ForceTimer = 5000;
-        checkTimer = 3000;
+        ForceTimer.Reset(0);
+        checkTimer.Reset(3000);
 
-        cur_wp = 4;
+        cur_wp = 6;
         m_creature->SetDisplayId(m_creature->GetNativeDisplayId());
         m_creature->SetSpeed(MOVE_RUN, 2.0);
         m_creature->SetSpeed(MOVE_FLIGHT, 2.0);
@@ -154,11 +154,12 @@ struct boss_alarAI : public ScriptedAI
         DoZoneInCombat();
     }
 
-    void JustDied(Unit *victim)
+    void JustDied(Unit *Killer)
     {
         m_creature->SetDisplayId(m_creature->GetNativeDisplayId());
         m_creature->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
         m_creature->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
+        m_creature->Relocate(331.717987, -0.059397, -2.389479);                        //prevent loot-bug and mid-air stuck, hope it will work after dc too
 
         Map::PlayerList const &PlayerList = ((InstanceMap*)m_creature->GetMap())->GetPlayers();
         for(Map::PlayerList::const_iterator i = PlayerList.begin(); i != PlayerList.end(); ++i)
@@ -216,9 +217,8 @@ struct boss_alarAI : public ScriptedAI
                 m_creature->SetSelection(0);
                 m_creature->SetSpeed(MOVE_RUN, 5.0f);
                 m_creature->SetSpeed(MOVE_FLIGHT, 5.0f);
-                ForceMove = true;
-                ForceTimer = 0;
-                cur_wp = 5;
+                ForceTimer = 1;
+                cur_wp = 7;
                 //m_creature->GetMotionMaster()->Clear();
                 //m_creature->GetMotionMaster()->MovePoint(0, waypoint[5][0], waypoint[5][1], waypoint[5][2]);
             }
@@ -237,11 +237,12 @@ struct boss_alarAI : public ScriptedAI
 
     void MovementInform(uint32 type, uint32 id)
     {
+        SendDebug("movement inform %u %u", type, id);
         if(type == POINT_MOTION_TYPE)
         {
-            WaitTimer = 1;
+            WaitTimer = 1000;
             AfterMoving = true;
-            ForceMove = false;
+            ForceTimer = 0;
         }
     }
 
@@ -252,7 +253,7 @@ struct boss_alarAI : public ScriptedAI
         {
             Player* i_pl = i->getSource();
             if (i_pl && i_pl->isAlive() && !i_pl->isGameMaster() &&
-                i_pl->isInCombat() && !i_pl->hasUnitState(UNIT_STAT_DIED) &&
+                i_pl->isInCombat() && !i_pl->HasFlag(UNIT_FIELD_FLAGS_2, UNIT_FLAG2_FEIGN_DEATH) &&
                 i_pl->IsWithinDistInMap(&wLoc, 135))
                     return true;
         }
@@ -265,7 +266,7 @@ struct boss_alarAI : public ScriptedAI
         if(!m_creature->isInCombat()) // sometimes isincombat but !incombat, faction bug?
             return;
 
-        if (checkTimer < diff)
+        if (checkTimer.Expired(diff))
         {
             if (!m_creature->IsWithinDistInMap(&wLoc, 135) || !CheckPlayersInInstance())
             {
@@ -277,33 +278,24 @@ struct boss_alarAI : public ScriptedAI
 
             checkTimer = 2000;
         }
-        else
-            checkTimer -= diff;
 
-        if(Berserk_Timer < diff)
+        if (Berserk_Timer.Expired(diff))
         {
             m_creature->CastSpell(m_creature, SPELL_BERSERK, true);
             Berserk_Timer = 60000;
         }
-        else
-            Berserk_Timer -= diff;
 
-        if(ForceMove)
+        if(ForceTimer.Expired(diff))
         {
-            if(ForceTimer < diff)
-            {
-                m_creature->GetMotionMaster()->MovePoint(0, waypoint[cur_wp][0], waypoint[cur_wp][1], waypoint[cur_wp][2]);
-                ForceTimer = 5000;
-            }
-            else
-                ForceTimer -= diff;
+            m_creature->GetMotionMaster()->MovePoint(0, waypoint[cur_wp][0], waypoint[cur_wp][1], waypoint[cur_wp][2]);
+            ForceTimer = 5000;
         }
 
         if(WaitEvent)
         {
-            if(WaitTimer)
+            if(WaitTimer.GetInterval())
             {
-                if(WaitTimer <= diff)
+                if(WaitTimer.Expired(diff))
                 {
                     if(AfterMoving)
                     {
@@ -323,7 +315,7 @@ struct boss_alarAI : public ScriptedAI
                             WaitEvent = WE_DUMMY;
                             return;
                         case WE_DIE:
-                            ForceMove = false;
+                            ForceTimer = 0;
                             DoTeleportTo(wLoc.coord_x, wLoc.coord_y, wLoc.coord_z, 0.0f);
                             WaitTimer = 5000;
                             WaitEvent = WE_REVIVE;
@@ -354,7 +346,8 @@ struct boss_alarAI : public ScriptedAI
                             if(Unit* target = SelectUnit(SELECT_TARGET_RANDOM, 0,GetSpellMaxRange(SPELL_DIVE_BOMB),true))
                             {
                                 m_creature->RemoveAurasDueToSpell(SPELL_DIVE_BOMB_VISUAL);
-                                m_creature->CastSpell(target, SPELL_DIVE_BOMB, true);
+                                int32 dmgVal = urand(90000, 120000); // PRE NERF HUE HUE HUE
+                                m_creature->CastCustomSpell(target, SPELL_DIVE_BOMB, &dmgVal, NULL, NULL, true);
                                 float dist = 3.0f;
                                 if(m_creature->IsWithinDistInMap(target, 5.0f))
                                     dist = 5.0f;
@@ -390,6 +383,7 @@ struct boss_alarAI : public ScriptedAI
                             break;
                         case WE_TRULY_DIE:
                             m_creature->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
+                            m_creature->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
                             m_creature->DealDamage(m_creature, m_creature->GetHealth(), DIRECT_DAMAGE, SPELL_SCHOOL_MASK_NORMAL, NULL, false);
                             break;
                         case WE_DUMMY:
@@ -400,8 +394,6 @@ struct boss_alarAI : public ScriptedAI
                     WaitEvent = WE_NONE;
                     WaitTimer = 0;
                 }
-                else
-                    WaitTimer -= diff;
             }
             return;
         }
@@ -414,11 +406,11 @@ struct boss_alarAI : public ScriptedAI
                 return;
             }
 
-            if(Platforms_Move_Timer < diff)
+            if(Platforms_Move_Timer.Expired(diff))
             {
-                if(cur_wp == 4)
+                if(cur_wp == 6)
                 {
-                    cur_wp = urand(0,1) ? 0 : 3;
+                    cur_wp = urand(0, 1) ? 0 : 3;
                     WaitEvent = WE_PLATFORM;
                 }
                 else
@@ -426,31 +418,26 @@ struct boss_alarAI : public ScriptedAI
                     if(urand(0,4)) // next platform
                     {
                         DoSpawnCreature(CREATURE_EMBER_OF_ALAR, 0, 0, 0, 0, TEMPSUMMON_TIMED_DESPAWN_OUT_OF_COMBAT, 5000);
-                        if(cur_wp == 3)
-                            cur_wp = 0;
-                        else
-                            cur_wp++;
+                        cur_wp += urand(1, 5);
+                        cur_wp %= 6;
                         WaitEvent = WE_PLATFORM;
                     }
                     else // flame quill
                     {
-                        cur_wp = 4;
+                        cur_wp = 6;
                         WaitEvent = WE_QUILL;
                     }
                 }
 
-                ForceMove = true;
-                ForceTimer = 5000;
+                ForceTimer.Reset(5000);
                 m_creature->GetMotionMaster()->MovePoint(0, waypoint[cur_wp][0], waypoint[cur_wp][1], waypoint[cur_wp][2]);
                 WaitTimer = 0;
                 return;
             }
-            else
-                Platforms_Move_Timer -= diff;
         }
         else
         {
-            if(Charge_Timer < diff)
+            if(Charge_Timer.Expired(diff))
             {
                 Unit *temp = m_creature->getVictim();
                 if(Unit *target = SelectUnit(SELECT_TARGET_RANDOM, 1, GetSpellMaxRange(SPELL_CHARGE), true, m_creature->getVictimGUID()))
@@ -459,22 +446,18 @@ struct boss_alarAI : public ScriptedAI
                 DoStartMovement(temp);
                 Charge_Timer = 30000;
             }
-            else
-                Charge_Timer -= diff;
 
-            if(MeltArmor_Timer < diff)
+            if(MeltArmor_Timer.Expired(diff))
             {
                 DoCast(m_creature->getVictim(), SPELL_MELT_ARMOR);
                 MeltArmor_Timer = 60000;
             }
-            else
-                MeltArmor_Timer -= diff;
 
-            if(DiveBomb_Timer < diff)
+            if(DiveBomb_Timer.Expired(diff))
             {
                 m_creature->SetReactState(REACT_PASSIVE);
                 m_creature->AttackStop();
-                m_creature->GetMotionMaster()->MovePoint(6, waypoint[4][0], waypoint[4][1], waypoint[4][2]);
+                m_creature->GetMotionMaster()->MovePoint(6, waypoint[6][0], waypoint[6][1], waypoint[6][2]);
                 m_creature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
                 m_creature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
                 m_creature->SetFloatValue(UNIT_FIELD_BOUNDINGRADIUS, 50);
@@ -483,18 +466,14 @@ struct boss_alarAI : public ScriptedAI
                 DiveBomb_Timer = 40000+rand()%5000;
                 return;
             }
-            else
-                DiveBomb_Timer -= diff;
 
-            if(FlamePatch_Timer < diff)
+            if(FlamePatch_Timer.Expired(diff))
             {
                 if(Unit* target = SelectUnit(SELECT_TARGET_RANDOM, 0, 100, true))
                     m_creature->SummonCreature(CREATURE_FLAME_PATCH_ALAR, target->GetPositionX(), target->GetPositionY(), target->GetPositionZ(), 0, TEMPSUMMON_TIMED_DESPAWN, 120000);
 
                 FlamePatch_Timer = 30000;
             }
-            else
-                FlamePatch_Timer -= diff;
         }
 
         DoMeleeAttackIfReady();
@@ -510,13 +489,15 @@ struct boss_alarAI : public ScriptedAI
 
         Unit *temp = m_creature->getVictim();
 
-        if (!temp && !(temp = SelectUnit(SELECT_TARGET_TOPAGGRO,0)))
-            return;
+        if (!temp || !m_creature->canAttack(temp))
+        {
+            temp = SelectUnit(SELECT_TARGET_TOPAGGRO, 0, 5.0f, true);
+        }
 
         if (WaitEvent == WE_PLATFORM || WaitEvent == WE_QUILL || WaitEvent == WE_DUMMY)
             return;
 
-        if (m_creature->IsWithinMeleeRange(temp))
+        if (temp && m_creature->IsWithinMeleeRange(temp))
         {
             if(m_creature->hasUnitState(UNIT_STAT_CASTING)) // TO JEST DO POTWIERDZENIA:
                 m_creature->InterruptNonMeleeSpells(true);  // PRZERWAC CASTA FLAME BUFFET,
@@ -533,9 +514,10 @@ struct boss_alarAI : public ScriptedAI
                     return;
                 }
             }
-            else
+            else if (temp)
                 AttackStart(temp);
 
+            SendDebug("casting buffet %u", uint32(WaitEvent));
             DoCast(m_creature, SPELL_FLAME_BUFFET);
         }
     }
@@ -557,11 +539,11 @@ struct mob_ember_of_alarAI : public ScriptedAI
 
     ScriptedInstance *pInstance;
 
-    uint32 CheckTimer;
+    Timer CheckTimer;
 
     void Reset()
     {
-        CheckTimer = 2000;
+        CheckTimer.Reset(2000);
     }
     void EnterCombat(Unit *who) { DoZoneInCombat(); }
     void EnterEvadeMode() { m_creature->setDeathState(JUST_DIED); }
@@ -575,10 +557,10 @@ struct mob_ember_of_alarAI : public ScriptedAI
             {
                 if((!((boss_alarAI*)Alar->AI())->Phase1) && Alar->isAlive())
                 {
-                    int AlarHealth = Alar->GetHealth() - Alar->GetMaxHealth()*0.03;
+                    int AlarHealth = Alar->GetHealth() - Alar->GetMaxHealth()*0.01;
 
                     if(AlarHealth > 0)
-                        Alar->ModifyHealth(-(int)Alar->GetMaxHealth()*0.03);
+                        Alar->ModifyHealth(-(int)Alar->GetMaxHealth()*0.01);
                     else
                         Alar->SetHealth(1);
                 }
@@ -589,7 +571,7 @@ struct mob_ember_of_alarAI : public ScriptedAI
     {
         UpdateVictim();
 
-        if(CheckTimer <= diff)
+        if(CheckTimer.Expired(diff))
         {
             if(pInstance && (pInstance->GetData(DATA_ALAREVENT) == DONE || pInstance->GetData(DATA_ALAREVENT) == NOT_STARTED))
             {
@@ -598,8 +580,7 @@ struct mob_ember_of_alarAI : public ScriptedAI
             }
             CheckTimer = 2000;
         }
-        else
-            CheckTimer -= diff;
+
         DoMeleeAttackIfReady();
     }
 };
@@ -617,7 +598,7 @@ struct mob_flame_patch_alarAI : public ScriptedAI
     }
 
     ScriptedInstance *pInstance;
-    uint32 CheckTimer;
+    Timer CheckTimer;
 
     bool needCast;
 
@@ -629,14 +610,14 @@ struct mob_flame_patch_alarAI : public ScriptedAI
         m_creature->setFaction(16);
         m_creature->SetLevel(73);
         needCast = true;
-        CheckTimer = 1000;
+        CheckTimer.Reset(1000);
     }
     void EnterCombat(Unit *who) {}
     void AttackStart(Unit* who) {}
     void MoveInLineOfSight(Unit* who) {}
     void UpdateAI(const uint32 diff)
     {
-        if(CheckTimer <= diff)
+        if(CheckTimer.Expired(diff))
         {
             if(needCast)
             {
@@ -649,8 +630,6 @@ struct mob_flame_patch_alarAI : public ScriptedAI
 
             CheckTimer = 2000;
         }
-        else
-            CheckTimer -= diff;
     }
 };
 

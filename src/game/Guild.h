@@ -1,7 +1,7 @@
 /*
  * Copyright (C) 2005-2008 MaNGOS <http://getmangos.com/>
  * Copyright (C) 2008 TrinityCore <http://www.trinitycore.org/>
- * Copyright (C) 2008-2014 Hellground <http://hellground.net/>
+ * Copyright (C) 2008-2017 Hellground <http://wow-hellground.com/>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -32,7 +32,8 @@ class Item;
 
 enum GuildFlags
 {
-    GUILD_FLAG_DISABLE_ANN      = 0x01      // disables guild announce system for guild
+    GUILD_FLAG_DISABLE_ANN      = 0x01,     // disables guild announce system for guild
+    GUILD_FLAG_ADVERT_SET       = 0x02,     // wont use guild announces to replace advert
 };
 
 enum GuildDefaultRanks

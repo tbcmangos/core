@@ -1,6 +1,6 @@
 /* 
  * Copyright (C) 2006-2008 ScriptDev2 <https://scriptdev2.svn.sourceforge.net/>
- * Copyright (C) 2008-2014 Hellground <http://hellground.net/>
+ * Copyright (C) 2008-2015 Hellground <http://hellground.net/>
  * 
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -31,7 +31,7 @@ EndScriptData */
 
 struct instance_magtheridons_lair : public ScriptedInstance
 {
-    instance_magtheridons_lair(Map *Map) : ScriptedInstance(Map)
+    instance_magtheridons_lair(Map *Map) : ScriptedInstance(Map), m_gbk(Map)
     {
         Initialize();
     }
@@ -43,8 +43,9 @@ struct instance_magtheridons_lair : public ScriptedInstance
     uint64 DoorGUID;
     std::set<uint64> ColumnGUID;
 
-    uint32 CageTimer;
-    uint32 RespawnTimer;
+    Timer CageTimer;
+    Timer RespawnTimer;
+    GBK_handler m_gbk;
 
     void Initialize()
     {
@@ -147,10 +148,16 @@ struct instance_magtheridons_lair : public ScriptedInstance
                     case IN_PROGRESS:
                         CageTimer = 120000;
                         HandleGameObject(DoorGUID, false);
+                        m_gbk.StartCombat(GBK_MAGTHERIDON);
                         break;
                     case NOT_STARTED:
+                        CageTimer = 0;
                         RespawnTimer = 10000;
+                        m_gbk.StopCombat(GBK_MAGTHERIDON, false);
+                        HandleGameObject(DoorGUID, true);
+                        break;
                     default:
+                        m_gbk.StopCombat(GBK_MAGTHERIDON, true);
                         HandleGameObject(DoorGUID, true);
                         break;
                 }
@@ -184,47 +191,37 @@ struct instance_magtheridons_lair : public ScriptedInstance
 
     void Update(uint32 diff)
     {
-        if (CageTimer)
+        if (CageTimer.Expired(diff))
         {
-            if (CageTimer <= diff)
+            Creature *Magtheridon = instance->GetCreature(MagtheridonGUID);
+            if (Magtheridon && Magtheridon->isAlive())
             {
-                Creature *Magtheridon = instance->GetCreature(MagtheridonGUID);
-                if (Magtheridon && Magtheridon->isAlive())
-                {
-                    Magtheridon->RemoveAurasDueToSpell(30205); // SPELL_SHADOW_CAGE_C
-                    Magtheridon->AI()->DoZoneInCombat();
-                    Magtheridon->AI()->AttackStart(Magtheridon->SelectNearestTarget(999));
-                }
-
-                CageTimer = 0;
+                Magtheridon->RemoveAurasDueToSpell(30205); // SPELL_SHADOW_CAGE_C
+                Magtheridon->AI()->DoZoneInCombat();
+                Magtheridon->AI()->AttackStart(Magtheridon->SelectNearestTarget(999));
             }
-            else
-                CageTimer -= diff;
+
+            CageTimer = 0;
         }
 
-        if (RespawnTimer)
+        if (RespawnTimer.Expired(diff))
         {
-            if (RespawnTimer <= diff)
+            for (std::set<uint64>::iterator i = ChannelerGUID.begin(); i != ChannelerGUID.end(); ++i)
             {
-                for (std::set<uint64>::iterator i = ChannelerGUID.begin(); i != ChannelerGUID.end(); ++i)
+                if (Creature *Channeler = instance->GetCreature(*i))
                 {
-                    if (Creature *Channeler = instance->GetCreature(*i))
-                    {
-                        if(Channeler->isAlive())
-                            Channeler->AI()->EnterEvadeMode();
-                        else
-                            Channeler->Respawn();
-                    }
+                    if(Channeler->isAlive())
+                        Channeler->AI()->EnterEvadeMode();
+                    else
+                        Channeler->Respawn();
                 }
-
-                HandleGameObject(DoorGUID, true);
-
-                RespawnTimer = 0;
-                if (Encounters[0] != DONE)
-                    Encounters[0] = NOT_STARTED;
             }
-            else
-                RespawnTimer -= diff;
+
+            HandleGameObject(DoorGUID, true);
+
+            RespawnTimer = 0;
+            if (Encounters[0] != DONE)
+                Encounters[0] = NOT_STARTED;
         }
     }
 
@@ -255,6 +252,21 @@ struct instance_magtheridons_lair : public ScriptedInstance
             if(Encounters[i] == IN_PROGRESS)                // Do not load an encounter as "In Progress" - reset it instead.
                 Encounters[i] = NOT_STARTED;
         OUT_LOAD_INST_DATA_COMPLETE;
+    }
+
+    void OnPlayerDealDamage(Player* plr, uint32 amount)
+    {
+        m_gbk.DamageDone(plr->GetGUIDLow(), amount);
+    }
+
+    void OnPlayerHealDamage(Player* plr, uint32 amount)
+    {
+        m_gbk.HealingDone(plr->GetGUIDLow(), amount);
+    }
+
+    void OnPlayerDeath(Player* plr)
+    {
+        m_gbk.PlayerDied(plr->GetGUIDLow());
     }
 };
 

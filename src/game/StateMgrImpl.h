@@ -1,6 +1,6 @@
 /*
  * Copyright (C) 2005-2012 MaNGOS <http://getmangos.com/>
- * Copyright (C) 2008-2014 Hellground <http://hellground.net/>
+ * Copyright (C) 2008-2017 Hellground <http://wow-hellground.com/>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -58,7 +58,6 @@ enum UnitActionId
     UNIT_ACTION_FEARED,
     UNIT_ACTION_CONFUSED,
     UNIT_ACTION_ROOT,
-    UNIT_ACTION_FEIGNDEATH,
     UNIT_ACTION_STUN,
     UNIT_ACTION_TAXI,
     UNIT_ACTION_EFFECT,
@@ -78,11 +77,10 @@ enum UnitActionPriority
     UNIT_ACTION_PRIORITY_FEARED      =  6,
     UNIT_ACTION_PRIORITY_CONFUSED    =  7,
     UNIT_ACTION_PRIORITY_ROOT        =  8,
-    UNIT_ACTION_PRIORITY_FEIGNDEATH  =  9,
-    UNIT_ACTION_PRIORITY_STUN        =  10,
-    UNIT_ACTION_PRIORITY_TAXI        = 11,
-    UNIT_ACTION_PRIORITY_EFFECT      = 12,
-    UNIT_ACTION_PRIORITY_IMMEDIATE   = 13,
+    UNIT_ACTION_PRIORITY_STUN        =  9,
+    UNIT_ACTION_PRIORITY_TAXI        = 10,
+    UNIT_ACTION_PRIORITY_EFFECT      = 11,
+    UNIT_ACTION_PRIORITY_IMMEDIATE   = 12,
     UNIT_ACTION_PRIORITY_END,
 };
 

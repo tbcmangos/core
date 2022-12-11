@@ -1,7 +1,7 @@
 /*
  * Copyright (C) 2005-2008 MaNGOS <http://getmangos.com/>
  * Copyright (C) 2008 TrinityCore <http://www.trinitycore.org/>
- * Copyright (C) 2008-2014 Hellground <http://hellground.net/>
+ * Copyright (C) 2008-2017 Hellground <http://wow-hellground.com/>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -141,19 +141,6 @@ enum __QuestFlags
     QUEST_HELLGROUND_FLAGS_SPEAKTO              = 0x080000,     // Internal flag computed only
     QUEST_HELLGROUND_FLAGS_KILL_OR_CAST         = 0x100000,     // Internal flag computed only
     QUEST_HELLGROUND_FLAGS_TIMED                = 0x200000,     // Internal flag computed only
-};
-
-struct QuestLocale
-{
-    QuestLocale() { ObjectiveText.resize(QUEST_OBJECTIVES_COUNT); }
-
-    std::vector<std::string> Title;
-    std::vector<std::string> Details;
-    std::vector<std::string> Objectives;
-    std::vector<std::string> OfferRewardText;
-    std::vector<std::string> RequestItemsText;
-    std::vector<std::string> EndText;
-    std::vector< std::vector<std::string> > ObjectiveText;
 };
 
 // This Quest class provides a convenient way to access a few pretotaled (cached) quest details,

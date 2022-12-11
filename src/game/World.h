@@ -1,7 +1,7 @@
 /*
  * Copyright (C) 2005-2008 MaNGOS <http://getmangos.com/>
  * Copyright (C) 2008 TrinityCore <http://www.trinitycore.org/>
- * Copyright (C) 2008-2014 Hellground <http://hellground.net/>
+ * Copyright (C) 2008-2017 Hellground <http://wow-hellground.com/>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -90,7 +90,6 @@ enum WorldTimers
     WUPDATE_GUILD_ANNOUNCES = 8,
     WUPDATE_DELETECHARS     = 9,
     WUPDATE_OLDMAILS        = 10,
-    WUPDATE_ACTIVE_BANS     = 11,
 
     WUPDATE_COUNT
 };
@@ -106,10 +105,10 @@ enum WorldConfigs
     CONFIG_ADDON_CHANNEL,
     CONFIG_SAVE_RESPAWN_TIME_IMMEDIATELY,
     CONFIG_GRID_UNLOAD,
+    CONFIG_WORLD_SLEEP,
 
     CONFIG_SOCKET_SELECTTIME,
     CONFIG_INTERVAL_GRIDCLEAN,
-    CONFIG_INTERVAL_MAPUPDATE,
     CONFIG_INTERVAL_CHANGEWEATHER,
     CONFIG_INTERVAL_SAVE,
     CONFIG_INTERVAL_DISCONNECT_TOLERANCE,
@@ -117,7 +116,10 @@ enum WorldConfigs
 
     CONFIG_NUMTHREADS,
     CONFIG_MAPUPDATE_MAXVISITORS,
-    CONFIG_CUMULATIVE_LOG_METHOD,
+    CONFIG_MAPUPDATE_CONTINENTS,
+    CONFIG_MAPUPDATE_INSTANCES,
+    CONFIG_MAPUPDATE_BATTLEGROUNDS,
+    CONFIG_MAPUPDATE_ARENAS,
 
     CONFIG_SESSION_UPDATE_MAX_TIME,
     CONFIG_SESSION_UPDATE_OVERTIME_METHOD,
@@ -126,6 +128,9 @@ enum WorldConfigs
     CONFIG_SESSION_UPDATE_MIN_LOG_DIFF,
     CONFIG_INTERVAL_LOG_UPDATE,
     CONFIG_MIN_LOG_UPDATE,
+    CONFIG_MIN_LOG_CELL,
+    CONFIG_MIN_LOG_ACTIVE_CELL,
+    CONFIG_FASTBOOT,
 
     // Server settings
     CONFIG_GAME_TYPE,
@@ -137,8 +142,6 @@ enum WorldConfigs
     CONFIG_STRICT_PET_NAMES,
     CONFIG_CHARACTERS_PER_REALM,
     CONFIG_CHARACTERS_PER_ACCOUNT,
-    CONFIG_ACTIVE_BANS_UPDATE_TIME,
-    CONFIG_ELUNA_ENABLED,
 
     // Server customization basic
     CONFIG_CHARACTERS_CREATING_DISABLED,
@@ -162,6 +165,7 @@ enum WorldConfigs
     CONFIG_DISABLE_PVP,
     CONFIG_EVENT_ANNOUNCE,
     CONFIG_FFA_DISALLOWGROUP,
+    CONFIG_HAPPY_TESTING,
     CONFIG_HONOR_AFTER_DUEL,
     CONFIG_INSTANCE_IGNORE_LEVEL,
     CONFIG_INSTANCE_IGNORE_RAID,
@@ -194,11 +198,15 @@ enum WorldConfigs
     CONFIG_MAX_WHO,
     CONFIG_MIN_PETITION_SIGNS,
     CONFIG_NO_RESET_TALENT_COST,
+    CONFIG_FREE_RESPEC_COST,
+    CONFIG_FREE_RESPEC_DURATION,
+    CONFIG_TRAINER_DISCOUNT_MAX_LEVEL,
     CONFIG_QUEST_LOW_LEVEL_HIDE_DIFF,
     CONFIG_QUEST_HIGH_LEVEL_HIDE_DIFF,
     CONFIG_RABBIT_DAY,
     CONFIG_SKIP_CINEMATICS,
     CONFIG_SKILL_PROSPECTING,
+    CONFIG_NO_CHANNEL_INVITES,
 
     CONFIG_GUILD_ANN_INTERVAL,
     CONFIG_GUILD_ANN_COOLDOWN,
@@ -245,6 +253,7 @@ enum WorldConfigs
     CONFIG_ALLOW_GM_GROUP,
     CONFIG_ALLOW_GM_FRIEND,
     CONFIG_GM_TRUSTED_LEVEL,
+    CONFIG_ENABLE_CRASHTEST,
     
     CONFIG_COMMAND_LOG_PERMISSION,
     CONFIG_INSTANT_LOGOUT,
@@ -307,6 +316,7 @@ enum WorldConfigs
     CONFIG_ENABLE_FAKE_WHO_IN_GUILD,
     CONFIG_ARENA_LOG_EXTENDED_INFO,
     CONFIG_ARENA_READY_START_TIMER,
+    CONFIG_ARENA_EXPORT_RESULTS,
 
     CONFIG_ENABLE_HIDDEN_RATING,
     CONFIG_ENABLE_HIDDEN_RATING_PENALTY,
@@ -322,11 +332,15 @@ enum WorldConfigs
     CONFIG_ARENA_ELO_COEFFICIENT,
     CONFIG_ARENA_DAILY_REQUIREMENT,
     CONFIG_ARENA_DAILY_AP_REWARD,
+    CONFIG_ARENA_KEEP_TEAMS,
 
     // Battleground settings
     CONFIG_BATTLEGROUND_ANNOUNCE_START,
     CONFIG_BATTLEGROUND_CAST_DESERTER,
+    CONFIG_BATTLEGROUND_DESERTER_ON_INACTIVE,
+    CONFIG_BATTLEGROUND_DESERTER_REALTIME,
     CONFIG_BATTLEGROUND_INVITATION_TYPE,
+    CONFIG_BATTLEGROUND_KICK_AFTER_INACTIVE_TIME,
     CONFIG_BATTLEGROUND_PREMADE_GROUP_WAIT_FOR_MATCH,
     CONFIG_BATTLEGROUND_PREMATURE_FINISH_TIMER,
     CONFIG_PREMATURE_BG_REWARD,
@@ -336,12 +350,14 @@ enum WorldConfigs
     CONFIG_BATTLEGROUND_WSG_END_AFTER_ENABLED,
     CONFIG_BATTLEGROUND_WSG_END_AFTER_TIME,
     CONFIG_BATTLEGROUND_WSG_END_AFTER_ALWAYS_DRAW,
+    CONFIG_BATTLEGROUND_KICK_QUEUES_ON_JOIN,
 
     // vmaps/mmaps
     CONFIG_VMAP_LOS_ENABLED,
     CONFIG_VMAP_INDOOR_CHECK,
     CONFIG_PET_LOS,
     CONFIG_VMAP_TOTEM,
+    CONFIG_VMAP_GROUND,
     CONFIG_MMAP_ENABLED,
 
     // visibility and radiuses
@@ -352,6 +368,7 @@ enum WorldConfigs
     CONFIG_TARGET_POS_RECHECK_TIMER,
     CONFIG_WAYPOINT_MOVEMENT_PATHFINDING_ON_CONTINENTS,
     CONFIG_WAYPOINT_MOVEMENT_PATHFINDING_IN_INSTANCES,
+    CONFIG_MOVEMENT_ENABLE_LONG_CHARGE,
 
     // CoreBalancer
     CONFIG_COREBALANCER_ENABLED,
@@ -416,6 +433,8 @@ enum Rates
     RATE_XP_QUEST,
     RATE_XP_EXPLORE,
     RATE_XP_PAST_70,
+    RATE_XP_HORDE_MULTIPLIER,
+    RATE_XP_ALIANCE_MULTIPLIER,
 
     RATE_REST_INGAME,
     RATE_REST_OFFLINE_IN_TAVERN_OR_CITY,
@@ -456,11 +475,19 @@ enum Rates
     RATE_CREATURE_ELITE_WORLDBOSS_HP,
     RATE_CREATURE_ELITE_RARE_HP,
     
+    RATE_FAKEPOP_ALLIANCE,
+    RATE_FAKEPOP_HORDE,
+    RATE_TRAINER_ALLIANCE,
+    RATE_TRAINER_HORDE,
     CONFIG_GANKING_PENALTY_PER_KILL,
     CONFIG_FLOAT_RATE_RAF_XP,
     CONFIG_FLOAT_RATE_RAF_LEVELPERLEVEL,
+    CONFIG_VMAP_GROUND_TOLERANCE,
     
     CONFIG_ANTICHEAT_SPEEDHACK_TOLERANCE,
+    CONFIG_GOBJECT_USE_EXPLOIT_RANGE,
+    CONFIG_ANTICHEAT_SHORTMOVE_INGNORE,
+    CONFIG_ANTICHEAT_RARE_CASE_TIMER,
     MAX_RATES
 };
 
@@ -558,60 +585,7 @@ struct CliCommandHolder
 typedef tbb::concurrent_hash_map<uint32, std::list<uint64> > LfgContainerType;
 typedef UNORDERED_MAP<uint32, WorldSession*> SessionMap;
 
-enum CumulateMapDiff
-{
-    DIFF_SESSION_UPDATE          = 0,
-    DIFF_PLAYER_UPDATE           = 1,
-    DIFF_CREATURE_UPDATE         = 2,
-    DIFF_PET_UPDATE              = 3,
-
-    DIFF_PLAYER_GRID_VISIT       = 4,
-    DIFF_ACTIVEUNIT_GRID_VISIT   = 5,
-
-    DIFF_SEND_OBJECTS_UPDATE     = 6,
-    DIFF_PROCESS_SCRIPTS         = 7,
-    DIFF_MOVE_CREATURES_IN_LIST  = 8,
-
-    DIFF_PROCESS_RELOCATION      = 9,
-
-    DIFF_MAP_SPECIAL_DATA_UPDATE = 10,
-
-    DIFF_MAX_CUMULATIVE_INFO     = 11
-};
-
 typedef ACE_Atomic_Op<ACE_Thread_Mutex, uint32> atomic_uint;
-
-struct MapUpdateDiffInfo
-{
-
-    ~MapUpdateDiffInfo()
-    {
-        for (CumulativeDiffMap::iterator itr = _cumulativeDiffInfo.begin(); itr != _cumulativeDiffInfo.end(); ++itr)
-            delete itr->second;
-    }
-
-    void InitializeMapData();
-
-    void ClearDiffInfo()
-    {
-        for (CumulativeDiffMap::iterator itr = _cumulativeDiffInfo.begin(); itr != _cumulativeDiffInfo.end(); ++itr)
-        {
-            for (int i = DIFF_SESSION_UPDATE; i < DIFF_MAX_CUMULATIVE_INFO; i++)
-                itr->second[i] = 0;
-        }
-    }
-
-    void CumulateDiffFor(CumulateMapDiff type, uint32 diff, uint32 mapid)
-    {
-        _cumulativeDiffInfo[mapid][type] += diff;
-    }
-
-    void PrintCumulativeMapUpdateDiff();
-
-    typedef std::map<uint32, atomic_uint*> CumulativeDiffMap;
-
-    CumulativeDiffMap _cumulativeDiffInfo;
-};
 
 enum CBTresholds
 {
@@ -681,7 +655,6 @@ class HELLGROUND_EXPORT World
         uint32 GetActiveAndQueuedSessionCount() const { return m_sessions.size(); }
         uint32 GetActiveSessionCount() const { return m_sessions.size() - m_QueuedPlayer.size(); }
         uint32 GetQueuedSessionCount() const { return m_QueuedPlayer.size(); }
-        const SessionMap& GetAllSessions() const { return m_sessions; }
 
         uint32 GetLoggedInCharsCount(TeamId team);
         uint32 ModifyLoggedInCharsCount(TeamId team, int val);
@@ -817,7 +790,7 @@ class HELLGROUND_EXPORT World
         void KickAll();
         void KickAllWithoutPermissions(uint64 perms);
         BanReturn BanAccount(BanMode mode, std::string nameIPOrMail, std::string duration, std::string reason, std::string author);
-        bool RemoveBanAccount(BanMode mode, std::string nameIPOrMail);
+        bool RemoveBanAccount(BanMode mode, std::string nameIPOrMail, uint32 unbanner);
 
         uint32 IncreaseScheduledScriptsCount() { return (uint32)++m_scheduledScripts; }
         uint32 DecreaseScheduledScriptCount() { return (uint32)--m_scheduledScripts; }
@@ -841,17 +814,7 @@ class HELLGROUND_EXPORT World
 
         void UpdateRealmCharCount(uint32 accid);
 
-        void UpdateRequiredPermissions();
-
         LocaleConstant GetAvailableDbcLocale(LocaleConstant locale) const { if (m_availableDbcLocaleMask & (1 << locale)) return locale; else return m_defaultDbcLocale; }
-
-        //used World DB version
-        void LoadDBVersion();
-        char const* GetDBVersion() { return m_DBVersion.c_str(); }
-
-        //used Script version
-        void SetScriptsVersion(char const* version) { m_ScriptsVersion = version ? version : "unknown scripting library"; }
-        char const* GetScriptsVersion() { return m_ScriptsVersion.c_str(); }
 
         void addDisconnectTime(std::pair<uint32,time_t> tPair){ m_disconnects.insert(tPair); }
 
@@ -878,6 +841,9 @@ class HELLGROUND_EXPORT World
 
         LfgContainerType & GetLfgContainer(uint32 team)
         {
+            if (getConfig(CONFIG_ALLOW_TWO_SIDE_INTERACTION_GROUP))
+                return lfgAllyContainer;
+
             switch (team)
             {
                 case ALLIANCE:
@@ -892,9 +858,6 @@ class HELLGROUND_EXPORT World
         LfgContainerType lfgAllyContainer;
 
         CBTresholds GetCoreBalancerTreshold();
-
-        MAP_UPDATE_DIFF(MapUpdateDiffInfo& MapUpdateDiff() { return m_mapUpdateDiffInfo; })
-
     protected:
         void _UpdateGameTime();
         void InitDailyQuestResetTime();
@@ -919,11 +882,9 @@ class HELLGROUND_EXPORT World
         IntervalTimer m_timers[WUPDATE_COUNT];
         uint32 mail_timer;
         uint32 mail_timer_expires;
-        uint32 m_updateTime, m_updateTimeSum, m_avgUpdateTime, m_curAvgUpdateTime;
+        uint32 m_updateTime, m_updateTimeSum;
 
         uint32 m_updateTimeCount;
-
-        MAP_UPDATE_DIFF(MapUpdateDiffInfo m_mapUpdateDiffInfo)
         uint64 m_serverUpdateTimeSum, m_serverUpdateTimeCount;
 
         CoreBalancer _coreBalancer;
@@ -967,6 +928,7 @@ class HELLGROUND_EXPORT World
 
         // next daily quests reset time
         time_t m_NextDailyQuestReset;
+        time_t m_NextWeekReset;
 
         // Player Queue
         Queue m_QueuedPlayer;
@@ -981,10 +943,6 @@ class HELLGROUND_EXPORT World
 
         std::list<std::string> m_Autobroadcasts;
         std::list<std::pair<uint64, std::string> > m_GuildAnnounces[2];
-
-        //used versions
-        std::string m_DBVersion;
-        std::string m_ScriptsVersion;
 };
 
 extern uint32 realmID;

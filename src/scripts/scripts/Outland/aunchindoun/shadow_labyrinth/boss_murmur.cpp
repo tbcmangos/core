@@ -1,6 +1,6 @@
 /* 
  * Copyright (C) 2006-2009 ScriptDev2 <https://scriptdev2.svn.sourceforge.net/>
- * Copyright (C) 2008-2014 Hellground <http://hellground.net/>
+ * Copyright (C) 2008-2015 Hellground <http://hellground.net/>
  * 
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -40,25 +40,23 @@ struct boss_murmurAI : public Scripted_NoMovementAI
 {
     boss_murmurAI(Creature *c) : Scripted_NoMovementAI(c)
     {
-        HeroicMode = me->GetMap()->IsHeroic();
     }
 
-    uint32 SonicBoom_Timer;
-    uint32 MurmursTouch_Timer;
-    uint32 Resonance_Timer;
-    uint32 MagneticPull_Timer;
-    uint32 SonicShock_Timer;
-    uint32 ThunderingStorm_Timer;
-    bool HeroicMode;
+    Timer SonicBoom_Timer;
+    Timer MurmursTouch_Timer;
+    Timer Resonance_Timer;
+    Timer MagneticPull_Timer;
+    Timer SonicShock_Timer;
+    Timer ThunderingStorm_Timer;
 
     void Reset()
     {
-        SonicBoom_Timer = (HeroicMode ? 40000 : 50000);
-        MurmursTouch_Timer = (HeroicMode ? 28000 : 31000);
-        Resonance_Timer = 5000;
-        MagneticPull_Timer = 45000;
-        ThunderingStorm_Timer = 5000;
-        SonicShock_Timer = 5000;
+        SonicBoom_Timer.Reset((HeroicMode ? 40000 : 50000));
+        MurmursTouch_Timer.Reset((HeroicMode ? 28000 : 31000));
+        Resonance_Timer.Reset(5000);
+        MagneticPull_Timer.Reset(45000);
+        ThunderingStorm_Timer.Reset(5000);
+        SonicShock_Timer.Reset(5000);
 
         //database should have `RegenHealth`=0 to prevent regen
         uint32 hp = (me->GetMaxHealth()*40)/100;
@@ -66,6 +64,7 @@ struct boss_murmurAI : public Scripted_NoMovementAI
             me->SetHealth(hp);
 
         me->ResetPlayerDamageReq();
+        ClearCastQueue();
     }
 
     void EnterCombat(Unit *who) { }
@@ -96,18 +95,17 @@ struct boss_murmurAI : public Scripted_NoMovementAI
             return;
 
         // Murmur's Touch
-        if (MurmursTouch_Timer < diff)
+        if (MurmursTouch_Timer.Expired(diff))
         {
             if (Unit* target = SelectUnit(SELECT_TARGET_RANDOM, 0, 100, true))
                 AddSpellToCast(target, SPELL_MURMURS_TOUCH);
 
             MurmursTouch_Timer = (HeroicMode ? 30000 : 20000);
         }
-        else
-            MurmursTouch_Timer -= diff;
+        
 
         // Resonance
-        if (Resonance_Timer < diff)
+        if (Resonance_Timer.Expired(diff))
         {
             Unit *target = SelectUnit(SELECT_TARGET_NEAREST, 0, 100, true);
 
@@ -116,13 +114,12 @@ struct boss_murmurAI : public Scripted_NoMovementAI
 
             Resonance_Timer = 5000;
         }
-        else
-            Resonance_Timer -= diff;
+        
 
         if (HeroicMode)
         {
             // Thundering Storm cast to all which are too far away
-            if (ThunderingStorm_Timer < diff)
+            if (ThunderingStorm_Timer.Expired(diff))
             {
                 std::list<HostileReference*>& m_threatlist = me->getThreatManager().getThreatList();
                 for(std::list<HostileReference*>::iterator i = m_threatlist.begin(); i != m_threatlist.end(); ++i)
@@ -136,11 +133,10 @@ struct boss_murmurAI : public Scripted_NoMovementAI
 
                 ThunderingStorm_Timer = 7500;
             }
-            else
-                ThunderingStorm_Timer -= diff;
+
 
             // Sonic Shock cast to tank if someone is too far away
-            if (SonicShock_Timer < diff)
+            if (SonicShock_Timer.Expired(diff))
             {
                 std::list<HostileReference*>& m_threatlist = me->getThreatManager().getThreatList();
                 for(std::list<HostileReference*>::iterator i = m_threatlist.begin(); i != m_threatlist.end(); ++i)
@@ -157,36 +153,33 @@ struct boss_murmurAI : public Scripted_NoMovementAI
 
                 SonicShock_Timer = 2000;
             }
-            else
-                SonicShock_Timer -= diff;
         }
 
         if (!HeroicMode)
         {
             // Magnetic Pull normal only
-            if (MagneticPull_Timer < diff)
+            if (MagneticPull_Timer.Expired(diff))
             {
                 if (Unit* target = SelectUnit(SELECT_TARGET_RANDOM, 0, 100, true))
                     ForceSpellCast(target, SPELL_MAGNETIC_PULL);
 
                  MagneticPull_Timer = 40000;
             }
-            else
-                MagneticPull_Timer -= diff;
         }
 
         // Sonic Boom
-        if (SonicBoom_Timer < diff)
+        if (SonicBoom_Timer.Expired(diff))
         {
             ForceSpellCast(me, SPELL_SONIC_BOOM, DONT_INTERRUPT, true);
             ForceSpellCastWithScriptText(me, SPELL_SONIC_BOOM_CAST, EMOTE_SONIC_BOOM);
             SonicBoom_Timer = (HeroicMode ? 30000 : 40000);
-            Resonance_Timer = 5000;
-            ThunderingStorm_Timer = 5000;
-            SonicShock_Timer = 5000;
+            //delay other spell so they wont get in queue during cast
+            Resonance_Timer.Delay(6000);
+            ThunderingStorm_Timer.Delay(6000);
+            SonicShock_Timer.Delay(6000);
+            MagneticPull_Timer.Delay(6000);
         }
-        else
-            SonicBoom_Timer -= diff;
+        
 
         CastNextSpellIfAnyAndReady();
 

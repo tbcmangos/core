@@ -1,6 +1,6 @@
 /*
  * Copyright (C) 2009-2012 /dev/rsa for MaNGOS <http://getmangos.com/>
- * Copyright (C) 2008-2014 Hellground <http://hellground.net/>
+ * Copyright (C) 2008-2017 Hellground <http://wow-hellground.com/>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -42,7 +42,6 @@ static const class staticActionInfo
         actionInfo[UNIT_ACTION_FEARED]( UNIT_ACTION_PRIORITY_FEARED);
         actionInfo[UNIT_ACTION_ROOT](UNIT_ACTION_PRIORITY_ROOT);
         actionInfo[UNIT_ACTION_STUN](UNIT_ACTION_PRIORITY_STUN);
-        actionInfo[UNIT_ACTION_FEIGNDEATH](UNIT_ACTION_PRIORITY_FEIGNDEATH);
         actionInfo[UNIT_ACTION_TAXI](UNIT_ACTION_PRIORITY_TAXI,ACTION_TYPE_NONRESTOREABLE);
         actionInfo[UNIT_ACTION_EFFECT](UNIT_ACTION_PRIORITY_EFFECT,ACTION_TYPE_NONRESTOREABLE);
     }
@@ -198,49 +197,6 @@ public:
     }
 };
 
-class FeignDeathState : public IdleMovementGenerator
-{
-public:
-
-    const char* Name() const { return "<FeignDeath>"; }
-    void Interrupt(Unit &u) {Finalize(u);}
-    void Reset(Unit &u) {Initialize(u);}
-    void Initialize(Unit &u)
-    {
-        Unit* const target = &u;
-        if (!target)
-            return;
-
-        if (target->GetTypeId() != TYPEID_PLAYER)
-            target->StopMoving();
-
-        target->m_movementInfo.RemoveMovementFlag(MOVEFLAG_MOVING);
-
-        target->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_UNKNOWN6);
-        target->SetFlag(UNIT_FIELD_FLAGS_2, UNIT_FLAG2_FEIGN_DEATH);
-        target->SetFlag(UNIT_DYNAMIC_FLAGS, UNIT_DYNFLAG_DEAD);
-
-        target->InterruptNonMeleeSpells(true);
-        target->CombatStop();
-        target->getHostileRefManager().deleteReferences();
-        target->addUnitState(UNIT_STAT_DIED);
-        //target->RemoveAurasWithInterruptFlags(AURA_INTERRUPT_FLAG_IMMUNE_OR_LOST_SELECTION);
-
-    }
-
-    void Finalize(Unit &u)
-    {
-        Unit* const target = &u;
-        if (!target)
-            return;
-
-        target->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_UNKNOWN6);
-        target->RemoveFlag(UNIT_FIELD_FLAGS_2, UNIT_FLAG2_FEIGN_DEATH);
-        target->RemoveFlag(UNIT_DYNAMIC_FLAGS, UNIT_DYNFLAG_DEAD);
-        target->clearUnitState(UNIT_STAT_DIED);
-    }
-};
-
 class TaxiState : public FlightPathMovementGenerator
 {
 public:
@@ -348,9 +304,6 @@ UnitActionPtr UnitStateMgr::CreateStandartState(UnitActionId stateId, ...)
             break;
         case UNIT_ACTION_STUN:
             state = new StunnedState();
-            break;
-        case UNIT_ACTION_FEIGNDEATH:
-            state = new FeignDeathState();
             break;
         case UNIT_ACTION_ROOT:
             state = new RootState();
@@ -466,7 +419,7 @@ void UnitStateMgr::DropAction(UnitActionPriority priority)
     // Don't remove action with NONE priority - static
     if (priority < UNIT_ACTION_PRIORITY_IDLE)
         return;
-
+   
     ActionInfo* oldInfo = CurrentState();
     UnitActionStorage::iterator itr;
     {
@@ -574,6 +527,13 @@ ActionInfo* UnitStateMgr::CurrentState()
 void UnitStateMgr::DropAllStates()
 {
     DropActionHigherThen(UNIT_ACTION_PRIORITY_IDLE);
+    PushAction(UNIT_ACTION_IDLE);
+}
+
+void UnitStateMgr::DropAllControlledStates() // drops states that we can control - such as chase, follow etc.
+{
+    for (int32 i = UNIT_ACTION_PRIORITY_IDLE + 1; i != UNIT_ACTION_PRIORITY_CONTROLLED + 1/*controlled gets removed too*/; ++i)
+        DropAction(UnitActionPriority(i));
     PushAction(UNIT_ACTION_IDLE);
 }
 

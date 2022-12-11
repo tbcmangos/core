@@ -1,7 +1,7 @@
 /*
  * Copyright (C) 2005-2008 MaNGOS <http://getmangos.com/>
  * Copyright (C) 2008 TrinityCore <http://www.trinitycore.org/>
- * Copyright (C) 2008-2014 Hellground <http://hellground.net/>
+ * Copyright (C) 2008-2017 Hellground <http://wow-hellground.com/>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -33,7 +33,7 @@ template<class UNIT>
 class HELLGROUND_EXPORT ConfusedMovementGenerator : public MovementGeneratorMedium< UNIT, ConfusedMovementGenerator<UNIT> >
 {
     public:
-        explicit ConfusedMovementGenerator() : _nextMoveTime(0) {}
+        explicit ConfusedMovementGenerator() : _nextMoveTime(0),_swimOrFly(false) {}
 
         void Initialize(UNIT &);
         void Finalize(UNIT &);
@@ -48,6 +48,7 @@ class HELLGROUND_EXPORT ConfusedMovementGenerator : public MovementGeneratorMedi
         void _generateMovement(UNIT &unit);
 
         TimeTrackerSmall _nextMoveTime;
+        bool _swimOrFly;
 
         Position _randomPosition[MAX_RANDOM_POINTS+1];
 };

@@ -1,5 +1,5 @@
 /* 
- * Copyright (C) 2008-2014 Hellground <http://hellground.net/>
+ * Copyright (C) 2008-2015 Hellground <http://hellground.net/>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -41,11 +41,9 @@ EndContentData */
 enum eDyingKodo
 {
     // signed for 9999
-    SAY_SMEED_HOME_1                = -1000348,
-    SAY_SMEED_HOME_2                = -1000349,
-    SAY_SMEED_HOME_3                = -1000350,
-
-    QUEST_KODO                      = 5561,
+    SAY_SMEED_HOME_1                = -1600348,
+    SAY_SMEED_HOME_2                = -1600349,
+    SAY_SMEED_HOME_3                = -1600350,
 
     NPC_SMEED                       = 11596,
     NPC_AGED_KODO                   = 4700,
@@ -54,7 +52,7 @@ enum eDyingKodo
     NPC_TAMED_KODO                  = 11627,
 
     SPELL_KODO_KOMBO_ITEM           = 18153,
-    SPELL_KODO_KOMBO_PLAYER_BUFF    = 18172,                //spells here have unclear function, but using them at least for visual parts and checks
+    SPELL_KODO_KOMBO_PLAYER_BUFF    = 18172,
     SPELL_KODO_KOMBO_DESPAWN_BUFF   = 18377,
     SPELL_KODO_KOMBO_GOSSIP         = 18362
 
@@ -62,55 +60,52 @@ enum eDyingKodo
 
 struct npc_aged_dying_ancient_kodoAI : public ScriptedAI
 {
-    npc_aged_dying_ancient_kodoAI(Creature* pCreature) : ScriptedAI(pCreature) { Reset(); }
-
-    uint32 m_uiDespawnTimer;
-
-    void Reset()
-    {
-        m_uiDespawnTimer = 0;
-    }
+    npc_aged_dying_ancient_kodoAI(Creature* pCreature) : ScriptedAI(pCreature) {}
 
     void MoveInLineOfSight(Unit* pWho)
     {
-        if (pWho->GetEntry() == NPC_SMEED)
+        if (pWho->GetEntry() == NPC_SMEED && !m_creature->HasFlag(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_GOSSIP) &&
+            m_creature->IsWithinDistInMap(pWho, 10.0f))
         {
-            if (m_creature->HasFlag(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_GOSSIP))
-                return;
-
-            if (m_creature->IsWithinDistInMap(pWho, 10.0f))
-            {
-                DoScriptText(RAND(SAY_SMEED_HOME_1,SAY_SMEED_HOME_2,SAY_SMEED_HOME_3), pWho);
-
-                //spell have no implemented effect (dummy), so useful to notify spellHit
-                DoCast(m_creature, SPELL_KODO_KOMBO_GOSSIP, true);
-            }
+            DoScriptText(RAND(SAY_SMEED_HOME_1,SAY_SMEED_HOME_2,SAY_SMEED_HOME_3), pWho);
+            m_creature->SetFlag(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_GOSSIP);
         }
     }
 
     void SpellHit(Unit* pCaster, SpellEntry const* pSpell)
     {
-        if (pSpell->Id == SPELL_KODO_KOMBO_GOSSIP)
+        if (pSpell->Id == SPELL_KODO_KOMBO_ITEM)
         {
-            m_creature->SetFlag(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_GOSSIP);
-            m_uiDespawnTimer = 60000;
+            //no effect if player/creature already have aura from spells
+            if (pCaster->HasAura(SPELL_KODO_KOMBO_PLAYER_BUFF, 0) || m_creature->HasAura(SPELL_KODO_KOMBO_DESPAWN_BUFF, 0))
+                return;
+
+            if (m_creature->GetEntry() != NPC_AGED_KODO && m_creature->GetEntry() != NPC_DYING_KODO &&
+                m_creature->GetEntry() != NPC_ANCIENT_KODO)
+                return;
+
+            pCaster->CastSpell(pCaster, SPELL_KODO_KOMBO_PLAYER_BUFF, true);
+
+            m_creature->UpdateEntry(NPC_TAMED_KODO);
+            m_creature->CastSpell(m_creature, SPELL_KODO_KOMBO_DESPAWN_BUFF, false);
+            m_creature->GetMotionMaster()->MoveIdle();
+
+            m_creature->GetMotionMaster()->MoveFollow(pCaster, PET_FOLLOW_DIST, m_creature->GetFollowAngle());
         }
     }
 
     void UpdateAI(const uint32 diff)
     {
-        //timer should always be == 0 unless we already updated entry of creature. Then not expect this updated to ever be in combat.
-        if (m_uiDespawnTimer && m_uiDespawnTimer <= diff)
+        if (me->GetEntry() == NPC_TAMED_KODO)
         {
-            if (!m_creature->getVictim() && m_creature->isAlive())
+            me->CombatStop();
+            if (!me->HasAura(SPELL_KODO_KOMBO_DESPAWN_BUFF))
             {
-                Reset();
-                m_creature->setDeathState(JUST_DIED);
-                m_creature->Respawn();
-                return;
+                me->ForcedDespawn(0);
             }
-        } else m_uiDespawnTimer -= diff;
-
+        }
+        
+        
         if (!UpdateVictim())
             return;
 
@@ -123,36 +118,6 @@ CreatureAI* GetAI_npc_aged_dying_ancient_kodo(Creature* pCreature)
     return new npc_aged_dying_ancient_kodoAI(pCreature);
 }
 
-bool EffectDummyCreature_npc_aged_dying_ancient_kodo(Unit *pCaster, uint32 spellId, uint32 effIndex, Creature *pCreatureTarget)
-{
-    //always check spellid and effectindex
-    if (spellId == SPELL_KODO_KOMBO_ITEM && effIndex == 0)
-    {
-        //no effect if player/creature already have aura from spells
-        if (pCaster->HasAura(SPELL_KODO_KOMBO_PLAYER_BUFF, 0) || pCreatureTarget->HasAura(SPELL_KODO_KOMBO_DESPAWN_BUFF, 0))
-            return true;
-
-        if (pCreatureTarget->GetEntry() == NPC_AGED_KODO ||
-            pCreatureTarget->GetEntry() == NPC_DYING_KODO ||
-            pCreatureTarget->GetEntry() == NPC_ANCIENT_KODO)
-        {
-            pCaster->CastSpell(pCaster,SPELL_KODO_KOMBO_PLAYER_BUFF,true);
-
-            pCreatureTarget->UpdateEntry(NPC_TAMED_KODO);
-            pCreatureTarget->CastSpell(pCreatureTarget,SPELL_KODO_KOMBO_DESPAWN_BUFF,false);
-
-            if (pCreatureTarget->GetMotionMaster()->GetCurrentMovementGeneratorType() == WAYPOINT_MOTION_TYPE)
-                pCreatureTarget->GetMotionMaster()->MoveIdle();
-
-            pCreatureTarget->GetMotionMaster()->MoveFollow(pCaster, PET_FOLLOW_DIST,  pCreatureTarget->GetFollowAngle());
-        }
-
-        //always return true when we are handling this spell and effect
-        return true;
-    }
-    return false;
-}
-
 bool GossipHello_npc_aged_dying_ancient_kodo(Player* pPlayer, Creature* pCreature)
 {
     if (pPlayer->HasAura(SPELL_KODO_KOMBO_PLAYER_BUFF, 0) && pCreature->HasAura(SPELL_KODO_KOMBO_DESPAWN_BUFF, 0))
@@ -161,7 +126,8 @@ bool GossipHello_npc_aged_dying_ancient_kodo(Player* pPlayer, Creature* pCreatur
         pPlayer->CastCreatureOrGO(pCreature->GetEntry(), pCreature->GetGUID(), SPELL_KODO_KOMBO_GOSSIP);
 
         pPlayer->RemoveAurasDueToSpell(SPELL_KODO_KOMBO_PLAYER_BUFF);
-        pCreature->GetMotionMaster()->MoveIdle();
+        pCreature->RemoveFlag(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_GOSSIP);
+        pCreature->ForcedDespawn(5000);
     }
 
     pPlayer->SEND_GOSSIP_MENU(pCreature->GetNpcTextId(), pCreature->GetGUID());
@@ -429,6 +395,553 @@ bool GossipSelect_npc_rokaro(Player *player, Creature *_Creature, uint32 sender,
     return true;
 }
 
+struct npc_magram_spectreAI : public ScriptedAI
+{
+    npc_magram_spectreAI(Creature* c) : ScriptedAI(c) {}
+    
+    Timer checker;
+
+    void Reset()
+    {
+        m_creature->SetWalk(true);
+        m_creature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
+        m_creature->SetVisibility(VISIBILITY_OFF);
+        checker = 60000;
+        checker.SetCurrent(urand(0, 60000));
+    }
+
+    void UpdateAI(const uint32 diff)
+    {
+        if (!UpdateVictim() && checker.Expired(diff))
+        {
+            checker = 60000;
+            GameObject* gob = NULL;
+            Hellground::NearestGameObjectEntryInObjectRangeCheck check(*m_creature,177746,50.0f);
+            Hellground::ObjectSearcher<GameObject, Hellground::NearestGameObjectEntryInObjectRangeCheck> checker(gob,check);
+
+            Cell::VisitGridObjects(m_creature, checker, 50);
+            if (gob)
+            {
+                m_creature->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
+                m_creature->SetVisibility(VISIBILITY_ON);
+                float x, y, z;
+                gob->GetNearPoint(x, y, z, 10, 0, frand(0, 2 * M_PI));
+                m_creature->GetMotionMaster()->MovePoint(0, x, y, z);
+            }
+            return;
+        }
+        DoMeleeAttackIfReady();
+    }
+};
+
+CreatureAI* GetAI_npc_magram_spectre(Creature* crea)
+{
+    return new npc_magram_spectreAI(crea);
+}
+
+/*######
+# Gizelton caravan
+# this script is supposed to deal with 300 waypoints long path, 2 defense quests, some events and stuff <3
+######*/
+
+enum eGizeltonCaravan
+{
+    NPC_CARAVAN         = 11630,
+    NPC_RIGGER          = 11626,
+    NPC_CORK            = 11625,
+    NPC_GIZELTON_KODO   = 11564,
+    NPC_VENDOR_TRON     = 12245,
+    NPC_SUPER_SELLER    = 12246,
+
+    NPC_KOLKAR_AMBUSHER = 12977,
+    NPC_KOLKAR_WAYLAYER = 12976,
+    NPC_NETHER_SORCERES = 4684,
+    NPC_DOOMWARDER      = 4677,
+    NPC_LESSER_INFERNAL = 4676,
+
+    QUEST_GIZELTON_CARAVAN      = 5943,
+    QUEST_BODYGUARD_FOR_HIRE    = 5821,
+
+    WAYPOINT_NORTH_STOP     = 52,
+    WAYPOINT_NORTH_QUEST    = 76,
+    WAYPOINT_NORTH_WAVE1    = 84,
+    WAYPOINT_NORTH_WAVE2    = 92,
+    WAYPOINT_NORTH_WAVE3    = 100,
+    WAYPOINT_NORTH_FINISH   = 107,
+    WAYPOINT_SOUTH_STOP     = 193,
+    WAYPOINT_SOUTH_QUEST    = 207,
+    WAYPOINT_SOUTH_WAVE1    = 216,
+    WAYPOINT_SOUTH_WAVE2    = 224,
+    WAYPOINT_SOUTH_WAVE3    = 234,
+    WAYPOINT_SOUTH_FINISH   = 239,
+
+    GIZELTON_TEXT_BEGIN = -1000050,
+
+};
+    
+const float caravan_pos[][4] = {
+    { -721.4, 1474.2, 91.3, 5.8 },
+    { -716.8, 1467.0, 91.3, 5.6 },
+    { -715.4, 1482.1, 91.3, 5.5 },
+    { -719.8, 1480.5, 91.3, 5.6 },
+    { -721.1, 1476.2, 91.3, 6.0 },
+
+    { -1922.6, 2432.4, 60.9, 0.25 },
+    { -1919.8, 2421.7, 60.9, 0.25 },
+    { -1922.5, 2423.2, 60.9, 0.6 },
+    { -1922.4, 2434.8, 60.9, 6.1 },
+    { -1923.1, 2424.2, 60.9, 0.6 },
+    
+};
+
+struct npc_gizelton_caravanAI : public ScriptedAI
+{
+    npc_gizelton_caravanAI(Creature* c) : ScriptedAI(c) { }
+
+    std::vector<ScriptPointMove> points;
+    std::vector<ScriptPointMove>::iterator current;
+    Timer pointWait;
+    Timer checkTimer;
+    uint64 members[5];//rigger,kodo,gizelton,kodo,robot
+    std::list<uint64> playerGUIDs;
+
+    void Reset()
+    {
+        points = pSystemMgr.GetPointMoveList(me->GetEntry());
+        pointWait.Reset(100);
+        current = points.begin();
+        me->SetWalk(false);
+
+        playerGUIDs.empty();
+        GetMembers();
+        me->setActive(true);
+        members[4] = 0;
+        checkTimer.Reset(10000);
+    }
+    
+    void GetMembers()
+    {
+        Map* map = me->GetMap();
+        if (!map)
+            return;
+        members[0] = map->GetCreatureGUID(NPC_RIGGER);
+        if (Creature* rigger = me->GetCreature(members[0]))
+            rigger->setActive(true);
+
+        members[2] = map->GetCreatureGUID(NPC_CORK);
+        if (Creature* cork = me->GetCreature(members[2]))
+            cork->setActive(true);
+
+        if (!members[1] || !me->GetCreature(members[1]))
+        {
+            Creature* kodo = me->SummonCreature(NPC_GIZELTON_KODO, me->GetPositionX(), me->GetPositionY(), me->GetPositionZ(), 0, TEMPSUMMON_DEAD_DESPAWN, 1000);
+            if (kodo)
+            {
+                members[1] = kodo->GetGUID();
+                kodo->setActive(true);
+            }
+        }
+        if (!members[3] || !me->GetCreature(members[3]))
+        {
+            Creature* kodo = me->SummonCreature(NPC_GIZELTON_KODO, me->GetPositionX(), me->GetPositionY(), me->GetPositionZ(), 0, TEMPSUMMON_DEAD_DESPAWN, 1000);
+            if (kodo)
+            {
+                members[3] = kodo->GetGUID();
+                kodo->setActive(true);
+            }
+        }
+    }
+
+    void UpdateAI(const uint32 diff)
+    {
+        if (pointWait.Expired(diff))
+        {
+            switch (current->uiPointId)
+            {
+            case WAYPOINT_NORTH_STOP:
+            {
+                if (Creature* robot = me->GetCreature(members[4]))
+                    robot->ForcedDespawn();
+                members[4] = 0;
+                if (Creature* cork = me->GetCreature(members[2]))
+                    DoScriptText(GIZELTON_TEXT_BEGIN, cork);
+                break;
+            }
+            case WAYPOINT_SOUTH_STOP:
+            {
+                if (Creature* robot = me->GetCreature(members[4]))
+                    robot->ForcedDespawn();
+                members[4] = 0;
+                if (Creature* rigger = me->GetCreature(members[0]))
+                    DoScriptText(GIZELTON_TEXT_BEGIN - 6, rigger);
+                break;
+            }
+            case WAYPOINT_NORTH_QUEST:
+            case WAYPOINT_SOUTH_QUEST:
+            {
+                if (!playerGUIDs.empty())
+                {
+                    for (uint8 i = 0; i < 4; i++)
+                    {
+                        Creature* member = me->GetCreature(members[i]);
+                        if (member)
+                            member->setFaction(FACTION_ESCORT_N_NEUTRAL_PASSIVE);
+                    }
+                    checkTimer.Reset(1000);
+                }
+                if (Creature* member = me->GetCreature(members[0]))
+                    member->RemoveFlag(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_QUESTGIVER);
+                if (Creature* member = me->GetCreature(members[2]))
+                    member->RemoveFlag(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_QUESTGIVER);
+                break;
+            }
+            }
+
+            current++;
+            if (current == points.end())
+                current = points.begin();
+
+            CaravanMovesTo(current->uiPointId, current->fX, current->fY, current->fZ);
+            pointWait.Reset(0);
+        }
+
+        if (checkTimer.Expired(diff))
+        {
+            if (playerGUIDs.empty()) // not during quest every 10 sec check if we have all members
+            {
+                GetMembers();
+                checkTimer = 10000; 
+            }
+            else // during quest check every second if we are alive
+            {
+                Creature* rigger = me->GetCreature(members[0]);
+                Creature* cork = me->GetCreature(members[2]);
+                if (!rigger || !cork || !rigger->isAlive() || !cork->isAlive())
+                {
+                    for (std::list<uint64>::iterator itr = playerGUIDs.begin(); itr != playerGUIDs.end(); itr++)
+                    {
+                        Player* plr = me->GetPlayer(*itr);
+                        if (plr && plr->IsActiveQuest(QUEST_BODYGUARD_FOR_HIRE))
+                            plr->FailQuest(QUEST_BODYGUARD_FOR_HIRE);
+                        if (plr && plr->IsActiveQuest(QUEST_GIZELTON_CARAVAN))
+                            plr->FailQuest(QUEST_GIZELTON_CARAVAN);
+                    }
+                    playerGUIDs.clear();
+
+                    if (cork)
+                    {
+                        cork->CombatStop();
+                        cork->RestoreFaction();
+                        cork->Respawn();
+                    }
+
+                    if (rigger)
+                    {
+                        rigger->CombatStop();
+                        rigger->RestoreFaction();
+                        rigger->Respawn();
+                    }
+                }
+                checkTimer = 1000;
+            }
+        }
+    }
+
+    void CaravanMovesTo(uint32 point, float x, float y, float z)
+    {
+        SendDebug("Starting movement to point %u (%f %f %f)", point, x, y, z);
+        float pathangle = atan2(me->GetPositionY() - y, me->GetPositionX() - x);
+        me->GetMotionMaster()->MovePoint(current->uiPointId, current->fX, current->fY, current->fZ);
+        me->SetHomePosition(current->fX, current->fY, current->fZ, 0);
+        
+        for (uint8 i = 0; i < 4; i++)
+        {
+            Creature* member = me->GetCreature(members[i]);
+            if (!member || !member->isAlive())
+                continue;
+            float dx = x + cos(pathangle) * (i*5.0f + 1.0f);
+            float dy = y + sin(pathangle) * (i*5.0f + 1.0f);
+            float dz = z;
+            Hellground::NormalizeMapCoord(dx);
+            Hellground::NormalizeMapCoord(dy);
+            member->UpdateGroundPositionZ(dx, dy, dz);
+
+            if (member->IsWithinDist(me, 30.0f))
+            {
+                member->SetUnitMovementFlags(me->GetUnitMovementFlags());
+            }
+            else
+            {
+                me->GetMap()->CreatureRelocation(member, me->GetPositionX(), me->GetPositionY(), me->GetPositionZ(), 0.0f);
+            }
+
+            member->GetMotionMaster()->MovePoint(0, dx, dy, dz, true, true, UNIT_ACTION_HOME);
+            member->SetHomePosition(me->GetPositionX(), me->GetPositionY(), me->GetPositionZ(), pathangle);
+        }
+    }
+
+    void MovementInform(uint32 uiMoveType, uint32 uiPointId)
+    {
+        if (uiMoveType != POINT_MOTION_TYPE)
+            return;
+        switch (current->uiPointId)
+        {
+        case WAYPOINT_NORTH_STOP:
+        {
+            Creature* member;
+            for (uint8 i = 0; i < 4; i++)
+            {
+                member = me->GetCreature(members[i]);
+                if (member)
+                    member->Relocate(caravan_pos[i][0], caravan_pos[i][1], caravan_pos[i][2], caravan_pos[i][3]);
+            }
+
+            member = me->SummonCreature(NPC_VENDOR_TRON, caravan_pos[4][0], caravan_pos[4][1], caravan_pos[4][2], caravan_pos[4][3], TEMPSUMMON_CORPSE_DESPAWN, 1000);
+            if (member)
+                members[4] = member->GetGUID();
+            SendDebug("reached north stop waypoint, 10 minute break");
+            pointWait.Reset(600000);
+            break;
+        }
+        case WAYPOINT_NORTH_QUEST:
+            if (Creature* cork = me->GetCreature(members[2]))
+            {
+                cork->YellToZone(GIZELTON_TEXT_BEGIN - 1, 0, 0);
+                cork->SetFlag(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_QUESTGIVER);
+            }
+            SendDebug("reached north quest waypoint, 3 minute break");
+            pointWait.Reset(180000);
+            me->SetWalk(true);
+            break;
+        case WAYPOINT_NORTH_WAVE1:
+            pointWait.Reset(3000);
+            if (!playerGUIDs.empty())
+            {
+                if (Creature* cork = me->GetCreature(members[2]))
+                    DoScriptText(GIZELTON_TEXT_BEGIN - 2, cork);
+                SendDebug("north quest wave 1");
+                MakeWave(true);
+            }
+            break;
+        case WAYPOINT_NORTH_WAVE2:
+            pointWait.Reset(3000);
+            if (!playerGUIDs.empty())
+            {
+                if (Creature* cork = me->GetCreature(members[2]))
+                    DoScriptText(GIZELTON_TEXT_BEGIN - 3, cork);
+                SendDebug("north quest wave 2");
+                MakeWave(true);
+            }
+            break;
+        case WAYPOINT_NORTH_WAVE3:
+            pointWait.Reset(3000);
+            if (!playerGUIDs.empty())
+            {
+                if (Creature* cork = me->GetCreature(members[2]))
+                    DoScriptText(GIZELTON_TEXT_BEGIN - 4, cork);
+                SendDebug("north quest wave 3");
+                MakeWave(true);
+            }
+            break;
+        case WAYPOINT_NORTH_FINISH:
+            SendDebug("north quest travel complete");
+            pointWait.Reset(10);
+            me->SetWalk(false);
+            if (!playerGUIDs.empty())
+            {
+                if (Creature* cork = me->GetCreature(members[2]))
+                    DoScriptText(GIZELTON_TEXT_BEGIN - 5, cork);
+                for (uint8 i = 0; i < 4; i++)
+                {
+                    Creature* member = me->GetCreature(members[i]);
+                    if (member)
+                        member->RestoreFaction();
+                }
+                for (std::list<uint64>::iterator itr = playerGUIDs.begin(); itr != playerGUIDs.end(); itr++)
+                {
+                    Player* plr = me->GetPlayer(*itr);
+                    if (plr && plr->IsAtGroupRewardDistance(me))
+                        plr->AreaExploredOrEventHappens(QUEST_BODYGUARD_FOR_HIRE);
+                }
+                playerGUIDs.clear();
+            }
+            break;
+        case WAYPOINT_SOUTH_STOP:
+        {
+            Creature* member;
+            for (uint8 i = 0; i < 4; i++)
+            {
+                member = me->GetCreature(members[i]);
+                if (member)
+                    member->Relocate(caravan_pos[5 + i][0], caravan_pos[5 + i][1], caravan_pos[5 + i][2], caravan_pos[5 + i][3]);
+            }
+
+            member = me->SummonCreature(NPC_SUPER_SELLER, caravan_pos[9][0], caravan_pos[9][1], caravan_pos[9][2], caravan_pos[9][3], TEMPSUMMON_CORPSE_DESPAWN, 1000);
+            if (member)
+                members[4] = member->GetGUID();
+            SendDebug("reached south stop waypoint, 10 minute break");
+            pointWait.Reset(600000);
+            break;
+        }
+        case WAYPOINT_SOUTH_QUEST:
+            if (Creature* rigger = me->GetCreature(members[0]))
+            {
+                rigger->YellToZone(GIZELTON_TEXT_BEGIN - 7, 0, 0);
+                rigger->SetFlag(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_QUESTGIVER);
+            }
+            SendDebug("reached south quest waypoint, 3 minute break");
+            pointWait.Reset(180000);
+            me->SetWalk(true);
+            break;
+        case WAYPOINT_SOUTH_WAVE1:
+            pointWait.Reset(3000);
+            if (!playerGUIDs.empty())
+            {
+                if (Creature* rigger = me->GetCreature(members[0]))
+                    DoScriptText(GIZELTON_TEXT_BEGIN - 8, rigger);
+                SendDebug("south quest wave 1");
+                MakeWave(false);
+            }
+            break;
+        case WAYPOINT_SOUTH_WAVE2:
+            pointWait.Reset(3000);
+            if (!playerGUIDs.empty())
+            {
+                if (Creature* rigger = me->GetCreature(members[0]))
+                    DoScriptText(GIZELTON_TEXT_BEGIN - 9, rigger);
+                SendDebug("south quest wave 2");
+                MakeWave(false);
+            }
+            break;
+        case WAYPOINT_SOUTH_WAVE3:
+            pointWait.Reset(3000);
+            if (!playerGUIDs.empty())
+            {
+                if (Creature* rigger = me->GetCreature(members[0]))
+                    DoScriptText(GIZELTON_TEXT_BEGIN - 9, rigger);
+                SendDebug("south quest wave 3");
+                MakeWave(false);
+            }
+            break;
+        case WAYPOINT_SOUTH_FINISH:
+            SendDebug("south quest travel complete");
+            pointWait.Reset(10);
+            me->SetWalk(false);
+            if (!playerGUIDs.empty())
+            {
+                if (Creature* rigger = me->GetCreature(members[0]))
+                    DoScriptText(GIZELTON_TEXT_BEGIN - 10, rigger);
+                for (uint8 i = 0; i < 4; i++)
+                {
+                    Creature* member = me->GetCreature(members[i]);
+                    if (member)
+                        member->RestoreFaction();
+                }
+
+                for (std::list<uint64>::iterator itr = playerGUIDs.begin(); itr != playerGUIDs.end(); itr++)
+                {
+                    Player* plr = me->GetPlayer(*itr);
+                    if (plr && plr->IsAtGroupRewardDistance(me))
+                        plr->AreaExploredOrEventHappens(QUEST_GIZELTON_CARAVAN);
+                }
+                playerGUIDs.clear();
+            }
+            break;
+        
+        default:
+            pointWait.Reset(10);
+            break;
+        }
+    }
+
+    void QuestAccepted(Player* plr)
+    {
+        if (current->uiPointId != WAYPOINT_NORTH_QUEST && current->uiPointId != WAYPOINT_SOUTH_QUEST)
+            return;
+
+        if (Group *pGroup = plr->GetGroup())
+        {
+            for (GroupReference *itr = pGroup->GetFirstMember(); itr != NULL; itr = itr->next())
+            {
+                if (Player* pGroupGuy = itr->getSource())
+                    playerGUIDs.push_back(pGroupGuy->GetGUID());
+            }
+        }
+        else
+            playerGUIDs.push_back(plr->GetGUID());
+    }
+
+    void MakeWave(bool north)
+    {
+        Creature* rigger = me->GetCreature(members[0]);
+        if (!rigger)
+            return;
+        Position pos;
+        for (uint8 i = 0; i < 4; i++)
+        {
+            uint32 id;
+            switch (i)
+            {
+            case 0:
+            case 1: id = north ? NPC_KOLKAR_AMBUSHER : NPC_NETHER_SORCERES; break;
+            case 2: id = north ? NPC_KOLKAR_WAYLAYER : NPC_DOOMWARDER; break;
+            case 3: id = north ? NPC_KOLKAR_WAYLAYER : NPC_LESSER_INFERNAL; break;
+            }
+            me->GetValidPointInAngle(pos, frand(15, 25), frand(-0.5, +0.5), true);
+            if (Creature* enemy = me->SummonCreature(id, pos.x, pos.y, pos.z, 0, TEMPSUMMON_CORPSE_DESPAWN, 10000))
+                enemy->CombatStart(rigger);
+        }
+    }
+
+    void EnteringCombat(Unit* enemy)
+    {
+        for (uint8 i = 0; i < 4; i++)
+        {
+            if (Creature* member = me->GetCreature(members[i]))
+                member->CombatStart(enemy);
+        }
+    }
+};
+
+CreatureAI* GetAI_npc_gizelton_caravan(Creature* c)
+{
+    return new npc_gizelton_caravanAI(c);
+}
+
+bool QuestAccept_npc_gizelton_caravan_member(Player* plr, Creature* cre, const Quest* quest)
+{
+    Creature* caravan = plr->GetMap()->GetCreatureById(NPC_CARAVAN);
+    if (caravan)
+        CAST_AI(npc_gizelton_caravanAI, caravan->AI())->QuestAccepted(plr);
+    return true;
+}
+
+bool GossipHello_npc_gizelton_caravan_member(Player* plr, Creature* cre)
+{
+    if (cre->isQuestGiver()) // disable/enable showing quest by seting npc flag
+        plr->PrepareQuestMenu(cre->GetGUID());
+
+    plr->SEND_GOSSIP_MENU(cre->GetNpcTextId(), cre->GetGUID());
+    return true;
+}
+
+struct npc_gizelton_caravan_memberAI : public ScriptedAI
+{
+    npc_gizelton_caravan_memberAI(Creature* c) : ScriptedAI(c) {}
+
+    void EnterCombat(Unit* enemy)
+    {
+        Creature* caravan = me->GetMap()->GetCreatureById(NPC_CARAVAN);
+        if (caravan)
+            CAST_AI(npc_gizelton_caravanAI, caravan->AI())->EnteringCombat(enemy);
+    }
+};
+
+CreatureAI* GetAI_npc_gizelton_caravan_member(Creature* cre)
+{
+    return new npc_gizelton_caravan_memberAI(cre);
+}
+
 void AddSC_desolace()
 {
     Script *newscript;
@@ -436,7 +949,6 @@ void AddSC_desolace()
     newscript = new Script;
     newscript->Name = "npc_aged_dying_ancient_kodo";
     newscript->GetAI = &GetAI_npc_aged_dying_ancient_kodo;
-    newscript->pEffectDummyNPC = &EffectDummyCreature_npc_aged_dying_ancient_kodo;
     newscript->pGossipHello = &GossipHello_npc_aged_dying_ancient_kodo;
     newscript->RegisterSelf();
 
@@ -461,5 +973,22 @@ void AddSC_desolace()
     newscript->Name="npc_rokaro";
     newscript->pGossipHello = &GossipHello_npc_rokaro;
     newscript->pGossipSelect = &GossipSelect_npc_rokaro;
+    newscript->RegisterSelf();
+
+    newscript = new Script;
+    newscript->Name = "npc_magram_spectre";
+    newscript->GetAI = &GetAI_npc_magram_spectre;
+    newscript->RegisterSelf();
+
+    newscript = new Script;
+    newscript->Name = "npc_gizelton_caravan";
+    newscript->GetAI = &GetAI_npc_gizelton_caravan;
+    newscript->RegisterSelf();
+
+    newscript = new Script;
+    newscript->Name = "npc_gizelton_caravan_member";
+    newscript->GetAI = &GetAI_npc_gizelton_caravan_member;
+    newscript->pGossipHello = &GossipHello_npc_gizelton_caravan_member;
+    newscript->pQuestAcceptNPC = &QuestAccept_npc_gizelton_caravan_member;
     newscript->RegisterSelf();
 }

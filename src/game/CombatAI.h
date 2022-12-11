@@ -1,7 +1,7 @@
 /*
  * Copyright (C) 2005-2009 MaNGOS <http://getmangos.com/>
  * Copyright (C) 2008-2009 TrinityCore <http://www.trinitycore.org/>
- * Copyright (C) 2008-2014 Hellground <http://hellground.net/>
+ * Copyright (C) 2008-2017 Hellground <http://wow-hellground.com/>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -33,36 +33,6 @@ class AggressorAI : public CreatureAI
 
         void UpdateAI(const uint32);
         static int Permissible(const Creature *);
-};
-
-typedef std::vector<uint32> SpellVct;
-
-class HELLGROUND_IMPORT_EXPORT CombatAI : public CreatureAI
-{
-    public:
-        explicit CombatAI(Creature *c) : CreatureAI(c) {}
-
-        void InitializeAI();
-        void Reset();
-        void EnterCombat(Unit* who);
-        void JustDied(Unit *killer);
-        void UpdateAI(const uint32 diff);
-        static int Permissible(const Creature *);
-    protected:
-        EventMap events;
-        SpellVct spells;
-};
-
-class HELLGROUND_IMPORT_EXPORT CasterAI : public CombatAI
-{
-    public:
-        explicit CasterAI(Creature *c) : CombatAI(c) { m_attackDist = MELEE_RANGE; }
-        void InitializeAI();
-        void AttackStart(Unit * victim) { AttackStartCaster(victim, m_attackDist); }
-        void UpdateAI(const uint32 diff);
-        void EnterCombat(Unit *who);
-    private:
-        float m_attackDist;
 };
 
 #endif

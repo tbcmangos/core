@@ -1,7 +1,7 @@
 /*
  * Copyright (C) 2005-2008 MaNGOS <http://getmangos.com/>
  * Copyright (C) 2008 TrinityCore <http://www.trinitycore.org/>
- * Copyright (C) 2008-2014 Hellground <http://hellground.net/>
+ * Copyright (C) 2008-2017 Hellground <http://wow-hellground.com/>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -32,6 +32,7 @@
 #include "CreatureAI.h"
 #include "Unit.h"
 #include "Util.h"
+#include "CooldownMgr.h"
 
 char const* petTypeSuffix[MAX_PET_TYPE] =
 {
@@ -81,8 +82,6 @@ Pet::Pet(PetType type) : Creature()
 
     m_spells.clear();
     m_Auras.clear();
-    m_CreatureSpellCooldowns.clear();
-    m_CreatureCategoryCooldowns.clear();
     m_autospells.clear();
     m_declinedname = NULL;
     
@@ -124,8 +123,6 @@ void Pet::RemoveFromWorld()
 
 bool Pet::LoadPetFromDB(Unit* owner, uint32 petentry, uint32 petnumber, bool current, float x, float y, float z, float ang)
 {
-    m_loading = true;
-
     uint32 ownerid = owner->GetGUIDLow();
 
     QueryResultAutoPtr result;
@@ -147,6 +144,8 @@ bool Pet::LoadPetFromDB(Unit* owner, uint32 petentry, uint32 petnumber, bool cur
 
     if (!result)
         return false;
+
+    m_loading = true;
 
     Field *fields = result->Fetch();
 
@@ -231,8 +230,8 @@ bool Pet::LoadPetFromDB(Unit* owner, uint32 petentry, uint32 petnumber, bool cur
             SetUInt32Value(UNIT_FIELD_FLAGS, UNIT_FLAG_PVP_ATTACKABLE);
                                                             // this enables popup window (pet abandon, cancel)
             SetTP(fields[9].GetInt32());
-            SetMaxPower(POWER_HAPPINESS,GetCreatePowers(POWER_HAPPINESS));
-            SetPower(  POWER_HAPPINESS,fields[15].GetUInt32());
+            SetMaxPower(POWER_HAPPINESS, GetCreatePowers(POWER_HAPPINESS));
+            SetPower(POWER_HAPPINESS, fields[15].GetUInt32());
             setPowerType(POWER_FOCUS);
             break;
         default:
@@ -334,14 +333,14 @@ bool Pet::LoadPetFromDB(Unit* owner, uint32 petentry, uint32 petnumber, bool cur
 
     // Spells should be loaded after pet is added to map, because in CheckCast is check on it
     _LoadSpells();
-    _LoadSpellCooldowns();
+    //_LoadSpellCooldowns();
 
     owner->SetPet(this);                                    // in DB stored only full controlled creature
     sLog.outDebug("New Pet has guid %u", GetGUIDLow());
 
     if (owner->GetTypeId() == TYPEID_PLAYER)
     {
-        ((Player*)owner)->PetSpellInitialize();
+        ((Player*)owner)->DelayedPetSpellInitialize();
         if (((Player*)owner)->GetGroup())
             ((Player*)owner)->SetGroupUpdateFlag(GROUP_UPDATE_PET);
     }
@@ -397,10 +396,11 @@ void Pet::SavePetToDB(PetSaveMode mode)
             break;
     }
 
+    RemoveCharmAuras(); // it is in save, not in RemovePet, cause pet could be saved as current without removal
+
     //save pet's data as one single transaction
     RealmDataDatabase.BeginTransaction();
     _SaveSpells();
-    _SaveSpellCooldowns();
     _SaveAuras();
 
     switch (mode)
@@ -537,7 +537,7 @@ void Pet::Update(uint32 update_diff, uint32 p_diff)
     {
         case CORPSE:
         {
-            if (m_deathTimer <= update_diff)
+            if (m_deathTimer <= time(NULL))
             {
                 ASSERT(getPetType()!=SUMMON_PET && "Must be already removed.");
                 Remove(PET_SAVE_NOT_IN_SLOT);               //hunters' pets never get removed because of death, NEVER!
@@ -1065,6 +1065,7 @@ bool Pet::InitStatsForLevel(uint32 petlevel)
     {
         case SUMMON_PET:
         {
+            float dmgBaseMultiplier = 1.0f;
             if (owner->GetTypeId() == TYPEID_PLAYER)
             {
                 switch (owner->getClass())
@@ -1079,6 +1080,22 @@ bool Pet::InitStatsForLevel(uint32 petlevel)
 
                         SetBonusDamage(int32 (val * 0.15f));
                         //bonusAP += val * 0.57;
+
+                        switch (cinfo->Entry)
+                        {
+                        case 17252: // felguard base dmg~ 148 = level* 2.1
+                            dmgBaseMultiplier = 2.1f;
+                            break;
+                        case 1863: // succubus base dmg~ 105 = level* 1.5
+                            dmgBaseMultiplier = 1.5f;
+                            break;
+                        case 417: // fel hunter dmg ?
+                            dmgBaseMultiplier = 1.3f;
+                            break;
+                        case 1860: // voidwalker base dmg~ 84 = level* 1.2
+                            dmgBaseMultiplier = 1.2f;
+                            break;
+                        }
                         break;
                     }
                     case CLASS_MAGE:
@@ -1095,10 +1112,8 @@ bool Pet::InitStatsForLevel(uint32 petlevel)
                 }
             }
 
-            SetBaseWeaponDamage(BASE_ATTACK, MINDAMAGE, float(petlevel - (petlevel / 4)));
-            SetBaseWeaponDamage(BASE_ATTACK, MAXDAMAGE, float(petlevel + (petlevel / 4)));
-
-            //SetModifierValue(UNIT_MOD_ATTACK_POWER, BASE_VALUE, float(cinfo->attackpower));
+            SetBaseWeaponDamage(BASE_ATTACK, MINDAMAGE, float(petlevel - (petlevel / 4))*dmgBaseMultiplier);
+            SetBaseWeaponDamage(BASE_ATTACK, MAXDAMAGE, float(petlevel + (petlevel / 4))*dmgBaseMultiplier);
 
             PetLevelInfo const* pInfo = sObjectMgr.GetPetLevelInfo(creature_ID, petlevel);
             if (pInfo)                                       // exist in DB
@@ -1147,7 +1162,6 @@ bool Pet::InitStatsForLevel(uint32 petlevel)
             {
                 SetCreateHealth(pInfo->health);
                 SetModifierValue(UNIT_MOD_ARMOR, BASE_VALUE, float(pInfo->armor));
-                //SetModifierValue(UNIT_MOD_ATTACK_POWER, BASE_VALUE, float(cinfo->attackpower));
 
                 for (int i = STAT_STRENGTH; i < MAX_STATS; i++)
                 {
@@ -1273,77 +1287,6 @@ uint32 Pet::GetCurrentFoodBenefitLevel(uint32 itemlevel)
     // -15 or less
     else
         return 0;                                           //food too low level
-}
-
-void Pet::_LoadSpellCooldowns()
-{
-    m_CreatureSpellCooldowns.clear();
-    m_CreatureCategoryCooldowns.clear();
-
-    QueryResultAutoPtr result = RealmDataDatabase.PQuery("SELECT spell,time FROM pet_spell_cooldown WHERE guid = '%u'",m_charmInfo->GetPetNumber());
-
-    if (result)
-    {
-        time_t curTime = time(NULL);
-
-        WorldPacket data(SMSG_SPELL_COOLDOWN, (8+1+result->GetRowCount()*8));
-        data << GetGUID();
-        data << uint8(0x0);                                 // flags (0x1, 0x2)
-
-        do
-        {
-            Field *fields = result->Fetch();
-
-            uint32 spell_id = fields[0].GetUInt32();
-            time_t db_time  = (time_t)fields[1].GetUInt64();
-
-            if (!sSpellStore.LookupEntry(spell_id))
-            {
-                sLog.outLog(LOG_DEFAULT, "ERROR: Pet %u have unknown spell %u in `pet_spell_cooldown`, skipping.",m_charmInfo->GetPetNumber(),spell_id);
-                continue;
-            }
-
-            // skip outdated cooldown
-            if (db_time <= curTime)
-                continue;
-
-            data << uint32(spell_id);
-            data << uint32(uint32(db_time-curTime)*1000);   // in m.secs
-
-            _AddCreatureSpellCooldown(spell_id,db_time);
-
-            sLog.outDebug("Pet (Number: %u) spell %u cooldown loaded (%u secs).", m_charmInfo->GetPetNumber(), spell_id, uint32(db_time-curTime));
-        }
-        while (result->NextRow());
-
-        if (!m_CreatureSpellCooldowns.empty() && GetOwner())
-        {
-            if (GetOwner()->GetTypeId() == TYPEID_PLAYER)
-                ((Player*)GetOwner())->SendPacketToSelf(&data);
-        }
-    }
-}
-
-void Pet::_SaveSpellCooldowns()
-{
-    if (getPetType() == SUMMON_PET) //don't save cooldowns for temp pets, thats senseless
-        return;
-
-    RealmDataDatabase.PExecute("DELETE FROM pet_spell_cooldown WHERE guid = '%u'", m_charmInfo->GetPetNumber());
-
-    time_t curTime = time(NULL);
-
-    // remove oudated and save active
-    for (CreatureSpellCooldowns::iterator itr = m_CreatureSpellCooldowns.begin();itr != m_CreatureSpellCooldowns.end();)
-    {
-        if (itr->second <= curTime)
-            m_CreatureSpellCooldowns.erase(itr++);
-        else
-        {
-            RealmDataDatabase.PExecute("INSERT INTO pet_spell_cooldown (guid,spell,time) VALUES ('%u', '%u', '" UI64FMTD "')", m_charmInfo->GetPetNumber(), itr->first, uint64(itr->second));
-            ++itr;
-        }
-    }
 }
 
 void Pet::_LoadSpells()
@@ -1948,7 +1891,7 @@ void Pet::ProhibitSpellSchool(SpellSchoolMask idSchoolMask, uint32 unTimeMs)
         {
             data << unSpellId;
             data << unTimeMs;                               // in m.secs
-            //owner->AddSpellCooldown(unSpellId, 0, curTime + unTimeMs/1000);
+            owner->GetCooldownMgr().AddSpellCooldown(unSpellId, unTimeMs);
         }
     }
     owner->SendPacketToSelf(&data);

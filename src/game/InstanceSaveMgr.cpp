@@ -1,7 +1,7 @@
 /*
  * Copyright (C) 2005-2008 MaNGOS <http://getmangos.com/>
  * Copyright (C) 2008 TrinityCore <http://www.trinitycore.org/>
- * Copyright (C) 2008-2014 Hellground <http://hellground.net/>
+ * Copyright (C) 2008-2017 Hellground <http://wow-hellground.com/>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -48,37 +48,6 @@ InstanceSaveManager::InstanceSaveManager() : lock_instLists(false)
 
 InstanceSaveManager::~InstanceSaveManager()
 {
-}
-
-void InstanceSaveManager::UnbindBeforeDelete()
-{
-    // it is undefined whether this or objectmgr will be unloaded first
-    // so we must be prepared for both cases
-    lock_instLists = true;
-    for (InstanceSaveHashMap::iterator itr = m_instanceSaveById.begin(); itr != m_instanceSaveById.end(); ++itr)
-    {
-        InstanceSave *save = itr->second;
-        if (save == nullptr)
-			continue;
-			
-        for (InstanceSave::PlayerListType::iterator itr2 = save->m_playerList.begin(); itr2 != save->m_playerList.end(); ++itr2)
-        {
-            if (Player* player = sObjectMgr.GetPlayer(*itr2))
-                player->UnbindInstance(save->GetMapId(), save->GetDifficulty(), true);
-        }
-
-        save->m_playerList.clear();
-
-        for (InstanceSave::GroupListType::iterator itr2 = save->m_groupList.begin(); itr2 != save->m_groupList.end(); ++itr2)
-            (*itr2)->UnbindInstance(save->GetMapId(), save->GetDifficulty(), true);
-
-        save->m_groupList.clear();
-		
-        delete save;
-		itr->second = nullptr;
-    }
-
-    m_instanceSaveById.clear();
 }
 
 /*
@@ -242,7 +211,7 @@ bool InstanceSave::UnloadIfEmpty()
         return true;
 }
 
-void InstanceSaveManager::_DelHelper(DatabaseType &db, const char *fields, const char *table, const char *queryTail,...)
+void InstanceSaveManager::_DelHelper(DatabaseType &db, const char *fields, const char *table, const char *queryTail, ...)
 {
     Tokens fieldTokens = StrSplit(fields, ", ");
     ASSERT(fieldTokens.size() != 0);
@@ -253,7 +222,9 @@ void InstanceSaveManager::_DelHelper(DatabaseType &db, const char *fields, const
     int res = vsnprintf(szQueryTail, MAX_QUERY_LEN, queryTail, ap);
     va_end(ap);
 
-    QueryResultAutoPtr result = db.PQuery("SELECT %s FROM %s %s", fields, table, szQueryTail);
+    QueryResultAutoPtr result;
+    result = db.PQuery("SELECT %s FROM %s %s", fields, table, szQueryTail);
+
     if (result)
     {
         do
@@ -285,6 +256,7 @@ void InstanceSaveManager::CleanupInstances()
     // clean character/group - instance binds with invalid group/characters
     _DelHelper(RealmDataDatabase, "character_instance.guid, instance", "character_instance", "LEFT JOIN characters ON character_instance.guid = characters.guid WHERE characters.guid IS NULL");
     _DelHelper(RealmDataDatabase, "group_instance.leaderGuid, instance", "group_instance", "LEFT JOIN characters ON group_instance.leaderGuid = characters.guid LEFT JOIN groups ON group_instance.leaderGuid = groups.leaderGuid WHERE characters.guid IS NULL OR groups.leaderGuid IS NULL");
+    _DelHelper(RealmDataDatabase, "group_saved_loot.instanceId", "group_saved_loot", "LEFT JOIN instance ON group_saved_loot.instanceId = instance.id WHERE instance.id IS NULL");
 
     // clean instances that do not have any players or groups bound to them
     _DelHelper(RealmDataDatabase, "id, map, difficulty", "instance", "LEFT JOIN character_instance ON character_instance.instance = id LEFT JOIN group_instance ON group_instance.instance = id WHERE character_instance.instance IS NULL AND group_instance.instance IS NULL");
@@ -294,8 +266,8 @@ void InstanceSaveManager::CleanupInstances()
     _DelHelper(RealmDataDatabase, "group_instance.leaderGuid, instance", "group_instance", "LEFT JOIN instance ON group_instance.instance = instance.id WHERE instance.id IS NULL");
 
     // clean creature/gameobject respawn times
-    RealmDataDatabase.DirectExecute("DELETE FROM creature_respawn WHERE NOT EXISTS (SELECT id FROM instance WHERE instance.id = creature_respawn.instance)");
-    RealmDataDatabase.DirectExecute("DELETE FROM gameobject_respawn WHERE NOT EXISTS (SELECT id FROM instance WHERE instance.id = gameobject_respawn.instance)");
+    RealmDataDatabase.DirectExecute("DELETE FROM creature_respawn WHERE creature_respawn.instance != 0 AND NOT EXISTS (SELECT id FROM instance WHERE instance.id = creature_respawn.instance)");
+    RealmDataDatabase.DirectExecute("DELETE FROM gameobject_respawn WHERE gameobject_respawn.instance != 0 AND NOT EXISTS (SELECT id FROM instance WHERE instance.id = gameobject_respawn.instance)");
 
     RealmDataDatabase.CommitTransaction();
     bar.step();
@@ -540,7 +512,12 @@ void InstanceSaveManager::_ResetSave(InstanceSaveHashMap::iterator &itr)
     InstanceSave::PlayerListType &pList = itr->second->m_playerList;
     while (!pList.empty())
     {
-        Player *player = sObjectMgr.GetPlayer(*pList.begin());
+        Player *player = ObjectAccessor::GetPlayer(*pList.begin());
+        if (!player)
+        {
+            sLog.outLog(LOG_DEFAULT, "ERROR: _ResetSave. Player GUID:%lu is still in instance save but no longer in object accessor",*pList.begin());
+            continue;
+        }
         player->UnbindInstance(itr->second->GetMapId(), itr->second->GetDifficulty(), true);
     }
 
@@ -574,7 +551,7 @@ void InstanceSaveManager::_ResetInstance(uint32 mapid, uint32 instanceId)
     {
         const MapEntry *mapEntry = sMapStore.LookupEntry(mapid);
         if (mapEntry->IsRaid())
-            sLog.outLog(LOG_DEFAULT, "ERROR: Called _ResetInstance for mapid: %u, canreset: %B", mapid, itr->second->CanReset());
+            sLog.outLog(LOG_DEFAULT, "ERROR: Called _ResetInstance for mapid: %u, canreset: %u", mapid, itr->second->CanReset());
 
         _ResetSave(itr);
     }

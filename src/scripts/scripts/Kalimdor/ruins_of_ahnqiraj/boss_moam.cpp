@@ -1,6 +1,6 @@
 /* 
  * Copyright (C) 2006-2008 ScriptDev2 <https://scriptdev2.svn.sourceforge.net/>
- * Copyright (C) 2008-2014 Hellground <http://hellground.net/>
+ * Copyright (C) 2008-2015 Hellground <http://hellground.net/>
  * 
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -50,9 +50,9 @@ struct boss_moamAI : public ScriptedAI
     ScriptedInstance * pInstance;
 
     Unit *pTarget;
-    uint32 TRAMPLE_Timer;
-    uint32 DRAINMANA_Timer;
-    uint32 SUMMONMANA_Timer;
+    int32 TRAMPLE_Timer;
+    int32 DRAINMANA_Timer;
+    int32 SUMMONMANA_Timer;
     uint32 DrainTargets;
     bool stoned;
 
@@ -83,6 +83,9 @@ struct boss_moamAI : public ScriptedAI
     {
         if (pInstance)
             pInstance->SetData(DATA_MOAM, DONE);
+        // summon obsidian shard
+        m_creature->SummonGameObject(181069, m_creature->GetPositionX(), m_creature->GetPositionY(),
+            m_creature->GetPositionZ(), 0, 0, 0, 0, 0, 0);
     }
 
     void JustSummoned(Creature *creature)
@@ -114,14 +117,14 @@ struct boss_moamAI : public ScriptedAI
             DoScriptText(EMOTE_MANA_FULL, m_creature);
         }
 
-        //SUMMONMANA_Timer
-        if (SUMMONMANA_Timer < diff)
+        SUMMONMANA_Timer -= diff;
+        if (SUMMONMANA_Timer <= diff)
         {
             if (stoned)
             {
                 m_creature->RemoveAurasDueToSpell(SPELL_ENERGIZE);
                 stoned = false;
-                SUMMONMANA_Timer = 90000;
+                SUMMONMANA_Timer += 90000;
                 DRAINMANA_Timer = 5000;
             }
             else if (!stoned)
@@ -131,23 +134,23 @@ struct boss_moamAI : public ScriptedAI
                 DoCast(m_creature->getVictim(),SPELL_SUMMONMANA+1);
                 DoCast(m_creature->getVictim(),SPELL_SUMMONMANA+2);
                 DoCast(m_creature, SPELL_ENERGIZE);
-                SUMMONMANA_Timer = 90000;
+                SUMMONMANA_Timer += 90000;
                 DRAINMANA_Timer = 90000;
                 stoned = true;
             }
         }
-        else SUMMONMANA_Timer -= diff;
+        
 
-        //TRAMPLE_Timer
-        if (TRAMPLE_Timer < diff)
+        TRAMPLE_Timer -= diff;
+        if (TRAMPLE_Timer <= diff)
         {
             DoCast(m_creature->getVictim(),SPELL_TRAMPLE);
-            TRAMPLE_Timer = 30000;
+            TRAMPLE_Timer += 30000;
         }
-        else TRAMPLE_Timer -= diff;
+        
 
-        //DRAINMANA_Timer
-        if (DRAINMANA_Timer < diff)
+        DRAINMANA_Timer -= diff;
+        if (DRAINMANA_Timer <= diff)
         {
             DrainTargets = m_creature->getThreatManager().getThreatList().size();
                             for (uint32 i = 0; i < DrainTargets && i < 6; i++)
@@ -159,9 +162,9 @@ struct boss_moamAI : public ScriptedAI
                                 if(target)
                                     DoCast(target, SPELL_DRAINMANA, true);
                             }
-            DRAINMANA_Timer = 5000;
+            DRAINMANA_Timer += 5000;
         }
-        else DRAINMANA_Timer -= diff;
+        
 
         DoMeleeAttackIfReady();
     }
@@ -193,7 +196,7 @@ struct mana_fiendAI : public ScriptedAI
     {
         if (!UpdateVictim())
             return;
-        if (Arcane_Timer < diff)
+        if (Arcane_Timer <= diff)
         {
             DoCast(m_creature->getVictim(), SPELL_ARCANEEXPLOSION);
             Arcane_Timer = 3000;

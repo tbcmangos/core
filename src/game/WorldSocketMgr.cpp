@@ -1,7 +1,7 @@
 /*
  * Copyright (C) 2005-2011 MaNGOS <http://getmangos.com/>
  * Copyright (C) 2008 TrinityCore <http://www.trinitycore.org/>
- * Copyright (C) 2008-2014 Hellground <http://hellground.net/>
+ * Copyright (C) 2008-2017 Hellground <http://wow-hellground.com/>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -303,6 +303,8 @@ void WorldSocketMgr::StopNetwork()
 
 void WorldSocketMgr::Wait()
 {
+    volatile size_t num_threads = m_NetThreadsCount; //debug
+
     if (m_NetThreadsCount != 0)
     {
         for (size_t i = 0; i < m_NetThreadsCount; ++i)

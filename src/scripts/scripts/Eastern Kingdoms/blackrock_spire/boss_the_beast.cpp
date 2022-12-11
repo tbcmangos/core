@@ -1,6 +1,6 @@
 /* 
  * Copyright (C) 2006-2008 ScriptDev2 <https://scriptdev2.svn.sourceforge.net/>
- * Copyright (C) 2008-2014 Hellground <http://hellground.net/>
+ * Copyright (C) 2008-2015 Hellground <http://hellground.net/>
  * 
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -40,10 +40,10 @@ struct boss_thebeastAI : public ScriptedAI
 
     ScriptedInstance* pInstance;
 
-    uint32 Flamebreak_Timer;
-    uint32 Immolate_Timer;
-    uint32 TerrifyingRoar_Timer;
-    uint32 checkTimer;
+    int32 Flamebreak_Timer;
+    int32 Immolate_Timer;
+    int32 TerrifyingRoar_Timer;
+    int32 checkTimer;
 
     void Reset()
     {
@@ -80,43 +80,40 @@ struct boss_thebeastAI : public ScriptedAI
         if (!UpdateVictim())
             return;
 
-        if (checkTimer < diff)
+        checkTimer -= diff;
+        if (checkTimer <= diff)
         {
             DoZoneInCombat();
-            checkTimer = 3000;
+            checkTimer += 3000;
         }
-        else
-            checkTimer -= diff;
+        
 
-        //Flamebreak_Timer
-        if (Flamebreak_Timer < diff)
+        Flamebreak_Timer -= diff;
+        if (Flamebreak_Timer <= diff)
         {
             AddSpellToCast(m_creature->getVictim(), SPELL_FLAMEBREAK);
-            Flamebreak_Timer = 10000;
+            Flamebreak_Timer += 10000;
         }
-        else
-            Flamebreak_Timer -= diff;
+        
 
-        //Immolate_Timer
-        if (Immolate_Timer < diff)
+        Immolate_Timer -= diff;
+        if (Immolate_Timer <= diff)
         {
             Unit* target = NULL;
             target = SelectUnit(SELECT_TARGET_RANDOM,0);
             if (target)
                 AddSpellToCast(target, SPELL_IMMOLATE);
-            Immolate_Timer = 8000;
+            Immolate_Timer += 8000;
         }
-        else
-            Immolate_Timer -= diff;
+        
 
-        //TerrifyingRoar_Timer
-        if (TerrifyingRoar_Timer < diff)
+        TerrifyingRoar_Timer -= diff;
+        if (TerrifyingRoar_Timer <= diff)
         {
             AddSpellToCast(m_creature->getVictim(), SPELL_TERRIFYINGROAR);
-            TerrifyingRoar_Timer = 20000;
+            TerrifyingRoar_Timer += 20000;
         }
-        else
-            TerrifyingRoar_Timer -= diff;
+        
 
         CastNextSpellIfAnyAndReady();
         DoMeleeAttackIfReady();

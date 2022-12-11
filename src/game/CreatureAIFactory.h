@@ -1,7 +1,7 @@
 /*
  * Copyright (C) 2005-2009 MaNGOS <http://getmangos.com/>
  * Copyright (C) 2008-2009 TrinityCore <http://www.trinitycore.org/>
- * Copyright (C) 2008-2014 Hellground <http://hellground.net/>
+ * Copyright (C) 2008-2017 Hellground <http://wow-hellground.com/>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -44,7 +44,9 @@ template<class REAL_AI>
 inline CreatureAI* CreatureAIFactory<REAL_AI>::Create(void *data) const
 {
     Creature* creature = reinterpret_cast<Creature *>(data);
-    return (new REAL_AI(creature));
+    CreatureAI* ai = (new REAL_AI(creature));
+    ai->m_AIName = key();
+    return ai;
 }
 
 typedef FactoryHolder<CreatureAI> CreatureAICreator;

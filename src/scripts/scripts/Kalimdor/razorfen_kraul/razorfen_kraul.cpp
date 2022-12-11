@@ -1,6 +1,6 @@
 /* 
  * Copyright (C) 2006-2008 ScriptDev2 <https://scriptdev2.svn.sourceforge.net/>
- * Copyright (C) 2008-2014 Hellground <http://hellground.net/>
+ * Copyright (C) 2008-2015 Hellground <http://hellground.net/>
  * 
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -147,7 +147,7 @@ struct npc_deaths_head_ward_keeperAI : public ScriptedAI
     }
 
     ScriptedInstance *pInstance;
-    uint32 QuillboarChanneling_Timer;
+    int32 QuillboarChanneling_Timer;
 
     void Reset()
     {
@@ -166,13 +166,14 @@ struct npc_deaths_head_ward_keeperAI : public ScriptedAI
         if (pInstance)
             pInstance->SetData(TYPE_WARD_KEEPERS, NOT_STARTED);
 
-        if (QuillboarChanneling_Timer < diff)
+        QuillboarChanneling_Timer -= diff;
+        if (QuillboarChanneling_Timer <= diff)
         {
             if( m_creature->IsNonMeleeSpellCast(false) )
                 m_creature->InterruptNonMeleeSpells(true);
             DoCast(m_creature, SPELL_QUILLBOAR_CHANNELING);
-            QuillboarChanneling_Timer = 1100;
-        }else QuillboarChanneling_Timer -= diff;
+            QuillboarChanneling_Timer += 1100;
+        }
 
     }
 };

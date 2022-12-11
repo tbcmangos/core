@@ -1,6 +1,6 @@
 /* 
  * Copyright (C) 2006-2008 ScriptDev2 <https://scriptdev2.svn.sourceforge.net/>
- * Copyright (C) 2008-2014 Hellground <http://hellground.net/>
+ * Copyright (C) 2008-2015 Hellground <http://hellground.net/>
  * 
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -81,10 +81,10 @@ struct boss_cannon_master_willeyAI : public ScriptedAI
 {
     boss_cannon_master_willeyAI(Creature *c) : ScriptedAI(c) {}
 
-    uint32 KnockAway_Timer;
-    uint32 Pummel_Timer;
-    uint32 Shoot_Timer;
-    uint32 SummonRifleman_Timer;
+    int32 KnockAway_Timer;
+    int32 Pummel_Timer;
+    int32 Shoot_Timer;
+    int32 SummonRifleman_Timer;
 
     void Reset()
     {
@@ -116,8 +116,8 @@ struct boss_cannon_master_willeyAI : public ScriptedAI
         if (!UpdateVictim())
             return;
 
-        //Pummel
-        if (Pummel_Timer < diff)
+        Pummel_Timer -= diff;
+        if (Pummel_Timer <= diff)
         {
             //Cast
             if (rand()%100 < 90) //90% chance to cast
@@ -125,11 +125,11 @@ struct boss_cannon_master_willeyAI : public ScriptedAI
                 DoCast(m_creature->getVictim(),SPELL_PUMMEL);
             }
             //12 seconds until we should cast this again
-            Pummel_Timer = 12000;
-        }else Pummel_Timer -= diff;
+            Pummel_Timer += 12000;
+        }
 
-        //KnockAway
-        if (KnockAway_Timer < diff)
+        KnockAway_Timer -= diff;
+        if (KnockAway_Timer <= diff)
         {
             //Cast
             if (rand()%100 < 80) //80% chance to cast
@@ -137,74 +137,73 @@ struct boss_cannon_master_willeyAI : public ScriptedAI
                 DoCast(m_creature->getVictim(),SPELL_KNOCKAWAY);
             }
             //14 seconds until we should cast this again
-            KnockAway_Timer = 14000;
-        }else KnockAway_Timer -= diff;
+            KnockAway_Timer += 14000;
+        }
 
-        //Shoot
-        if (Shoot_Timer < diff)
+        Shoot_Timer -= diff;
+        if (Shoot_Timer <= diff)
         {
             //Cast
             DoCast(m_creature->getVictim(),SPELL_SHOOT);
             //1 seconds until we should cast this again
-            Shoot_Timer = 1000;
-        }else Shoot_Timer -= diff;
+            Shoot_Timer += 1000;
+        }
 
-        //SummonRifleman
-        if (SummonRifleman_Timer < diff)
+        SummonRifleman_Timer -= diff;
+        if (SummonRifleman_Timer <= diff)
         {
             //Cast
-            switch (rand()%9)
+            switch (rand() % 9)
             {
-            case 0:
-                m_creature->SummonCreature(11054,ADD_1X,ADD_1Y,ADD_1Z,ADD_1O,TEMPSUMMON_TIMED_DESPAWN,240000);
-                m_creature->SummonCreature(11054,ADD_2X,ADD_2Y,ADD_2Z,ADD_2O,TEMPSUMMON_TIMED_DESPAWN,240000);
-                m_creature->SummonCreature(11054,ADD_4X,ADD_4Y,ADD_4Z,ADD_4O,TEMPSUMMON_TIMED_DESPAWN,240000);
-                break;
-            case 1:
-                m_creature->SummonCreature(11054,ADD_2X,ADD_2Y,ADD_2Z,ADD_2O,TEMPSUMMON_TIMED_DESPAWN,240000);
-                m_creature->SummonCreature(11054,ADD_3X,ADD_3Y,ADD_3Z,ADD_3O,TEMPSUMMON_TIMED_DESPAWN,240000);
-                m_creature->SummonCreature(11054,ADD_5X,ADD_5Y,ADD_5Z,ADD_5O,TEMPSUMMON_TIMED_DESPAWN,240000);
-                break;
-            case 2:
-                m_creature->SummonCreature(11054,ADD_3X,ADD_3Y,ADD_3Z,ADD_3O,TEMPSUMMON_TIMED_DESPAWN,240000);
-                m_creature->SummonCreature(11054,ADD_4X,ADD_4Y,ADD_4Z,ADD_4O,TEMPSUMMON_TIMED_DESPAWN,240000);
-                m_creature->SummonCreature(11054,ADD_6X,ADD_6Y,ADD_6Z,ADD_6O,TEMPSUMMON_TIMED_DESPAWN,240000);
-                break;
-            case 3:
-                m_creature->SummonCreature(11054,ADD_4X,ADD_4Y,ADD_4Z,ADD_4O,TEMPSUMMON_TIMED_DESPAWN,240000);
-                m_creature->SummonCreature(11054,ADD_5X,ADD_5Y,ADD_5Z,ADD_5O,TEMPSUMMON_TIMED_DESPAWN,240000);
-                m_creature->SummonCreature(11054,ADD_7X,ADD_7Y,ADD_7Z,ADD_7O,TEMPSUMMON_TIMED_DESPAWN,240000);
-                break;
-            case 4:
-                m_creature->SummonCreature(11054,ADD_5X,ADD_5Y,ADD_5Z,ADD_5O,TEMPSUMMON_TIMED_DESPAWN,240000);
-                m_creature->SummonCreature(11054,ADD_6X,ADD_6Y,ADD_6Z,ADD_6O,TEMPSUMMON_TIMED_DESPAWN,240000);
-                m_creature->SummonCreature(11054,ADD_8X,ADD_8Y,ADD_8Z,ADD_8O,TEMPSUMMON_TIMED_DESPAWN,240000);
-                break;
-            case 5:
-                m_creature->SummonCreature(11054,ADD_6X,ADD_6Y,ADD_6Z,ADD_6O,TEMPSUMMON_TIMED_DESPAWN,240000);
-                m_creature->SummonCreature(11054,ADD_7X,ADD_7Y,ADD_7Z,ADD_7O,TEMPSUMMON_TIMED_DESPAWN,240000);
-                m_creature->SummonCreature(11054,ADD_9X,ADD_9Y,ADD_9Z,ADD_9O,TEMPSUMMON_TIMED_DESPAWN,240000);
-                break;
-            case 6:
-                m_creature->SummonCreature(11054,ADD_7X,ADD_7Y,ADD_7Z,ADD_7O,TEMPSUMMON_TIMED_DESPAWN,240000);
-                m_creature->SummonCreature(11054,ADD_8X,ADD_8Y,ADD_8Z,ADD_8O,TEMPSUMMON_TIMED_DESPAWN,240000);
-                m_creature->SummonCreature(11054,ADD_1X,ADD_1Y,ADD_1Z,ADD_1O,TEMPSUMMON_TIMED_DESPAWN,240000);
-                break;
-            case 7:
-                m_creature->SummonCreature(11054,ADD_8X,ADD_8Y,ADD_8Z,ADD_8O,TEMPSUMMON_TIMED_DESPAWN,240000);
-                m_creature->SummonCreature(11054,ADD_9X,ADD_9Y,ADD_9Z,ADD_9O,TEMPSUMMON_TIMED_DESPAWN,240000);
-                m_creature->SummonCreature(11054,ADD_2X,ADD_2Y,ADD_2Z,ADD_2O,TEMPSUMMON_TIMED_DESPAWN,240000);
-                break;
-            case 8:
-                m_creature->SummonCreature(11054,ADD_9X,ADD_9Y,ADD_9Z,ADD_9O,TEMPSUMMON_TIMED_DESPAWN,240000);
-                m_creature->SummonCreature(11054,ADD_1X,ADD_1Y,ADD_1Z,ADD_1O,TEMPSUMMON_TIMED_DESPAWN,240000);
-                m_creature->SummonCreature(11054,ADD_3X,ADD_3Y,ADD_3Z,ADD_3O,TEMPSUMMON_TIMED_DESPAWN,240000);
-                break;
+                case 0:
+                    m_creature->SummonCreature(11054, ADD_1X, ADD_1Y, ADD_1Z, ADD_1O, TEMPSUMMON_TIMED_DESPAWN, 240000);
+                    m_creature->SummonCreature(11054, ADD_2X, ADD_2Y, ADD_2Z, ADD_2O, TEMPSUMMON_TIMED_DESPAWN, 240000);
+                    m_creature->SummonCreature(11054, ADD_4X, ADD_4Y, ADD_4Z, ADD_4O, TEMPSUMMON_TIMED_DESPAWN, 240000);
+                    break;
+                case 1:
+                    m_creature->SummonCreature(11054, ADD_2X, ADD_2Y, ADD_2Z, ADD_2O, TEMPSUMMON_TIMED_DESPAWN, 240000);
+                    m_creature->SummonCreature(11054, ADD_3X, ADD_3Y, ADD_3Z, ADD_3O, TEMPSUMMON_TIMED_DESPAWN, 240000);
+                    m_creature->SummonCreature(11054, ADD_5X, ADD_5Y, ADD_5Z, ADD_5O, TEMPSUMMON_TIMED_DESPAWN, 240000);
+                    break;
+                case 2:
+                    m_creature->SummonCreature(11054, ADD_3X, ADD_3Y, ADD_3Z, ADD_3O, TEMPSUMMON_TIMED_DESPAWN, 240000);
+                    m_creature->SummonCreature(11054, ADD_4X, ADD_4Y, ADD_4Z, ADD_4O, TEMPSUMMON_TIMED_DESPAWN, 240000);
+                    m_creature->SummonCreature(11054, ADD_6X, ADD_6Y, ADD_6Z, ADD_6O, TEMPSUMMON_TIMED_DESPAWN, 240000);
+                    break;
+                case 3:
+                    m_creature->SummonCreature(11054, ADD_4X, ADD_4Y, ADD_4Z, ADD_4O, TEMPSUMMON_TIMED_DESPAWN, 240000);
+                    m_creature->SummonCreature(11054, ADD_5X, ADD_5Y, ADD_5Z, ADD_5O, TEMPSUMMON_TIMED_DESPAWN, 240000);
+                    m_creature->SummonCreature(11054, ADD_7X, ADD_7Y, ADD_7Z, ADD_7O, TEMPSUMMON_TIMED_DESPAWN, 240000);
+                    break;
+                case 4:
+                    m_creature->SummonCreature(11054, ADD_5X, ADD_5Y, ADD_5Z, ADD_5O, TEMPSUMMON_TIMED_DESPAWN, 240000);
+                    m_creature->SummonCreature(11054, ADD_6X, ADD_6Y, ADD_6Z, ADD_6O, TEMPSUMMON_TIMED_DESPAWN, 240000);
+                    m_creature->SummonCreature(11054, ADD_8X, ADD_8Y, ADD_8Z, ADD_8O, TEMPSUMMON_TIMED_DESPAWN, 240000);
+                    break;
+                case 5:
+                    m_creature->SummonCreature(11054, ADD_6X, ADD_6Y, ADD_6Z, ADD_6O, TEMPSUMMON_TIMED_DESPAWN, 240000);
+                    m_creature->SummonCreature(11054, ADD_7X, ADD_7Y, ADD_7Z, ADD_7O, TEMPSUMMON_TIMED_DESPAWN, 240000);
+                    m_creature->SummonCreature(11054, ADD_9X, ADD_9Y, ADD_9Z, ADD_9O, TEMPSUMMON_TIMED_DESPAWN, 240000);
+                    break;
+                case 6:
+                    m_creature->SummonCreature(11054, ADD_7X, ADD_7Y, ADD_7Z, ADD_7O, TEMPSUMMON_TIMED_DESPAWN, 240000);
+                    m_creature->SummonCreature(11054, ADD_8X, ADD_8Y, ADD_8Z, ADD_8O, TEMPSUMMON_TIMED_DESPAWN, 240000);
+                    m_creature->SummonCreature(11054, ADD_1X, ADD_1Y, ADD_1Z, ADD_1O, TEMPSUMMON_TIMED_DESPAWN, 240000);
+                    break;
+                case 7:
+                    m_creature->SummonCreature(11054, ADD_8X, ADD_8Y, ADD_8Z, ADD_8O, TEMPSUMMON_TIMED_DESPAWN, 240000);
+                    m_creature->SummonCreature(11054, ADD_9X, ADD_9Y, ADD_9Z, ADD_9O, TEMPSUMMON_TIMED_DESPAWN, 240000);
+                    m_creature->SummonCreature(11054, ADD_2X, ADD_2Y, ADD_2Z, ADD_2O, TEMPSUMMON_TIMED_DESPAWN, 240000);
+                    break;
+                case 8:
+                    m_creature->SummonCreature(11054, ADD_9X, ADD_9Y, ADD_9Z, ADD_9O, TEMPSUMMON_TIMED_DESPAWN, 240000);
+                    m_creature->SummonCreature(11054, ADD_1X, ADD_1Y, ADD_1Z, ADD_1O, TEMPSUMMON_TIMED_DESPAWN, 240000);
+                    m_creature->SummonCreature(11054, ADD_3X, ADD_3Y, ADD_3Z, ADD_3O, TEMPSUMMON_TIMED_DESPAWN, 240000);
+                    break;
             }
             //30 seconds until we should cast this again
-            SummonRifleman_Timer = 30000;
-        }else SummonRifleman_Timer -= diff;
-
+            SummonRifleman_Timer += 30000;
+        }
         DoMeleeAttackIfReady();
     }
 };

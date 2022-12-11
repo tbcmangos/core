@@ -1,6 +1,6 @@
 /* 
  * Copyright (C) 2006-2008 ScriptDev2 <https://scriptdev2.svn.sourceforge.net/>
- * Copyright (C) 2008-2014 Hellground <http://hellground.net/>
+ * Copyright (C) 2008-2015 Hellground <http://hellground.net/>
  * 
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -27,8 +27,6 @@ EndScriptData */
 #include "precompiled.h"
 #include "def_zulgurub.h"
 
-#define ENCOUNTERS 10
-
 /* Zul'Gurub encounters:
 0 - High Priestess Jeklik Event
 1 - High Priest Venoxis Event
@@ -44,7 +42,7 @@ EndScriptData */
 
 struct instance_zulgurub : public ScriptedInstance
 {
-    instance_zulgurub(Map *map) : ScriptedInstance(map) {Initialize();};
+    instance_zulgurub(Map *map) : ScriptedInstance(map) { Initialize(); };
 
     uint32 encounters[ENCOUNTERS+3];
 
@@ -53,12 +51,14 @@ struct instance_zulgurub : public ScriptedInstance
     uint64 ZathGUID;
     uint64 ThekalGUID;
     uint64 JindoGUID;
+    uint64 MandokirGUID;
     uint64 OhganGUID;
     uint64 GongGUID;
+    uint64 GahzrankaGUID;
 
     void OnObjectCreate(GameObject* pGo)
     {
-        if(pGo->GetEntry() == GO_GONG_OF_BETHEKK)
+        if (pGo->GetEntry() == GO_GONG_OF_BETHEKK)
             GongGUID = pGo->GetGUID();
     }
 
@@ -95,7 +95,7 @@ struct instance_zulgurub : public ScriptedInstance
         }
     }
 
-    void OnCreatureCreate (Creature *creature, uint32 creature_entry)
+    void OnCreatureCreate(Creature *creature, uint32 creature_entry)
     {
         switch (creature_entry)
         {
@@ -115,8 +115,22 @@ struct instance_zulgurub : public ScriptedInstance
                 JindoGUID = creature->GetGUID();
                 break;
 
+            case 11382:
+                MandokirGUID = creature->GetGUID();
+                break;
+
             case 14988:
                 OhganGUID = creature->GetGUID();
+                break;
+
+            case 15114:
+                if (GahzrankaGUID)
+                {
+                    creature->DisappearAndDie();
+                    return;
+                }
+
+                GahzrankaGUID = creature->GetGUID();
                 break;
         }
 
@@ -125,6 +139,15 @@ struct instance_zulgurub : public ScriptedInstance
 
     void Initialize()
     {
+        LorKhanGUID     = 0;
+        ZathGUID        = 0;
+        ThekalGUID      = 0;
+        JindoGUID       = 0;
+        MandokirGUID    = 0;
+        OhganGUID       = 0;
+        GongGUID        = 0;
+        GahzrankaGUID   = 0;
+
         for (uint8 i = 0; i < ENCOUNTERS; ++i)
             encounters[i] = NOT_STARTED;
     }
@@ -140,7 +163,7 @@ struct instance_zulgurub : public ScriptedInstance
 
     uint32 GetData(uint32 type)
     {
-        switch(type)
+        switch (type)
         {
             case DATA_JEKLIKEVENT:
                 return encounters[0];
@@ -185,9 +208,9 @@ struct instance_zulgurub : public ScriptedInstance
         return 0;
     }
 
-    uint64 GetData64 (uint32 identifier)
+    uint64 GetData64(uint32 identifier)
     {
-        switch(identifier)
+        switch (identifier)
         {
             case DATA_LORKHAN:
                 return LorKhanGUID;
@@ -201,6 +224,9 @@ struct instance_zulgurub : public ScriptedInstance
             case DATA_JINDO:
                 return JindoGUID;
 
+            case DATA_MANDOKIR:
+                return MandokirGUID;
+
             case DATA_OHGAN:
                 return OhganGUID;
         }
@@ -210,7 +236,7 @@ struct instance_zulgurub : public ScriptedInstance
 
     void SetData(uint32 type, uint32 data)
     {
-        switch(type)
+        switch (type)
         {
             case DATA_JEKLIKEVENT:
                 if (encounters[0] != DONE)
@@ -329,7 +355,7 @@ struct instance_zulgurub : public ScriptedInstance
                     encounters[3] >> encounters[4] >> encounters[5] >>
                     encounters[6] >> encounters[7] >> encounters[8] >> encounters[9];
 
-        for(uint8 i = 0; i < ENCOUNTERS; ++i)
+        for (uint8 i = 0; i < ENCOUNTERS; ++i)
         {
             if (encounters[i] == IN_PROGRESS)
                 encounters[i] = NOT_STARTED;

@@ -1,6 +1,6 @@
 /* 
  * Copyright (C) 2006-2008 ScriptDev2 <https://scriptdev2.svn.sourceforge.net/>
- * Copyright (C) 2008-2014 Hellground <http://hellground.net/>
+ * Copyright (C) 2008-2015 Hellground <http://hellground.net/>
  * 
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -45,25 +45,23 @@ struct boss_temporusAI : public ScriptedAI
     boss_temporusAI(Creature *c) : ScriptedAI(c)
     {
         pInstance = (c->GetInstanceData());
-        HeroicMode = m_creature->GetMap()->IsHeroic();
     }
 
     ScriptedInstance *pInstance;
-    bool HeroicMode;
     bool canApplyWound;
 
-    uint32 MortalWound_Timer;
-    uint32 WingBuffet_Timer;
-    uint32 Haste_Timer;
-    uint32 SpellReflection_Timer;
+    Timer MortalWound_Timer;
+    Timer WingBuffet_Timer;
+    Timer Haste_Timer;
+    Timer SpellReflection_Timer;
 
     void Reset()
     {
-        MortalWound_Timer = 5000;
+        MortalWound_Timer.Reset(5000);
         canApplyWound = false;
-        WingBuffet_Timer = 10000;
-        Haste_Timer = 20000;
-        SpellReflection_Timer = 40000;
+        WingBuffet_Timer.Reset(10000);
+        Haste_Timer.Reset(20000);
+        SpellReflection_Timer.Reset(40000);
         m_creature->setActive(true);
 
         SayIntro();
@@ -98,18 +96,17 @@ struct boss_temporusAI : public ScriptedAI
         //Despawn Time Keeper
         if (who->GetTypeId() == TYPEID_UNIT && who->GetEntry() == C_TIME_KEEPER)
         {
-            if (m_creature->IsWithinDistInMap(who,20.0f))
+            if (me->isAlive() && m_creature->IsWithinDistInMap(who,20.0f))
             {
                 DoScriptText(SAY_BANISH, m_creature);
-
-                m_creature->DealDamage(who, who->GetHealth(), DIRECT_DAMAGE, SPELL_SCHOOL_MASK_NORMAL, NULL, false);
+                who->ToCreature()->ForcedDespawn();
             }
         }
 
         ScriptedAI::MoveInLineOfSight(who);
     }
 
-    void DamageMade(Unit* target, uint32 & damage, bool direct_damage)
+    void DamageMade(Unit* target, uint32 & damage, bool direct_damage, uint8 school_mask)
     {
         if (canApplyWound)
             me->CastSpell(target, SPELL_MORTAL_WOUND, true);
@@ -123,26 +120,24 @@ struct boss_temporusAI : public ScriptedAI
         if (!UpdateVictim())
             return;
 
-        //Attack Haste
-        if (Haste_Timer < diff)
+
+        if (Haste_Timer.Expired(diff))
         {
             AddSpellToCast(SPELL_HASTE, CAST_SELF);
             Haste_Timer = urand(20000, 25000);
         }
-        else
-            Haste_Timer -= diff;
+        
 
-        //Wing Buffet
-        if (WingBuffet_Timer < diff)
+        
+        if (WingBuffet_Timer.Expired(diff))
         {
             AddSpellToCast(m_creature, HeroicMode ? H_SPELL_WING_BUFFET : SPELL_WING_BUFFET);
             WingBuffet_Timer = urand(15000, 25000);
         }
-        else
-            WingBuffet_Timer -= diff;
+        
 
-        //Mortal Wound
-        if (MortalWound_Timer < diff)
+        
+        if (MortalWound_Timer.Expired(diff))
         {
             canApplyWound = true;
 
@@ -151,17 +146,15 @@ struct boss_temporusAI : public ScriptedAI
             else
                 MortalWound_Timer = urand(6000, 9000);
         }
-        else
-            MortalWound_Timer -= diff;
+        
 
-        //Spell Reflection
-        if (HeroicMode && SpellReflection_Timer < diff)
+     
+        if (HeroicMode && SpellReflection_Timer.Expired(diff))
         {
             AddSpellToCast(m_creature, SPELL_REFLECT);
             SpellReflection_Timer = urand(40000, 50000);
         }
-        else
-            SpellReflection_Timer -= diff;
+        
 
         //if event failed, remove boss from instance
         if (pInstance->GetData(TYPE_MEDIVH) == FAIL)

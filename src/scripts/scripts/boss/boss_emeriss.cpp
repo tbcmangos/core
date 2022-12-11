@@ -1,6 +1,6 @@
 /* 
  * Copyright (C) 2006-2008 ScriptDev2 <https://scriptdev2.svn.sourceforge.net/>
- * Copyright (C) 2008-2014 Hellground <http://hellground.net/>
+ * Copyright (C) 2008-2015 Hellground <http://hellground.net/>
  * 
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -37,14 +37,14 @@ struct boss_emerissAI : public ScriptedAI
 {
     boss_emerissAI(Creature *c) : ScriptedAI(c) {}
 
-    uint32 Sleep_Timer;
-    uint32 NoxiousBreath_Timer;
-    uint32 TailSweep_Timer;
-    //uint32 MarkOfNature_Timer;
-    uint32 VolatileInfection_Timer;
-    uint32 CorruptionofEarth1_Timer;
-    uint32 CorruptionofEarth2_Timer;
-    uint32 CorruptionofEarth3_Timer;
+    int32 Sleep_Timer;
+    int32 NoxiousBreath_Timer;
+    int32 TailSweep_Timer;
+    //int32 MarkOfNature_Timer;
+    int32 VolatileInfection_Timer;
+    int32 CorruptionofEarth1_Timer;
+    int32 CorruptionofEarth2_Timer;
+    int32 CorruptionofEarth3_Timer;
 
     void Reset()
     {
@@ -66,93 +66,89 @@ struct boss_emerissAI : public ScriptedAI
         if (!UpdateVictim())
             return;
 
-        //Sleep_Timer
-        if (Sleep_Timer < diff)
+        Sleep_Timer -= diff;
+        if (Sleep_Timer <= diff)
         {
             if( Unit *target = SelectUnit(SELECT_TARGET_RANDOM,0) )
                 DoCast(target,SPELL_SLEEP);
 
-            Sleep_Timer = 8000 + rand()%8000;
+            Sleep_Timer += 8000 + rand()%8000;
         }
-        else
-            Sleep_Timer -= diff;
+        
 
-        //NoxiousBreath_Timer
-        if (NoxiousBreath_Timer < diff)
+        NoxiousBreath_Timer -= diff;
+        if (NoxiousBreath_Timer <= diff)
         {
             DoCast(m_creature->getVictim(),SPELL_NOXIOUSBREATH);
-            NoxiousBreath_Timer = 14000 + rand()%6000;
+            NoxiousBreath_Timer += 14000 + rand()%6000;
         }
-        else
-            NoxiousBreath_Timer -= diff;
 
-        //Tailsweep every 2 seconds
-        if (TailSweep_Timer < diff)
+        TailSweep_Timer -= diff;
+        if (TailSweep_Timer <= diff)
         {
             if( Unit *target = SelectUnit(SELECT_TARGET_RANDOM,0) )
                 DoCast(target,SPELL_TAILSWEEP);
 
-            TailSweep_Timer = 2000;
+            TailSweep_Timer += 2000;
         }
-        else
-            TailSweep_Timer -= diff;
+        
 
-        //MarkOfNature_Timer
-        //if (MarkOfNature_Timer < diff)
+        //MarkOfNature_Timer -= diff;
+        //if (MarkOfNature_Timer <= diff)
         //{
         //    DoCast(m_creature->getVictim(),SPELL_MARKOFNATURE);
-        //    MarkOfNature_Timer = 45000;
-        //}else MarkOfNature_Timer -= diff;
+        //    MarkOfNature_Timer += 45000;
+        //}
 
-        //VolatileInfection_Timer
-        if (VolatileInfection_Timer < diff)
+        VolatileInfection_Timer -= diff;
+        if (VolatileInfection_Timer <= diff)
         {
             DoCast(m_creature->getVictim(),SPELL_VOLATILEINFECTION);
-            VolatileInfection_Timer = 7000 + rand()%5000;
+            VolatileInfection_Timer += 7000 + rand()%5000;
         }
-        else
-            VolatileInfection_Timer -= diff;
+        
+
 
         //CorruptionofEarth_Timer
         if ( (int) (m_creature->GetHealth()*100 / m_creature->GetMaxHealth() +0.5) == 75)
         {
-            if (CorruptionofEarth1_Timer < diff)
+            CorruptionofEarth1_Timer -= diff;
+            if (CorruptionofEarth1_Timer <= diff)
             {
                 DoCast(m_creature->getVictim(),SPELL_CORRUPTIONOFEARTH);
 
                 //1 minutes for next one. Means not again with this health value
-                CorruptionofEarth1_Timer = 60000;
+                CorruptionofEarth1_Timer += 60000;
             }
-            else
-                CorruptionofEarth1_Timer -= diff;
+
+
         }
 
         //CorruptionofEarth_Timer
         if ( (int) (m_creature->GetHealth()*100 / m_creature->GetMaxHealth() +0.5) == 50)
         {
-            if (CorruptionofEarth2_Timer < diff)
+            CorruptionofEarth2_Timer -= diff;
+            if (CorruptionofEarth2_Timer <= diff)
             {
                 DoCast(m_creature->getVictim(),SPELL_CORRUPTIONOFEARTH);
 
                 //1 minutes for next one. Means not again with this health value
-                CorruptionofEarth2_Timer = 60000;
+                CorruptionofEarth2_Timer += 60000;
             }
-            else
-                CorruptionofEarth2_Timer -= diff;
         }
 
         //CorruptionofEarth_Timer
         if ( (int) (m_creature->GetHealth()*100 / m_creature->GetMaxHealth() +0.5) == 25)
         {
-            if (CorruptionofEarth3_Timer < diff)
+            CorruptionofEarth3_Timer -= diff;
+            if (CorruptionofEarth3_Timer <= diff)
             {
                 DoCast(m_creature->getVictim(),SPELL_CORRUPTIONOFEARTH);
 
                 //1 minutes for next one. Means not again with this health value
-                CorruptionofEarth3_Timer = 60000;
+                CorruptionofEarth3_Timer += 60000;
             }
-            else
-                CorruptionofEarth3_Timer -= diff;
+            
         }
 
         DoMeleeAttackIfReady();

@@ -1,7 +1,7 @@
 /*
  * Copyright (C) 2005-2008 MaNGOS <http://getmangos.com/>
  * Copyright (C) 2008 TrinityCore <http://www.trinitycore.org/>
- * Copyright (C) 2008-2014 Hellground <http://hellground.net/>
+ * Copyright (C) 2008-2017 Hellground <http://wow-hellground.com/>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -46,7 +46,6 @@
 #include "WardenWin.h"
 #include "WardenMac.h"
 #include "WardenChat.h"
-#include "luaengine/HookMgr.h"
 #include "GuildMgr.h"
 
 bool MapSessionFilter::Process(WorldPacket * packet)
@@ -151,7 +150,7 @@ WorldSession::~WorldSession()
 
 void WorldSession::SizeError(WorldPacket const& packet, uint32 size) const
 {
-    sLog.outLog(LOG_DEFAULT, "ERROR: Client (account %u) send packet %s (%u) with size %u but expected %u (attempt crash server?), skipped",
+    sLog.outLog(LOG_DEFAULT, "ERROR: Client (account %u) send packet %s (%u) with size %lu but expected %u (attempt crash server?), skipped",
         GetAccountId(),LookupOpcodeName(packet.GetOpcode()),packet.GetOpcode(),packet.size(),size);
 }
 
@@ -282,9 +281,6 @@ void WorldSession::ProcessPacket(WorldPacket* packet)
     if (!packet)
         return;
 
-    //if (!sHookMgr->OnPacketReceive(this, *packet))
-    //    return;
-
     if (packet->GetOpcode() >= NUM_MSG_TYPES)
     {
         sLog.outLog(LOG_DEFAULT, "ERROR: SESSION: received non-existed opcode %s (0x%.4X)",
@@ -356,8 +352,7 @@ bool WorldSession::Update(uint32 diff, PacketFilter& updater)
     {
         if (!m_inQueue && !m_playerLoading && (!_player || !_player->IsInWorld()))
         {
-            _kickTimer.Update(diff);
-            if (_kickTimer.Passed())
+            if (_kickTimer.Expired(diff))
                 KickPlayer();
         }
         else
@@ -365,11 +360,10 @@ bool WorldSession::Update(uint32 diff, PacketFilter& updater)
 
         if (GetPlayer() && GetPlayer()->IsInWorld())
         {
-            _mailSendTimer.Update(diff);
-            if (_mailSendTimer.Passed())
+            if (_mailSendTimer.Expired(diff))
             {
                 SendExternalMails();
-                _mailSendTimer.Reset(sWorld.getConfig(CONFIG_EXTERNAL_MAIL_INTERVAL)*MINUTE*IN_MILISECONDS);
+                _mailSendTimer = sWorld.getConfig(CONFIG_EXTERNAL_MAIL_INTERVAL)*MINUTE*IN_MILISECONDS;
             }
         }
 
@@ -399,7 +393,7 @@ bool WorldSession::Update(uint32 diff, PacketFilter& updater)
     }
     catch (...)
     {
-        sLog.outLog(LOG_SPECIAL, "WPE NOOB: packet doesn't contains required data, %s(%u), acc: %u", GetPlayer()->GetName(), GetPlayer()->GetGUIDLow(), GetAccountId());
+        sLog.outLog(LOG_WARDEN, "WPE NOOB: packet doesn't contains required data, %s(%u), acc: %u", GetPlayer()->GetName(), GetPlayer()->GetGUIDLow(), GetAccountId());
         KickPlayer();
     }
 
@@ -457,7 +451,7 @@ bool WorldSession::Update(uint32 diff, PacketFilter& updater)
             overtimeText << "  " << (*itr).opcode << " (" << (*itr).diff << ")\n";
 
         overtimeText << "#################################################";
-        sLog.outLog(LOG_SESSION_DIFF, overtimeText.str().c_str());
+        sLog.outLog(LOG_SESSION_DIFF, "%s", overtimeText.str().c_str());
     }
 
     //check if we are safe to proceed with logout
@@ -504,8 +498,6 @@ void WorldSession::LogoutPlayer(bool Save)
         if (uint64 lguid = GetPlayer()->GetLootGUID())
             DoLootRelease(lguid);
 
-        ///- used by eluna
-        sHookMgr->OnLogout(_player);
         sLog.outLog(LOG_CHAR, "Account: %u Character:[%s] (guid:%u) Logged out.",
             GetAccountId(),_player->GetName(),_player->GetGUIDLow());
 
@@ -569,16 +561,18 @@ void WorldSession::LogoutPlayer(bool Save)
                 _player->BuildPlayerRepop();
                 _player->RepopAtGraveyard();
             }
-            else
-            {
-                 _player->RemoveSpellsCausingAura(SPELL_AURA_MOD_UNATTACKABLE);
-                 _player->RemoveCharmAuras();
-            }
+
+            _player->RemoveSpellsCausingAura(SPELL_AURA_MOD_UNATTACKABLE);
+            _player->RemoveCharmAuras();
         }
 
+        BattleGroundQueueTypeId bgqti_in = BATTLEGROUND_QUEUE_NONE;
         //drop a flag if player is carrying it
         if (BattleGround *bg = _player->GetBattleGround())
+        {
             bg->EventPlayerLoggedOut(_player);
+            bgqti_in = BattleGroundMgr::BGQueueTypeId(bg->GetTypeID(), bg->GetArenaType());
+        }
 
         sOutdoorPvPMgr.HandlePlayerLeave(_player);
 
@@ -586,6 +580,8 @@ void WorldSession::LogoutPlayer(bool Save)
         {
             if (BattleGroundQueueTypeId bgTypeId = _player->GetBattleGroundQueueTypeId(i))
             {
+                if (bgTypeId == bgqti_in)
+                    continue;
                 _player->RemoveBattleGroundQueueId(bgTypeId);
                 sBattleGroundMgr.m_BattleGroundQueues[ bgTypeId ].RemovePlayer(_player->GetGUID(), true);
             }

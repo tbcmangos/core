@@ -1,7 +1,7 @@
 /* 
  * Copyright (C) 2006-2008 ScriptDev2 <https://scriptdev2.svn.sourceforge.net/>
  * Copyright (C) 2008-2013 TrinityCore <http://www.trinitycore.org/>
- * Copyright (C) 2008-2014 Hellground <http://hellground.net/>
+ * Copyright (C) 2008-2015 Hellground <http://hellground.net/>
  * 
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -32,11 +32,9 @@ EndScriptData */
 
 #define DOOR_NETHEKURSE1     182539
 #define DOOR_NETHEKURSE2     182540
-#define NPC_FEL_ORC          17083
 #define NPC_NETHEKURSE       16807
 #define NPC_WARBRINGER       16809
 #define NPC_KARGATH          16808
-#define SPELL_SHADOW_SEAR    30735
 
 enum
 {
@@ -54,6 +52,9 @@ enum
     SPELL_KARGATH_EXECUTIONER_1    = 39288,
     SPELL_KARGATH_EXECUTIONER_2    = 39289,
     SPELL_KARGATH_EXECUTIONER_3    = 39290,
+
+    QUEST_ALLY = 9524,
+    QUEST_HORDE = 9525,
 
     //SAY_KARGATH_EXECUTE_ALLY = ?,
     //SAY_KARGATH_EXECUTE_HORDE = ?
@@ -88,7 +89,6 @@ struct instance_shattered_halls : public ScriptedInstance
     instance_shattered_halls(Map *map) : ScriptedInstance(map) {Initialize();};
 
     uint32 Encounter[ENCOUNTERS];
-    std::list<uint64> OrcGUID;
     uint64 nethekurseGUID;
     uint64 warbringerGUID;
     uint64 nethekurseDoor1GUID;
@@ -102,7 +102,7 @@ struct instance_shattered_halls : public ScriptedInstance
     uint64 soldierh2GUID;
     uint64 soldierh3GUID;
 
-    uint32 ExecutionTimer;
+    Timer ExecutionTimer;
     uint32 Team;
     uint8 ExecutionStage;
 
@@ -125,7 +125,7 @@ struct instance_shattered_halls : public ScriptedInstance
 
         Team = 0;
         ExecutionStage =0;
-        ExecutionTimer = 55*MINUTE*IN_MILISECONDS;
+        ExecutionTimer = 0;
 
         summon = NOT_SUMMONED;
 
@@ -198,7 +198,6 @@ struct instance_shattered_halls : public ScriptedInstance
             case NPC_SOLDIER_HORDE_2: soldierh2GUID = creature->GetGUID(); break;
             case NPC_SOLDIER_HORDE_3: soldierh3GUID = creature->GetGUID(); break;
             case NPC_OFFICER_HORDE: officerhGUID = creature->GetGUID(); break;
-            case NPC_FEL_ORC: OrcGUID.push_back(creature->GetGUID()); break;
         }
     }
 
@@ -207,35 +206,6 @@ struct instance_shattered_halls : public ScriptedInstance
         switch( type )
         {
             case TYPE_NETHEKURSE:
-                if (data == FAIL)
-                {
-                    for (std::list<uint64>::iterator itr = OrcGUID.begin(); itr != OrcGUID.end(); ++itr)
-                    {
-                        if (Creature* Orc = instance->GetCreature(*itr))
-                        {
-                            if (!Orc->isAlive())
-                            {
-                                Orc->ForcedDespawn();
-                                Orc->Respawn();
-                            }
-                        }
-                    }
-                }
-                if (data == SPECIAL)
-                {
-                    for (std::list<uint64>::iterator itr = OrcGUID.begin(); itr != OrcGUID.end(); ++itr)
-                    {
-                        if (Creature* Orc = instance->GetCreature(*itr))
-                        {
-                            if (Orc->isAlive())
-                            {
-                                if (Creature* neth = instance->GetCreature(nethekurseGUID))
-                                    neth->CastSpell(Orc, SPELL_SHADOW_SEAR, true);
-
-                            }
-                        }
-                    }
-                }
                 if (data == DONE)
                 {
                     HandleGameObject(nethekurseDoor1GUID, 0);
@@ -259,7 +229,8 @@ struct instance_shattered_halls : public ScriptedInstance
                     if (Creature* Executioner = instance->GetCreature(executionerGUID))
                         Executioner->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE | UNIT_FLAG_NON_ATTACKABLE);
                 }
-                else
+                
+                if (Encounter[3] != DONE)
                     Encounter[3] = data;
                 break;
             case TYPE_EXECUTION:
@@ -270,23 +241,32 @@ struct instance_shattered_halls : public ScriptedInstance
                         for (uint8 i = 2; i < 5; ++i)
                             player->SummonCreature(Team == ALLIANCE ? aSoldiersLocs[i].AllianceEntry : aSoldiersLocs[i].HordeEntry, aSoldiersLocs[i].fX, aSoldiersLocs[i].fY, aSoldiersLocs[i].fZ, aSoldiersLocs[i].fO, TEMPSUMMON_DEAD_DESPAWN, 0);
 
-                        if (Creature* Executioner = player->SummonCreature(NPC_EXECUTIONER, afExecutionerLoc[0], afExecutionerLoc[1], afExecutionerLoc[2], afExecutionerLoc[3], TEMPSUMMON_TIMED_OR_DEAD_DESPAWN, 80*MINUTE*IN_MILISECONDS))
+                        if (Creature* Executioner = player->SummonCreature(NPC_EXECUTIONER, afExecutionerLoc[0], afExecutionerLoc[1], afExecutionerLoc[2], afExecutionerLoc[3], TEMPSUMMON_TIMED_OR_DEAD_DESPAWN, 90*MINUTE*IN_MILISECONDS))
                             Executioner->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE | UNIT_FLAG_NON_ATTACKABLE);
 
                         DoCastGroupDebuff(SPELL_KARGATH_EXECUTIONER_1);
-                        ExecutionTimer = 55*MINUTE*IN_MILISECONDS;
+                        ExecutionTimer.Reset(55*MINUTE*IN_MILISECONDS);
                    }
-               }
-               else
-                   Encounter[4] = data;
-               break;
+                }
+                if (Encounter[4] != DONE)
+                    Encounter[4] = data;
+                break;
             case TYPE_EXECUTION_DONE:
                if (data == DONE)
                {
+                   
                    if (Creature* Officer = instance->GetCreature(Team == ALLIANCE ? officeraGUID : officerhGUID))
+                   {
+                       if (Player* player = GetPlayerInMap())
+                       {
+                            if (ExecutionStage == 0) // officer still alive
+                                player->AreaExploredOrEventHappens(Team == ALLIANCE ? QUEST_ALLY : QUEST_HORDE);
+                       }
                        Officer->SetFlag(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_GOSSIP | UNIT_NPC_FLAG_QUESTGIVER);
+                   }
                }
-               else
+               
+               if (Encounter[5] != DONE)
                    Encounter[5] = data;
                break;
         }
@@ -314,6 +294,8 @@ struct instance_shattered_halls : public ScriptedInstance
                 return Encounter[4];
             case TYPE_EXECUTION_DONE:
                 return Encounter[5];
+            case TYPE_EXECUTION_TIMER:
+                return ExecutionTimer.GetTimeLeft();
         }
         return 0;
     }
@@ -364,39 +346,35 @@ struct instance_shattered_halls : public ScriptedInstance
 
     void Update(uint32 diff)
     {
-        if (ExecutionTimer)
+        if (Encounter[5] == NOT_STARTED && ExecutionTimer.Expired(diff))
         {
-            if (ExecutionTimer <= diff)
+            switch(ExecutionStage)
             {
-                switch(ExecutionStage)
-                {
-                    case 0:
-                        if (Creature* Soldier = instance->GetCreature(Team == ALLIANCE ? officeraGUID : officerhGUID))
-                            Soldier->DealDamage(Soldier, Soldier->GetHealth(), DIRECT_DAMAGE, SPELL_SCHOOL_MASK_NORMAL, NULL, false);
+                case 0:
+                    if (Creature* Soldier = instance->GetCreature(Team == ALLIANCE ? officeraGUID : officerhGUID))
+                        Soldier->DealDamage(Soldier, Soldier->GetHealth(), DIRECT_DAMAGE, SPELL_SCHOOL_MASK_NORMAL, NULL, false);
 
-                        //DoScriptText(Team == ALLIANCE ? SAY_KARGATH_EXECUTE_ALLY : SAY_KARGATH_EXECUTE_HORDE, instance->GetCreature(kargathGUID));
+                    //DoScriptText(Team == ALLIANCE ? SAY_KARGATH_EXECUTE_ALLY : SAY_KARGATH_EXECUTE_HORDE, instance->GetCreature(kargathGUID));
 
-                        DoCastGroupDebuff(SPELL_KARGATH_EXECUTIONER_2);
-                        ExecutionTimer = 10*MINUTE*IN_MILISECONDS;
-                        break;
-                    case 1:
-                        if (Creature* Soldier = instance->GetCreature(Team == ALLIANCE ? soldiera2GUID : soldierh2GUID))
-                            Soldier->DealDamage(Soldier, Soldier->GetHealth(), DIRECT_DAMAGE, SPELL_SCHOOL_MASK_NORMAL, NULL, false);
+                    DoCastGroupDebuff(SPELL_KARGATH_EXECUTIONER_2);
+                    ExecutionTimer = 10*MINUTE*IN_MILISECONDS;
+                    break;
+                case 1:
+                    if (Creature* Soldier = instance->GetCreature(Team == ALLIANCE ? soldiera2GUID : soldierh2GUID))
+                        Soldier->DealDamage(Soldier, Soldier->GetHealth(), DIRECT_DAMAGE, SPELL_SCHOOL_MASK_NORMAL, NULL, false);
 
-                        DoCastGroupDebuff(SPELL_KARGATH_EXECUTIONER_3);
-                        ExecutionTimer = 15*MINUTE*IN_MILISECONDS;
-                        break;
-                     case 2:
-                         if (Creature* Soldier = instance->GetCreature(Team == ALLIANCE ? soldiera3GUID : soldierh3GUID))
-                             Soldier->DealDamage(Soldier, Soldier->GetHealth(), DIRECT_DAMAGE, SPELL_SCHOOL_MASK_NORMAL, NULL, false);
+                    DoCastGroupDebuff(SPELL_KARGATH_EXECUTIONER_3);
+                    ExecutionTimer = 15*MINUTE*IN_MILISECONDS;
+                    break;
+                 case 2:
+                     if (Creature* Soldier = instance->GetCreature(Team == ALLIANCE ? soldiera3GUID : soldierh3GUID))
+                         Soldier->DealDamage(Soldier, Soldier->GetHealth(), DIRECT_DAMAGE, SPELL_SCHOOL_MASK_NORMAL, NULL, false);
 
-                         SetData(TYPE_EXECUTION_DONE, FAIL);
-                         ExecutionTimer = 0;
-                         break;
-                }
-                ++ExecutionStage;
+                     SetData(TYPE_EXECUTION_DONE, FAIL);
+                     ExecutionTimer = 0;
+                     break;
             }
-            else ExecutionTimer -= diff;
+            ++ExecutionStage;
         }
 
         if (summon == WAIT_FOR_SUMMON)

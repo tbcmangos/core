@@ -1,6 +1,6 @@
 /* 
  * Copyright (C) 2006-2008 ScriptDev2 <https://scriptdev2.svn.sourceforge.net/>
- * Copyright (C) 2008-2014 Hellground <http://hellground.net/>
+ * Copyright (C) 2008-2015 Hellground <http://hellground.net/>
  * 
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -38,13 +38,13 @@ struct boss_highlordomokkAI : public ScriptedAI
 {
     boss_highlordomokkAI(Creature *c) : ScriptedAI(c) {}
 
-    uint32 WarStomp_Timer;
-    uint32 Cleave_Timer;
-    uint32 Strike_Timer;
-    uint32 Rend_Timer;
-    uint32 SunderArmor_Timer;
-    uint32 KnockAway_Timer;
-    uint32 Slow_Timer;
+    int32 WarStomp_Timer;
+    int32 Cleave_Timer;
+    int32 Strike_Timer;
+    int32 Rend_Timer;
+    int32 SunderArmor_Timer;
+    int32 KnockAway_Timer;
+    int32 Slow_Timer;
 
     void Reset()
     {
@@ -67,54 +67,54 @@ struct boss_highlordomokkAI : public ScriptedAI
         if (!UpdateVictim() )
             return;
 
-        //WarStomp_Timer
-        if (WarStomp_Timer < diff)
+        WarStomp_Timer -= diff;
+        if (WarStomp_Timer <= diff)
         {
             DoCast(m_creature->getVictim(),SPELL_WARSTOMP);
-            WarStomp_Timer = 14000;
-        }else WarStomp_Timer -= diff;
+            WarStomp_Timer += 14000;
+        }
 
-        //Cleave_Timer
-        if (Cleave_Timer < diff)
+        Cleave_Timer -= diff;
+        if (Cleave_Timer <= diff)
         {
             DoCast(m_creature->getVictim(),SPELL_CLEAVE);
-            Cleave_Timer = 8000;
-        }else Cleave_Timer -= diff;
+            Cleave_Timer += 8000;
+        }
 
-        //Strike_Timer
-        if (Strike_Timer < diff)
+        Strike_Timer -= diff;
+        if (Strike_Timer <= diff)
         {
             DoCast(m_creature->getVictim(),SPELL_STRIKE);
-            Strike_Timer = 10000;
-        }else Strike_Timer -= diff;
+            Strike_Timer += 10000;
+        }
 
-        //Rend_Timer
-        if (Rend_Timer < diff)
+        Rend_Timer -= diff;
+        if (Rend_Timer <= diff)
         {
             DoCast(m_creature->getVictim(),SPELL_REND);
-            Rend_Timer = 18000;
-        }else Rend_Timer -= diff;
+            Rend_Timer += 18000;
+        }
 
-        //SunderArmor_Timer
-        if (SunderArmor_Timer < diff)
+        SunderArmor_Timer -= diff;
+        if (SunderArmor_Timer <= diff)
         {
             DoCast(m_creature->getVictim(),SPELL_SUNDERARMOR);
-            SunderArmor_Timer = 25000;
-        }else SunderArmor_Timer -= diff;
+            SunderArmor_Timer += 25000;
+        }
 
-        //KnockAway_Timer
-        if (KnockAway_Timer < diff)
+        KnockAway_Timer -= diff;
+        if (KnockAway_Timer <= diff)
         {
             DoCast(m_creature->getVictim(),SPELL_KNOCKAWAY);
-            KnockAway_Timer = 12000;
-        }else KnockAway_Timer -= diff;
+            KnockAway_Timer += 12000;
+        }
 
-        //Slow_Timer
-        if (Slow_Timer < diff)
+        Slow_Timer -= diff;
+        if (Slow_Timer <= diff)
         {
             DoCast(m_creature->getVictim(),SPELL_SLOW);
-            Slow_Timer = 18000;
-        }else Slow_Timer -= diff;
+            Slow_Timer += 18000;
+        }
 
         DoMeleeAttackIfReady();
     }

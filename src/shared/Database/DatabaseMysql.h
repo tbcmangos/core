@@ -1,6 +1,6 @@
 /*
  * Copyright (C) 2005-2011 MaNGOS <http://getmangos.com/>
- * Copyright (C) 2008-2014 Hellground <http://hellground.net/>
+ * Copyright (C) 2008-2015 Hellground <http://hellground.net/>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -83,6 +83,7 @@ class MySQLConnection : public SqlConnection
         bool BeginTransaction();
         bool CommitTransaction();
         bool RollbackTransaction();
+        bool Ping();
 
     protected:
         SqlPreparedStatement * CreateStatement(const std::string& fmt);
@@ -107,7 +108,6 @@ class DatabaseMysql : public Database
         void ThreadStart();
         // must be call before finish thread run
         void ThreadEnd();
-
     protected:
         virtual SqlConnection * CreateConnection();
 

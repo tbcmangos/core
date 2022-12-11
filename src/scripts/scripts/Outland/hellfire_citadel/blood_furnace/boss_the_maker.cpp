@@ -1,6 +1,6 @@
 /* 
  * Copyright (C) 2006-2008 ScriptDev2 <https://scriptdev2.svn.sourceforge.net/>
- * Copyright (C) 2008-2014 Hellground <http://hellground.net/>
+ * Copyright (C) 2008-2015 Hellground <http://hellground.net/>
  * 
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -34,10 +34,8 @@ EndScriptData */
 #define SAY_KILL_2                  -1542013
 #define SAY_DIE                     -1542014
 
-#define SPELL_ACID_SPRAY            38153
 #define SPELL_EXPLODING_BREAKER     (HeroicMode ? 40059 : 30925)
-#define SPELL_KNOCKDOWN             20276
-#define SPELL_DOMINATION            25772
+#define SPELL_DOMINATION            30923
 
 struct boss_the_makerAI : public ScriptedAI
 {
@@ -46,19 +44,15 @@ struct boss_the_makerAI : public ScriptedAI
         pInstance = c->GetInstanceData();
     }
 
-    uint32 AcidSpray_Timer;
-    uint32 ExplodingBreaker_Timer;
-    uint32 Domination_Timer;
-    uint32 Knockdown_Timer;
+    Timer ExplodingBreaker_Timer;
+    Timer Domination_Timer;
 
     ScriptedInstance *pInstance;
 
     void Reset()
     {
-        AcidSpray_Timer = 15000;
-        ExplodingBreaker_Timer = 6000;
-        Domination_Timer = 20000;
-        Knockdown_Timer = 10000;
+        ExplodingBreaker_Timer.Reset(6000);
+        Domination_Timer.Reset(20000);
 
         if (pInstance)
             pInstance->SetData(DATA_MAKEREVENT, NOT_STARTED);
@@ -90,41 +84,22 @@ struct boss_the_makerAI : public ScriptedAI
         if (!UpdateVictim())
             return;
 
-        if (AcidSpray_Timer < diff)
+        if (ExplodingBreaker_Timer.Expired(diff))
         {
-            AddSpellToCast(me->getVictim(), SPELL_ACID_SPRAY);
-            AcidSpray_Timer = 35000+rand()%8000; // not the correct spell. why spam ?
-        }
-        else
-            AcidSpray_Timer -=diff;
-
-        if (ExplodingBreaker_Timer < diff)
-        {
-            if (Unit* target = SelectUnit(SELECT_TARGET_RANDOM,0))
+            if (Unit* target = SelectUnit(SELECT_TARGET_RANDOM,0,10.0f,true))
                 AddSpellToCast(target,SPELL_EXPLODING_BREAKER);
-
             ExplodingBreaker_Timer = urand(4000, 12000);
         }
-        else
-            ExplodingBreaker_Timer -=diff;
 
-        if (Domination_Timer < diff)
+        if (Domination_Timer.Expired(diff))
         {
             if (Unit* target = SelectUnit(SELECT_TARGET_RANDOM,0))
                 AddSpellToCast(target, SPELL_DOMINATION);
 
-            Domination_Timer = 120000;
+            Domination_Timer = HeroicMode ? urand(20000,25000) : urand(30000,50000);
         }
-        else
-            Domination_Timer -=diff;
 
-        if (Knockdown_Timer < diff)
-        {
-            AddSpellToCast(me->getVictim(),SPELL_KNOCKDOWN);
-            Knockdown_Timer = urand(4000, 12000);
-        }
-        else
-            Knockdown_Timer -=diff;
+ 
 
         CastNextSpellIfAnyAndReady();
         DoMeleeAttackIfReady();

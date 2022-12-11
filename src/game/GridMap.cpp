@@ -1,6 +1,6 @@
 /*
  * Copyright (C) 2005-2010 MaNGOS <http://getmangos.com/>
- * Copyright (C) 2008-2014 Hellground <http://hellground.net/>
+ * Copyright (C) 2008-2017 Hellground <http://wow-hellground.com/>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -62,6 +62,8 @@ GridMap::GridMap()
     m_liquidLevel = INVALID_HEIGHT_VALUE;
     m_liquid_type = NULL;
     m_liquid_map  = NULL;
+
+    lastTimeUsed = 0;
 }
 
 GridMap::~GridMap()
@@ -611,6 +613,10 @@ bool GridMap::ExistVMap(uint32 mapid,int gx,int gy)
 }
 
 //////////////////////////////////////////////////////////////////////////
+
+//clean up GridMap objects every few minutes
+#define GRID_CLEANUP_INTERVAL 60000
+
 TerrainInfo::TerrainInfo(uint32 mapid, TerrainSpecifics terrainspecifics) : m_mapId(mapid)
 {
     for (int k = 0; k < MAX_NUMBER_OF_GRIDS; ++k)
@@ -622,13 +628,8 @@ TerrainInfo::TerrainInfo(uint32 mapid, TerrainSpecifics terrainspecifics) : m_ma
         }
     }
 
-    //clean up GridMap objects every minute
-    const uint32 iCleanUpInterval = 60;
-    //schedule start randomly
-    const uint32 iRandomStart = urand(20, 40);
-
-    i_timer.SetInterval(iCleanUpInterval * 1000);
-    i_timer.SetCurrent(iRandomStart * 1000);
+    i_timer.SetInterval(GRID_CLEANUP_INTERVAL);
+    i_timer.SetCurrent(urand(10000,50000));
 
     m_specifics = new MapTemplate(terrainspecifics);
 }
@@ -651,50 +652,33 @@ GridMap * TerrainInfo::Load(const uint32 x, const uint32 y)
      ASSERT(x < MAX_NUMBER_OF_GRIDS);
      ASSERT(y < MAX_NUMBER_OF_GRIDS);
 
-     //reference grid as a first step
-     RefGrid(x, y);
-
      //quick check if GridMap already loaded
      GridMap * pMap = m_GridMaps[x][y];
      if(!pMap)
          pMap = LoadMapAndVMap(x, y);
 
+     if (pMap)
+         pMap->lastTimeUsed = WorldTimer::getMSTime();
+
      return pMap;
-}
-
-//schedule lazy GridMap object cleanup
-void TerrainInfo::Unload(const uint32 x, const uint32 y)
-{
-     ASSERT(x < MAX_NUMBER_OF_GRIDS);
-     ASSERT(y < MAX_NUMBER_OF_GRIDS);
-
-     if(m_GridMaps[x][y])
-     {
-         //decrease grid reference count...
-         if(UnrefGrid(x, y) == 0)
-         {
-             //TODO: add your additional logic here
-
-         }
-     }
 }
 
 //call this method only
 void TerrainInfo::CleanUpGrids(const uint32 diff)
 {
-     i_timer.Update(diff);
-     if( !i_timer.Passed() )
+     // do not unload continent maps ever, its just pointless
+     if (GetMapId() == 0 || GetMapId() == 1 || GetMapId() == 530 || !i_timer.Expired(diff)) 
          return;
-
+     uint32 timeNow = WorldTimer::getMSTime();
      for (int y = 0; y < MAX_NUMBER_OF_GRIDS; ++y)
      {
          for (int x = 0; x < MAX_NUMBER_OF_GRIDS; ++x)
          {
              const int16& iRef = m_GridRef[x][y];
              GridMap * pMap = m_GridMaps[x][y];
-
+             
              //delete those GridMap objects which have refcount = 0
-             if(pMap && iRef == 0 )
+             if (pMap && iRef == 0 && (pMap->lastTimeUsed + GRID_CLEANUP_INTERVAL * 5) < timeNow)
              {
                  m_GridMaps[x][y] = NULL;
                  //delete grid data if reference count == 0
@@ -708,30 +692,7 @@ void TerrainInfo::CleanUpGrids(const uint32 diff)
          }
      }
 
-     i_timer.Reset();
-}
-
-int TerrainInfo::RefGrid(const uint32& x, const uint32& y)
-{
-     ASSERT(x < MAX_NUMBER_OF_GRIDS);
-     ASSERT(y < MAX_NUMBER_OF_GRIDS);
-
-     LOCK_GUARD _lock(m_refMutex);
-     return (m_GridRef[x][y] += 1);
-}
-
-int TerrainInfo::UnrefGrid(const uint32& x, const uint32& y)
-{
-     ASSERT(x < MAX_NUMBER_OF_GRIDS);
-     ASSERT(y < MAX_NUMBER_OF_GRIDS);
-
-     int16& iRef = m_GridRef[x][y];
-
-     LOCK_GUARD _lock(m_refMutex);
-     if(iRef > 0)
-         return (iRef -= 1);
-
-     return 0;
+     i_timer.SetCurrent(0);
 }
 
 float TerrainInfo::GetHeight(float x, float y, float z, bool pUseVmaps, float maxSearchDist) const
@@ -986,7 +947,13 @@ float TerrainInfo::GetWaterOrGroundLevel(float x, float y, float z, float* pGrou
         GridMapLiquidData liquid_status;
 
         GridMapLiquidStatus res = getLiquidStatus(x, y, ground_z, MAP_ALL_LIQUIDS, &liquid_status);
-        return res ? ( swim ? liquid_status.level - 2.0f : liquid_status.level) : ground_z;
+        if (res)
+        {
+            float liquidZ = swim ? liquid_status.level - 2.0f : liquid_status.level;
+            if (liquidZ > ground_z)
+                return liquidZ;
+        }
+        return ground_z;
     }
 
     return VMAP_INVALID_HEIGHT_VALUE;
@@ -1008,6 +975,9 @@ GridMap* TerrainInfo::GetGrid(const float x, const float y)
     GridMap * pMap = m_GridMaps[gx][gy];
     if(!pMap)
          pMap = LoadMapAndVMap(gx, gy);
+
+    if(pMap)
+        pMap->lastTimeUsed = WorldTimer::getMSTime();
 
     return pMap;
 }
@@ -1163,7 +1133,7 @@ void TerrainManager::LoadTerrainSpecifics()
 
         bar.step();
 
-        sLog.outString("");
+        sLog.outString();
         sLog.outString(">> Loaded 0 map template data. DB table `map_template` is empty.");
         return;
     }
@@ -1191,7 +1161,7 @@ void TerrainManager::LoadTerrainSpecifics()
     while (result->NextRow());
 
     sLog.outString();
-    sLog.outString(">> Loaded %u map template data.", i_TerrainSpecifics.size());
+    sLog.outString(">> Loaded %lu map template data.", i_TerrainSpecifics.size());
 }
 
 TerrainInfo * TerrainManager::LoadTerrain(const uint32 mapId)

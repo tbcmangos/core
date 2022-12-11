@@ -1,6 +1,6 @@
 /* 
  * Copyright (C) 2006-2008 ScriptDev2 <https://scriptdev2.svn.sourceforge.net/>
- * Copyright (C) 2008-2014 Hellground <http://hellground.net/>
+ * Copyright (C) 2008-2015 Hellground <http://hellground.net/>
  * 
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -37,7 +37,7 @@ struct boss_ironayaAI : public ScriptedAI
 {
     boss_ironayaAI(Creature *c) : ScriptedAI(c) {}
 
-    uint32 Arcing_Timer;
+    int32 Arcing_Timer;
     bool hasCastWstomp;
     bool hasCastKnockaway;
 
@@ -78,12 +78,12 @@ struct boss_ironayaAI : public ScriptedAI
             hasCastKnockaway = true;
         }
 
-        //Arcing_Timer
-        if (Arcing_Timer < diff)
+        Arcing_Timer -= diff;
+        if (Arcing_Timer <= diff)
         {
             DoCast(m_creature,SPELL_ARCINGSMASH);
-            Arcing_Timer = 13000;
-        }else Arcing_Timer -= diff;
+            Arcing_Timer += 13000;
+        }
 
         if (!hasCastWstomp && m_creature->GetHealth()*4 < m_creature->GetMaxHealth())
         {

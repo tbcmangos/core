@@ -1,6 +1,6 @@
 /*
  * Copyright (C) 2008 TrinityCore <http://www.trinitycore.org/>
- * Copyright (C) 2008-2014 Hellground <http://hellground.net/>
+ * Copyright (C) 2008-2015 Hellground <http://hellground.net/>
  *
  * Thanks to the original authors: ScriptDev2 <https://scriptdev2.svn.sourceforge.net/>
  *
@@ -39,20 +39,18 @@
 
 class ScriptedInstance;
 
-typedef TimeTrackerSmall Timer;
-
-class SummonList : std::list<uint64>
+class SummonList : public std::set<uint64>
 {
 public:
     SummonList(Creature* creature) : m_creature(creature) {}
-    void Summon(Creature *summon) {push_back(summon->GetGUID());}
+    void Summon(Creature *summon) { insert(summon->GetGUID()); }
     void Despawn(Creature *summon);
     void DespawnEntry(uint32 entry);
     void DespawnAll();
-    bool isEmpty();
-    void AuraOnEntry(uint32 entry, uint32 spellId, bool apply);
-    void DoAction(uint32 entry, uint32 info);
-    void Cast(uint32 entry, uint32 spell, Unit* target);
+    void RemoveByEntry(uint32 entry);
+    void DoAction(uint32 entry, uint32 info) const;
+    void Cast(uint32 entry, uint32 spell, Unit* target) const;
+    void CastAuraOnEntry(uint32 entry, uint32 spellId, bool apply) const;
 private:
     Creature *m_creature;
 };
@@ -248,7 +246,7 @@ struct ScriptedAI : public CreatureAI
     void OnAuraRemove(Aura* aur, bool stackRemove) {}
 
     //Called when creature deals damage to player
-    void DamageMade(Unit* target, uint32 & damage, bool direct_damage) {}
+    void DamageMade(Unit* target, uint32 & damage, bool direct_damage, uint8 school_mask) {}
 
     // Called when spell hits a target
     void SpellHitTarget(Unit* target, const SpellEntry*) {}
@@ -270,7 +268,7 @@ struct ScriptedAI : public CreatureAI
     bool IsFleeing;
 
     //Timer for caster type movement check
-    uint32 casterTimer;
+    Timer casterTimer;
 
     //Spell list to cast
     std::list<SpellToCast> spellList;
@@ -279,8 +277,8 @@ struct ScriptedAI : public CreatureAI
     uint32 autocastId;
 
     //timer for autocast spell
-    uint32 autocastTimer;
-    uint32 autocastTimerDef;
+    Timer autocastTimer;
+    int32 autocastTimerDef;
 
     castTargetMode autocastMode;
     uint32 autocastTargetRange;
@@ -395,7 +393,7 @@ struct ScriptedAI : public CreatureAI
 
     void DoSpecialThings(uint32 diff, SpecialThing, float range = 200.0f, float speedRate = 2.0f);
 
-    uint32 m_specialThingTimer;
+    Timer m_specialThingTimer;
 
     //Spawns a creature relative to m_creature
     Creature* DoSpawnCreature(uint32 id, float x, float y, float z, float angle, uint32 type, uint32 despawntime);
@@ -403,7 +401,7 @@ struct ScriptedAI : public CreatureAI
     //Returns spells that meet the specified criteria from the creatures spell list
     SpellEntry const* SelectSpell(Unit* Target, int32 School, int32 Mechanic, SelectTargetType Targets,  uint32 PowerCostMin, uint32 PowerCostMax, float RangeMin, float RangeMax, SelectEffect Effect);
     float GetSpellMaxRange(uint32 id);
-
+    bool reportedBigList;
     bool m_bCombatMovement;
     bool HeroicMode;
     uint32 m_uiEvadeCheckCooldown;

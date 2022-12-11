@@ -1,7 +1,7 @@
 /* 
  * Copyright (C) 2006-2008 ScriptDev2 <https://scriptdev2.svn.sourceforge.net/>
  * Copyright (C) 2008-2013 TrinityCore <http://www.trinitycore.org/>
- * Copyright (C) 2008-2014 Hellground <http://hellground.net/>
+ * Copyright (C) 2008-2015 Hellground <http://hellground.net/>
  * 
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -54,7 +54,7 @@ struct boss_blood_guard_porungAI : public ScriptedAI
     }
 
     ScriptedInstance* pInstance;
-    uint32 Cleave_Timer;
+    Timer Cleave_Timer;
     uint64 playerGUID;
     uint8 wave;
     bool waveone;
@@ -63,7 +63,7 @@ struct boss_blood_guard_porungAI : public ScriptedAI
 
     void Reset() 
     {
-        Cleave_Timer = 10000;
+        Cleave_Timer.Reset(10000);
         playerGUID = 0;
         waveone = false;
         wavetwo = false;
@@ -127,13 +127,11 @@ struct boss_blood_guard_porungAI : public ScriptedAI
         if (!UpdateVictim())
             return;
 
-        if (Cleave_Timer < diff)
+        if (Cleave_Timer.Expired(diff))
         {
             DoCast(me->getVictim(), SPELL_CLEAVE, false);
             Cleave_Timer = 7500 + rand()%5000;
         }
-        else
-            Cleave_Timer -= diff;
 
         DoMeleeAttackIfReady();
     }

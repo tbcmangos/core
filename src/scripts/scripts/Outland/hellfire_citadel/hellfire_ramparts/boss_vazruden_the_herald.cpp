@@ -1,7 +1,7 @@
 /* 
  * Copyright (C) 2006-2009 ScriptDev2 <https://scriptdev2.svn.sourceforge.net/>
  * Copyright (C) 2008-2013 TrinityCore <http://www.trinitycore.org/>
- * Copyright (C) 2008-2014 Hellground <http://hellground.net/>
+ * Copyright (C) 2008-2015 Hellground <http://hellground.net/>
  * 
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -66,22 +66,20 @@ struct boss_vazruden_the_heraldAI : public ScriptedAI
     boss_vazruden_the_heraldAI(Creature* creature) : ScriptedAI(creature)
     {
         pInstance = (creature->GetInstanceData());
-        HeroicMode = me->GetMap()->IsHeroic();
     }
 
     ScriptedInstance* pInstance;
 
-    bool HeroicMode;
     bool SentryDown;
     bool IsEventInProgress;
     bool IsDescending;
     uint8 phase;
-    uint32 MovementTimer;
-    uint32 FireballTimer;
-    uint32 ConeOfFireTimer;
-    uint32 BellowingRoarTimer;
-    uint32 checktimer;
-    uint32 FlyTimer;
+    Timer MovementTimer;
+    Timer FireballTimer;
+    Timer ConeOfFireTimer;
+    Timer BellowingRoarTimer;
+    Timer checktimer;
+    Timer FlyTimer;
     uint64 PlayerGUID;
     uint64 VazrudenGUID;
     uint64 VictimGUID;
@@ -101,9 +99,9 @@ struct boss_vazruden_the_heraldAI : public ScriptedAI
         VictimGUID = 0;
         checktimer = 0;
         FireballTimer = 0;
-        ConeOfFireTimer = 1200+rand()%3000;
-        BellowingRoarTimer = 1800+rand()%3000;
-        FlyTimer = 45000+rand()%3000;
+        ConeOfFireTimer.Reset(1200 + rand() % 3000);
+        BellowingRoarTimer.Reset(1800 + rand() % 3000);
+        FlyTimer.Reset(45000 + rand() % 3000);
         me->SetLevitate(true);
         me->SetSpeed(MOVE_FLIGHT, 1.0f);
         me->GetMotionMaster()->MovePath(PATH_ENTRY, true);
@@ -113,6 +111,9 @@ struct boss_vazruden_the_heraldAI : public ScriptedAI
             Vazruden->SetLootRecipient(NULL);
             Vazruden->RemoveCorpse();
         }
+
+        if (pInstance)
+            pInstance->SetData(DATA_NAZAN, FAIL);
     }
 
     void AttackStart(Unit* who)
@@ -121,6 +122,7 @@ struct boss_vazruden_the_heraldAI : public ScriptedAI
             return;
 
         ScriptedAI::AttackStart(who);
+        DoZoneInCombat();
     }
 
     void MovementInform(uint32 type, uint32 id)
@@ -133,7 +135,8 @@ struct boss_vazruden_the_heraldAI : public ScriptedAI
             switch (id)
             {
                 case POINT_ID_CENTER:
-                    DoSplit();
+                    if (!VazrudenGUID)
+                        DoSplit();
                     break;
                 case POINT_ID_COMBAT:
                     me->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
@@ -158,7 +161,7 @@ struct boss_vazruden_the_heraldAI : public ScriptedAI
 
     void DoStart()
     {
-        if (MovementTimer || IsEventInProgress)
+        if (MovementTimer.GetInterval() || IsEventInProgress)
             return;
 
         if (pInstance)
@@ -218,6 +221,7 @@ struct boss_vazruden_the_heraldAI : public ScriptedAI
                     summoned->AI()->AttackStart(pPlayer);
 
                 VazrudenGUID = summoned->GetGUID();
+                summoned->AI()->DoZoneInCombat();
                 break;
             case ENTRY_LIQUID_FIRE:
                 summoned->SetLevel(me->getLevel());
@@ -257,12 +261,6 @@ struct boss_vazruden_the_heraldAI : public ScriptedAI
             pInstance->SetData(DATA_NAZAN, DONE);
     }
 
-    void JustReachedHome()
-    {
-        if (pInstance)
-            pInstance->SetData(DATA_NAZAN, FAIL);
-    }
-
     void UpdateAI(const uint32 diff)
     {
        
@@ -273,20 +271,15 @@ struct boss_vazruden_the_heraldAI : public ScriptedAI
                 return;
                 break;
             case 1: // flight
-                if (MovementTimer)
+                if (MovementTimer.Expired(diff))
                 {
-                    if (MovementTimer <= diff)
-                    {
-                        DoMoveToAir();
-                        MovementTimer = 0;
-                    }
-                    else
-                        MovementTimer -= diff;
+                    DoMoveToAir();
+                    MovementTimer = 0;
                 }
 
-                if (VazrudenGUID && FireballTimer)
+                if (VazrudenGUID && FireballTimer.GetInterval())
                 {
-                    if (FireballTimer <= diff)
+                    if (FireballTimer.Expired(diff))
                     {
                         if (Creature* Vazruden = me->GetMap()->GetCreature(VazrudenGUID))
                         {
@@ -299,21 +292,15 @@ struct boss_vazruden_the_heraldAI : public ScriptedAI
                             }
                         }
                     }
-                    else
-                        FireballTimer -= diff;
                  }
 
-                 if (FlyTimer <= diff)
-                 {
+                 if (FlyTimer.Expired(diff))
                      DoDescend();
-                 }
-                 else
-                     FlyTimer -= diff;
 
                  if ((me->GetHealth())*100 / me->GetMaxHealth() < 20)
                      DoMoveToCombat();
 
-                 if (checktimer < diff && me->isAlive())
+                 if (me->isAlive() && checktimer.Expired(diff))
                  {
                      if (Creature* Vazruden = me->GetMap()->GetCreature(VazrudenGUID))
                      {
@@ -326,11 +313,9 @@ struct boss_vazruden_the_heraldAI : public ScriptedAI
                      checktimer = 2000;
                         
                 }
-                else
-                    checktimer -= diff;
                 break;
             case 2: // In Combat
-                if (FireballTimer <= diff)
+                if (FireballTimer.Expired(diff))
                 {
                     if (Unit *victim = SelectUnit(SELECT_TARGET_RANDOM,0))
                     {
@@ -338,31 +323,25 @@ struct boss_vazruden_the_heraldAI : public ScriptedAI
                         FireballTimer = 7000+rand()%3000;
                     }
                 }
-                else
-                    FireballTimer -= diff;
 
-                if (ConeOfFireTimer <= diff)
+                if (ConeOfFireTimer.Expired(diff))
                 {
                     DoCast(me->getVictim(), SPELL_CONE_OF_FIRE);
                     ConeOfFireTimer = 8300+rand()%3000;
                 }
-                else
-                    ConeOfFireTimer -= diff;
 
                 if (HeroicMode)
                 {
-                    if (BellowingRoarTimer <= diff)
+                    if (BellowingRoarTimer.Expired(diff))
                     {
                         DoCast(me, SPELL_BELLOW_ROAR);
                         BellowingRoarTimer = 35000+rand()%4000;
                     }
-                    else
-                        BellowingRoarTimer -= diff;
                 }
 
                 DoMeleeAttackIfReady();
 
-                if (checktimer <= diff)
+                if (checktimer.Expired(diff))
                 {
                     if (!me->getVictim())
                     {
@@ -375,8 +354,6 @@ struct boss_vazruden_the_heraldAI : public ScriptedAI
                     checktimer = 2000;
                         
                 }
-                else
-                    checktimer -= diff;
                 break;
         }
      }
@@ -387,21 +364,19 @@ struct boss_vazrudenAI : public ScriptedAI
     boss_vazrudenAI(Creature* creature) : ScriptedAI(creature)
     {
         pInstance = (creature->GetInstanceData());
-        HeroicMode = me->GetMap()->IsHeroic();
     }
 
     ScriptedInstance* pInstance;
 
-    bool HeroicMode;
     bool HealthBelow;
 
-    uint32 RevengeTimer;
+    Timer RevengeTimer;
     uint64 VazHeraldGUID;
     
     void Reset()
     {
         HealthBelow = false;
-        RevengeTimer = 4000+rand()%3000;
+        RevengeTimer.Reset(4000 + rand() % 3000);
         VazHeraldGUID = 0;
     }
 
@@ -443,6 +418,7 @@ struct boss_vazrudenAI : public ScriptedAI
             {
                 Creature* Nazan = (Unit::GetCreature(*me, VazHeraldGUID));
                 CAST_AI(boss_vazruden_the_heraldAI, Nazan->AI())->DoDescend();
+                Nazan->AI()->DoZoneInCombat();
             }
 
             HealthBelow = true;
@@ -465,14 +441,13 @@ struct boss_vazrudenAI : public ScriptedAI
     {
         if (!UpdateVictim())
             return;
+        DoSpecialThings(diff, DO_PULSE_COMBAT);
 
-        if (RevengeTimer < diff)
+        if (RevengeTimer.Expired(diff))
         {
             DoCast(me->getVictim(), SPELL_REVENGE);
             RevengeTimer = 10000+rand()%3000;
         }
-        else
-            RevengeTimer -= diff;
 
         DoMeleeAttackIfReady();
     }
@@ -487,12 +462,12 @@ struct mob_hellfire_sentryAI : public ScriptedAI
 
     ScriptedInstance* pInstance;
 
-    uint32 KidneyShot_Timer;
+    Timer KidneyShot_Timer;
     uint64 VazHeraldGUID;
 
     void Reset()
     {
-        KidneyShot_Timer = 3000+rand()%4000;
+        KidneyShot_Timer.Reset(3000 + rand() % 4000);
         VazHeraldGUID = 0;
     }
 
@@ -510,15 +485,13 @@ struct mob_hellfire_sentryAI : public ScriptedAI
         if (!UpdateVictim())
             return;
 
-        if (KidneyShot_Timer <= diff)
+        if (KidneyShot_Timer.Expired(diff))
         {
             if (Unit *victim = me->getVictim())
                 DoCast(victim, SPELL_KIDNEY_SHOT);
 
             KidneyShot_Timer = 18000+rand()%3000;
         }
-        else
-            KidneyShot_Timer -= diff;
 
         DoMeleeAttackIfReady();
     }

@@ -1,6 +1,6 @@
 /*
  * Copyright (C) 2005-2012 MaNGOS <http://getmangos.com/>
- * Copyright (C) 2008-2014 Hellground <http://hellground.net/>
+ * Copyright (C) 2008-2017 Hellground <http://wow-hellground.com/>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -64,7 +64,7 @@ void Camera::SetView(WorldObject *obj, bool update_far_sight_field /*= true*/)
     if (_source == obj)
         return;
 
-    if (!_owner.IsInMap(obj))
+    if (&_owner != obj && !_owner.IsInMap(obj))
     {
         sLog.outLog(LOG_DEFAULT, "ERROR: Camera::SetView, viewpoint is not in map with camera's owner");
         return;
@@ -83,7 +83,7 @@ void Camera::SetView(WorldObject *obj, bool update_far_sight_field /*= true*/)
 
     _source = obj;
 
-    if (!_source->isActiveObject())
+    if (!_source->isActiveObject() && _source->GetMap())
         _source->GetMap()->AddToActive(_source);
 
     _source->GetViewPoint().Attach(this);

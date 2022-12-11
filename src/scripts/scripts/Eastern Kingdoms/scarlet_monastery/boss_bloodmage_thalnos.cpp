@@ -1,6 +1,6 @@
 /* 
  * Copyright (C) 2006-2008 ScriptDev2 <https://scriptdev2.svn.sourceforge.net/>
- * Copyright (C) 2008-2014 Hellground <http://hellground.net/>
+ * Copyright (C) 2008-2015 Hellground <http://hellground.net/>
  * 
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -44,12 +44,12 @@ struct boss_bloodmage_thalnosAI : public ScriptedAI
 {
     boss_bloodmage_thalnosAI(Creature *c) : ScriptedAI(c) {}
 
-    uint32 FrostNova2_Timer;
-    uint32 FlameShock3_Timer;
-    uint32 ShadowBolt5_Timer;
-    uint32 FlameSpike_Timer;
-    uint32 FireNova_Timer;
-    uint32 Yell_Timer;
+    int32 FrostNova2_Timer;
+    int32 FlameShock3_Timer;
+    int32 ShadowBolt5_Timer;
+    int32 FlameSpike_Timer;
+    int32 FireNova_Timer;
+    int32 Yell_Timer;
 
     void Reset()
     {
@@ -77,48 +77,48 @@ struct boss_bloodmage_thalnosAI : public ScriptedAI
         {
             Yell_Timer -= diff;
 
-            if (Yell_Timer < diff)
+            if (Yell_Timer <= diff)
             {
                 DoYell(SAY_HEALTH,LANG_UNIVERSAL,NULL);
                 DoPlaySoundToSet(m_creature,SOUND_HEALTH);
-                Yell_Timer = 900000;
+                Yell_Timer += 900000;
             }
         }
 
-        //FrostNova2_Timer
-        if (FrostNova2_Timer < diff)
+        FrostNova2_Timer -= diff;
+        if (FrostNova2_Timer <= diff)
         {
             DoCast(m_creature->getVictim(),SPELL_FROSTNOVA2);
-            FrostNova2_Timer = 10000;
-        }else FrostNova2_Timer -= diff;
+            FrostNova2_Timer += 10000;
+        }
 
-        //FlameShock3_Timer
-        if (FlameShock3_Timer < diff)
+        FlameShock3_Timer -= diff;
+        if (FlameShock3_Timer <= diff)
         {
             DoCast(m_creature->getVictim(),SPELL_FLAMESHOCK3);
-            FlameShock3_Timer = 15000;
-        }else FlameShock3_Timer -= diff;
+            FlameShock3_Timer += 15000;
+        }
 
-        //ShadowBolt5_Timer
-        if (ShadowBolt5_Timer < diff)
+        ShadowBolt5_Timer -= diff;
+        if (ShadowBolt5_Timer <= diff)
         {
             DoCast(m_creature->getVictim(),SPELL_SHADOWBOLT5);
-            ShadowBolt5_Timer = 20000;
-        }else ShadowBolt5_Timer -= diff;
+            ShadowBolt5_Timer += 20000;
+        }
 
-        //FlameSpike_Timer
-        if (FlameSpike_Timer < diff)
+        FlameSpike_Timer -= diff;
+        if (FlameSpike_Timer <= diff)
         {
             DoCast(m_creature->getVictim(),SPELL_FLAMESPIKE);
-            FlameSpike_Timer = 30000;
-        }else FlameSpike_Timer -= diff;
+            FlameSpike_Timer += 30000;
+        }
 
-        //FireNova_Timer
-        if (FireNova_Timer < diff)
+        FireNova_Timer -= diff;
+        if (FireNova_Timer <= diff)
         {
             DoCast(m_creature->getVictim(),SPELL_FIRENOVA);
-            FireNova_Timer = 20000;
-        }else FireNova_Timer -= diff;
+            FireNova_Timer += 20000;
+        }
 
         DoMeleeAttackIfReady();
     }

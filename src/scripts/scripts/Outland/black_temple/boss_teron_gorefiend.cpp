@@ -1,7 +1,7 @@
-/* 
+/*
  * Copyright (C) 2006-2008 ScriptDev2 <https://scriptdev2.svn.sourceforge.net/>
- * Copyright (C) 2008-2014 Hellground <http://hellground.net/>
- * 
+ * Copyright (C) 2008-2015 Hellground <http://hellground.net/>
+ *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 2 of the License, or
@@ -63,7 +63,6 @@ uint32 GhostSpell[5] =
     40322
 };
 
-
 struct mob_doom_blossomAI : public NullCreatureAI
 {
     mob_doom_blossomAI(Creature *c) : NullCreatureAI(c)
@@ -74,19 +73,21 @@ struct mob_doom_blossomAI : public NullCreatureAI
 
     ScriptedInstance* pInstance;
 
-    uint32 CheckTeronTimer;
-    uint32 ShadowBoltTimer;
+    Timer CheckTeronTimer;
+    Timer ShadowBoltTimer;
     uint64 TeronGUID;
 
     void Reset()
     {
-        CheckTeronTimer = 10000;
-        ShadowBoltTimer = 2000;
+        CheckTeronTimer.Reset(10000);
+        ShadowBoltTimer.Reset(2000);
+
         Creature* Teron = (Unit::GetCreature((*m_creature), TeronGUID));
         if(Teron)
             m_creature->setFaction(Teron->getFaction());
         m_creature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
         m_creature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
+        me->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_DISABLE_ROTATE);
         m_creature->SetLevitate(true);
 
         float newX, newY, newZ;
@@ -106,7 +107,7 @@ struct mob_doom_blossomAI : public NullCreatureAI
 
     void UpdateAI(const uint32 diff)
     {
-        if(CheckTeronTimer < diff)
+        if (CheckTeronTimer.Expired(diff))
         {
             Creature* Teron = (Unit::GetCreature((*m_creature), TeronGUID));
             if(Teron && Teron->isInCombat())
@@ -129,10 +130,8 @@ struct mob_doom_blossomAI : public NullCreatureAI
 
             CheckTeronTimer = 5000;
         }
-        else
-            CheckTeronTimer -= diff;
 
-        if(ShadowBoltTimer < diff)
+        if (ShadowBoltTimer.Expired(diff))
         {
             Creature* Teron = (Unit::GetCreature((*m_creature), TeronGUID));
             if(!Teron)
@@ -143,8 +142,6 @@ struct mob_doom_blossomAI : public NullCreatureAI
 
             ShadowBoltTimer = 1500+rand()%1000;
         }
-        else
-            ShadowBoltTimer -= diff;
 
         return;
     }
@@ -159,18 +156,18 @@ struct mob_shadowy_constructAI : public ScriptedAI
 
     ScriptedInstance* pInstance;
 
-    uint32 DelayTimer;
-    uint32 CheckTeronTimer;
-    uint32 ChangeTarget;
+    Timer DelayTimer;
+    Timer CheckTeronTimer;
+    Timer ChangeTarget;
 
     void Reset()
     {
         DoCast(m_creature, SPELL_PASSIVE_SHADOWFORM, false);
         DoCast(m_creature, SPELL_SHADOW_STRIKES, false);
 
-        CheckTeronTimer = 5000;
-        ChangeTarget = 4000;
-        DelayTimer = 2000;
+        CheckTeronTimer.Reset(5000);
+        ChangeTarget.Reset(4000);
+        DelayTimer.Reset(2000);
 
         me->SetSpeed(MOVE_RUN, 1.0f);
         me->setActive(true);
@@ -184,10 +181,11 @@ struct mob_shadowy_constructAI : public ScriptedAI
     {
         me->RemoveCorpse();
     }
+
     void AttackStart(Unit* who)
     {
         // unit or target with posses spirit immune cannot be taken as targets
-        if(DelayTimer || who->GetTypeId() != TYPEID_PLAYER || who->HasAura(40282, 0) || who->HasAura(40251, 0) || who->HasAura(40268,0))
+        if(DelayTimer.GetInterval() || who->GetTypeId() != TYPEID_PLAYER || who->HasAura(40282, 0) || who->HasAura(40251, 0) || who->HasAura(40268,0))
             return;
 
         if(me->getVictim())
@@ -196,12 +194,12 @@ struct mob_shadowy_constructAI : public ScriptedAI
         ScriptedAI::AttackStart(who);
 
         me->AddThreat(who, 10000000.0f);
-        ChangeTarget = 5000;
+        ChangeTarget.Reset(5000);
     }
 
     void KilledUnit(Unit *who)
     {
-        ChangeTarget = 0;
+        ChangeTarget.Reset(1);
     }
 
     void DamageTaken(Unit* done_by, uint32 &damage)
@@ -210,7 +208,7 @@ struct mob_shadowy_constructAI : public ScriptedAI
             damage = 0;                                         // Only the ghost can deal damage.
     }
 
-    void DamageMade(Unit* target, uint32 &dmg, bool direct)
+    void DamageMade(Unit* target, uint32 &dmg, bool direct, uint8 school_mask)
     {
         if(dmg && direct)
             DoCast(target, SPELL_ATROPHY);
@@ -230,49 +228,47 @@ struct mob_shadowy_constructAI : public ScriptedAI
 
     void UpdateTarget(uint32 diff)
     {
-        if(ChangeTarget < diff)
+        if (ChangeTarget.Expired(diff))
         {
             DoZoneInCombat();
-            if(Creature* pTeron = pInstance->GetCreature(pInstance->GetData64(DATA_TERONGOREFIEND)))
-            {
-                if(Unit* pTarget = ((ScriptedAI*)pTeron->AI())->SelectUnit(SELECT_TARGET_RANDOM, 1, 100, true))
-                    AttackStart(pTarget);
-            }
+            ChangeTarget = 0;
 
-            if(!UpdateVictim())
-            {
-                if(Unit *pTarget = SelectUnit(SELECT_TARGET_RANDOM, 1, 200, true))
+            if (pInstance)
+                if (Creature* pTeron = pInstance->GetCreature(pInstance->GetData64(DATA_TERONGOREFIEND)))
+                    if (Unit* pTarget = ((ScriptedAI*)pTeron->AI())->SelectUnit(SELECT_TARGET_RANDOM, 1, 100, true))
+                        AttackStart(pTarget);
+
+            if (!UpdateVictim())
+                if (Unit *pTarget = SelectUnit(SELECT_TARGET_RANDOM, 1, 200, true))
                     AttackStart(pTarget);
-            }
+
+            if (ChangeTarget.GetInterval() == 0)
+                ChangeTarget = 500; // try again later
         }
-        else
-            ChangeTarget -= diff;
     }
 
     void UpdateAI(const uint32 diff)
     {
-        if(DelayTimer > diff)
+        if (DelayTimer.GetTimeLeft() > 0)
         {
-            DelayTimer -= diff;
-            return;
-        }
-        else if(DelayTimer)
-        {
-            DelayTimer = 0;
+            if (DelayTimer.Expired(diff))
+                DelayTimer = 0;
+            else
+                return;
         }
 
         UpdateTarget(diff);
 
-        if(CheckTeronTimer < diff)
+        if (CheckTeronTimer.Expired(diff))
         {
-            Creature *pTeron = pInstance->GetCreature(pInstance->GetData64(DATA_TERONGOREFIEND));
-            if(!pTeron || !pTeron->isInCombat())
-                 m_creature->Kill(m_creature, false);
-
+            if (pInstance)
+            {
+                Creature *pTeron = pInstance->GetCreature(pInstance->GetData64(DATA_TERONGOREFIEND));
+                if (!pTeron || !pTeron->isInCombat())
+                    m_creature->Kill(m_creature, false);
+            }
             CheckTeronTimer = 2000;
         }
-        else
-            CheckTeronTimer -= diff;
 
         DoMeleeAttackIfReady();
     }
@@ -292,15 +288,15 @@ struct boss_teron_gorefiendAI : public ScriptedAI
 
     ScriptedInstance* pInstance;
 
-    uint32 IncinerateTimer;
-    uint32 SummonDoomBlossomTimer;
-    uint32 EnrageTimer;
-    uint32 CrushingShadowsTimer;
-    uint32 ShadowOfDeathTimer;
-    uint32 SummonShadowsTimer;
-    uint32 RandomYellTimer;
-    uint32 AggroTimer;
-    uint32 CheckTimer;
+    Timer IncinerateTimer;
+    Timer SummonDoomBlossomTimer;
+    Timer EnrageTimer;
+    Timer CrushingShadowsTimer;
+    Timer ShadowOfDeathTimer;
+    Timer SummonShadowsTimer;
+    Timer RandomYellTimer;
+    Timer AggroTimer;
+    Timer CheckTimer;
 
     WorldLocation wLoc;
 
@@ -322,20 +318,20 @@ struct boss_teron_gorefiendAI : public ScriptedAI
         if(pInstance)
             pInstance->SetData(EVENT_TERONGOREFIEND, NOT_STARTED);
 
-        IncinerateTimer = 40000;
-        SummonDoomBlossomTimer = 10000;
-        EnrageTimer = 600000;
-        CrushingShadowsTimer = 30000;
-        ShadowOfDeathTimer = 10000;
-        RandomYellTimer = 50000;
-        CheckTimer = 3000;
+        IncinerateTimer.Reset(40000);
+        SummonDoomBlossomTimer.Reset(10000);
+        EnrageTimer.Reset(600000);
+        CrushingShadowsTimer.Reset(30000);
+        ShadowOfDeathTimer.Reset(10000);
+        RandomYellTimer.Reset(50000);
+        CheckTimer.Reset(3000);
 
         m_creature->ApplySpellImmune(0, IMMUNITY_STATE, SPELL_AURA_MOD_STUN, true);
 
         // Start off unattackable so that the intro is done properly
         m_creature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
 
-        AggroTimer = 20000;
+        AggroTimer.Reset(20000);
         AggroTargetGUID = 0;
         Intro = INTRO_NOT_STARTED;
     }
@@ -379,7 +375,7 @@ struct boss_teron_gorefiendAI : public ScriptedAI
         DoScriptText(RAND(SAY_SLAY1, SAY_SLAY2), m_creature);
     }
 
-    void JustDied(Unit *victim)
+    void JustDied(Unit *Killer)
     {
         if(pInstance)
             pInstance->SetData(EVENT_TERONGOREFIEND, DONE);
@@ -401,7 +397,6 @@ struct boss_teron_gorefiendAI : public ScriptedAI
     {
         if(caster->GetTypeId() == TYPEID_UNIT && caster->isPossessedByPlayer())
             m_creature->RemoveAurasByCasterSpell(spell->Id, caster->GetGUID());
-
     }
 
     void SpellHitTarget(Unit *target, const SpellEntry *spell)
@@ -448,21 +443,17 @@ struct boss_teron_gorefiendAI : public ScriptedAI
     void UpdateAI(const uint32 diff)
     {
         if(Intro == INTRO_IN_PROGRESS)
-        {
-            if(AggroTimer < diff)
+            if (AggroTimer.Expired(diff))
             {
                 m_creature->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
                 m_creature->SetUInt32Value(UNIT_NPC_EMOTESTATE, EMOTE_STATE_NONE);
                 Intro = INTRO_DONE;
             }
-            else
-                AggroTimer -= diff;
-        }
 
         if(!UpdateVictim() || Intro == INTRO_IN_PROGRESS)
             return;
 
-        if (CheckTimer < diff)
+        if (CheckTimer.Expired(diff))
         {
             if(!m_creature->IsWithinDistInMap(&wLoc, 90))
                 EnterEvadeMode();
@@ -473,18 +464,14 @@ struct boss_teron_gorefiendAI : public ScriptedAI
 
             CheckTimer = 1500;
         }
-        else
-            CheckTimer -= diff;
 
-        if(SummonDoomBlossomTimer < diff)
+        if (SummonDoomBlossomTimer.Expired(diff))
         {
             AddSpellToCast(m_creature, 40188);
             SummonDoomBlossomTimer = 25000+rand()%15000;
         }
-        else
-            SummonDoomBlossomTimer -= diff;
 
-        if(IncinerateTimer < diff)
+        if (IncinerateTimer.Expired(diff))
         {
             Unit* target = SelectUnit(SELECT_TARGET_RANDOM, 0, 200, true, m_creature->getVictimGUID());
             if(!target)
@@ -496,19 +483,14 @@ struct boss_teron_gorefiendAI : public ScriptedAI
                 IncinerateTimer = urand(5000, 40000);
             }
         }
-        else
-            IncinerateTimer -= diff;
 
-        if(CrushingShadowsTimer < diff)
+        if (CrushingShadowsTimer.Expired(diff))
         {
             AddSpellToCastWithScriptText(m_creature, SPELL_CRUSHING_SHADOWS, SAY_SPELL3);
             CrushingShadowsTimer = urand(17000, 42000);
         }
-        else
-            CrushingShadowsTimer -= diff;
 
-
-        if(ShadowOfDeathTimer < diff)
+        if (ShadowOfDeathTimer.Expired(diff))
         {
             Unit* target = SelectUnit(SELECT_TARGET_RANDOM, 0, 100, true, m_creature->getVictimGUID());
 
@@ -518,25 +500,20 @@ struct boss_teron_gorefiendAI : public ScriptedAI
                 ShadowOfDeathTimer = 30000;
             }
         }
-        else
-            ShadowOfDeathTimer -= diff;
 
-        if(RandomYellTimer < diff)
+        if (RandomYellTimer.Expired(diff))
         {
             DoScriptText(RAND(SAY_SPELL1, SAY_SPELL2), m_creature);
             RandomYellTimer = 50000 + rand()%51000;
         }
-        else
-            RandomYellTimer -= diff;
 
         if(!m_creature->HasAura(SPELL_BERSERK, 0))
         {
-            if(EnrageTimer < diff)
+            if (EnrageTimer.Expired(diff))
             {
                 AddSpellToCastWithScriptText(m_creature, SPELL_BERSERK, SAY_ENRAGE);
+                EnrageTimer = 0;
             }
-            else
-                EnrageTimer -= diff;
         }
 
         CastNextSpellIfAnyAndReady();

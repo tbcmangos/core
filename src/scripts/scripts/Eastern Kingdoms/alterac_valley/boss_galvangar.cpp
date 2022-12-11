@@ -1,6 +1,6 @@
 /* 
  * Copyright (C) 2006-2009 ScriptDev2 <https://scriptdev2.svn.sourceforge.net/>
- * Copyright (C) 2008-2014 Hellground <http://hellground.net/>
+ * Copyright (C) 2008-2015 Hellground <http://hellground.net/>
  * 
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -25,8 +25,8 @@ EndScriptData */
 
 #include "precompiled.h"
 
-#define YELL_AGGRO                 -2100021
-#define YELL_EVADE                 -2100022
+#define YELL_AGGRO                 -1001021
+#define YELL_EVADE                 -1001022
 
 #define SPELL_CLEAVE               15284
 #define SPELL_FRIGHTENING_SHOUT    19134
@@ -42,21 +42,21 @@ struct boss_galvangarAI : public ScriptedAI
     }
 
 
-    uint32 CleaveTimer;
-    uint32 FrighteningShoutTimer;
-    uint32 WhirlwindTimer;
-    uint32 MortalStrikeTimer;
-    uint32 CheckTimer;
+    Timer CleaveTimer;
+    Timer FrighteningShoutTimer;
+    Timer WhirlwindTimer;
+    Timer MortalStrikeTimer;
+    Timer CheckTimer;
     WorldLocation wLoc;
 
 
     void Reset()
     {
-        CleaveTimer                = 4000;
-        FrighteningShoutTimer      = 10000;
-        WhirlwindTimer             = 5000;
-        MortalStrikeTimer          = 2000;
-        CheckTimer                 = 2000;
+        CleaveTimer.Reset(4000);
+        FrighteningShoutTimer.Reset(10000);
+        WhirlwindTimer.Reset(5000);
+        MortalStrikeTimer.Reset(2000);
+        CheckTimer.Reset(2000);
     }
 
     void EnterCombat(Unit *who)
@@ -73,21 +73,12 @@ struct boss_galvangarAI : public ScriptedAI
 
     void JustDied(Unit* Killer){}
 
-    void UpdateTimer(uint32 &timer, const uint32 diff)
-    {
-        if (timer)
-            if (timer > diff)
-                timer -= diff;
-            else
-                timer = 0;
-    }
-
     void UpdateAI(const uint32 diff)
     {
         if (!UpdateVictim())
             return;
 
-        if (CheckTimer < diff)
+        if (CheckTimer.Expired(diff))
         {
             if (!m_creature->IsWithinDistInMap(&wLoc, 20.0f))
             {
@@ -96,34 +87,27 @@ struct boss_galvangarAI : public ScriptedAI
             }
             CheckTimer = 2000;
         }
-        else
-            CheckTimer -= diff;
+        
 
-
-        UpdateTimer(CleaveTimer, diff);
-        UpdateTimer(WhirlwindTimer, diff);
-        UpdateTimer(FrighteningShoutTimer, diff);
-        UpdateTimer(MortalStrikeTimer, diff);
-
-        if (CleaveTimer < diff)
+        if (CleaveTimer.Expired(diff))
         {
             AddSpellToCast(m_creature->getVictim(), SPELL_CLEAVE);
             CleaveTimer =  urand(4000, 12000);
         }
 
-        if (FrighteningShoutTimer < diff)
+        if (FrighteningShoutTimer.Expired(diff))
         {
             AddSpellToCast(m_creature->getVictim(), SPELL_FRIGHTENING_SHOUT);
             FrighteningShoutTimer = urand(14000, 24000);
         }
 
-        if (MortalStrikeTimer < diff)
+        if (MortalStrikeTimer.Expired(diff))
         {
             AddSpellToCast(m_creature->getVictim(), SPELL_MORTAL_STRIKE);
             MortalStrikeTimer = 6000;
         }
 
-        if (WhirlwindTimer < diff)
+        if (WhirlwindTimer.Expired(diff))
         {
             AddSpellToCast(m_creature->getVictim(), SPELL_WHIRLWIND);
             WhirlwindTimer = 10000;

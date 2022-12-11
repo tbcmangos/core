@@ -1,6 +1,6 @@
 /* 
  * Copyright (C) 2006-2008 ScriptDev2 <https://scriptdev2.svn.sourceforge.net/>
- * Copyright (C) 2008-2014 Hellground <http://hellground.net/>
+ * Copyright (C) 2008-2015 Hellground <http://hellground.net/>
  * 
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -39,9 +39,9 @@ struct boss_firemawAI : public ScriptedAI
     }
 
     ScriptedInstance * pInstance;
-    uint32 ShadowFlame_Timer;
-    uint32 WingBuffet_Timer;
-    uint32 FlameBuffet_Timer;
+    int32 ShadowFlame_Timer;
+    int32 WingBuffet_Timer;
+    int32 FlameBuffet_Timer;
 
     void Reset()
     {
@@ -72,29 +72,29 @@ struct boss_firemawAI : public ScriptedAI
         if (!UpdateVictim() )
             return;
 
-        //ShadowFlame_Timer
-        if (ShadowFlame_Timer < diff)
+        ShadowFlame_Timer -= diff;
+        if (ShadowFlame_Timer <= diff)
         {
             DoCast(m_creature->getVictim(),SPELL_SHADOWFLAME);
-            ShadowFlame_Timer = 15000 + rand()%3000;
-        }else ShadowFlame_Timer -= diff;
+            ShadowFlame_Timer += 15000 + rand()%3000;
+        }
 
-        //WingBuffet_Timer
-        if (WingBuffet_Timer < diff)
+        WingBuffet_Timer -= diff;
+        if (WingBuffet_Timer <= diff)
         {
             DoCast(m_creature->getVictim(),SPELL_WINGBUFFET);
             if(DoGetThreat(m_creature->getVictim()))
                 DoModifyThreatPercent(m_creature->getVictim(),-75);
 
-            WingBuffet_Timer = 25000;
-        }else WingBuffet_Timer -= diff;
+            WingBuffet_Timer += 25000;
+        }
 
-        //FlameBuffet_Timer
-        if (FlameBuffet_Timer < diff)
+        FlameBuffet_Timer -= diff;
+        if (FlameBuffet_Timer <= diff)
         {
             DoCast(m_creature->getVictim(),SPELL_FLAMEBUFFET);
-            FlameBuffet_Timer = 5000;
-        }else FlameBuffet_Timer -= diff;
+            FlameBuffet_Timer += 5000;
+        }
 
         DoMeleeAttackIfReady();
     }

@@ -1,6 +1,6 @@
 /* 
  * Copyright (C) 2006-2008 ScriptDev2 <https://scriptdev2.svn.sourceforge.net/>
- * Copyright (C) 2008-2014 Hellground <http://hellground.net/>
+ * Copyright (C) 2008-2015 Hellground <http://hellground.net/>
  * 
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -45,11 +45,11 @@ struct boss_sulfuronAI : public ScriptedAI
         pInstance = (c->GetInstanceData());
     }
 
-    uint32 Darkstrike_Timer;
-    uint32 DemoralizingShout_Timer;
-    uint32 Inspire_Timer;
-    uint32 Knockdown_Timer;
-    uint32 Flamespear_Timer;
+    int32 Darkstrike_Timer;
+    int32 DemoralizingShout_Timer;
+    int32 Inspire_Timer;
+    int32 Knockdown_Timer;
+    int32 Flamespear_Timer;
     ScriptedInstance *pInstance;
 
     void Reset()
@@ -81,15 +81,15 @@ struct boss_sulfuronAI : public ScriptedAI
         if (!UpdateVictim())
             return;
 
-        //DemoralizingShout_Timer
-        if (DemoralizingShout_Timer < diff)
+        DemoralizingShout_Timer -= diff;
+        if (DemoralizingShout_Timer <= diff)
         {
             DoCast(m_creature->getVictim(),SPELL_DEMORALIZINGSHOUT);
-            DemoralizingShout_Timer = 15000 + rand()%5000;
-        }else DemoralizingShout_Timer -= diff;
+            DemoralizingShout_Timer += 15000 + rand()%5000;
+        }
 
-        //Inspire_Timer
-        if (Inspire_Timer < diff)
+        Inspire_Timer -= diff;
+        if (Inspire_Timer <= diff)
         {
             Creature* target = NULL;
             std::list<Creature*> pList = FindFriendlyMissingBuff(45.0f,SPELL_INSPIRE);
@@ -105,32 +105,32 @@ struct boss_sulfuronAI : public ScriptedAI
 
             DoCast(m_creature,SPELL_INSPIRE);
 
-            Inspire_Timer = 20000 + rand()%6000;
-        }else Inspire_Timer -= diff;
+            Inspire_Timer += 20000 + rand()%6000;
+        }
 
-        //Knockdown_Timer
-        if (Knockdown_Timer < diff)
+        Knockdown_Timer -= diff;
+        if (Knockdown_Timer <= diff)
         {
             DoCast(m_creature->getVictim(),SPELL_KNOCKDOWN);
-            Knockdown_Timer = 12000 + rand()%3000;
-        }else Knockdown_Timer -= diff;
+            Knockdown_Timer += 12000 + rand()%3000;
+        }
 
-        //Flamespear_Timer
-        if (Flamespear_Timer < diff)
+        Flamespear_Timer -= diff;
+        if (Flamespear_Timer <= diff)
         {
             Unit* target = NULL;
             target = SelectUnit(SELECT_TARGET_RANDOM,0);
             if (target) DoCast(target,SPELL_FLAMESPEAR);
 
-            Flamespear_Timer = 12000 + rand()%4000;
-        }else Flamespear_Timer -= diff;
+            Flamespear_Timer += 12000 + rand()%4000;
+        }
 
-        //DarkStrike_Timer
-        if (Darkstrike_Timer < diff)
+        Darkstrike_Timer -= diff;
+        if (Darkstrike_Timer <= diff)
         {
             DoCast(m_creature, SPELL_DARKSTRIKE);
-            Darkstrike_Timer = 15000 + rand()%3000;
-        }else Darkstrike_Timer -= diff;
+            Darkstrike_Timer += 15000 + rand()%3000;
+        }
 
         DoMeleeAttackIfReady();
     }
@@ -143,9 +143,9 @@ struct mob_flamewaker_priestAI : public ScriptedAI
         pInstance = (c->GetInstanceData());
     }
 
-    uint32 Heal_Timer;
-    uint32 ShadowWordPain_Timer;
-    uint32 Immolate_Timer;
+    int32 Heal_Timer;
+    int32 ShadowWordPain_Timer;
+    int32 Immolate_Timer;
 
     ScriptedInstance *pInstance;
 
@@ -166,7 +166,8 @@ struct mob_flamewaker_priestAI : public ScriptedAI
             return;
 
         //Casting Heal to Sulfuron or other Guards.
-        if(Heal_Timer < diff)
+        Heal_Timer -= diff;
+        if(Heal_Timer <= diff)
         {
             Unit* pUnit = SelectLowestHpFriendly(60.0f, 1);
             if (!pUnit)
@@ -174,28 +175,29 @@ struct mob_flamewaker_priestAI : public ScriptedAI
 
             DoCast(pUnit, SPELL_HEAL);
 
-            Heal_Timer = 15000+rand()%5000;
-        }else Heal_Timer -= diff;
+            Heal_Timer += 15000+rand()%5000;
+        }
 
-        //ShadowWordPain_Timer
-        if (ShadowWordPain_Timer < diff)
+        ShadowWordPain_Timer -= diff;
+        if (ShadowWordPain_Timer <= diff)
         {
             Unit* target = NULL;
             target = SelectUnit(SELECT_TARGET_RANDOM,0);
             if (target) DoCast(target,SPELL_SHADOWWORDPAIN);
 
-            ShadowWordPain_Timer = 18000+rand()%8000;
-        }else ShadowWordPain_Timer -= diff;
+            ShadowWordPain_Timer += 18000+rand()%8000;
+        }
 
-        //Immolate_Timer
-        if (Immolate_Timer < diff)
+        
+        Immolate_Timer -= diff;
+        if (Immolate_Timer <= diff)
         {
             Unit* target = NULL;
             target = SelectUnit(SELECT_TARGET_RANDOM,0);
             if (target) DoCast(target,SPELL_IMMOLATE);
 
-            Immolate_Timer = 15000+rand()%10000;
-        }else Immolate_Timer -= diff;
+            Immolate_Timer += 15000+rand()%10000;
+        }
 
         DoMeleeAttackIfReady();
     }

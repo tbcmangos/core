@@ -1,5 +1,5 @@
 /* 
- * Copyright (C) 2008-2014 Hellground <http://hellground.net/>
+ * Copyright (C) 2008-2015 Hellground <http://hellground.net/>
  * 
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -32,15 +32,15 @@ struct boss_yorAI : public ScriptedAI
     }
 
     ScriptedInstance *pInstance;
-    uint32 DoubleBreath_Timer;
-    uint32 Stomp_Timer;
+    Timer DoubleBreath_Timer;
+    Timer Stomp_Timer;
 
     void Reset()
     {
         ClearCastQueue();
 
-        DoubleBreath_Timer = 8000+rand()%5000;
-        Stomp_Timer = 15000+rand()%5000;
+        DoubleBreath_Timer.Reset(8000 + rand() % 5000);
+        Stomp_Timer.Reset(15000 + rand() % 5000);
 
         if(pInstance)
             pInstance->SetData(DATA_YOREVENT, NOT_STARTED);
@@ -63,21 +63,18 @@ struct boss_yorAI : public ScriptedAI
         if (!UpdateVictim())
             return;
 
-        if (DoubleBreath_Timer < diff)
+        if (DoubleBreath_Timer.Expired(diff))
         {
             AddSpellToCast(m_creature->getVictim(), SPELL_DOUBLE_BREATH);
-            DoubleBreath_Timer = 7500 + rand()%5000;
+            DoubleBreath_Timer = 7500 + rand() % 5000;
         }
-        else
-            DoubleBreath_Timer -= diff;
 
-        if (Stomp_Timer < diff)
+        if (Stomp_Timer.Expired(diff))
         {
             AddSpellToCast(m_creature->getVictim(), SPELL_STOMP);
             Stomp_Timer = 15000+rand()%5000;
         }
-        else
-            Stomp_Timer -= diff;
+
 
         CastNextSpellIfAnyAndReady(diff);
         DoMeleeAttackIfReady();

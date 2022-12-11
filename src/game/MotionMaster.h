@@ -1,6 +1,6 @@
 /*
  * Copyright (C) 2005-2012 MaNGOS <http://getmangos.com/>
- * Copyright (C) 2008-2014 Hellground <http://hellground.net/>
+ * Copyright (C) 2008-2017 Hellground <http://wow-hellground.com/>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -51,8 +51,9 @@ class HELLGROUND_IMPORT_EXPORT MotionMaster
         ~MotionMaster();
 
         void Initialize();
-        void Clear(bool reset = true, bool all = false);
-        void MovementExpired(bool reset = true) { Clear(); }
+        void Clear(bool reset = true, bool all = false); // if reset true and all false - same as MoveIdle() - drops all states
+        void MovementExpired() { Clear(); } // drops ALL states! just like MoveIdle();
+        void StopControlledMovement();
 
         void MoveIdle();
         void MoveRandom(float spawndist = 0.0f);
@@ -62,8 +63,8 @@ class HELLGROUND_IMPORT_EXPORT MotionMaster
         void MoveConfused();
         void MoveFleeing(Unit* enemy, uint32 timeLimit = 0);
         void MovePoint(uint32 id, float x,float y,float z, bool generatePath = true, bool callStop = true, UnitActionId actionId = UNIT_ACTION_ASSISTANCE);
-        void MoveCharge(float x, float y, float z, float speed = SPEED_CHARGE, uint32 id = EVENT_CHARGE, bool generatePath = false);
-        void MoveCharge(PathFinder path, float speed = SPEED_CHARGE, uint32 id = EVENT_CHARGE);
+        void MoveCharge(float x, float y, float z, float speed = SPEED_CHARGE);
+        void MoveCharge(PathFinder path, float speed = SPEED_CHARGE);
         void MoveSeekAssistance(float x,float y,float z);
         void MoveSeekAssistanceDistract(uint32 timer);
         void MovePath(uint32 path_id, bool repeatable);

@@ -1,7 +1,7 @@
 /*
  * Copyright (C) 2005-2008 MaNGOS <http://getmangos.com/>
  * Copyright (C) 2008 TrinityCore <http://www.trinitycore.org/>
- * Copyright (C) 2008-2014 Hellground <http://hellground.net/>
+ * Copyright (C) 2008-2017 Hellground <http://wow-hellground.com/>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -39,7 +39,6 @@
 #include "Util.h"
 #include "GridNotifiersImpl.h"
 #include "CellImpl.h"
-#include "luaengine/HookMgr.h"
 #include "GuildMgr.h"
 
 enum ChatDenyMask
@@ -60,7 +59,7 @@ void WorldSession::HandleMessagechatOpcode(WorldPacket & recv_data)
 
     uint32 type;
     uint32 lang;
-
+    uint32 team = _player->GetTeam();
     recv_data >> type;
     recv_data >> lang;
 
@@ -78,27 +77,27 @@ void WorldSession::HandleMessagechatOpcode(WorldPacket & recv_data)
     std::string msg = "";
     std::string to = "";
 
-    switch (type)
+    if (type == CHAT_MSG_WHISPER)
     {
-        case CHAT_MSG_WHISPER:
-            recv_data >> to;
-            // no-break
-        case CHAT_MSG_CHANNEL:
-            if (type != CHAT_MSG_WHISPER)
-                recv_data >> channel;
-            // no-break
-        default:
+        recv_data >> to;
+        if (!normalizePlayerName(to))
         {
-            recv_data >> msg;
-            if (type != CHAT_MSG_AFK && type != CHAT_MSG_DND)
-            {
-                if (msg.empty())
-                    return;
-
-                if (ChatHandler(this).ParseCommands(msg.c_str()) > 0)
-                    return;
-            }
+            WorldPacket data(SMSG_CHAT_PLAYER_NOT_FOUND, (to.size() + 1));
+            data << to;
+            SendPacket(&data);
         }
+    }
+    else if(type == CHAT_MSG_CHANNEL)
+        recv_data >> channel;
+
+    recv_data >> msg;
+    if (type != CHAT_MSG_AFK && type != CHAT_MSG_DND)
+    {
+        if (msg.empty())
+            return;
+
+        if (ChatHandler(this).ParseCommands(msg.c_str()) > 0)
+            return;
     }
 
     // prevent talking at unknown language (cheating)
@@ -134,7 +133,7 @@ void WorldSession::HandleMessagechatOpcode(WorldPacket & recv_data)
     if (!HasPermissions(PERM_GMT) && sWorld.GetMassMuteTime() && sWorld.GetMassMuteTime() > time(NULL))
     {
         if (sWorld.GetMassMuteReason())
-            ChatHandler(_player).PSendSysMessage("Mass mute reason: %s", sWorld.GetMassMuteReason());
+            ChatHandler(_player).PSendSysMessage("Server has been muted. Mass mute reason: %s", sWorld.GetMassMuteReason());
 
         return;
     }
@@ -167,6 +166,10 @@ void WorldSession::HandleMessagechatOpcode(WorldPacket & recv_data)
                         // allow two side chat at guild channel if two side guild allowed
                         if (sWorld.getConfig(CONFIG_ALLOW_TWO_SIDE_INTERACTION_GUILD))
                             lang = LANG_UNIVERSAL;
+                        break;
+                    case CHAT_MSG_BATTLEGROUND:
+                    case CHAT_MSG_BATTLEGROUND_LEADER:
+                        lang = LANG_UNIVERSAL;
                         break;
                 }
             }
@@ -221,8 +224,13 @@ void WorldSession::HandleMessagechatOpcode(WorldPacket & recv_data)
             case CHAT_MSG_WHISPER:
             case CHAT_MSG_WHISPER_INFORM:
             case CHAT_MSG_REPLY:
-                mask = DENY_WHISP;
+            {
+                Player *target = sObjectMgr.GetPlayer(to.c_str());
+                if (target && !target->isGameMaster())
+                    mask = DENY_WHISP;
+
                 break;
+            }
             case CHAT_MSG_CHANNEL:
             case CHAT_MSG_CHANNEL_JOIN:
             case CHAT_MSG_CHANNEL_LEAVE:
@@ -246,10 +254,6 @@ void WorldSession::HandleMessagechatOpcode(WorldPacket & recv_data)
             return;
         }
     }
-
-    // used by eluna
-    if (!sHookMgr->OnChat(GetPlayer(), type, lang, msg))
-        return;
 
     switch (type)
     {
@@ -284,6 +288,8 @@ void WorldSession::HandleMessagechatOpcode(WorldPacket & recv_data)
                 default:
                     break;
             }
+            if (lang != LANG_ADDON)
+                sLog.outChat(LOG_CHAT_SAY_A, team,_player->GetName(), msg.c_str());
         } 
         break;
 
@@ -298,14 +304,6 @@ void WorldSession::HandleMessagechatOpcode(WorldPacket & recv_data)
 
             if (ChatHandler(this).ContainsNotAllowedSigns(msg))
                 return;
-
-            if (!normalizePlayerName(to))
-            {
-                WorldPacket data(SMSG_CHAT_PLAYER_NOT_FOUND, (to.size()+1));
-                data<<to;
-                SendPacket(&data);
-                break;
-            }
 
             Player *player = sObjectMgr.GetPlayer(to.c_str());
             if (!player ||
@@ -333,6 +331,8 @@ void WorldSession::HandleMessagechatOpcode(WorldPacket & recv_data)
             }
 
             GetPlayer()->Whisper(msg, lang,player->GetGUID());
+            if (!player->CanSpeak())
+                ChatHandler(_player).PSendSysMessage("The player you are whispering to is muted and can not reply.");
         } 
         break;
 
@@ -355,6 +355,8 @@ void WorldSession::HandleMessagechatOpcode(WorldPacket & recv_data)
             WorldPacket data;
             ChatHandler::FillMessageData(&data, this, CHAT_MSG_PARTY, lang, NULL, 0, msg.c_str(),NULL);
             group->BroadcastPacket(&data, false, group->GetMemberGroup(GetPlayer()->GetGUID()));
+            if (lang != LANG_ADDON)
+                sLog.outChat(LOG_CHAT_PARTY_A, team, _player->GetName(), msg.c_str());
         }
         break;
         case CHAT_MSG_GUILD:
@@ -374,8 +376,13 @@ void WorldSession::HandleMessagechatOpcode(WorldPacket & recv_data)
                 Guild *guild = sGuildMgr.GetGuildById(GetPlayer()->GetGuildId());
                 if (guild)
                     guild->BroadcastToGuild(this, msg, lang == LANG_ADDON ? LANG_ADDON : LANG_UNIVERSAL);
+                if (lang != LANG_ADDON)
+                {
+                    std::string widename = std::string(_player->GetName()) + " " + guild->GetName();
+                    sLog.outChat(LOG_CHAT_GUILD_A, team, widename.c_str(), msg.c_str());
+                }
             }
-
+            
             break;
         }
         case CHAT_MSG_OFFICER:
@@ -396,6 +403,12 @@ void WorldSession::HandleMessagechatOpcode(WorldPacket & recv_data)
                 Guild *guild = sGuildMgr.GetGuildById(GetPlayer()->GetGuildId());
                 if (guild)
                     guild->BroadcastToOfficers(this, msg, lang == LANG_ADDON ? LANG_ADDON : LANG_UNIVERSAL);
+
+                if (lang != LANG_ADDON)
+                {
+                    std::string widename = std::string(_player->GetName()) + " oficer " + guild->GetName();
+                    sLog.outChat(LOG_CHAT_GUILD_A, team, widename.c_str(), msg.c_str());
+                }
             }
             break;
         }
@@ -418,6 +431,8 @@ void WorldSession::HandleMessagechatOpcode(WorldPacket & recv_data)
             WorldPacket data;
             ChatHandler::FillMessageData(&data, this, CHAT_MSG_RAID, lang, "", 0, msg.c_str(),NULL);
             group->BroadcastPacket(&data, false);
+            if (lang != LANG_ADDON)
+                sLog.outChat(LOG_CHAT_RAID_A, team, _player->GetName(), msg.c_str());
         } break;
         case CHAT_MSG_RAID_LEADER:
         {
@@ -438,6 +453,8 @@ void WorldSession::HandleMessagechatOpcode(WorldPacket & recv_data)
             WorldPacket data;
             ChatHandler::FillMessageData(&data, this, CHAT_MSG_RAID_LEADER, lang, "", 0, msg.c_str(),NULL);
             group->BroadcastPacket(&data, false);
+            if (lang != LANG_ADDON)
+                sLog.outChat(LOG_CHAT_RAID_A, team, _player->GetName(), msg.c_str());
         } break;
         case CHAT_MSG_RAID_WARNING:
         {
@@ -455,6 +472,8 @@ void WorldSession::HandleMessagechatOpcode(WorldPacket & recv_data)
             WorldPacket data;
             ChatHandler::FillMessageData(&data, this, CHAT_MSG_RAID_WARNING, lang, "", 0, msg.c_str(),NULL);
             group->BroadcastPacket(&data, false);
+            if (lang != LANG_ADDON)
+                sLog.outChat(LOG_CHAT_RAID_A, team, _player->GetName(), msg.c_str());
         } break;
 
         case CHAT_MSG_BATTLEGROUND:
@@ -473,6 +492,8 @@ void WorldSession::HandleMessagechatOpcode(WorldPacket & recv_data)
             WorldPacket data;
             ChatHandler::FillMessageData(&data, this, CHAT_MSG_BATTLEGROUND, lang, "", 0, msg.c_str(),NULL);
             group->BroadcastPacket(&data, false);
+            if (lang != LANG_ADDON)
+                sLog.outChat(LOG_CHAT_BG_A, team, _player->GetName(), msg.c_str());
         } break;
 
         case CHAT_MSG_BATTLEGROUND_LEADER:
@@ -491,6 +512,8 @@ void WorldSession::HandleMessagechatOpcode(WorldPacket & recv_data)
             WorldPacket data;
             ChatHandler::FillMessageData(&data, this, CHAT_MSG_BATTLEGROUND_LEADER, lang, "", 0, msg.c_str(),NULL);
             group->BroadcastPacket(&data, false);
+            if (lang != LANG_ADDON)
+                sLog.outChat(LOG_CHAT_BG_A, team, _player->GetName(), msg.c_str());
         } break;
 
         case CHAT_MSG_CHANNEL:
@@ -502,10 +525,7 @@ void WorldSession::HandleMessagechatOpcode(WorldPacket & recv_data)
             if (msg.empty())
                 break;
 
-            if (ChatHandler(this).ContainsNotAllowedSigns(msg))
-                return;
-
-            if (ChannelMgr* cMgr = channelMgr(_player->GetTeam()))
+            if (ChannelMgr* cMgr = channelMgr(team))
             {
                 if (Channel *chn = cMgr->GetChannel(channel,_player))
                     chn->Say(_player->GetGUID(),msg.c_str(),lang);
@@ -558,44 +578,8 @@ void WorldSession::HandleEmoteOpcode(WorldPacket & recv_data)
 
     uint32 emote;
     recv_data >> emote;
-
-    // used by eluna
-    sHookMgr->OnEmote(GetPlayer(), emote);
-
     GetPlayer()->HandleEmoteCommand(emote);
 }
-
-namespace Hellground
-{
-    class EmoteChatBuilder
-    {
-        public:
-            EmoteChatBuilder(Player const& pl, uint32 text_emote, uint32 emote_num, Unit const* target)
-                : i_player(pl), i_text_emote(text_emote), i_emote_num(emote_num), i_target(target) {}
-
-            void operator()(WorldPacket& data, int32 loc_idx)
-            {
-                char const* nam = i_target ? i_target->GetNameForLocaleIdx(loc_idx) : NULL;
-                uint32 namlen = (nam ? strlen(nam) : 0) + 1;
-
-                data.Initialize(SMSG_TEXT_EMOTE, (20+namlen));
-                data << i_player.GetGUID();
-                data << uint32(i_text_emote);
-                data << i_emote_num;
-                data << uint32(namlen);
-                if( namlen > 1 )
-                    data.append(nam, namlen);
-                else
-                    data << (uint8)0x00;
-            }
-
-        private:
-            Player const& i_player;
-            uint32        i_text_emote;
-            uint32        i_emote_num;
-            Unit const*   i_target;
-    };
-}                                                           // namespace Hellground
 
 void WorldSession::HandleTextEmoteOpcode(WorldPacket & recv_data)
 {
@@ -636,7 +620,7 @@ void WorldSession::HandleTextEmoteOpcode(WorldPacket & recv_data)
         default:
         {
             // in feign death state allowed only text emotes.
-            if (!player->hasUnitState(UNIT_STAT_DIED))
+            if (!player->HasFlag(UNIT_FIELD_FLAGS_2, UNIT_FLAG2_FEIGN_DEATH))
                 player->HandleEmoteCommand(emote_anim);
             break;
         }
@@ -644,10 +628,22 @@ void WorldSession::HandleTextEmoteOpcode(WorldPacket & recv_data)
 
     Unit* unit = player->GetMap()->GetUnit(guid);
 
-    Hellground::EmoteChatBuilder emote_builder(*player, text_emote, emoteNum, unit);
-    Hellground::LocalizedPacketDo<Hellground::EmoteChatBuilder > emote_do(emote_builder);
-    Hellground::CameraDistWorker<Hellground::LocalizedPacketDo<Hellground::EmoteChatBuilder > > emote_worker(player, sWorld.getConfig(CONFIG_LISTEN_RANGE_TEXTEMOTE), emote_do);
-    Cell::VisitWorldObjects(player, emote_worker,  sWorld.getConfig(CONFIG_LISTEN_RANGE_TEXTEMOTE));
+    WorldPacket data;
+    char const* nam = unit ? unit->GetName() : NULL;
+    uint32 namlen = (nam ? strlen(nam) : 0) + 1;
+
+    data.Initialize(SMSG_TEXT_EMOTE, (20 + namlen));
+    data << player->GetGUID();
+    data << uint32(text_emote);
+    data << emoteNum;
+    data << uint32(namlen);
+    if (namlen > 1)
+        data.append(nam, namlen);
+    else
+        data << (uint8)0x00;
+
+    Hellground::PacketBroadcaster broadcast(*player, &data, NULL, sWorld.getConfig(CONFIG_LISTEN_RANGE_TEXTEMOTE));
+    Cell::VisitWorldObjects(player, broadcast, sWorld.getConfig(CONFIG_LISTEN_RANGE_TEXTEMOTE));
 
     //Send scripted event call
     if (unit && unit->GetTypeId() == TYPEID_UNIT)
@@ -657,9 +653,6 @@ void WorldSession::HandleTextEmoteOpcode(WorldPacket & recv_data)
 
         sScriptMgr.OnReceiveEmote(GetPlayer(), (Creature*)unit, text_emote);
     }
-
-    // used by eluna
-    sHookMgr->OnTextEmote(GetPlayer(), text_emote, emoteNum, guid);
 }
 
 void WorldSession::HandleChatIgnoredOpcode(WorldPacket& recv_data)

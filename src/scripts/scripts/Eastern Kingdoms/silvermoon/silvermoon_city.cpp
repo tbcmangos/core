@@ -1,6 +1,6 @@
 /* 
  * Copyright (C) 2006-2008 ScriptDev2 <https://scriptdev2.svn.sourceforge.net/>
- * Copyright (C) 2008-2014 Hellground <http://hellground.net/>
+ * Copyright (C) 2008-2015 Hellground <http://hellground.net/>
  * 
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -26,6 +26,7 @@ EndScriptData */
 
 /* ContentData
 npc_blood_knight_stillblade
+npc_silvermoon_guard
 EndContentData */
 
 #include "precompiled.h"
@@ -44,12 +45,12 @@ struct npc_blood_knight_stillbladeAI : public ScriptedAI
 {
     npc_blood_knight_stillbladeAI(Creature *c) : ScriptedAI(c) {}
 
-    uint32 lifeTimer;
+    Timer lifeTimer;
     bool spellHit;
 
     void Reset()
     {
-        lifeTimer = 120000;
+        lifeTimer.Reset(120000);
         m_creature->SetUInt32Value(UNIT_DYNAMIC_FLAGS, 32);
         m_creature->SetUInt32Value(UNIT_FIELD_BYTES_1,7);   // lay down
         spellHit = false;
@@ -68,10 +69,9 @@ struct npc_blood_knight_stillbladeAI : public ScriptedAI
     {
         if (!m_creature->GetUInt32Value(UNIT_FIELD_BYTES_1))
         {
-            if(lifeTimer < diff)
+            if(lifeTimer.Expired(diff))
                 m_creature->AI()->EnterEvadeMode();
-            else
-                lifeTimer -= diff;
+            
         }
     }
 
@@ -95,6 +95,9 @@ CreatureAI* GetAI_npc_blood_knight_stillblade(Creature *_Creature)
 {
     return new npc_blood_knight_stillbladeAI (_Creature);
 }
+
+
+
 
 void AddSC_silvermoon_city()
 {

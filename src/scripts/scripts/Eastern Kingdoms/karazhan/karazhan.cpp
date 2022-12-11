@@ -1,6 +1,6 @@
  /* 
  * Copyright (C) 2006-2008 ScriptDev2 <https://scriptdev2.svn.sourceforge.net/>
- * Copyright (C) 2008-2014 Hellground <http://hellground.net/>
+ * Copyright (C) 2008-2015 Hellground <http://hellground.net/>
  * 
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -105,22 +105,22 @@ struct npc_calliardAI : public ScriptedAI
 {
     npc_calliardAI(Creature* c) : ScriptedAI(c) {}
 
-    uint32 Timer;
+    Timer _Timer;
 
     void Reset()
     {
-        Timer = 60000;
+        _Timer.Reset(60000);
     }
 
     void UpdateAI(const uint32 diff)
     {
-        if (Timer < diff)
+        
+        if (_Timer.Expired(diff))
         {
             me->Say(RAND<const char*>(CALLIARD_SAY1, CALLIARD_SAY2, CALLIARD_SAY3), 0, 0);
-            Timer = urand(60000, 180000);
+            _Timer = urand(60000, 180000);
         } 
-        else
-            Timer -= diff;
+        
 
     }    
 };
@@ -216,10 +216,10 @@ struct npc_image_of_medivhAI : public ScriptedAI
 
     uint64 ArcanagosGUID;
 
-    uint32 YellTimer;
-    uint32 Step;
-    uint32 FireMedivhTimer;
-    uint32 FireArcanagosTimer;
+    Timer YellTimer;
+    int32 Step;
+    Timer FireMedivhTimer;
+    Timer FireArcanagosTimer;
 
     bool EventStarted;
 
@@ -350,32 +350,33 @@ struct npc_image_of_medivhAI : public ScriptedAI
 
     void UpdateAI(const uint32 diff)
     {
-
-        if(YellTimer < diff)
+        
+        if (YellTimer.Expired(diff))
         {
             if(EventStarted)
             {
                 YellTimer = NextStep(Step++);
             }
-        }else YellTimer -= diff;
+        }
 
         if(Step >= 7 && Step <= 12 )
         {
             Unit* arca = Unit::GetUnit((*m_creature),ArcanagosGUID);
 
-            if(FireArcanagosTimer < diff)
+     
+            if (FireArcanagosTimer.Expired(diff))
             {
                 if(arca)
                     arca->CastSpell(m_creature, SPELL_FIRE_BALL, false);
                 FireArcanagosTimer = 6000;
-            }else FireArcanagosTimer -= diff;
+            }
 
-            if(FireMedivhTimer < diff)
+            if (FireMedivhTimer.Expired(diff))
             {
                 if(arca)
                     DoCast(arca, SPELL_FIRE_BALL);
                 FireMedivhTimer = 5000;
-            }else FireMedivhTimer -= diff;
+            }
 
         }
     }

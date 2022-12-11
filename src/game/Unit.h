@@ -1,7 +1,7 @@
 /*
  * Copyright (C) 2005-2008 MaNGOS <http://getmangos.com/>
  * Copyright (C) 2008 TrinityCore <http://www.trinitycore.org/>
- * Copyright (C) 2008-2014 Hellground <http://hellground.net/>
+ * Copyright (C) 2008-2017 Hellground <http://wow-hellground.com/>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -50,16 +50,6 @@ enum SpellInterruptFlags
     SPELL_INTERRUPT_FLAG_DAMAGE       = 0x10  // _complete_ interrupt on direct damage?
 };
 
-enum SpellChannelInterruptFlags
-{
- // CHANNEL_INTERRUPT_FLAG_DAMAGE       = 0x0002,
- // CHANNEL_INTERRUPT_FLAG_INTERRUPT    = 0x0004,
-    CHANNEL_INTERRUPT_FLAG_MOVEMENT     = 0x0008,
- // CHANNEL_INTERRUPT_FLAG_TURNING      = 0x0010,
- // CHANNEL_INTERRUPT_FLAG_DAMAGE2      = 0x0080,
-    CHANNEL_INTERRUPT_FLAG_DELAY        = 0x4000
-};
-
 enum SpellAuraInterruptFlags
 {
     AURA_INTERRUPT_FLAG_NONE                = 0x00000000,
@@ -77,7 +67,7 @@ enum SpellAuraInterruptFlags
     AURA_INTERRUPT_FLAG_USE                 = 0x00000800,   // 11   mine/use/open action on gameobject
     AURA_INTERRUPT_FLAG_ATTACK              = 0x00001000,   // 12   removed by attacking
     AURA_INTERRUPT_FLAG_CAST                = 0x00002000,   // 13   ???
-    AURA_INTERRUPT_FLAG_UNK14               = 0x00004000,   // 14
+    AURA_INTERRUPT_FLAG_DELAY               = 0x00004000,   // 14   channeled spell can be delayed by damage
     AURA_INTERRUPT_FLAG_TRANSFORM           = 0x00008000,   // 15   removed by transform?
     AURA_INTERRUPT_FLAG_UNK16               = 0x00010000,   // 16
     AURA_INTERRUPT_FLAG_MOUNT               = 0x00020000,   // 17   misdirect, aspect, swim speed
@@ -378,35 +368,28 @@ enum DeathState
 
 enum UnitState
 {
-    UNIT_STAT_DIED               = 0x00000001,        // unit is dead
-    UNIT_STAT_MELEE_ATTACKING    = 0x00000002,        // player is melee attacking someone
-    UNIT_STAT_IGNORE_ATTACKERS   = 0x00000004,        // unit will ignore all attackers and won't add them to threat list(NYI)
-    UNIT_STAT_STUNNED            = 0x00000008,        // unit is stunned
-    UNIT_STAT_ROAMING            = 0x00000010,        // unit is moving
-    UNIT_STAT_CHASE              = 0x00000020,        // unit is chasing someone
-    //UNIT_STAT_UNUSED           = 0x00000040,
-    UNIT_STAT_FLEEING            = 0x00000080,        // unit is feared
-    UNIT_STAT_TAXI_FLIGHT        = 0x00000100,        // player is flying using taxi mode
-    UNIT_STAT_FOLLOW             = 0x00000200,        // unit is following someone
-    UNIT_STAT_ROOT               = 0x00000400,        // unit is rooted
-    UNIT_STAT_CONFUSED           = 0x00000800,        // unit is disoriented
-    UNIT_STAT_DISTRACTED         = 0x00001000,        // unit is distracted
-    UNIT_STAT_ISOLATED           = 0x00002000,        // area auras do not affect other players
-    UNIT_STAT_ATTACK_PLAYER      = 0x00004000,        // unit is attacking a player
-    UNIT_STAT_CASTING            = 0x00008000,        // unit is casting a spell with cast time
-    UNIT_STAT_POSSESSED          = 0x00010000,        // unit is possessed
-    UNIT_STAT_CHARGING           = 0x00020000,        // unit is charging
-    //UNIT_STAT_UNUSED           = 0x00040000,
-    //UNIT_STAT_UNUSED           = 0x00100000,
-    UNIT_STAT_ROTATING           = 0x00200000,        // unit is rotating
-    UNIT_STAT_CASTING_NOT_MOVE   = 0x00400000,        // unit is casting a spell and can NOT move
-    UNIT_STAT_IGNORE_PATHFINDING = 0x00800000,        // unit won't generate path
+    UNIT_STAT_MELEE_ATTACKING    = 0x00000001,        // player is melee attacking someone
+    UNIT_STAT_IGNORE_ATTACKERS   = 0x00000002,        // unit will ignore all attackers and won't add them to threat list(NYI)
+    UNIT_STAT_STUNNED            = 0x00000004,        // unit is stunned
+    UNIT_STAT_IGNORE_PATHFINDING = 0x00000008,        // unit won't generate path
+    UNIT_STAT_CHASE              = 0x00000010,        // unit is chasing someone
+    UNIT_STAT_FLEEING            = 0x00000020,        // unit is feared
+    UNIT_STAT_TAXI_FLIGHT        = 0x00000040,        // player is flying using taxi mode
+    UNIT_STAT_FOLLOW             = 0x00000080,        // unit is following someone
+    UNIT_STAT_ROOT               = 0x00000100,        // unit is rooted
+    UNIT_STAT_CONFUSED           = 0x00000200,        // unit is disoriented
+    UNIT_STAT_DISTRACTED         = 0x00000400,        // unit is distracted
+    UNIT_STAT_ISOLATED           = 0x00000800,        // area auras do not affect other players
+    UNIT_STAT_ATTACK_PLAYER      = 0x00001000,        // unit is attacking a player
+    UNIT_STAT_CASTING            = 0x00002000,        // unit is casting a spell with cast time
+    UNIT_STAT_POSSESSED          = 0x00004000,        // unit is possessed
+    UNIT_STAT_CHARGING           = 0x00008000,        // unit is charging
+    UNIT_STAT_ROTATING           = 0x00010000,        // unit is rotating
+    UNIT_STAT_CASTING_NOT_MOVE   = 0x00020000,        // unit is casting a spell and can NOT move
 
-    UNIT_STAT_CAN_NOT_MOVE    = (UNIT_STAT_ROOT | UNIT_STAT_STUNNED | UNIT_STAT_DIED),
     UNIT_STAT_LOST_CONTROL    = (UNIT_STAT_CONFUSED | UNIT_STAT_STUNNED | UNIT_STAT_FLEEING | UNIT_STAT_CHARGING),
-    UNIT_STAT_SIGHTLESS       = (UNIT_STAT_LOST_CONTROL),
-    UNIT_STAT_CAN_NOT_REACT   = (UNIT_STAT_STUNNED | UNIT_STAT_DIED | UNIT_STAT_CONFUSED | UNIT_STAT_FLEEING),
-    UNIT_STAT_NOT_MOVE        = (UNIT_STAT_ROOT | UNIT_STAT_STUNNED | UNIT_STAT_DIED | UNIT_STAT_DISTRACTED),
+    UNIT_STAT_CAN_NOT_REACT   = (UNIT_STAT_STUNNED | UNIT_STAT_CONFUSED | UNIT_STAT_FLEEING),
+    UNIT_STAT_NOT_MOVE        = (UNIT_STAT_ROOT | UNIT_STAT_STUNNED | UNIT_STAT_DISTRACTED),
     UNIT_STAT_CANNOT_AUTOATTACK = (UNIT_STAT_LOST_CONTROL | UNIT_STAT_CASTING | UNIT_STAT_CASTING_NOT_MOVE),
     UNIT_STAT_CANNOT_TURN     = (UNIT_STAT_LOST_CONTROL | UNIT_STAT_ROTATING),
     UNIT_STAT_ALL_STATE       = 0xffffffff
@@ -528,7 +511,7 @@ enum UnitFlags
     UNIT_FLAG_DISARMED            = 0x00200000,                // disable melee spells casting..., "Required melee weapon" added to melee spells tooltip.
     UNIT_FLAG_CONFUSED            = 0x00400000,
     UNIT_FLAG_FLEEING             = 0x00800000,
-    UNIT_FLAG_PLAYER_CONTROLLED   = 0x01000000,           // used in spell Eyes of the Beast for pet... let attack by controlled creature
+    UNIT_FLAG_PLAYER_CONTROLLED   = 0x01000000,                // used in spell Eyes of the Beast for pet... let attack by controlled creature
     UNIT_FLAG_NOT_SELECTABLE      = 0x02000000,
     UNIT_FLAG_SKINNABLE           = 0x04000000,
     UNIT_FLAG_MOUNT               = 0x08000000,
@@ -855,7 +838,7 @@ class HELLGROUND_IMPORT_EXPORT Unit : public WorldObject
 
         DiminishingLevels GetDiminishing(DiminishingGroup  group);
         void IncrDiminishing(DiminishingGroup group);
-        void ApplyDiminishingToDuration(DiminishingGroup  group, int32 &duration,Unit* caster, DiminishingLevels Level, SpellEntry const *tSpell = NULL);
+        void ApplyDiminishingToDuration(DiminishingGroup  group, int32 &duration, DiminishingLevels Level, SpellEntry const *tSpell = NULL);
         void ApplyDiminishingAura(DiminishingGroup  group, bool apply);
         void ClearDiminishings() { m_Diminishing.clear(); }
 
@@ -875,7 +858,7 @@ class HELLGROUND_IMPORT_EXPORT Unit : public WorldObject
         bool CanDualWield() const { return m_canDualWield; }
         void SetCanDualWield(bool value) { m_canDualWield = value; }
         float GetCombatReach() const { return m_floatValues[UNIT_FIELD_COMBATREACH]; }
-        float GetMeleeReach() const { float reach = m_floatValues[UNIT_FIELD_COMBATREACH]; return reach > MIN_MELEE_REACH ? reach : MIN_MELEE_REACH; }
+        void RecalculateCombatReach();
         bool IsWithinCombatRange(const Unit *obj, float dist2compare) const;
         bool IsWithinMeleeRange(Unit *obj, float dist = MELEE_RANGE) const;
         void GetRandomContactPoint(const Unit* target, float &x, float &y, float &z, float distance2dMin, float distance2dMax) const;
@@ -926,7 +909,7 @@ class HELLGROUND_IMPORT_EXPORT Unit : public WorldObject
         bool CanFreeMove() const
         {
             return !hasUnitState(UNIT_STAT_CONFUSED | UNIT_STAT_FLEEING | UNIT_STAT_TAXI_FLIGHT |
-                UNIT_STAT_ROOT | UNIT_STAT_STUNNED | UNIT_STAT_DISTRACTED) && GetOwnerGUID()==0;
+                UNIT_STAT_ROOT | UNIT_STAT_STUNNED | UNIT_STAT_DISTRACTED) && GetOwnerGUID() == 0;
         }
 
         uint32 getLevel() const { return GetUInt32Value(UNIT_FIELD_LEVEL); }
@@ -965,7 +948,6 @@ class HELLGROUND_IMPORT_EXPORT Unit : public WorldObject
         void SetMaxPower(Powers power, uint32 val);
         int32 ModifyPower(Powers power, int32 val);
         void ApplyPowerMod(Powers power, uint32 val, bool apply);
-        void ApplyMaxPowerMod(Powers power, uint32 val, bool apply);
 
         uint32 GetAttackTime(WeaponAttackType att) const { return (uint32)(GetFloatValue(UNIT_FIELD_BASEATTACKTIME+att)/m_modAttackSpeedPct[att]); }
         void SetAttackTime(WeaponAttackType att, uint32 val) { SetFloatValue(UNIT_FIELD_BASEATTACKTIME+att,val*m_modAttackSpeedPct[att]); }
@@ -1033,19 +1015,21 @@ class HELLGROUND_IMPORT_EXPORT Unit : public WorldObject
         void CalculateMeleeDamage(MeleeDamageLog *damageInfo);
         void DealMeleeDamage(MeleeDamageLog *damageInfo, bool durabilityLoss);
 
-        void CalculateSpellDamageTaken(SpellDamageLog *damageInfo, int32 damage, SpellEntry const *spellInfo, WeaponAttackType attackType = BASE_ATTACK, bool crit = false);
+        void CalculateSpellDamageTaken(SpellDamageLog *damageInfo, int32 damage, SpellEntry const *spellInfo, WeaponAttackType attackType = BASE_ATTACK, bool crit = false, bool blocked = false);
         void DealSpellDamage(SpellDamageLog *damageInfo, bool durabilityLoss);
 
         float MeleeSpellMissChance(const Unit *pVictim, WeaponAttackType attType, int32 skillDiff, uint32 spellId) const;
         SpellMissInfo MeleeSpellHitResult(Unit *pVictim, SpellEntry const *spell, bool cMiss = true);
         SpellMissInfo MagicSpellHitResult(Unit *pVictim, SpellEntry const *spell);
-        SpellMissInfo SpellHitResult(Unit *pVictim, SpellEntry const *spell, bool canReflect = false, bool canMiss = true);
+        SpellMissInfo SpellHitResult(Unit *pVictim, SpellEntry const *spell, bool canMiss = true);
+        SpellMissInfo SpellReflectCheck(SpellEntry const* spell);
 
         float GetUnitDodgeChance()    const;
         float GetUnitParryChance()    const;
         float GetUnitBlockChance()    const;
         float GetUnitCriticalChance(WeaponAttackType attackType, const Unit *pVictim) const;
-        int32 GetMechanicResistChance(const SpellEntry *spell);
+        int32 GetSpellMechanicResistChance(const SpellEntry *spell);
+        int32 GetEffectMechanicResistChance(const SpellEntry *spell, uint8 eff);
 
         virtual uint32 GetShieldBlockValue() const =0;
         uint32 GetUnitMeleeSkill(Unit const* target = NULL) const { return (target ? getLevelForTarget(target) : getLevel()) * 5; }
@@ -1114,8 +1098,8 @@ class HELLGROUND_IMPORT_EXPORT Unit : public WorldObject
         bool HasStealthAura()      const { return HasAuraType(SPELL_AURA_MOD_STEALTH); }
         bool HasInvisibilityAura() const { return HasAuraType(SPELL_AURA_MOD_INVISIBILITY); }
         bool isCrowdControlled() const { return hasUnitState(UNIT_STAT_LOST_CONTROL | UNIT_STAT_POSSESSED); }
-        bool isFeared()  const { return HasAuraType(SPELL_AURA_MOD_FEAR); }
-        bool isInRoots() const { return HasAuraType(SPELL_AURA_MOD_ROOT); }
+        bool CantMove() const { return hasUnitState(UNIT_STAT_ROOT | UNIT_STAT_STUNNED); }
+        bool isInRoots() const { return hasUnitState(UNIT_STAT_ROOT); }
         bool IsPolymorphed() const;
 
         bool isFrozen() const;
@@ -1151,7 +1135,10 @@ class HELLGROUND_IMPORT_EXPORT Unit : public WorldObject
 
         void MonsterMoveWithSpeed(float x, float y, float z, float speed, bool time=false, bool generatePath = false, bool forceDestination = false);
 
+        //Sends mobs movement (and movement end?) to client
         void SendMonsterStop();
+        //Sends visual updates to client, DOES NOT UPDATE ON SERVER SIDE;
+        //for server side update use UpdateVisibilityAndView()
         void SendHeartBeat();
 
         bool IsLevitating() const { return m_movementInfo.HasMovementFlag(MOVEFLAG_LEVITATING);}
@@ -1193,7 +1180,15 @@ class HELLGROUND_IMPORT_EXPORT Unit : public WorldObject
         Pet* GetPet() const;
         Unit* GetCharmer() const;
         Unit* GetCharm() const;
-        Unit* GetCharmerOrOwner() const { return GetCharmerGUID() ? GetCharmer() : GetOwner(); }
+        Unit* GetCharmerOrOwner() const 
+        {
+            if (GetCharmer())
+                return GetCharmer();
+            else if (GetOwner())
+                return GetOwner();
+            else
+                return NULL;
+        }
         Unit* GetCharmerOrOwnerOrSelf() const
         {
             if (Unit *u = GetCharmerOrOwner())
@@ -1257,6 +1252,7 @@ class HELLGROUND_IMPORT_EXPORT Unit : public WorldObject
         void RemoveAuraTypeByCaster(AuraType auraType, uint64 casterGUID);
         void RemoveRankAurasDueToSpell(uint32 spellId);
         bool RemoveNoStackAurasDueToAura(Aura *Aur);
+        bool CheckForStrongerAuras(Aura* Aur);
         void RemoveAurasWithAttribute(uint32 flags, bool notPassiveOnly = false);
         void RemoveAurasWithInterruptFlags(uint32 flags, uint32 except = 0, bool PositiveOnly = false);
         void RemoveAurasWithDispelType(DispelType type);
@@ -1340,7 +1336,6 @@ class HELLGROUND_IMPORT_EXPORT Unit : public WorldObject
         // Event handler
         EventProcessor m_Events;
         EventProcessor* GetEvents();
-        void UpdateEvents(uint32 update_diff, uint32 time);
         void KillAllEvents(bool force);
         void AddEvent(BasicEvent* Event, uint64 e_time, bool set_addtime = true);
 
@@ -1382,13 +1377,15 @@ class HELLGROUND_IMPORT_EXPORT Unit : public WorldObject
         void SetVisibility(UnitVisibility x);
         void DestroyForNearbyPlayers();
 
+        //Updates mobs and objects on SERVER SIDE, does not send update to CLIENTS;
+        //use SendHeartBeat() to update visibility for clients
         void UpdateVisibilityAndView();
 
         // common function for visibility checks for player/creatures with detection code
         virtual bool canSeeOrDetect(Unit const* u, WorldObject const*, bool detect, bool inVisibleList = false, bool is3dDistance = true) const;
 
-        bool canDetectInvisibilityOf(Unit const* u, WorldObject const*) const;
-        bool canDetectStealthOf(Unit const* u, WorldObject const*, float distance) const;
+        bool canDetectInvisibilityOf(Unit const* u) const;
+        bool canDetectStealthOf(Unit const* u, WorldObject const*) const;
 
         // virtual functions for all world objects types
         bool isVisibleForInState(Player const*, WorldObject const*, bool) const;
@@ -1487,8 +1484,7 @@ class HELLGROUND_IMPORT_EXPORT Unit : public WorldObject
         int32 SpellBaseHealingBonusForVictim(SpellSchoolMask schoolMask, Unit *pVictim);
         uint32 SpellDamageBonus(Unit *pVictim, SpellEntry const *spellProto, uint32 damage, DamageEffectType damagetype, CasterModifiers *casterModifiers = NULL);
         uint32 SpellHealingBonus(SpellEntry const *spellProto, uint32 healamount, DamageEffectType damagetype, Unit *pVictim, CasterModifiers *casterModifiers = NULL);
-        bool   isSpellBlocked(Unit *pVictim, SpellEntry const *spellProto, WeaponAttackType attackType = BASE_ATTACK);
-        bool   isSpellCrit(Unit *pVictim, SpellEntry const *spellProto, SpellSchoolMask schoolMask, WeaponAttackType attackType = BASE_ATTACK);
+        bool   isSpellCrit(Unit *pVictim, SpellEntry const *spellProto, SpellSchoolMask schoolMask, WeaponAttackType attackType = BASE_ATTACK, float extraChance = 0);
         uint32 SpellCriticalBonus(SpellEntry const *spellProto, uint32 damage, Unit *pVictim);
 
         void SetLastManaUse(uint32 spellCastTime) { m_lastManaUse = spellCastTime; }
@@ -1520,6 +1516,7 @@ class HELLGROUND_IMPORT_EXPORT Unit : public WorldObject
 
         void KnockBackFrom(Unit* target, float horizontalSpeed, float verticalSpeed);
         void KnockBack(float angle, float horizontalSpeed, float verticalSpeed);
+        void GetLeapForwardDestination(Position& pos, float distance);
 
         void _RemoveAllAuraMods();
         void _ApplyAllAuraMods();
@@ -1568,8 +1565,6 @@ class HELLGROUND_IMPORT_EXPORT Unit : public WorldObject
         void SendPetCastFail(uint32 spellid, SpellCastResult msg);
         void SendPetActionFeedback (uint8 msg);
         void SendPetTalk (uint32 pettalk);
-        void SendPetSpellCooldown (uint32 spellid, time_t cooltime);
-        void SendPetClearCooldown (uint32 spellid);
         void SendPetAIReaction(uint64 guid);
         ///----------End of Pet responses methods----------
 
@@ -1594,6 +1589,7 @@ class HELLGROUND_IMPORT_EXPORT Unit : public WorldObject
             m_reducedThreatPercent = pct;
             m_misdirectionTargetGUID = guid;
         }
+
         uint32 GetReducedThreatPercent() { return m_reducedThreatPercent; }
         Unit *GetMisdirectionTarget() { return m_misdirectionTargetGUID ? GetUnit(*this, m_misdirectionTargetGUID) : NULL; }
 
@@ -1611,15 +1607,16 @@ class HELLGROUND_IMPORT_EXPORT Unit : public WorldObject
 
         float GetDeterminativeSize() const;
 
-        Player* GetGMToSendCombatStats() const { return m_GMToSendCombatStats ? GetPlayer(m_GMToSendCombatStats) : NULL; }
-        void SetGMToSendCombatStats(uint64 guid) { m_GMToSendCombatStats = guid; }
-        void SendCombatStats(const char* str, Unit *pVictim, ...) const;
+        void SetGMToSendCombatStats(uint64 guid, uint32 flag) { m_GMToSendCombatStats = guid; m_CombatStatsFlag = flag; }
+        void SendCombatStats(uint32 flag, const char* str, Unit *pVictim, ...) const;
 
         bool RollPRD(float baseChance, float extraChance, uint32 spellId);
 
         // Movement info
         Movement::MoveSpline * movespline;
         MovementInfo m_movementInfo;
+
+        void TriggerAutocastSpell();
 
     protected:
         explicit Unit ();
@@ -1715,6 +1712,7 @@ class HELLGROUND_IMPORT_EXPORT Unit : public WorldObject
         uint32 m_procDeep;
 
         uint64 m_GMToSendCombatStats;
+        uint32 m_CombatStatsFlag;
         UNORDERED_MAP<uint32, uint32> m_PRDMap;
 
         void UpdateSplineMovement(uint32 t_diff);

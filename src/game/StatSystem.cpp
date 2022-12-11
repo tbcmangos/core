@@ -1,7 +1,7 @@
 /*
  * Copyright (C) 2005-2008 MaNGOS <http://getmangos.com/>
  * Copyright (C) 2008 TrinityCore <http://www.trinitycore.org/>
- * Copyright (C) 2008-2014 Hellground <http://hellground.net/>
+ * Copyright (C) 2008-2017 Hellground <http://wow-hellground.com/>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -778,26 +778,19 @@ void Creature::UpdateDamagePhysical(WeaponAttackType attType)
             break;
     }
 
-    //float att_speed = float(GetAttackTime(attType))/1000.0f;
-
     float weapon_mindamage = GetWeaponDamageRange(attType, MINDAMAGE);
     float weapon_maxdamage = GetWeaponDamageRange(attType, MAXDAMAGE);
 
-    //This formula is not correct
-    //The correct one is (Damage_from_AttackPower + Base_Weapon_Damage) * Multiplier
-    //We do not know the multiplier, so we assume attack power is about 25% damage
-    //float base_value  = GetModifierValue(unitMod, BASE_VALUE) + GetTotalAttackPowerValue(attType)/ 14.0f * att_speed;
-    float base_value  = GetModifierValue(unitMod, BASE_VALUE)
-        + (weapon_mindamage + weapon_maxdamage) / 6
-        * GetTotalAttackPowerValue(attType) / (getLevel() * 5);
-    float base_pct    = GetModifierValue(unitMod, BASE_PCT);
+    float base_value = GetModifierValue(unitMod, BASE_VALUE);
+    // base ap is 5* level, reducing ap to 0 should cause about 15% decrease in damage
+    float base_pct    = GetModifierValue(unitMod, BASE_PCT) * (0.85f + 0.03f * GetTotalAttackPowerValue(attType)/getLevel());
     float total_value = GetModifierValue(unitMod, TOTAL_VALUE);
     float total_pct   = GetModifierValue(unitMod, TOTAL_PCT);
 
-    if (attType == BASE_ATTACK && HasFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_DISARMED))
+    // disarming decreases creature damage by ~50%
+    if (attType == BASE_ATTACK && HasFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_DISARMED) && GetEquipmentId())
     {
-        weapon_mindamage = 0;
-        weapon_maxdamage = 0;
+        base_pct *= 0.5f;
     }
 
     float mindamage = ((base_value + weapon_mindamage) * base_pct + total_value) * total_pct ;

@@ -1,7 +1,7 @@
 /*
  * Copyright (C) 2005-2008 MaNGOS <http://getmangos.com/>
  * Copyright (C) 2008 TrinityCore <http://www.trinitycore.org/>
- * Copyright (C) 2008-2014 Hellground <http://hellground.net/>
+ * Copyright (C) 2008-2017 Hellground <http://wow-hellground.com/>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -44,6 +44,7 @@ struct PlayerQueueInfo                                      // stores informatio
     uint32  LastInviteTime;                                 // last invite time
     uint32  LastOnlineTime;                                 // for tracking and removing offline players from queue after 5 minutes
     GroupQueueInfo * GroupInfo;                             // pointer to the associated groupqueueinfo
+    std::string adr;
 };
 
 struct GroupQueueInfo                                       // stores information about the group in queue (also used when joined as solo!)
@@ -89,7 +90,7 @@ class BattleGroundQueue
         bool CheckPremadeMatch(BattleGroundBracketId bracket_id, uint32 MaxPlayersPerTeam, uint32 MinPlayersPerTeam);
         bool CheckNormalMatch(BattleGround* bg_template, BattleGroundBracketId bracket_id, uint32 minPlayers, uint32 maxPlayers);
         bool CheckSkirmishForSameFaction(BattleGroundBracketId bracket_id, uint32 minPlayersPerTeam);
-        GroupQueueInfo * AddGroup(Player* leader, BattleGroundTypeId bgTypeId, BattleGroundBracketId bracket_id, uint8 ArenaType, bool isRated, bool isPremade, uint32 ArenaRating, uint32 hiddenRating, uint32 ArenaTeamId = 0);
+        GroupQueueInfo * AddGroup(Player* leader, BattleGroundTypeId bgTypeId, BattleGroundBracketId bracket_id, uint8 ArenaType, bool isRated, bool isPremade, uint32 ArenaRating, uint32 hiddenRating, uint32 ArenaTeamId, uint32 faction);
         void AddPlayer(Player *plr, GroupQueueInfo *ginfo);
         void RemovePlayer(const uint64& guid, bool decreaseInvitedCount);
         void DecreaseGroupLength(uint32 queueId, uint32 AsGroup);
@@ -133,8 +134,6 @@ class BattleGroundQueue
 
         typedef ACE_Atomic_Op<ACE_Thread_Mutex, uint32> atomicUInt32;
         atomicUInt32 queuedPlayersCount[BG_TEAMS_COUNT][MAX_BATTLEGROUND_BRACKETS];
-
-    private:
 
         bool InviteGroupToBG(GroupQueueInfo * ginfo, BattleGround * bg, uint32 side);
 };
@@ -273,9 +272,9 @@ class BattleGroundMgr
 
         /* Battlegrounds */
         BattleGroundSet m_BattleGrounds[MAX_BATTLEGROUND_TYPE_ID];
-        uint32 m_NextRatingDiscardUpdate;
+        Timer m_NextRatingDiscardUpdate;
         time_t m_NextAutoDistributionTime;
-        uint32 m_AutoDistributionTimeChecker;
+        Timer m_AutoDistributionTimeChecker;
         bool   m_ArenaTesting;
         bool   m_Testing;
         bool   m_ApAnnounce;

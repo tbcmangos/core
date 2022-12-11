@@ -1,5 +1,5 @@
 /* 
- * Copyright (C) 2008-2014 Hellground <http://hellground.net/>
+ * Copyright (C) 2008-2015 Hellground <http://hellground.net/>
  * 
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -41,11 +41,11 @@ struct boss_coren_direbrewAI : public ScriptedAI
 {
     boss_coren_direbrewAI(Creature *c) : ScriptedAI(c) { }
 
-    uint32 Disarm_Timer;
-    uint32 Summon_Timer;
-    uint32 Drink_Timer;
-    uint32 Ilsa_Timer;
-    uint32 Ursula_Timer;
+    int32 Disarm_Timer;
+    int32 Summon_Timer;
+    int32 Drink_Timer;
+    int32 Ilsa_Timer;
+    int32 Ursula_Timer;
 
     void Reset()
     {
@@ -93,17 +93,18 @@ struct boss_coren_direbrewAI : public ScriptedAI
         if (!UpdateVictim())
             return;
 
-        if(Disarm_Timer < diff)
+        Disarm_Timer -= diff;
+        if(Disarm_Timer <= diff)
         {
             AddSpellToCast(SPELL_DISARM_GROW, CAST_SELF, true);
             AddSpellToCast(SPELL_DISARM_GROW, CAST_SELF, true);
             AddSpellToCast(SPELL_DISARM_GROW, CAST_SELF, true);
             AddSpellToCast(SPELL_DIREBREWS_DISARM, CAST_NULL);
-            Disarm_Timer = 30000;
+            Disarm_Timer += 30000;
         }
-        else Disarm_Timer -= diff;
-
-        if(Summon_Timer < diff)
+      
+        Summon_Timer -= diff;
+        if(Summon_Timer <= diff)
         {
             if(Unit * target = SelectUnit(SELECT_TARGET_RANDOM, 0, 45, true))
             {
@@ -112,37 +113,37 @@ struct boss_coren_direbrewAI : public ScriptedAI
                 //me->getVictim()->KnockBackFrom(me, 4, 7);
                 //AddSpellToCast(me, SPELL_SUMMON_MINION_KNOCKBACK);
                 AddSpellToCast(target, SPELL_SUMMON_MINION, true);
-                Summon_Timer = 15000;
+                Summon_Timer += 15000;
             }
         }
-        else Summon_Timer -= diff;
+
 
         if(float(me->GetHealth())/float(me->GetMaxHealth()) < 0.66f)
         {
-            if(Ilsa_Timer < diff)
+            Ilsa_Timer -= diff;
+            if (Ilsa_Timer <= diff)
             {
                 Creature * Ilsa = GetClosestCreatureWithEntry(me, NPC_ILSA_DIREBREW, 100);
                 if (!Ilsa)
                 {
                     me->SummonCreature(NPC_ILSA_DIREBREW, me->GetPositionX(), me->GetPositionY(), me->GetPositionZ(), 0, TEMPSUMMON_CORPSE_DESPAWN, 0);
                 }
-                Ilsa_Timer = 300000;
+                Ilsa_Timer += 300000;
             }
-            else Ilsa_Timer -= diff;
         }
 
         if(float(me->GetHealth())/float(me->GetMaxHealth()) < 0.33f)
         {
-            if(Ursula_Timer < diff)
+            Ursula_Timer -= diff;
+            if(Ursula_Timer <= diff)
             {
                 Creature * Ursula = GetClosestCreatureWithEntry(me, NPC_URSULA_DIREBREW, 100);
                 if (!Ursula)
                 {
                     me->SummonCreature(NPC_URSULA_DIREBREW, me->GetPositionX(), me->GetPositionY(), me->GetPositionZ(), 0, TEMPSUMMON_CORPSE_DESPAWN, 0);
                 }
-                Ursula_Timer = 300000;
+                Ursula_Timer += 300000;
             }
-            else Ursula_Timer -= diff;
         }
 
         CastNextSpellIfAnyAndReady();
@@ -173,7 +174,8 @@ struct direbrew_starter_triggerAI : public ScriptedAI
 
     void UpdateAI(const uint32 diff)
     {
-        if(Start_Timer < diff)
+        Start_Timer -= diff;
+        if(Start_Timer <= diff)
         {
             Creature * Coren = GetClosestCreatureWithEntry(me, BOSS_COREN_DIREBREW, 20);
             if (Coren && Coren->isAlive())
@@ -198,7 +200,6 @@ struct direbrew_starter_triggerAI : public ScriptedAI
                 me->ForcedDespawn(0);
             }
         }
-        else Start_Timer -= diff;
     }
 };
 

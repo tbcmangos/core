@@ -1,7 +1,7 @@
 /*
  * Copyright (C) 2005-2008 MaNGOS <http://getmangos.com/>
  * Copyright (C) 2008 TrinityCore <http://www.trinitycore.org/>
- * Copyright (C) 2008-2014 Hellground <http://hellground.net/>
+ * Copyright (C) 2008-2017 Hellground <http://wow-hellground.com/>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -133,7 +133,7 @@ bool BattleGroundQueue::SelectionPool::AddGroup(GroupQueueInfo *ginfo, uint32 de
 }
 
 // add group to bg queue with the given leader and bg specifications
-GroupQueueInfo * BattleGroundQueue::AddGroup(Player *leader, BattleGroundTypeId BgTypeId, BattleGroundBracketId bracketId, uint8 ArenaType, bool isRated, bool isPremade, uint32 arenaRating, uint32 hiddenRating, uint32 arenateamid)
+GroupQueueInfo * BattleGroundQueue::AddGroup(Player *leader, BattleGroundTypeId BgTypeId, BattleGroundBracketId bracketId, uint8 ArenaType, bool isRated, bool isPremade, uint32 arenaRating, uint32 hiddenRating, uint32 arenateamid, uint32 faction)
 {
     // create new ginfo
     // cannot use the method like in addplayer, because that could modify an in-queue group's stats
@@ -145,7 +145,7 @@ GroupQueueInfo * BattleGroundQueue::AddGroup(Player *leader, BattleGroundTypeId 
     ginfo->IsRated                   = isRated;
     ginfo->IsInvitedToBGInstanceGUID = 0;
     ginfo->JoinTime                  = WorldTimer::getMSTime();
-    ginfo->Team                      = leader->GetTeam();
+    ginfo->Team                      = faction; // leader->GetTeam();
     ginfo->ArenaTeamRating           = arenaRating;
     ginfo->HiddenRating              = hiddenRating;
     ginfo->OpponentsTeamRating       = 0;
@@ -178,9 +178,21 @@ void BattleGroundQueue::AddPlayer(Player *plr, GroupQueueInfo *ginfo)
     info.LastInviteTime             = 0;
     info.LastOnlineTime             = WorldTimer::getMSTime();
     info.GroupInfo                  = ginfo;
+    info.adr                        = plr->GetSession()->GetRemoteAddress();
 
     // add the pinfo to ginfo's list
     ginfo->Players[plr->GetGUID()]  = &info;
+
+    for (QueuedPlayersMap::iterator itr = m_QueuedPlayers.begin(); itr != m_QueuedPlayers.end(); ++itr)
+    {
+        if (itr->second.GroupInfo->GetBGTeam() == ginfo->GetBGTeam())
+            continue;
+        if (itr->second.adr != info.adr)
+            continue;
+
+        sWorld.SendGMText(LANG_ABUSE_BG_BOTH_FACTIONS, plr->GetName(), plr->GetGUID(), itr->first);
+        sLog.outLog(LOG_EXPLOITS_CHEATS, "Player (%s %u) queued bg on both factions from same IP (other faction char %u)", plr->GetName(), plr->GetGUID(), itr->first);
+    }
 }
 
 //remove player from queue and from group info, if group info is empty then remove it too
@@ -309,7 +321,7 @@ bool BattleGroundQueue::InviteGroupToBG(GroupQueueInfo * ginfo, BattleGround * b
             // if offline, skip him
             if(!plr)
                 continue;
-
+            plr->GetSession()->GetRemoteAddress();
             // invite the player
             sBattleGroundMgr.InvitePlayer(plr, bg->GetInstanceID(), bg->GetTypeID(), ginfo->Team);
 
@@ -430,7 +442,7 @@ void BattleGroundQueue::FillPlayersToBG(BattleGround* bg, BattleGroundBracketId 
     while( abs(diffAli - diffHorde) > 1 && (m_SelectionPools[BG_TEAM_HORDE].GetPlayerCount() > 0 || m_SelectionPools[BG_TEAM_ALLIANCE].GetPlayerCount() > 0) )
     {
         //each cycle execution we need to kick at least 1 group
-        if (diffAli < diffHorde)
+        if (diffAli <= diffHorde)
         {
             //kick alliance group, add to pool new group if needed
             if (m_SelectionPools[BG_TEAM_ALLIANCE].KickGroup(diffHorde - diffAli))
@@ -1060,7 +1072,7 @@ void BGQueueRemoveEvent::Abort(uint64 /*e_time*/)
 /***            BATTLEGROUND MANAGER                   ***/
 /*********************************************************/
 
-BattleGroundMgr::BattleGroundMgr() : m_AutoDistributionTimeChecker(0), m_ArenaTesting(false), m_ApAnnounce(false)
+BattleGroundMgr::BattleGroundMgr() : m_AutoDistributionTimeChecker(120000), m_ArenaTesting(false), m_ApAnnounce(false)
 {
     for(uint32 i = BATTLEGROUND_TYPE_NONE; i < MAX_BATTLEGROUND_TYPE_ID; i++)
         m_BattleGrounds[i].clear();
@@ -1144,7 +1156,7 @@ void BattleGroundMgr::Update(uint32 diff)
     if (sWorld.getConfig(CONFIG_ARENA_MAX_RATING_DIFFERENCE) && sWorld.getConfig(CONFIG_ARENA_RATING_DISCARD_TIMER))
     {
         // it's time to force update
-        if (m_NextRatingDiscardUpdate < diff)
+        if (m_NextRatingDiscardUpdate.Expired(diff))
         {
             // forced update for level 70 rated arenas
             m_BattleGroundQueues[BATTLEGROUND_QUEUE_2v2].Update(BATTLEGROUND_AA,BG_BRACKET_ID_LAST,ARENA_TYPE_2v2,true,0,0);
@@ -1152,13 +1164,11 @@ void BattleGroundMgr::Update(uint32 diff)
             m_BattleGroundQueues[BATTLEGROUND_QUEUE_5v5].Update(BATTLEGROUND_AA,BG_BRACKET_ID_LAST,ARENA_TYPE_5v5,true,0,0);
             m_NextRatingDiscardUpdate = sWorld.getConfig(CONFIG_ARENA_RATING_DISCARD_TIMER);
         }
-        else
-            m_NextRatingDiscardUpdate -= diff;
     }
 
     if (sWorld.getConfig(CONFIG_ARENA_AUTO_DISTRIBUTE_POINTS))
     {
-        if (m_AutoDistributionTimeChecker < diff)
+        if (m_AutoDistributionTimeChecker.Expired(diff))
         {
             if (time(NULL) > m_NextAutoDistributionTime)
             {
@@ -1176,8 +1186,6 @@ void BattleGroundMgr::Update(uint32 diff)
             }
             m_AutoDistributionTimeChecker = 600000; // check in 10 minutes
         }
-        else
-            m_AutoDistributionTimeChecker -= diff;
     }
 }
 
@@ -1428,9 +1436,9 @@ void BattleGroundMgr::InvitePlayer(Player* plr, uint32 bgInstanceGUID, BattleGro
     // create invite events:
     //add events to player's counters ---- this is not good way - there should be something like global event processor, where we should add those events
     BGQueueInviteEvent* inviteEvent = new BGQueueInviteEvent(plr->GetGUID(), bgInstanceGUID, bgTypeId);
-    plr->m_Events.AddEvent(inviteEvent, plr->m_Events.CalculateTime(INVITATION_REMIND_TIME));
+    plr->AddEvent(inviteEvent, INVITATION_REMIND_TIME, true);
     BGQueueRemoveEvent* removeEvent = new BGQueueRemoveEvent(plr->GetGUID(), bgInstanceGUID, bgTypeId, team);
-    plr->m_Events.AddEvent(removeEvent, plr->m_Events.CalculateTime(INVITE_ACCEPT_WAIT_TIME));
+    plr->AddEvent(removeEvent, INVITE_ACCEPT_WAIT_TIME, true);
 }
 
 BattleGround * BattleGroundMgr::GetBattleGround(uint32 InstanceID, BattleGroundTypeId bgTypeId)
@@ -1721,8 +1729,6 @@ void BattleGroundMgr::DistributeArenaPoints()
     // used to distribute arena points based on last week's stats
     sWorld.SendGlobalText("Flushing Arena points based on team ratings, this may take a few minutes. Please stand by...", NULL);
 
-    sWorld.SendGlobalText("Distributing arena points to players...", NULL);
-
     //temporary structure for storing maximum points to add values for all players
     std::map<uint32, uint32> PlayerPoints;
 
@@ -1735,8 +1741,11 @@ void BattleGroundMgr::DistributeArenaPoints()
         }
     }
 
+    sWorld.SendGlobalText("Distributing arena points to players...", NULL);
+
+    uint32 cycles = 0;
     //cycle that gives points to all players
-    for (std::map<uint32, uint32>::iterator plr_itr = PlayerPoints.begin(); plr_itr != PlayerPoints.end(); ++plr_itr)
+    for (std::map<uint32, uint32>::iterator plr_itr = PlayerPoints.begin(); plr_itr != PlayerPoints.end(); ++plr_itr, cycles++)
     {
         //update to database
         RealmDataDatabase.PExecute("UPDATE characters SET arena_pending_points = '%u' WHERE `guid` = '%u'", plr_itr->second, plr_itr->first);
@@ -1744,6 +1753,12 @@ void BattleGroundMgr::DistributeArenaPoints()
         Player* pl = sObjectMgr.GetPlayer(plr_itr->first);
         if (pl)
             pl->ModifyArenaPoints(plr_itr->second);
+
+        if (cycles == 500)
+        {
+            RealmDataDatabase.Ping(); // keep connection alive, we can stay in here for some time and we dont execute any SQL directly
+            cycles = 0;
+        }
     }
 
     PlayerPoints.clear();

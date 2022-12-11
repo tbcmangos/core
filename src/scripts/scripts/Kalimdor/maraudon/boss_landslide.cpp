@@ -1,6 +1,6 @@
 /* 
  * Copyright (C) 2006-2008 ScriptDev2 <https://scriptdev2.svn.sourceforge.net/>
- * Copyright (C) 2008-2014 Hellground <http://hellground.net/>
+ * Copyright (C) 2008-2015 Hellground <http://hellground.net/>
  * 
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -34,9 +34,9 @@ struct boss_landslideAI : public ScriptedAI
 {
     boss_landslideAI(Creature *c) : ScriptedAI(c) {}
 
-    uint32 KnockAway_Timer;
-    uint32 Trample_Timer;
-    uint32 Landslide_Timer;
+    int32 KnockAway_Timer;
+    int32 Trample_Timer;
+    int32 Landslide_Timer;
 
     void Reset()
     {
@@ -54,29 +54,30 @@ struct boss_landslideAI : public ScriptedAI
         if (!UpdateVictim() )
             return;
 
-        //KnockAway_Timer
-        if (KnockAway_Timer < diff)
+        KnockAway_Timer -= diff;
+        if (KnockAway_Timer <= diff)
         {
             DoCast(m_creature->getVictim(),SPELL_KNOCKAWAY);
-            KnockAway_Timer = 15000;
-        }else KnockAway_Timer -= diff;
+            KnockAway_Timer += 15000;
+        }
 
-        //Trample_Timer
-        if (Trample_Timer < diff)
+        Trample_Timer -= diff;
+        if (Trample_Timer <= diff)
         {
             DoCast(m_creature,SPELL_TRAMPLE);
-            Trample_Timer = 8000;
-        }else Trample_Timer -= diff;
+            Trample_Timer += 8000;
+        }
 
         //Landslide
         if ( m_creature->GetHealth()*100 / m_creature->GetMaxHealth() < 50 )
         {
-            if (Landslide_Timer < diff)
+            Landslide_Timer -= diff;
+            if (Landslide_Timer <= diff)
             {
                 m_creature->InterruptNonMeleeSpells(false);
                 DoCast(m_creature,SPELL_LANDSLIDE);
-                Landslide_Timer = 60000;
-            } else Landslide_Timer -= diff;
+                Landslide_Timer += 60000;
+            } 
         }
 
         DoMeleeAttackIfReady();

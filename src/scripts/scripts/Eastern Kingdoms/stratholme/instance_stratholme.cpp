@@ -1,6 +1,6 @@
 /* 
  * Copyright (C) 2006-2008 ScriptDev2 <https://scriptdev2.svn.sourceforge.net/>
- * Copyright (C) 2008-2014 Hellground <http://hellground.net/>
+ * Copyright (C) 2008-2015 Hellground <http://hellground.net/>
  * 
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -50,7 +50,7 @@ EndScriptData */
 #define C_YSIDA                 16031
 #define C_ACOLYTE               10399
 
-#define ENCOUNTERS              6
+#define ENCOUNTERS              7
 
 struct instance_stratholme : public ScriptedInstance
 {
@@ -60,8 +60,8 @@ struct instance_stratholme : public ScriptedInstance
 
     bool IsSilverHandDead[5];
 
-    uint32 BaronRun_Timer;
-    uint32 SlaugtherSquare_Timer;
+    int32 BaronRun_Timer;
+    int32 SlaugtherSquare_Timer;
 
     uint64 serviceEntranceGUID;
     uint64 gauntletGate1GUID;
@@ -401,6 +401,10 @@ struct instance_stratholme : public ScriptedInstance
                     c->Kill(c,false);
                 SetData(TYPE_PALLID,DONE);
             }
+            break;
+        case TYPE_POSTBOXES:
+            Encounter[6] = data;
+            break;
         }
     }
 
@@ -424,6 +428,8 @@ struct instance_stratholme : public ScriptedInstance
               return Encounter[4];
           case TYPE_BARON:
               return Encounter[5];
+          case TYPE_POSTBOXES:
+              return Encounter[6];
           }
           return 0;
     }
@@ -444,17 +450,19 @@ struct instance_stratholme : public ScriptedInstance
     {
         if (BaronRun_Timer)
         {
+            BaronRun_Timer -= diff;
             if (BaronRun_Timer <= diff)
             {
                 if (GetData(TYPE_BARON_RUN) != DONE)
                     SetData(TYPE_BARON_RUN, FAIL);
                 BaronRun_Timer = 0;
                 debug_log("TSCR: Instance Stratholme: Baron run event reached end. Event has state %u.",GetData(TYPE_BARON_RUN));
-            }else BaronRun_Timer -= diff;
+            }
         }
 
         if (SlaugtherSquare_Timer)
         {
+            SlaugtherSquare_Timer -= diff;
             if (SlaugtherSquare_Timer <= diff)
             {
                 if (Player *p = GetPlayerInMap())
@@ -467,7 +475,7 @@ struct instance_stratholme : public ScriptedInstance
                     debug_log("TSCR: Instance Stratholme: Black guard sentries spawned. Opening gates to baron.");
                 }
                 SlaugtherSquare_Timer = 0;
-            }else SlaugtherSquare_Timer -= diff;
+            }
         }
     }
 

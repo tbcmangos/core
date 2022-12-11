@@ -1,5 +1,5 @@
 /* 
- * Copyright (C) 2008-2014 Hellground <http://hellground.net/>
+ * Copyright (C) 2008-2015 Hellground <http://hellground.net/>
  * 
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -42,15 +42,15 @@ struct mob_phantom_guestAI : public ScriptedAI
     }
 
     uint32 Type;
-    uint32 MainTimer;
-    uint32 SecondaryTimer;
+    Timer MainTimer;
+    Timer SecondaryTimer;
 
     void Reset()
     {
         me->CastSpell(me, SPELL_DANCE_VIBE, true);
 
         MainTimer = 0;
-        SecondaryTimer = urand(5000, 20000);
+        SecondaryTimer.Reset(urand(5000, 20000));
 
         if(GameObject *chair = FindGameObject(GO_CHAIR, 5.0, me))
             chair->Use(me);
@@ -69,7 +69,8 @@ struct mob_phantom_guestAI : public ScriptedAI
         if(!UpdateVictim())
             return;
 
-        if(MainTimer < diff)
+        
+        if (MainTimer.Expired(diff))
         {
             switch(Type)
             {
@@ -95,10 +96,9 @@ struct mob_phantom_guestAI : public ScriptedAI
                 break;
             }
         } 
-        else
-            MainTimer -= diff;
-
-        if(SecondaryTimer < diff)
+        
+        
+        if (SecondaryTimer.Expired(diff))
         {
             switch(Type)
             {
@@ -124,8 +124,7 @@ struct mob_phantom_guestAI : public ScriptedAI
                 break;
             }
         }
-        else
-            SecondaryTimer -= diff;
+        
 
         if(Type == 0)
             CheckCasterNoMovementInRange(diff, 30.0);
@@ -155,17 +154,17 @@ struct mob_spectral_sentryAI : public ScriptedAI
 {
     mob_spectral_sentryAI(Creature* c) : ScriptedAI(c) {}
 
-    uint32 ShotTimer;
-    uint32 MultiShotTimer;
-    uint32 RandomSayTimer;
+    Timer ShotTimer;
+    Timer MultiShotTimer;
+    Timer RandomSayTimer;
 
     void Reset()
     {
         me->CastSpell(me, SPELL_DUAL_WIELD, true);
 
-        ShotTimer = 0;
-        MultiShotTimer = 8000;
-        RandomSayTimer = urand(40000, 80000);
+        ShotTimer = 1;
+        MultiShotTimer.Reset(8000);
+        RandomSayTimer.Reset(urand(40000, 80000));
     }
     
     void EnterCombat(Unit *who)
@@ -189,32 +188,29 @@ struct mob_spectral_sentryAI : public ScriptedAI
     {
         if(!UpdateVictim())
         {
-            if (RandomSayTimer < diff)
+            if (RandomSayTimer.Expired(diff))
             {
                 if(roll_chance_i(30))
                     me->Say(SENTRY_SAY_RANDOM, 0, 0);
                 RandomSayTimer = urand(40000, 80000);
             }
-            else 
-                RandomSayTimer -= diff;
+            
             return;
         }
 
-        if(ShotTimer < diff)
+        
+        if (ShotTimer.Expired(diff))
         {
             AddSpellToCast(SPELL_SHOT, CAST_TANK);
             ShotTimer = 2000;
         } 
-        else
-            ShotTimer -= diff;
-
-        if(MultiShotTimer < diff)
+        
+        if (MultiShotTimer.Expired(diff))
         {
             AddSpellToCast(SPELL_MULTI_SHOT, CAST_RANDOM);
             MultiShotTimer = 8000;
         }
-        else
-            MultiShotTimer -= diff;
+        
 
         CheckShooterNoMovementInRange(diff, 20.0);
         CastNextSpellIfAnyAndReady(diff);
@@ -231,8 +227,6 @@ CreatureAI* GetAI_mob_spectral_sentry(Creature *_Creature)
 #define SPELL_RETURN_FIRE2  29794
 #define SPELL_RETURN_FIRE3  29788
 #define SPELL_FIST_OF_STONE 29840
-#define SPELL_DETONATE      29876
-#define SPELL_SEAR          29864
 #define NPC_ASTRAL_SPARK    17283
 
 
@@ -240,25 +234,19 @@ struct mob_arcane_protectorAI : public ScriptedAI
 {
     mob_arcane_protectorAI(Creature* c) : ScriptedAI(c) {}
 
-    uint32 SkillTimer;
+    Timer SkillTimer;
 
     void Reset()
     {
-        SkillTimer = urand(10000, 20000);
+        me->ApplySpellImmune(1, IMMUNITY_STATE, SPELL_AURA_PERIODIC_LEECH, true);
+        me->ApplySpellImmune(2, IMMUNITY_STATE, SPELL_AURA_PERIODIC_MANA_LEECH, true);
+        me->ApplySpellImmune(3, IMMUNITY_DISPEL, DISPEL_POISON, true);
+        SkillTimer.Reset(urand(10000, 20000));
     }
     
     void EnterCombat(Unit *who)
     {
         me->CastSpell(me, RAND(SPELL_RETURN_FIRE1, SPELL_RETURN_FIRE2, SPELL_RETURN_FIRE3), false); 
-    }
-
-    void JustSummoned(Creature *c)
-    {
-        if (c->GetEntry() == NPC_ASTRAL_SPARK)
-        {
-            c->CastSpell(me, SPELL_DETONATE, true);
-            c->CastSpell(me, SPELL_SEAR, true);
-        }
     }
 
     void OnAuraApply(Aura *aur, Unit*, bool stack)
@@ -293,7 +281,8 @@ struct mob_arcane_protectorAI : public ScriptedAI
         if(!UpdateVictim())
             return;
 
-        if(SkillTimer < diff)
+        
+        if (SkillTimer.Expired(diff))
         {
             if(roll_chance_i(50))
                 me->SummonCreature(NPC_ASTRAL_SPARK, me->GetPositionX(), me->GetPositionY(), me->GetPositionZ(), me->GetOrientation(),
@@ -302,8 +291,7 @@ struct mob_arcane_protectorAI : public ScriptedAI
                 me->CastSpell(me, SPELL_FIST_OF_STONE, false);
             SkillTimer = urand(15000, 30000);
         }
-        else
-            SkillTimer -= diff;
+        
 
         CastNextSpellIfAnyAndReady(diff);
         DoMeleeAttackIfReady();
@@ -322,11 +310,11 @@ struct mob_mana_warpAI : public ScriptedAI
 {
     mob_mana_warpAI(Creature* c) : ScriptedAI(c) {}
 
-    bool Exploded;
+    Timer Exploded;
 
     void Reset()
     {
-        Exploded = false;
+        Exploded = 0;
     }
     
     void DamageTaken(Unit* pDone_by, uint32& uiDamage)
@@ -340,12 +328,14 @@ struct mob_mana_warpAI : public ScriptedAI
         if(!UpdateVictim())
             return;
 
-        if(!Exploded && HealthBelowPct(10))
+        if(!Exploded.GetInterval() && HealthBelowPct(10))
         {
             me->CastSpell(me, SPELL_WARP_BREACH_AOE, false);
             me->CastSpell(me, SPELL_WARP_BREACH_VISUAL, true);
-            Exploded = true;
+            Exploded.Reset(1000);
         }
+        if (Exploded.Expired(diff))
+            me->Kill(me);
 
         DoMeleeAttackIfReady();
     }    
@@ -374,12 +364,12 @@ struct mob_shadow_pillagerAI : public ScriptedAI
 {
     mob_shadow_pillagerAI(Creature* c) : ScriptedAI(c) {}
 
-    uint32 DotTimer;
+    Timer DotTimer;
 
     void Reset()
     {
         SetAutocast(SPELL_SEARING_PAIN, 2500, true);
-        DotTimer = urand(2000, 6000);
+        DotTimer.Reset(urand(2000, 6000));
     }
     
     void AttackStart(Unit *who)
@@ -392,13 +382,13 @@ struct mob_shadow_pillagerAI : public ScriptedAI
         if(!UpdateVictim())
             return;
         
-        if(DotTimer < diff)
+        
+        if (DotTimer.Expired(diff))
         {
             AddSpellToCast(roll_chance_i(50) ? SPELL_IMMOLATE : SPELL_CURSE_OF_AGONY, CAST_RANDOM);
             DotTimer = urand(2000, 8000);
         } 
-        else
-            DotTimer -= diff;
+        
 
         CheckCasterNoMovementInRange(diff, 40.0);
         CastNextSpellIfAnyAndReady(diff);
@@ -442,6 +432,304 @@ CreatureAI* GetAI_mob_homunculus(Creature *_Creature)
     return new mob_homunculusAI(_Creature);
 }
 
+enum arcaneanomalyspells
+{
+    SPELL_AA_MANASHIELD = 29880,
+    SPELL_AA_LOOSEMANA  = 29882,
+    SPELL_AA_BLINK      = 29883,
+    SPELL_AA_VOLLEY     = 29885
+};
+
+struct mob_arcane_anomalyAI : public ScriptedAI
+{
+    mob_arcane_anomalyAI(Creature* c) : ScriptedAI(c) {}
+
+
+    Timer blinkTimer;
+    Timer volleyTimer;
+    bool shield;
+    void Reset()
+    {
+        blinkTimer = urand(6000, 8000);
+        volleyTimer = urand(8000, 10000);
+        shield = false;
+    }
+
+    void DamageTaken(Unit* enemy, uint32& Damage)
+    {
+        if (m_creature->HasAura(SPELL_AA_MANASHIELD))
+        {
+            Damage = 0;
+            return;
+        }
+        if (shield) // shield ended dont cast again
+            return;
+
+        m_creature->CastSpell(m_creature, SPELL_AA_MANASHIELD, true);
+        shield = true;
+        if (Damage >= m_creature->GetHealth())
+            Damage = m_creature->GetHealth() - 1;
+    }
+
+    void UpdateAI(const uint32 diff)
+    {
+        if (!UpdateVictim())
+            return;
+
+        if (blinkTimer.Expired(diff))
+        {
+            AddSpellToCast(SPELL_AA_BLINK, CAST_RANDOM);
+            blinkTimer = urand(10000, 12000);
+        }
+
+        if (volleyTimer.Expired(diff))
+        {
+            AddSpellToCast(SPELL_AA_VOLLEY);
+            volleyTimer = urand(10000, 15000);
+        }
+
+        CastNextSpellIfAnyAndReady();
+        DoMeleeAttackIfReady();
+    }
+
+    void JustDied(Unit* who)
+    {
+        m_creature->CastSpell(m_creature, SPELL_AA_LOOSEMANA, true);
+    }
+};
+
+CreatureAI* GetAI_mob_arcane_anomaly(Creature *_Creature)
+{
+    return new mob_arcane_anomalyAI(_Creature);
+}
+
+enum downstairs
+{
+    SPELL_KNOCKDOWN         = 18812,
+    SPELL_PIERCE_ARMOUR     = 6016,
+    SPELL_HEALING_TOUCH     = 29339,
+    SPELL_FRENZY_WHIP       = 29340,
+
+    SPELL_DEMORALIZING_ROAR = 29584,
+    SPELL_STEALTH_DETECTION = 12418,
+
+    SPELL_ALLURING_AURA     = 29485,
+    SPELL_HOSTESS_TRANSFORM = 29472,
+    SPELL_BEWITCHING_AURA   = 29486,
+    SPELL_HOSTESS_WAIL      = 29477,
+    SPELL_HOSTESS_SILENCE   = 29505,
+
+    SPELL_NIGHT_TRANSFORM   = 29491,
+    SPELL_NIGHT_SHADOWBOLT  = 29487,
+    SPELL_NIGHT_IMPENDING   = 29488,
+
+    SPELL_CONCUBINE_TRANSFORM = 29489,
+    SPELL_CONCUBINE_SEDUCTION = 29490,
+    SPELL_CONCUBINE_TEMPTATION = 29494,
+    SPELL_CONCUBINE_JEALOUSY = 29497,
+
+    NPC_HOSTESS         = 16459,
+    NPC_NIGHT_MISTRESS  = 16460,
+    NPC_CONCUBINE       = 16461,
+};
+
+struct mob_demon_ladiesAI : public ScriptedAI
+{
+    mob_demon_ladiesAI(Creature* c) : ScriptedAI(c) {}
+
+    bool changed;
+    Timer mainCastTimer;
+
+    void Reset()
+    {
+        changed = false;
+        mainCastTimer.Reset(urand(5000,7000));
+    }
+
+    void EnterCombat(Unit*)
+    {
+        if (m_creature->GetEntry() == NPC_HOSTESS)
+            DoCast(m_creature, SPELL_ALLURING_AURA, true);
+    }
+
+    void UpdateAI(const uint32 diff)
+    {
+        if (!changed && m_creature->HealthBelowPct(50))
+        {
+            changed = true;
+            m_creature->RemoveAllAuras();
+            switch (m_creature->GetEntry())
+            {
+            case NPC_HOSTESS:
+                DoCast(m_creature, SPELL_BEWITCHING_AURA, true);
+                DoCast(m_creature, SPELL_HOSTESS_TRANSFORM, true);
+                break;
+            case NPC_NIGHT_MISTRESS:
+                DoCast(m_creature, SPELL_NIGHT_TRANSFORM, true);
+                break;
+            case NPC_CONCUBINE:
+                DoCast(m_creature, SPELL_CONCUBINE_TRANSFORM, true);
+                break;
+            }
+        }
+        if (!UpdateVictim())
+            return;
+
+        if (mainCastTimer.Expired(diff))
+        {
+            if (Unit* target = SelectUnit(SELECT_TARGET_RANDOM, 0, 0, true))
+            {
+                switch (m_creature->GetEntry())
+                {
+                case NPC_HOSTESS:
+                    DoCast(target, changed ? SPELL_HOSTESS_SILENCE : SPELL_HOSTESS_WAIL, false);
+                    mainCastTimer = urand(8000, 15000);
+                    break;
+                case NPC_NIGHT_MISTRESS:
+                    DoCast(target, changed ? SPELL_NIGHT_IMPENDING : SPELL_NIGHT_SHADOWBOLT, false);
+                    mainCastTimer = urand(5000, 7000);
+                    break;
+                case NPC_CONCUBINE:
+                    DoCast(target, changed ? SPELL_CONCUBINE_JEALOUSY : SPELL_CONCUBINE_TEMPTATION, false);
+                    mainCastTimer = urand(8000, 12000);
+                    break;
+                }
+            }
+            else
+                mainCastTimer = 1000;
+        }
+        DoMeleeAttackIfReady();
+    }
+};
+
+CreatureAI* GetAI_mob_demon_ladies(Creature* c)
+{
+    return new mob_demon_ladiesAI(c);
+}
+
+struct mob_spectral_stable_handAI : public ScriptedAI
+{
+    mob_spectral_stable_handAI(Creature* c) : ScriptedAI(c) {}
+
+    Timer KnockdownTimer;
+    Timer PierceTimer;
+    Timer HealTimer;
+    Timer FrenzyTimer;
+
+    
+
+    void Reset()
+    {
+        KnockdownTimer.Reset(urand(7000,10000));
+        PierceTimer.Reset(urand(4000,6000));
+        HealTimer.Reset(urand(15000,25000));
+        FrenzyTimer.Reset(urand(15000,25000));
+    }
+
+    Unit* findHorse()
+    {
+        struct horsefinder
+        {
+            bool operator()(Unit* u)
+            {
+                if (u->GetTypeId() != TYPEID_UNIT || !u->isAlive() || !u->isInCombat())
+                    return false;
+                return (u->GetEntry() == 15547 || u->GetEntry() == 15548);
+            }
+        } u_check;
+        std::list<Creature*> unitList;
+
+        Hellground::ObjectListSearcher<Creature, horsefinder> searcher(unitList, u_check);
+        Cell::VisitGridObjects(me, searcher, 100);
+
+        if (unitList.size() == 0)
+            return NULL;
+        std::list<Creature*>::iterator i = unitList.begin();
+        advance(i, urand(0, unitList.size() - 1));
+        return (*i);
+    }
+
+    void UpdateAI(const uint32 diff)
+    {
+        if (!UpdateVictim())
+            return;
+
+        if (KnockdownTimer.Expired(diff))
+        {
+            DoCastVictim(SPELL_KNOCKDOWN);
+            KnockdownTimer = urand(12000,18000);
+        }
+
+        if (PierceTimer.Expired(diff))
+        {
+            DoCastVictim(SPELL_PIERCE_ARMOUR);
+            PierceTimer = urand(30000, 45000);
+        }
+
+        if (HealTimer.Expired(diff))
+        {
+            if (Unit* horse = findHorse())
+                DoCast(horse, SPELL_HEALING_TOUCH);
+            HealTimer = urand(20000, 35000);
+        }
+
+        if (FrenzyTimer.Expired(diff))
+        {
+            if (Unit* horse = findHorse())
+                DoCast(horse, SPELL_FRENZY_WHIP);
+            FrenzyTimer = urand(20000, 35000);
+        }
+
+        DoMeleeAttackIfReady();
+    }
+
+    void JustDied(Unit*)
+    {
+        DoScriptText(RAND(-40, -41), m_creature);
+    }
+};
+
+CreatureAI* GetAI_mob_spectral_stable_hand(Creature* c)
+{
+    return new mob_spectral_stable_handAI(c);
+}
+
+struct mob_phantom_valetAI : public ScriptedAI
+{
+    mob_phantom_valetAI(Creature* c) : ScriptedAI(c) {}
+
+    Timer RoarTimer;
+
+    void Reset()
+    {
+        RoarTimer.Reset(9000);
+    }
+
+    void UpdateAI(const uint32 diff)
+    {
+        if (!m_creature->HasAura(SPELL_STEALTH_DETECTION))
+            DoCast(m_creature, SPELL_STEALTH_DETECTION, true);
+        if (!UpdateVictim())
+            return;
+
+        if (RoarTimer.Expired(diff))
+        {
+            DoCastVictim(SPELL_DEMORALIZING_ROAR);
+            RoarTimer = 30000;
+        }
+    }
+
+    void JustDied(Unit*)
+    {
+        DoScriptText(-51, m_creature);
+    }
+};
+
+CreatureAI* GetAI_mob_phantom_valet(Creature* c)
+{
+    return new mob_phantom_valetAI(c);
+}
+
 
 void AddSC_karazhan_trash()
 {
@@ -479,5 +767,25 @@ void AddSC_karazhan_trash()
     newscript = new Script;
     newscript->Name = "mob_homunculus";
     newscript->GetAI = &GetAI_mob_homunculus;
+    newscript->RegisterSelf();
+
+    newscript = new Script;
+    newscript->Name = "mob_arcane_anomaly";
+    newscript->GetAI = &GetAI_mob_arcane_anomaly;
+    newscript->RegisterSelf();
+
+    newscript = new Script;
+    newscript->Name = "mob_demon_ladies";
+    newscript->GetAI = &GetAI_mob_demon_ladies;
+    newscript->RegisterSelf();
+
+    newscript = new Script;
+    newscript->Name = "mob_spectral_stable_hand";
+    newscript->GetAI = &GetAI_mob_spectral_stable_hand;
+    newscript->RegisterSelf();
+
+    newscript = new Script;
+    newscript->Name = "mob_phantom_valet";
+    newscript->GetAI = &GetAI_mob_phantom_valet;
     newscript->RegisterSelf();
 }

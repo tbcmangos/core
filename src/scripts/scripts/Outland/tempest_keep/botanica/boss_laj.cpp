@@ -1,6 +1,6 @@
 /* 
  * Copyright (C) 2006-2008 ScriptDev2 <https://scriptdev2.svn.sourceforge.net/>
- * Copyright (C) 2008-2014 Hellground <http://hellground.net/>
+ * Copyright (C) 2008-2015 Hellground <http://hellground.net/>
  * 
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -51,10 +51,10 @@ struct boss_lajAI : public ScriptedAI
     boss_lajAI(Creature *c) : ScriptedAI(c) {}
 
     bool CanSummon;
-    uint32 Teleport_Timer;
-    uint32 Summon_Timer;
-    uint32 Transform_Timer;
-    uint32 Allergic_Timer;
+    Timer Teleport_Timer;
+    Timer Summon_Timer;
+    Timer Transform_Timer;
+    Timer Allergic_Timer;
 
     void Reset()
     {
@@ -66,10 +66,10 @@ struct boss_lajAI : public ScriptedAI
         m_creature->ApplySpellImmune(0, IMMUNITY_SCHOOL, SPELL_SCHOOL_MASK_NATURE, false);
 
         CanSummon = false;
-        Teleport_Timer = 20000;
-        Summon_Timer = 2500;
-        Transform_Timer = 30000;
-        Allergic_Timer = 5000;
+        Teleport_Timer.Reset(20000);
+        Summon_Timer.Reset(2500);
+        Transform_Timer.Reset(30000);
+        Allergic_Timer.Reset(5000);
     }
 
     void DoTransform()
@@ -163,32 +163,32 @@ struct boss_lajAI : public ScriptedAI
 
         if( CanSummon )
         {
-            if( Summon_Timer < diff )
+            if (Summon_Timer.Expired(diff))
             {
                 DoScriptText(EMOTE_SUMMON, m_creature);
                 DoSummons();
                 Summon_Timer = 2500;
-            }else Summon_Timer -= diff;
+            }
         }
 
-        if( Allergic_Timer < diff )
+        if (Allergic_Timer.Expired(diff))
         {
             DoCast(m_creature->getVictim(),SPELL_ALLERGIC_REACTION);
             Allergic_Timer = 25000+rand()%15000;
-        }else Allergic_Timer -= diff;
+        }
 
-        if( Teleport_Timer < diff )
+        if (Teleport_Timer.Expired(diff))
         {
             DoCast(m_creature,SPELL_TELEPORT_SELF);
             Teleport_Timer = 30000+rand()%10000;
             CanSummon = true;
-        }else Teleport_Timer -= diff;
+        }
 
-        if( Transform_Timer < diff )
+        if (Transform_Timer.Expired(diff))
         {
             DoTransform();
             Transform_Timer = 25000+rand()%15000;
-        }else Transform_Timer -= diff;
+        }
 
         DoMeleeAttackIfReady();
     }

@@ -1,7 +1,7 @@
 /*
  * Copyright (C) 2005-2008 MaNGOS <http://getmangos.com/>
  * Copyright (C) 2008 TrinityCore <http://www.trinitycore.org/>
- * Copyright (C) 2008-2014 Hellground <http://hellground.net/>
+ * Copyright (C) 2008-2017 Hellground <http://wow-hellground.com/>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -372,12 +372,6 @@ struct GameObjectInfo
     uint32 ScriptId;
 };
 
-struct GameObjectLocale
-{
-    std::vector<std::string> Name;
-    std::vector<std::string> CastBarCaption;
-};
-
 // client side GO show states
 enum GOState
 {
@@ -477,9 +471,6 @@ class HELLGROUND_IMPORT_EXPORT GameObject : public WorldObject
         void TextEmote(int32 textId, uint64 TargetGuid) { MonsterTextEmote(textId,TargetGuid); }
         void Whisper(int32 textId, uint64 receiver) { MonsterWhisper(textId,receiver); }
         void YellToZone(int32 textId, uint32 language, uint64 TargetGuid) { MonsterYellToZone(textId,language,TargetGuid); }
-
-        // overwrite WorldObject function for proper name localization
-        const char* GetNameForLocaleIdx(int32 locale_idx) const;
 
         void SaveToDB();
         void SaveToDB(uint32 mapid, uint8 spawnMask);
@@ -642,6 +633,7 @@ class HELLGROUND_IMPORT_EXPORT GameObject : public WorldObject
 
         float GetDeterminativeSize() const;
         void Reset();
+        int32 GetCooldownTimeLeft() { return m_cooldownTime.GetExpiry(); }
 
     protected:
         uint32      m_charges;                              // Spell charges for GAMEOBJECT_TYPE_SPELLCASTER (22)
@@ -650,14 +642,14 @@ class HELLGROUND_IMPORT_EXPORT GameObject : public WorldObject
         uint32      m_respawnDelayTime;                     // (secs) if 0 then current GO state no dependent from timer
         LootState   m_lootState;
         bool        m_spawnedByDefault;
-        time_t      m_cooldownTime;                         // used as internal reaction delay time store (not state change reaction).
+        Countdown   m_cooldownTime;                         // used as internal reaction delay time store (not state change reaction).
                                                             // For traps this: spell casting cooldown, for doors/buttons: reset time.
         std::list<uint32> m_SkillupList;
 
         std::set<uint32> m_unique_users;
         uint32 m_usetimes;
 
-        uint32 m_DBTableGuid;                               ///< For new or temporary gameobjects is 0 for saved it is lowguid
+        uint32 m_DBTableGuid;                               /// For new or temporary gameobjects is 0 for saved it is lowguid
 
         GameObjectInfo const* m_goInfo;
         GameObjectData const* m_goData;

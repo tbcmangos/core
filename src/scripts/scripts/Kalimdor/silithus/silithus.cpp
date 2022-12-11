@@ -1,6 +1,6 @@
 /* 
  * Copyright (C) 2006-2008 ScriptDev2 <https://scriptdev2.svn.sourceforge.net/>
- * Copyright (C) 2008-2014 Hellground <http://hellground.net/>
+ * Copyright (C) 2008-2015 Hellground <http://hellground.net/>
  * 
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -580,41 +580,41 @@ static QuestCinematic EventAnim[]=
     {ARYGOS_EMOTE_1, 2, 2000},
     {CAELESTRASZ_SAY_1, 4, 8000},
     {MERITHRA_SAY_2, 3, 6000},
-    {NULL,3,2000},
+    {0,3,2000},
     {MERITHRA_YELL_1, 3, 2500},
-    {NULL, 3, 3000},//Morph
-    {NULL,3,4000},//EmoteLiftoff
-    {NULL, 3, 4000},// spell
-    {NULL, 3, 1250},//fly
-    {NULL, 3, 250},//remove flags
+    {0, 3, 3000},//Morph
+    {0,3,4000},//EmoteLiftoff
+    {0, 3, 4000},// spell
+    {0, 3, 1250},//fly
+    {0, 3, 250},//remove flags
     {ARYGOS_SAY_1, 2, 3000},
-    {NULL,3,2000},
+    {0,3,2000},
     {ARYGOS_YELL_1, 2, 3000},
-    {NULL, 3, 3000},//Morph
-    {NULL,3,4000},//EmoteLiftoff
-    {NULL, 3, 4000},// spell
-    {NULL, 3, 1000},//fly
-    {NULL, 3, 1000},//remove flags
+    {0, 3, 3000},//Morph
+    {0,3,4000},//EmoteLiftoff
+    {0, 3, 4000},// spell
+    {0, 3, 1000},//fly
+    {0, 3, 1000},//remove flags
     {CAELESTRASZ_SAY_2, 4, 5000},
-    {NULL,3,3000},
+    {0,3,3000},
     {CAELESTRASZ_YELL_1, 4, 3000},
-    {NULL, 3, 3000},//Morph
-    {NULL,3,4000},//EmoteLiftoff
-    {NULL, 3, 2500},// spell
+    {0, 3, 3000},//Morph
+    {0,3,4000},//EmoteLiftoff
+    {0, 3, 2500},// spell
     {ANACHRONOS_SAY_2, 0, 2000},
-    {NULL, 3, 250},//fly
-    {NULL, 3, 25},//remove flags
+    {0, 3, 250},//fly
+    {0, 3, 25},//remove flags
     {FANDRAL_SAY_2, 1, 3000},
     {ANACHRONOS_SAY_3, 0, 10000},//Both run through the armies
-    {NULL,3,2000},// Sands will stop
-    {NULL,3,8000},// Summon Gate
+    {0,3,2000},// Sands will stop
+    {0,3,8000},// Summon Gate
     {ANACHRONOS_SAY_4, 0, 4000},
-    {NULL, 0, 2000},//spell 1-> Arcane cosmetic (Mobs freeze)
-    {NULL, 0, 5000}, //Spell 2-> Arcane long cosmetic (barrier appears) (Barrier -> Glyphs)
-    {NULL, 0, 7000},//BarrieR
-    {NULL, 0, 4000},//Glyphs
+    {0, 0, 2000},//spell 1-> Arcane cosmetic (Mobs freeze)
+    {0, 0, 5000}, //Spell 2-> Arcane long cosmetic (barrier appears) (Barrier -> Glyphs)
+    {0, 0, 7000},//BarrieR
+    {0, 0, 4000},//Glyphs
     {ANACHRONOS_SAY_5, 0, 2000},
-    {NULL, 0, 4000},// Roots
+    {0, 0, 4000},// Roots
     {FANDRAL_SAY_3, 1, 3000},//Root Text
     {FANDRAL_EMOTE_1, 1, 3000},//falls knee
     {ANACHRONOS_SAY_6, 0, 3000},
@@ -628,19 +628,19 @@ static QuestCinematic EventAnim[]=
     {FANDRAL_SAY_6, 1, 3000},//fandral goes away
     {ANACHRONOS_EMOTE_2, 0, 3000},
     {ANACHRONOS_EMOTE_3, 0, 3000},
-    {NULL, 0, 2000},
-    {NULL, 0, 2000},
-    {NULL, 0, 4000},
+    {0, 0, 2000},
+    {0, 0, 2000},
+    {0, 0, 4000},
     {ANACHRONOS_SAY_10, 0, 3000},
-    {NULL, 0, 2000},
-    {NULL, 0, 3000},
-    {NULL, 0, 15000},
-    {NULL, 0, 5000},
-    {NULL, 0, 3500},
-    {NULL, 0, 5000},
-    {NULL, 0, 3500},
-    {NULL, 0, 5000},
-    {NULL, 0, NULL}
+    {0, 0, 2000},
+    {0, 0, 3000},
+    {0, 0, 15000},
+    {0, 0, 5000},
+    {0, 0, 3500},
+    {0, 0, 5000},
+    {0, 0, 3500},
+    {0, 0, 5000},
+    {0, 0, 0}
 };
 
 struct Location
@@ -737,11 +737,11 @@ struct WaveData
 
 static WaveData WavesInfo[] =
 {
-    {30, 0, 15423, 0, 0,24000, NULL},   //Kaldorei Soldier
-    {3, 35, 15424, 0, 0,24000, NULL},   //Anubisath Conqueror
-    {12, 38, 15414, 0, 0,24000, NULL},  //Qiraji Wasps
-    {6, 50, 15422, 0, 0,24000, NULL},   //Qiraji Tanks
-    {15, 15, 15423, 0, 0,24000, NULL}   //Kaldorei Soldier
+    {30, 0, 15423, 0, 0,24000, 0},   //Kaldorei Soldier
+    {3, 35, 15424, 0, 0,24000, 0},   //Anubisath Conqueror
+    {12, 38, 15414, 0, 0,24000, 0},  //Qiraji Wasps
+    {6, 50, 15422, 0, 0,24000, 0},   //Qiraji Tanks
+    {15, 15, 15423, 0, 0,24000, 0}   //Kaldorei Soldier
 
 };
 
@@ -819,7 +819,7 @@ struct npc_anachronos_the_ancientAI : public ScriptedAI
                     DoScriptText(FANDRAL_SAY_1, Fandral,me);
                     break;
                 case 2:
-                    Fandral->SetUInt64Value(UNIT_FIELD_TARGET,NULL);
+                    Fandral->SetUInt64Value(UNIT_FIELD_TARGET,0);
                     DoScriptText(MERITHRA_EMOTE_1,Merithra);
                     break;
                 case 3:
@@ -836,7 +836,7 @@ struct npc_anachronos_the_ancientAI : public ScriptedAI
                     DoScriptText(MERITHRA_SAY_2, Merithra);
                     break;
                 case 7:
-                    Caelestrasz->SetUInt64Value(UNIT_FIELD_TARGET, NULL);
+                    Caelestrasz->SetUInt64Value(UNIT_FIELD_TARGET, 0);
                     Merithra->GetMotionMaster()->MoveCharge(-8065,1530,2.61f,10);
                     break;
                 case 8:
@@ -1423,8 +1423,46 @@ CreatureAI* Getnpc_anachronos_the_ancientAI(Creature* pCreature)
 }
 
 /*###
-##
+## silithus glyphed crystals (quest Glyph Chasing 8309)
 ####*/
+
+enum glyphchasing
+{
+    TRANSCRIPTION_KIT = 20453,
+    ZORA_ITEM = 20454,
+    ASHI_ITEM = 20455,
+    REGAL_ITEM = 20456,
+
+    REGAL_OBJECT = 180453,
+    ASHI_OBJECT = 180454,
+    ZORA_OBJECT = 180455
+};
+
+bool GOUse_go_silithus_glyph(Player* plr, GameObject* gob)
+{
+    if (!plr->HasItemCount(TRANSCRIPTION_KIT, 1))
+        return true;
+
+    uint32 entry = 0;
+    switch (gob->GetEntry())
+    {
+    case REGAL_OBJECT: entry = REGAL_ITEM; break;
+    case ASHI_OBJECT: entry = ASHI_ITEM; break;
+    case ZORA_OBJECT: entry = ZORA_ITEM; break;
+    }
+    if (!entry)
+        return true;
+
+    ItemPosCountVec dest;
+    uint8 msg = plr->CanStoreNewItem(NULL_BAG, NULL_SLOT, dest, entry, 1);
+    if (msg == EQUIP_ERR_OK)
+    {
+        Item* item = plr->StoreNewItem(dest, entry, true);
+        plr->SendNewItem(item, 1, true, false, true);
+    }
+
+    return true;
+}
 
 void AddSC_silithus()
 {
@@ -1504,5 +1542,11 @@ void AddSC_silithus()
     newscript->Name = "npc_anachronos_the_ancient";
     newscript->GetAI = Getnpc_anachronos_the_ancientAI;
     newscript->RegisterSelf();
+
+    newscript = new Script;
+    newscript->Name = "go_silithus_glyph";
+    newscript->pGOUse = &GOUse_go_silithus_glyph;
+    newscript->RegisterSelf();
+    
 }
 

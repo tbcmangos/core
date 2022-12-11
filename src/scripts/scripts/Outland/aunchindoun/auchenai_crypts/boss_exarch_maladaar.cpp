@@ -1,6 +1,6 @@
 /* 
  * Copyright (C) 2006-2008 ScriptDev2 <https://scriptdev2.svn.sourceforge.net/>
- * Copyright (C) 2008-2014 Hellground <http://hellground.net/>
+ * Copyright (C) 2008-2015 Hellground <http://hellground.net/>
  * 
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -47,11 +47,11 @@ struct mob_stolen_soulAI : public ScriptedAI
     mob_stolen_soulAI(Creature *c) : ScriptedAI(c) {}
 
     uint8 myClass;
-    uint32 Class_Timer;
+    Timer Class_Timer;
 
     void Reset()
     {
-        Class_Timer = 1000;
+        Class_Timer.Reset(1000);
     }
 
     void EnterCombat(Unit *who)
@@ -67,7 +67,7 @@ struct mob_stolen_soulAI : public ScriptedAI
         if (!UpdateVictim())
             return;
 
-        if (Class_Timer < diff)
+        if (Class_Timer.Expired(diff))
         {
             switch (myClass)
             {
@@ -108,7 +108,7 @@ struct mob_stolen_soulAI : public ScriptedAI
                     Class_Timer = 10000;
                     break;
             }
-        } else Class_Timer -= diff;
+        } 
 
         DoMeleeAttackIfReady();
     }
@@ -155,9 +155,9 @@ struct boss_exarch_maladaarAI : public ScriptedAI
     uint64 soulholder;
     uint8 soulclass;
 
-    uint32 Fear_timer;
-    uint32 Ribbon_of_Souls_timer;
-    uint32 StolenSoul_Timer;
+    Timer Fear_timer;
+    Timer Ribbon_of_Souls_timer;
+    Timer StolenSoul_Timer;
 
     bool HasTaunted;
     bool Avatar_summoned;
@@ -168,16 +168,16 @@ struct boss_exarch_maladaarAI : public ScriptedAI
         soulholder = 0;
         soulclass = 0;
 
-        Fear_timer = 15000 + rand()% 5000;
-        Ribbon_of_Souls_timer = 5000;
-        StolenSoul_Timer = 25000 + rand()% 10000;
+        Fear_timer.Reset(15000 + rand() % 5000);
+        Ribbon_of_Souls_timer.Reset(5000);
+        StolenSoul_Timer = 0;
 
         Avatar_summoned = false;
     }
 
     void MoveInLineOfSight(Unit *who)
     {
-        if (!HasTaunted && m_creature->IsWithinDistInMap(who, 150.0))
+        if (!HasTaunted && m_creature->IsWithinDistInMap(who, 60.0))
         {
             DoScriptText(SAY_INTRO, m_creature);
             HasTaunted = true;
@@ -230,7 +230,7 @@ struct boss_exarch_maladaarAI : public ScriptedAI
         if (!UpdateVictim())
             return;
 
-        if (!Avatar_summoned && ((m_creature->GetHealth()*100) / m_creature->GetMaxHealth() < 25))
+        if (!Avatar_summoned && HealthBelowPct(25))
         {
             if (m_creature->IsNonMeleeSpellCast(false))
                 m_creature->InterruptNonMeleeSpells(true);
@@ -239,10 +239,10 @@ struct boss_exarch_maladaarAI : public ScriptedAI
 
             DoCast(m_creature, SPELL_SUMMON_AVATAR);
             Avatar_summoned = true;
-            StolenSoul_Timer = 15000 + rand()% 15000;
+            StolenSoul_Timer = 15000 + rand() % 15000;
         }
 
-        if (StolenSoul_Timer < diff)
+        if (StolenSoul_Timer.Expired(diff))
         {
             if (Unit *target = SelectUnit(SELECT_TARGET_RANDOM,0, 100, true))
             {
@@ -251,11 +251,7 @@ struct boss_exarch_maladaarAI : public ScriptedAI
                     if (m_creature->IsNonMeleeSpellCast(false))
                         m_creature->InterruptNonMeleeSpells(true);
 
-                    uint32 i = urand(1,2);
-                    if (i == 1)
-                        DoScriptText(SAY_ROAR, m_creature);
-                    else
-                        DoScriptText(SAY_SOUL_CLEAVE, m_creature);
+                    DoScriptText(rand() % 2 ? SAY_ROAR : SAY_SOUL_CLEAVE, m_creature);
 
                     soulmodel = target->GetDisplayId();
                     soulholder = target->GetGUID();
@@ -265,29 +261,23 @@ struct boss_exarch_maladaarAI : public ScriptedAI
                     DoSpawnCreature(ENTRY_STOLEN_SOUL,0,0,0,0,TEMPSUMMON_TIMED_DESPAWN_OUT_OF_COMBAT,10000);
 
                     StolenSoul_Timer = 20000 + rand()% 10000;
-                } else StolenSoul_Timer = 1000;
+                } 
             }
         }
-        else
-            StolenSoul_Timer -= diff;
 
-        if (Ribbon_of_Souls_timer < diff)
+        if (Ribbon_of_Souls_timer.Expired(diff))
         {
             if (Unit *target = SelectUnit(SELECT_TARGET_RANDOM,0, 100, true))
                 DoCast(target,SPELL_RIBBON_OF_SOULS);
 
             Ribbon_of_Souls_timer = 5000 + (rand()%20 * 1000);
         }
-        else
-            Ribbon_of_Souls_timer -= diff;
 
-        if (Fear_timer < diff)
+        if (Fear_timer.Expired(diff))
         {
             DoCast(m_creature,SPELL_SOUL_SCREAM);
             Fear_timer = 15000 + rand()% 15000;
         }
-        else
-            Fear_timer -= diff;
 
         DoMeleeAttackIfReady();
     }
@@ -305,11 +295,11 @@ struct mob_avatar_of_martyredAI : public ScriptedAI
 {
     mob_avatar_of_martyredAI(Creature *c) : ScriptedAI(c) {}
 
-    uint32 Mortal_Strike_timer;
+    Timer Mortal_Strike_timer;
 
     void Reset()
     {
-        Mortal_Strike_timer = 10000;
+        Mortal_Strike_timer.Reset(10000);
     }
 
     void EnterCombat(Unit *who)
@@ -321,13 +311,11 @@ struct mob_avatar_of_martyredAI : public ScriptedAI
         if (!UpdateVictim())
             return;
 
-        if (Mortal_Strike_timer < diff)
+        if (Mortal_Strike_timer.Expired(diff))
         {
             DoCast(m_creature->getVictim(), SPELL_AV_MORTAL_STRIKE);
             Mortal_Strike_timer = 10000 + rand()%20 * 1000;
         }
-        else
-            Mortal_Strike_timer -= diff;
 
         DoMeleeAttackIfReady();
     }

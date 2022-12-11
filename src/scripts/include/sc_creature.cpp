@@ -1,6 +1,6 @@
 /*
  * Copyright (C) 2008 TrinityCore <http://www.trinitycore.org/>
- * Copyright (C) 2008-2014 Hellground <http://hellground.net/>
+ * Copyright (C) 2008-2015 Hellground <http://hellground.net/>
  *
  * Thanks to the original authors: ScriptDev2 <https://scriptdev2.svn.sourceforge.net/>
  *
@@ -31,72 +31,72 @@ struct TSpellSummary
     uint8 Effects;                                          // set of enum SelectEffect
 } *SpellSummary;
 
-void SummonList::DoAction(uint32 entry, uint32 info)
+void SummonList::DoAction(uint32 entry, uint32 info) const
 {
-    for (iterator i = begin(); i != end(); )
-    {
-         Creature *summon = Unit::GetCreature(*m_creature, *i);
-         i++;
-         if(summon && summon->IsAIEnabled && (!entry || summon->GetEntry() == entry))
-             summon->AI()->DoAction(info);
-    }
+    for (const_iterator i = begin(); i != end(); ++i)
+        if (Creature *summon = m_creature->GetCreature(*i))
+            if (summon->IsAIEnabled && (!entry || summon->GetEntry() == entry))
+                summon->AI()->DoAction(info);
 }
 
-void SummonList::Cast(uint32 entry, uint32 spell, Unit* target)
+void SummonList::Cast(uint32 entry, uint32 spell, Unit* target) const
 {
-    for (iterator i = begin(); i != end(); )
-    {
-         Creature *summon = Unit::GetCreature(*m_creature, *i);
-         i++;
-         if(summon && (!entry || summon->GetEntry() == entry))
-             summon->CastSpell(target, spell, true);
-    }
+    for (const_iterator i = begin(); i != end(); ++i)
+        if (Creature *summon = m_creature->GetCreature(*i))
+            if (!entry || summon->GetEntry() == entry)
+                summon->CastSpell(target, spell, true);
 }
 
 void SummonList::Despawn(Creature *summon)
 {
-    uint64 guid = summon->GetGUID();
-    for(iterator i = begin(); i != end(); ++i)
-    {
-        if(*i == guid)
-        {
-            erase(i);
-            return;
-        }
-    }
+    erase(summon->GetGUID());
 }
 
 void SummonList::DespawnEntry(uint32 entry)
 {
-    for(iterator i = begin(); i != end(); ++i)
+    for (iterator i = begin(); i != end(); )
     {
-        if(Creature *summon = Unit::GetCreature(*m_creature, *i))
+        if (Creature *summon = m_creature->GetCreature(*i))
         {
-            if(summon->GetEntry() == entry)
+            if (summon->GetEntry() == entry)
             {
                 summon->setDeathState(JUST_DIED);
                 summon->RemoveCorpse();
                 i = erase(i);
-                --i;
             }
+            else
+                ++i;
         }
         else
-        {
             i = erase(i);
-            --i;
-        }
     }
 }
 
-void SummonList::AuraOnEntry(uint32 entry, uint32 spellId, bool apply)
+void SummonList::RemoveByEntry(uint32 entry)
 {
-    for(iterator i = begin(); i != end(); ++i)
+    for (iterator i = begin(); i != end(); )
     {
-        if(Creature *summon = Unit::GetCreature(*m_creature, *i))
+        if (Creature *summon = m_creature->GetCreature(*i))
         {
-            if(summon->GetEntry() == entry)
+            if (summon->GetEntry() == entry)
+                i = erase(i);
+            else
+                ++i;
+        }
+        else
+            i = erase(i);
+    }
+}
+
+void SummonList::CastAuraOnEntry(uint32 entry, uint32 spellId, bool apply) const
+{
+    for (const_iterator i = begin(); i != end(); ++i)
+    {
+        if (Creature *summon = m_creature->GetCreature(*i))
+        {
+            if (summon->GetEntry() == entry)
             {
-                if(apply)
+                if (apply)
                     summon->AddAura(spellId, summon);
                 else
                     summon->RemoveAurasDueToSpell(spellId);
@@ -107,9 +107,9 @@ void SummonList::AuraOnEntry(uint32 entry, uint32 spellId, bool apply)
 
 void SummonList::DespawnAll()
 {
-    for(iterator i = begin(); i != end(); ++i)
+    for (iterator i = begin(); i != end(); ++i)
     {
-        if(Creature *summon = Unit::GetCreature(*m_creature, *i))
+        if (Creature *summon = m_creature->GetCreature(*i))
         {
             summon->setDeathState(JUST_DIED);
             summon->RemoveCorpse();
@@ -118,16 +118,11 @@ void SummonList::DespawnAll()
     clear();
 }
 
-bool SummonList::isEmpty()
-{
-    return empty();
-}
-
-
 ScriptedAI::ScriptedAI(Creature* pCreature) :
-CreatureAI(pCreature), m_creature(pCreature), IsFleeing(false), m_bCombatMovement(true), m_uiEvadeCheckCooldown(2500), autocast(false)
+CreatureAI(pCreature), m_creature(pCreature), IsFleeing(false), m_bCombatMovement(true), m_uiEvadeCheckCooldown(2500),
+autocast(false), m_specialThingTimer(1000)
 {
-    m_specialThingTimer = 0;
+    reportedBigList = false;
     HeroicMode = m_creature->GetMap()->IsHeroic();
 }
 
@@ -188,11 +183,11 @@ void ScriptedAI::DoStartNoMovement(Unit* pVictim, movementCheckType type)
 
     switch(type)
     {
-        case 1:
+        case CHECK_TYPE_CASTER:
             me->SetWalk(false);
             casterTimer = 2000;
             break;
-        case 2:
+        case CHECK_TYPE_SHOOTER:
             me->SetWalk(false);
             casterTimer = 3000;
             break;
@@ -200,64 +195,70 @@ void ScriptedAI::DoStartNoMovement(Unit* pVictim, movementCheckType type)
             break;
     }
 
-    m_creature->GetMotionMaster()->MoveIdle();
+    m_creature->GetMotionMaster()->StopControlledMovement();
 }
 
 void ScriptedAI::CheckCasterNoMovementInRange(uint32 diff, float maxrange)
 {
-    if(!UpdateVictim() || !me->getVictim())
+    if (!UpdateVictim() || !me->getVictim())
         return;
 
-    if(!me->IsInMap(me->getVictim()))
+    if (!me->IsInMap(me->getVictim()))
         return;
 
-    if(casterTimer > 2000)  // just in case
-        casterTimer = 2000;
+    if (casterTimer.GetTimeLeft() > 2000)  // just in case
+        casterTimer.Reset(2000);
 
-    if(casterTimer < diff)
+
+    if (casterTimer.Expired(diff))
     {
+        if (me->hasUnitState(UNIT_STAT_CANNOT_AUTOATTACK))
+        {
+            casterTimer = 1000;
+            return;
+        }
+
         // go to victim
-        if(!me->IsWithinDistInMap(me->getVictim(), maxrange) || !me->IsWithinLOSInMap(me->getVictim()))
+        if (!me->IsWithinDistInMap(me->getVictim(), maxrange) || !me->IsWithinLOSInMap(me->getVictim()))
         {
             float x, y, z;
-            /*
-            float dist = me->GetDistance2d(me->getVictim());
-            float angle = me->GetAngle(me->getVictim());
-            me->GetPosition(x, y, z);
-            x = x + dist/2 * cos(angle);
-            y = y + dist/2 * sin(angle);*/
             me->getVictim()->GetPosition(x, y, z);
             me->UpdateAllowedPositionZ(x, y, z);
             me->SetSpeed(MOVE_RUN, 1.5);
             me->GetMotionMaster()->MovePoint(40, x, y, z);  //to not possibly collide with any Movement Inform check
             casterTimer = 200;
+            return;
         }
         else
-            me->GetMotionMaster()->MoveIdle();
+            me->GetMotionMaster()->StopControlledMovement();
 
         casterTimer = 2000;
     }
-    else
-        casterTimer -= diff;
 }
 
 void ScriptedAI::CheckShooterNoMovementInRange(uint32 diff, float maxrange)
 {
-    if(!UpdateVictim() || !me->getVictim())
+    if (!UpdateVictim() || !me->getVictim())
         return;
 
-    if(!me->IsInMap(me->getVictim()))
+    if (!me->IsInMap(me->getVictim()))
         return;
 
-    if(casterTimer > 3000)  // just in case
-        casterTimer = 3000;
+    if (casterTimer.GetTimeLeft() > 3000)  // just in case
+        casterTimer.Reset(3000);
 
-    if(casterTimer < diff)
+    if (casterTimer.Expired(diff))
     {
-        // if victim in melee range, than chase it
-        if(me->IsWithinDistInMap(me->getVictim(), 5.0))
+        if (me->hasUnitState(UNIT_STAT_CANNOT_AUTOATTACK))
         {
-            if(me->GetMotionMaster()->GetCurrentMovementGeneratorType() != CHASE_MOTION_TYPE)
+            casterTimer = 1000;
+            return;
+        }
+
+        // if victim in melee range, than chase it
+        if (me->IsWithinDistInMap(me->getVictim(), 5.0))
+        {
+            if (!me->hasUnitState(UNIT_STAT_CHASE))
                 DoStartMovement(me->getVictim());
             else
             {
@@ -265,32 +266,25 @@ void ScriptedAI::CheckShooterNoMovementInRange(uint32 diff, float maxrange)
                 return;
             }
         }
-        else if(me->GetMotionMaster()->GetCurrentMovementGeneratorType() == CHASE_MOTION_TYPE)
-            me->GetMotionMaster()->MoveIdle();
+        else if (me->hasUnitState(UNIT_STAT_CHASE))
+            me->GetMotionMaster()->StopControlledMovement();
 
         // when victim is in distance, stop and shoot
-        if(!me->IsWithinDistInMap(me->getVictim(), maxrange) || !me->IsWithinLOSInMap(me->getVictim()))
+        if (!me->IsWithinDistInMap(me->getVictim(), maxrange) || !me->IsWithinLOSInMap(me->getVictim()))
         {
             float x, y, z;
             me->getVictim()->GetPosition(x, y, z);
-            /*
-            float dist = me->GetDistance2d(me->getVictim());
-            float angle = me->GetAngle(me->getVictim());
-            me->GetPosition(x, y, z);
-            x = x + dist/2 * cos(angle);
-            y = y + dist/2 * sin(angle);*/
             me->UpdateAllowedPositionZ(x, y, z);
             me->SetSpeed(MOVE_RUN, 1.5);
             me->GetMotionMaster()->MovePoint(41, x, y, z);  //to not possibly collide with any Movement Inform check
             casterTimer = 200;
+            return;
         }
         else
-            me->GetMotionMaster()->MoveIdle();
+            me->GetMotionMaster()->StopControlledMovement();
 
         casterTimer = 3000;
     }
-    else
-        casterTimer -= diff;
 }
 
 void ScriptedAI::DoStopAttack()
@@ -348,6 +342,11 @@ void ScriptedAI::CastNextSpellIfAnyAndReady(uint32 diff)
 
     if (!spellList.empty() && !cast)
     {
+        if (spellList.size() > 10 && !reportedBigList)
+        {
+            reportedBigList = true;
+            sLog.outLog(LOG_DB_ERR, "creature %u has too many spells to cast!", m_creature->GetEntry());
+        }
         SpellToCast temp(spellList.front());
         spellList.pop_front();
 
@@ -404,7 +403,7 @@ void ScriptedAI::CastNextSpellIfAnyAndReady(uint32 diff)
 
     if (autocast)
     {
-        if (autocastTimer < diff)
+        if (autocastTimer.Expired(diff))
         {
             if (!cast)
             {
@@ -458,8 +457,6 @@ void ScriptedAI::CastNextSpellIfAnyAndReady(uint32 diff)
                 autocastTimer = autocastTimerDef;
             }
         }
-        else
-            autocastTimer -= diff;
     }
 }
 
@@ -659,7 +656,11 @@ void ScriptedAI::SetAutocast(uint32 spellId, uint32 timer, bool startImmediately
 
     autocastId = spellId;
 
-    autocastTimer = startImmediately ? 0 : timer;
+    autocastTimer = timer;
+
+    if (startImmediately)
+        autocastTimer.SetCurrent(timer);
+
     autocastTimerDef = timer;
 
     autocastMode = mode;
@@ -735,7 +736,7 @@ void ScriptedAI::DoPlaySoundToSet(WorldObject* unit, uint32 sound)
 
     if (!GetSoundEntriesStore()->LookupEntry(sound))
     {
-        error_log("TSCR: Invalid soundId %u used in DoPlaySoundToSet (by unit TypeId %u, guid %u)", sound, unit->GetTypeId(), unit->GetGUID());
+        error_log("TSCR: Invalid soundId %u used in DoPlaySoundToSet (by unit TypeId %u, guid %lu)", sound, unit->GetTypeId(), unit->GetGUID());
         return;
     }
 
@@ -982,7 +983,7 @@ void ScriptedAI::DoTeleportPlayer(Unit* pUnit, float x, float y, float z, float 
     if(!pUnit || pUnit->GetTypeId() != TYPEID_PLAYER)
     {
         if(pUnit)
-            error_log("TSCR: Creature %u (Entry: %u) Tried to teleport non-player unit (Type: %u GUID: %u) to x: %f y:%f z: %f o: %f. Aborted.", m_creature->GetGUID(), m_creature->GetEntry(), pUnit->GetTypeId(), pUnit->GetGUID(), x, y, z, o);
+            error_log("TSCR: Creature %lu (Entry: %u) Tried to teleport non-player unit (Type: %u GUID: %lu) to x: %f y:%f z: %f o: %f. Aborted.", m_creature->GetGUID(), m_creature->GetEntry(), pUnit->GetTypeId(), pUnit->GetGUID(), x, y, z, o);
         return;
     }
 
@@ -1062,7 +1063,7 @@ void Scripted_NoMovementAI::AttackStart(Unit* pWho)
 
 void ScriptedAI::DoSpecialThings(uint32 diff, SpecialThing flags, float range, float speedRate)
 {
-    if (m_specialThingTimer < diff)
+    if (m_specialThingTimer.Expired(diff))
     {
         if (flags & DO_PULSE_COMBAT)
             DoZoneInCombat(range);
@@ -1081,10 +1082,8 @@ void ScriptedAI::DoSpecialThings(uint32 diff, SpecialThing flags, float range, f
                 EnterEvadeMode();
         }
 
-        m_specialThingTimer = 3000;
+        m_specialThingTimer = 1000;
     }
-    else
-        m_specialThingTimer -= diff;
 }
 
 BossAI::BossAI(Creature *c, uint32 id) : ScriptedAI(c),

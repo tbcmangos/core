@@ -1,6 +1,6 @@
 /* 
  * Copyright (C) 2006-2008 ScriptDev2 <https://scriptdev2.svn.sourceforge.net/>
- * Copyright (C) 2008-2014 Hellground <http://hellground.net/>
+ * Copyright (C) 2008-2015 Hellground <http://hellground.net/>
  * 
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -140,16 +140,16 @@ struct npc_wretched_devourerAI : public ScriptedAI
 {
     npc_wretched_devourerAI(Creature* c) : ScriptedAI(c) {}
 
-    uint32 ArcaneTorrent;
-    uint32 ManaTap;
-    uint32 NetherShock;
+    Timer ArcaneTorrent;
+    Timer ManaTap;
+    Timer NetherShock;
 
     void Reset()
     {
         me->SetPower(POWER_MANA, 0);
-        ArcaneTorrent = RAND(urand(1500, 4500),urand(5000, 10000));
-        ManaTap = urand(3000, 6000);
-        NetherShock = urand(4000, 8000);
+        ArcaneTorrent.Reset(RAND(urand(1500, 4500), urand(5000, 10000)));
+        ManaTap.Reset(urand(3000, 6000));
+        NetherShock.Reset(urand(4000, 8000));
     }
 
     void EnterCombat(Unit* who)
@@ -162,27 +162,27 @@ struct npc_wretched_devourerAI : public ScriptedAI
     {
         if(!UpdateVictim())
             return;
-        if(ArcaneTorrent < diff)
+
+        if (ArcaneTorrent.Expired(diff))
         {
             AddSpellToCast(SPELL_ARCANE_TORRENT, CAST_SELF);
             ArcaneTorrent = RAND(urand(1500, 4500),urand(6000, 11000));
         }
-        else
-            ArcaneTorrent -= diff;
-        if(ManaTap < diff)
+
+        
+        if (ManaTap.Expired(diff))
         {
             AddSpellToCast(SPELL_MANA_TAP, CAST_TANK);
             ManaTap = urand(15000, 24000);
         }
-        else
-            ManaTap -= diff;
-        if(NetherShock < diff)
+        
+        
+        if (NetherShock.Expired(diff))
         {
             AddSpellToCast(SPELL_NETHER_SHOCK, CAST_TANK);
             NetherShock = urand(4000, 8000);
         }
-        else
-            NetherShock -= diff;
+        
         CastNextSpellIfAnyAndReady();
         DoMeleeAttackIfReady();
     }
@@ -207,14 +207,14 @@ struct npc_wretched_fiendAI : public ScriptedAI
 {
     npc_wretched_fiendAI(Creature* c) : ScriptedAI(c) {}
 
-    uint32 SunderArmor;
-    uint32 BitterWithdrawal;
+    Timer SunderArmor;
+    Timer BitterWithdrawal;
 
     void Reset()
     {
         me->SetPower(POWER_MANA, 0);
-        SunderArmor = urand(6000, 10000);
-        BitterWithdrawal = 1000;
+        SunderArmor.Reset(urand(6000, 10000));
+        BitterWithdrawal.Reset(1000);
     }
 
     void EnterCombat(Unit* who)
@@ -227,22 +227,21 @@ struct npc_wretched_fiendAI : public ScriptedAI
     {
         if(!UpdateVictim())
             return;
-        if(SunderArmor < diff)
+
+        if (SunderArmor.Expired(diff))
         {
             AddSpellToCast(SPELL_SUNDER_ARMOR, CAST_TANK);
             SunderArmor = urand(12000, 16000);
         }
-        else
-            SunderArmor -= diff;
+        
         if(HealthBelowPct(85))
         {
-            if(BitterWithdrawal < diff)
+            if (BitterWithdrawal.Expired(diff))
             {
                 AddSpellToCast(SPELL_BITTER_WITHDRAWAL, CAST_TANK);
                 BitterWithdrawal = urand(10000, 15000);
             }
-            else
-                BitterWithdrawal -= diff;
+            
         }
 
         CastNextSpellIfAnyAndReady();
@@ -270,17 +269,17 @@ struct npc_erratic_sentryAI : public ScriptedAI
 {
     npc_erratic_sentryAI(Creature* c) : ScriptedAI(c) {}
 
-    uint32 CapacitatorOverload;
-    uint32 Suppression;
-    uint32 ElectricalOverload;
-    uint32 CrystalStrike;
+    Timer CapacitatorOverload;
+    Timer Suppression;
+    Timer ElectricalOverload;
+    Timer CrystalStrike;
 
     void Reset()
     {
-        CapacitatorOverload = 5000;
-        Suppression = urand(3000, 10000);
-        ElectricalOverload = 1000;
-        CrystalStrike = urand(2000, 14000);
+        CapacitatorOverload.Reset(5000);
+        Suppression.Reset(urand(3000, 10000));
+        ElectricalOverload.Reset(1000);
+        CrystalStrike.Reset(urand(2000, 14000));
     }
 
     void UpdateAI(const uint32 diff)
@@ -291,18 +290,17 @@ struct npc_erratic_sentryAI : public ScriptedAI
             {
                 if(!me->HasAura(44994))
                 {
-                    if(CapacitatorOverload < diff)
+                    if (CapacitatorOverload.Expired(diff))
                     {
                         DoCast(me, CAPACITATOR_OVERLOAD, true);
                         CapacitatorOverload = 500;
                     }
-                    else
-                        CapacitatorOverload -= diff;
+                    
                 }
             }
             else
             {
-                if(CapacitatorOverload < diff)
+                if (CapacitatorOverload.Expired(diff))
                 {
                     if(roll_chance_i(5))
                     {
@@ -315,41 +313,39 @@ struct npc_erratic_sentryAI : public ScriptedAI
                         me->SetHealth(me->GetMaxHealth());
                     CapacitatorOverload = 5000;
                 }
-                else
-                    CapacitatorOverload -= diff;
+                
             }
         }
 
         if(!UpdateVictim())
             return;
 
-        if(Suppression < diff)
+
+        if (Suppression.Expired(diff))
         {
             AddSpellToCast(SPELL_SUPPRESSION, CAST_NULL);
             Suppression = urand(15000, 25000);
         }
-        else
-            Suppression -= diff;
+        
 
-        if(CrystalStrike < diff)
+
+        if (CrystalStrike.Expired(diff))
         {
             AddSpellToCast(SPELL_CRYSTAL_STRIKE, CAST_TANK);
             CrystalStrike = 14000;
         }
-        else
-            CrystalStrike -= diff;
+        
 
         if(HealthBelowPct(80) && !HealthBelowPct(50))
         {
-            if(ElectricalOverload < diff)
+            if (ElectricalOverload.Expired(diff))
             {
                 if(roll_chance_i(20))
                     DoYell(YELL_CORE_OVERLOAD, 0, me->getVictim());
                 AddSpellToCast(SPELL_ELECTRICAL_OVERLOAD, CAST_SELF);
                 ElectricalOverload = 10000;
             }
-            else
-                ElectricalOverload -= diff;
+            
         }
 
         CastNextSpellIfAnyAndReady();
@@ -401,7 +397,7 @@ CreatureAI* GetAI_npc_sunblade_lookout(Creature* _Creature)
 /*######
 ## npc_wrath_enforcer
 ######*/
-
+#define SPELL_ARCANE_CHARGE         45072
 #define SPELL_DUAL_WIELD            29651
 #define SPELL_FLAME_WAVE            33803
 #define MOB_RAVAGER                 25028
@@ -411,13 +407,22 @@ struct npc_wrath_enforcerAI : public ScriptedAI
 {
     npc_wrath_enforcerAI(Creature* c) : ScriptedAI(c) {}
 
-    uint32 FlameWave;
+    Timer FlameWave;
 
     void Reset()
     {
         me->setActive(true);
         DoCast(me, 29651, true);
-        FlameWave = urand(5000, 35000);
+        FlameWave.Reset(urand(5000, 35000));
+    }
+
+    void SpellHit(Unit* caster, const SpellEntry* spell)
+    {
+        if (spell->Id == SPELL_ARCANE_CHARGE && caster->GetTypeId() == TYPEID_PLAYER)
+        {
+            m_creature->LowerPlayerDamageReq(m_creature->GetMaxHealth());
+            caster->Kill(m_creature);
+        }
     }
 
     void UpdateAI(const uint32 diff)
@@ -442,13 +447,13 @@ struct npc_wrath_enforcerAI : public ScriptedAI
         if(!UpdateVictim())
             return;
 
-        if(FlameWave < diff)
+
+        if (FlameWave.Expired(diff))
         {
             AddSpellToCast(SPELL_FLAME_WAVE, CAST_SELF);
             FlameWave = urand(20000, 30000);
         }
-        else
-            FlameWave -= diff;
+        
 
         CastNextSpellIfAnyAndReady();
         DoMeleeAttackIfReady();
@@ -470,11 +475,11 @@ struct npc_flame_waveAI : public ScriptedAI
 {
     npc_flame_waveAI(Creature* c) : ScriptedAI(c) {}
 
-    uint32 Burn;
+    Timer Burn;
 
     void IsSummonedBy(Unit *summoner)
     {
-        Burn = 0;
+        Burn.Reset(1);
         me->SetReactState(REACT_PASSIVE);
         float x, y, z;
         me->SetWalk(true);
@@ -483,15 +488,14 @@ struct npc_flame_waveAI : public ScriptedAI
         me->UpdateAllowedPositionZ(x, y, z);
         me->GetMotionMaster()->MovePoint(1, x, y, z);
     }
+
     void UpdateAI(const uint32 diff)
     {
-        if(Burn < diff)
+        if (Burn.Expired(diff))
         {
             DoCast(me, SPELL_BURN, true);
             Burn = 500;
         }
-        else
-            Burn -= diff;
     }
 };
 
@@ -512,16 +516,25 @@ struct npc_pit_overlordAI : public ScriptedAI
 {
     npc_pit_overlordAI(Creature* c) : ScriptedAI(c) {}
 
-    uint32 Cleave;
-    uint32 ConeOfFire;
-    uint32 DeathCoil;
+    Timer Cleave;
+    Timer ConeOfFire;
+    Timer DeathCoil;
 
     void Reset()
     {
         me->setActive(true);
-        Cleave = urand(5000, 15000);
-        ConeOfFire = urand(1000, 5000);
-        DeathCoil = urand(3000, 8000);
+        Cleave.Reset(urand(5000, 15000));
+        ConeOfFire.Reset(urand(1000, 5000));
+        DeathCoil.Reset(urand(3000, 8000));
+    }
+
+    void SpellHit(Unit* caster, const SpellEntry* spell)
+    {
+        if (spell->Id == SPELL_ARCANE_CHARGE && caster->GetTypeId() == TYPEID_PLAYER)
+        {
+            m_creature->LowerPlayerDamageReq(m_creature->GetMaxHealth());
+            caster->Kill(m_creature);
+        }
     }
 
     void UpdateAI(const uint32 diff)
@@ -546,29 +559,28 @@ struct npc_pit_overlordAI : public ScriptedAI
         if(!UpdateVictim())
             return;
 
-        if(Cleave < diff)
+
+        if (Cleave.Expired(diff))
         {
             AddSpellToCast(SPELL_CLEAVE);
             Cleave = urand(10000, 20000);
         }
-        else
-            Cleave -= diff;
+        
 
-        if(ConeOfFire < diff)
+        if (ConeOfFire.Expired(diff))
         {
             AddSpellToCast(SPELL_CONE_OF_FIRE, CAST_NULL);
             ConeOfFire = urand(8000, 16000);
         }
-        else
-            ConeOfFire -= diff;
+        
 
-        if(DeathCoil < diff)
+        
+        if (DeathCoil.Expired(diff))
         {
             AddSpellToCast(SPELL_DEATH_COIL);
             DeathCoil = urand(8000, 12000);
         }
-        else
-            DeathCoil -= diff;
+        
 
         CastNextSpellIfAnyAndReady();
         DoMeleeAttackIfReady();
@@ -594,6 +606,16 @@ struct npc_eredar_sorcererAI : public Scripted_NoMovementAI
     {
         me->setActive(true);
         SetAutocast(SPELL_FLAMES_OF_DOOM, 10000, true);
+    }
+
+    void SpellHit(Unit* caster, const SpellEntry* spell)
+    {
+        if (spell->Id == SPELL_ARCANE_CHARGE && caster->GetTypeId() == TYPEID_PLAYER)
+        {
+            m_creature->LowerPlayerDamageReq(m_creature->GetMaxHealth());
+            caster->Kill(m_creature);
+        }
+
     }
 
     void UpdateAI(const uint32 diff)
@@ -647,16 +669,16 @@ struct npc_shattered_sun_bombardierAI : public ScriptedAI
     npc_shattered_sun_bombardierAI(Creature* c) : ScriptedAI(c) {}
 
     uint64 PlayerGUID;
-    uint32 yell_timer;
-    uint8 yell;
+    Timer yell_timer;
+    int8 yell;
     bool PathFly;
 
     void Reset()
     {
-        me->SetVisibility(VISIBILITY_OFF);
-        me->setActive(true);
+        //me->SetVisibility(VISIBILITY_OFF);
+        //me->setActive(true);
         PlayerGUID = 0;
-        yell_timer = 60000000;
+        yell_timer.Reset(60000000);
         PathFly = false;
         yell = 0;
         me->GetMotionMaster()->MoveIdle();
@@ -674,7 +696,7 @@ struct npc_shattered_sun_bombardierAI : public ScriptedAI
             m_creature->SetLevitate(true);
             m_creature->GetMotionMaster()->MovePath(BOMBARDIER_FLY_PATH, false);
             me->SetSpeed(MOVE_WALK, 1.4*who->GetSpeed(MOVE_FLIGHT));
-            me->SetVisibility(VISIBILITY_ON);
+            //me->SetVisibility(VISIBILITY_ON);
             yell_timer = 5000;
             PathFly = true;
         }
@@ -682,7 +704,7 @@ struct npc_shattered_sun_bombardierAI : public ScriptedAI
 
     void UpdateAI(const uint32 diff)
     {
-        if (yell_timer < diff)
+        if (yell_timer.Expired(diff))
         {
             switch(yell)
             {
@@ -700,15 +722,14 @@ struct npc_shattered_sun_bombardierAI : public ScriptedAI
                     yell_timer = 7000;
                     break;
                 case 2:
-                    me->DisappearAndDie();
-                    me->Respawn();
+                    //me->DisappearAndDie();
+                    //me->Respawn();
                     break;
                 default:
                     break;
             }
         }
-        else
-            yell_timer -= diff;
+        
     }
 };
 
@@ -755,12 +776,12 @@ struct npc_greengill_slaveAI : public ScriptedAI
     npc_greengill_slaveAI(Creature* c) : ScriptedAI(c) {}
 
     uint64 PlayerGUID;
-    uint32 enrageTimer;
+    Timer enrageTimer;
 
     void Reset()
     {
         PlayerGUID = 0;
-        enrageTimer = 30000;
+        enrageTimer.Reset(30000);
     }
     void MovementInform(uint32 type, uint32 id)
     {
@@ -809,7 +830,7 @@ struct npc_greengill_slaveAI : public ScriptedAI
     {
         if(me->HasAura(ENRAGE))
         {
-            if(enrageTimer < diff)
+            if (enrageTimer.Expired(diff))
             {
                 me->CombatStop();
                 float x, y, z;
@@ -818,8 +839,7 @@ struct npc_greengill_slaveAI : public ScriptedAI
                 me->GetMotionMaster()->MovePoint(1, x, y, z);
                 enrageTimer = 60000;
             }
-            else
-                enrageTimer -= diff;
+            
         }
         DoMeleeAttackIfReady();
     }
@@ -856,11 +876,11 @@ struct npc_ioqd_brutallusAI : public ScriptedAI
 {
     npc_ioqd_brutallusAI(Creature* c) : ScriptedAI(c) {}
 
-    uint32 RandYell_timer;
+    Timer RandYell_timer;
 
     void Reset()
     {
-        RandYell_timer = urand(15000, 25000);
+        RandYell_timer.Reset(urand(15000, 25000));
     }
 
     void SpellHit(Unit* caster, const SpellEntry* spell)
@@ -873,14 +893,13 @@ struct npc_ioqd_brutallusAI : public ScriptedAI
     }
 
     void UpdateAI(const uint32 diff)
-    {
-        if(RandYell_timer < diff)
+    {    
+        if (RandYell_timer.Expired(diff))
         {
             DoYell(BrutalYell[urand(1, 6)], 0, 0);
             RandYell_timer = urand(15000, 25000);
         }
-        else
-            RandYell_timer -= diff;
+        
 
         // TODO-> answers to taunting
     }
@@ -902,14 +921,14 @@ struct npc_ioqd_madrigosaAI : public ScriptedAI
 {
     npc_ioqd_madrigosaAI(Creature* c) : ScriptedAI(c) {}
 
-    uint32 RandYell_timer;
+    Timer RandYell_timer;
 
     void Reset()
     {
         me->SetLevitate(true);
         me->SetSpeed(MOVE_FLIGHT, 1.5);
         me->GetMotionMaster()->MovePath(MADRIGOSA_PATH, true);
-        RandYell_timer = urand(15000, 25000);
+        RandYell_timer.Reset(urand(15000, 25000));
     }
 
     void UpdateAI(const uint32 diff)

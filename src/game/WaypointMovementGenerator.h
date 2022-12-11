@@ -1,7 +1,7 @@
 /*
  * Copyright (C) 2005-2009 MaNGOS <http://getmangos.com/>
  * Copyright (C) 2008-2012 TrinityCore <http://www.trinitycore.org/>
- * Copyright (C) 2008-2014 Hellground <http://hellground.net/>
+ * Copyright (C) 2008-2017 Hellground <http://wow-hellground.com/>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -72,11 +72,11 @@ class WaypointMovementGenerator<Creature> : public MovementGeneratorMedium< Crea
         void Finalize(Creature &);
 
         void Interrupt(Creature &c) { Finalize(c); }
-        void Reset(Creature &c) { Initialize(c); }
+        void Reset(Creature &c);
 
         bool Update(Creature &, const uint32 &diff);
 
-        const char* Name() const { return "<Waypoint>"; }
+        const char* Name() const { return _repeating ? "<Repeating Waypoint>" : "<Waypoint>"; }
         MovementGeneratorType GetMovementGeneratorType() const { return WAYPOINT_MOTION_TYPE; }
 
         // now path movement implementation

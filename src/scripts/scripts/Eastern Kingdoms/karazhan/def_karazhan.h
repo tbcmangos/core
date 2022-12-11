@@ -1,6 +1,6 @@
 /* 
  * Copyright (C) 2006-2008 ScriptDev2 <https://scriptdev2.svn.sourceforge.net/>
- * Copyright (C) 2008-2014 Hellground <http://hellground.net/>
+ * Copyright (C) 2008-2015 Hellground <http://hellground.net/>
  * 
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -56,8 +56,6 @@
 #define DATA_CHESS_ECHO_OF_MEDIVH       34
 #define DATA_DUST_COVERED_CHEST         35
 #define DATA_CHESS_DAMAGE               36
-
-#define SPELL_BROKEN_PACT               30065
 
 // Opera Performances
 #define EVENT_OZ        1

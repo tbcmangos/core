@@ -1,6 +1,6 @@
 /*
  * Copyright (C) 2005-2011 MaNGOS <http://getmangos.com/>
- * Copyright (C) 2008-2014 Hellground <http://hellground.net/>
+ * Copyright (C) 2008-2015 Hellground <http://hellground.net/>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -40,12 +40,6 @@
 #include <sstream>
 
 extern DatabaseType AccountsDatabase;
-
-enum eStatus
-{
-    STATUS_CONNECTED = 0,
-    STATUS_AUTHED
-};
 
 enum AccountFlags
 {
@@ -156,7 +150,7 @@ typedef struct XFER_INIT
 typedef struct AuthHandler
 {
     eAuthCmd cmd;
-    uint32 status;
+    eStatus status;
     bool (AuthSocket::*handler)(void);
 }AuthHandler;
 
@@ -169,14 +163,14 @@ typedef struct AuthHandler
 
 const AuthHandler table[] =
 {
-    { CMD_AUTH_LOGON_CHALLENGE,     STATUS_CONNECTED, &AuthSocket::_HandleLogonChallenge    },
-    { CMD_AUTH_LOGON_PROOF,         STATUS_CONNECTED, &AuthSocket::_HandleLogonProof        },
-    { CMD_AUTH_RECONNECT_CHALLENGE, STATUS_CONNECTED, &AuthSocket::_HandleReconnectChallenge},
-    { CMD_AUTH_RECONNECT_PROOF,     STATUS_CONNECTED, &AuthSocket::_HandleReconnectProof    },
-    { CMD_REALM_LIST,               STATUS_AUTHED,    &AuthSocket::_HandleRealmList         },
-    { CMD_XFER_ACCEPT,              STATUS_CONNECTED, &AuthSocket::_HandleXferAccept        },
-    { CMD_XFER_RESUME,              STATUS_CONNECTED, &AuthSocket::_HandleXferResume        },
-    { CMD_XFER_CANCEL,              STATUS_CONNECTED, &AuthSocket::_HandleXferCancel        }
+    { CMD_AUTH_LOGON_CHALLENGE,     STATUS_CHALLENGE,   &AuthSocket::_HandleLogonChallenge    },
+    { CMD_AUTH_LOGON_PROOF,         STATUS_LOGON_PROOF, &AuthSocket::_HandleLogonProof        },
+    { CMD_AUTH_RECONNECT_CHALLENGE, STATUS_CHALLENGE,   &AuthSocket::_HandleReconnectChallenge},
+    { CMD_AUTH_RECONNECT_PROOF,     STATUS_RECON_PROOF, &AuthSocket::_HandleReconnectProof    },
+    { CMD_REALM_LIST,               STATUS_AUTHED,      &AuthSocket::_HandleRealmList         },
+    { CMD_XFER_ACCEPT,              STATUS_NEVER,       &AuthSocket::_HandleXferAccept        },
+    { CMD_XFER_RESUME,              STATUS_NEVER,       &AuthSocket::_HandleXferResume        },
+    { CMD_XFER_CANCEL,              STATUS_NEVER,       &AuthSocket::_HandleXferCancel        }
 };
 
 #define AUTH_TOTAL_COMMANDS sizeof(table)/sizeof(AuthHandler)
@@ -186,7 +180,7 @@ AuthSocket::AuthSocket()
 {
     N.SetHexStr("894B645E89E1535BBDAD5B8B290650530801B18EBFBF5E8FAB3C82872A3E9BB7");
     g.SetDword(7);
-    _authed = false;
+    _authed = STATUS_CHALLENGE;
 
     accountPermissionMask_ = PERM_PLAYER;
 
@@ -221,10 +215,11 @@ void AuthSocket::OnRead()
         ///- Circle through known commands and call the correct command handler
         for (i = 0; i < AUTH_TOTAL_COMMANDS; ++i)
         {
-            if ((uint8)table[i].cmd == _cmd &&
-                    (table[i].status == STATUS_CONNECTED ||
-                     (_authed && table[i].status == STATUS_AUTHED)))
+            if ((uint8)table[i].cmd == _cmd)
             {
+                if (_authed != table[i].status)
+                    return;
+
                 DEBUG_LOG("[Auth] got data for cmd %u recv length %u",
                         (uint32)_cmd, (uint32)recv_len());
 
@@ -344,6 +339,8 @@ bool AuthSocket::_HandleLogonChallenge()
     if ((remaining < sizeof(sAuthLogonChallenge_C) - buf.size()) || (recv_len() < remaining))
         return false;
 
+    _authed = STATUS_CLOSED;
+
     //No big fear of memory outage (size is int16, i.e. < 65536)
     buf.resize(remaining + buf.size() + 1);
     buf[buf.size() - 1] = 0;
@@ -416,9 +413,9 @@ bool AuthSocket::_HandleLogonChallenge()
 
     ///- Verify that this IP is not in the ip_banned table
     // No SQL injection possible (paste the IP address as passed by the socket)
-    AccountsDatabase.Execute("DELETE FROM ip_banned WHERE unbandate<=UNIX_TIMESTAMP() AND unbandate<>bandate");
+    AccountsDatabase.Execute("UPDATE ip_banned SET active = 0 WHERE expiration_date<=UNIX_TIMESTAMP() AND expiration_date<>punishment_date");
     AccountsDatabase.escape_string(address);
-    QueryResultAutoPtr result = AccountsDatabase.PQuery("SELECT * FROM ip_banned WHERE ip = '%s'", address.c_str());
+    QueryResultAutoPtr result = AccountsDatabase.PQuery("SELECT * FROM ip_banned WHERE ip = '%s' and active = 1", address.c_str());
 
     if (result) // ip banned
     {
@@ -474,11 +471,13 @@ bool AuthSocket::_HandleLogonChallenge()
             DEBUG_LOG("[AuthChallenge] Account '%s' is not locked to ip or frozen", _login.c_str());
             break;
     }
+    // update account punishments
+    AccountsDatabase.PQuery("UPDATE account_punishment SET active = 0 WHERE account_id = '%u' "
+        "AND active = 1 AND expiration_date <= UNIX_TIMESTAMP() AND expiration_date <> punishment_date", (*result)[1].GetUInt32());
     ///- If the account is banned, reject the logon attempt
     QueryResultAutoPtr  banresult = AccountsDatabase.PQuery("SELECT punishment_date, expiration_date "
-                                                            "FROM account_punishment "
-                                                            "WHERE account_id = '%u' AND punishment_type_id = '%u' AND active = 1 "
-                                                            "AND (punishment_date = expiration_date OR expiration_date > UNIX_TIMESTAMP())", (*result)[1].GetUInt32(), PUNISHMENT_BAN);
+                                                            "FROM account_punishment WHERE account_id = '%u' "
+                                                            "AND punishment_type_id = '%u' AND active = 1 ",(*result)[1].GetUInt32(), PUNISHMENT_BAN);
 
     if (banresult)
     {
@@ -567,6 +566,7 @@ bool AuthSocket::_HandleLogonChallenge()
     sLog.outBasic("[AuthChallenge] account %s is using '%c%c%c%c' locale (%u)", _login.c_str (), ch->country[3], ch->country[2], ch->country[1], ch->country[0], GetLocaleByName(_localizationName));
 
     send((char const*)pkt.contents(), pkt.size());
+    _authed = STATUS_LOGON_PROOF;
     return true;
 }
 
@@ -578,6 +578,8 @@ bool AuthSocket::_HandleLogonProof()
     sAuthLogonProof_C lp;
     if(!recv((char *)&lp, sizeof(sAuthLogonProof_C)))
         return false;
+
+    _authed = STATUS_CLOSED;
 
     ///- Check if the client has one of the expected version numbers
     bool valid_version = FindBuildInfo(_build) != NULL;
@@ -649,6 +651,8 @@ bool AuthSocket::_HandleLogonProof()
 
     // SRP safeguard: abort if A==0
     if (A.isZero())
+        return false;
+    if ((A%N).isZero())
         return false;
 
     Sha1Hash sha;
@@ -787,7 +791,7 @@ bool AuthSocket::_HandleLogonProof()
         SendProof(sha);
 
         ///- Set _authed to true!
-        _authed = true;
+        _authed = STATUS_AUTHED;
     }
     else
     {
@@ -832,7 +836,7 @@ bool AuthSocket::_HandleLogonProof()
                     {
                         std::string current_ip = get_remote_address();
                         AccountsDatabase.escape_string(current_ip);
-                        AccountsDatabase.PExecute("INSERT INTO ip_banned VALUES ('%s',UNIX_TIMESTAMP(),UNIX_TIMESTAMP()+'%u','Realm','Incorrect password for: %u times. Ban for: %u seconds')",
+                        AccountsDatabase.PExecute("INSERT INTO ip_banned VALUES ('%s',UNIX_TIMESTAMP(),UNIX_TIMESTAMP()+'%u','Realm','Incorrect password for: %u times. Ban for: %u seconds', 1)",
                             current_ip.c_str(), sRealmList.GetWrongPassBanTime(), failed_logins, sRealmList.GetWrongPassBanTime());
                         sLog.outBasic("[AuthChallenge] IP %s got banned for '%u' seconds because account %s failed to authenticate '%u' times",
                             current_ip.c_str(), sRealmList.GetWrongPassBanTime(), _login.c_str(), failed_logins);
@@ -863,6 +867,8 @@ bool AuthSocket::_HandleReconnectChallenge()
 
     if ((remaining < sizeof(sAuthLogonChallenge_C) - buf.size()) || (recv_len() < remaining))
         return false;
+
+    _authed = STATUS_CLOSED;
 
     //No big fear of memory outage (size is int16, i.e. < 65536)
     buf.resize(remaining + buf.size() + 1);
@@ -903,6 +909,7 @@ bool AuthSocket::_HandleReconnectChallenge()
     pkt.append(_reconnectProof.AsByteArray(16),16);         // 16 bytes random
     pkt << uint64(0x00) << uint64(0x00);                    // 16 bytes zeros
     send((char const*)pkt.contents(), pkt.size());
+    _authed = STATUS_RECON_PROOF;
     return true;
 }
 
@@ -914,6 +921,8 @@ bool AuthSocket::_HandleReconnectProof()
     sAuthReconnectProof_C lp;
     if(!recv((char *)&lp, sizeof(sAuthReconnectProof_C)))
         return false;
+
+    _authed = STATUS_CLOSED;
 
     if (_login.empty() || !_reconnectProof.GetNumBytes() || !K.GetNumBytes())
         return false;
@@ -937,7 +946,7 @@ bool AuthSocket::_HandleReconnectProof()
         send((char const*)pkt.contents(), pkt.size());
 
         ///- Set _authed to true!
-        _authed = true;
+        _authed = STATUS_AUTHED;
 
         return true;
     }
