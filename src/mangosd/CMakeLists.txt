@@ -1,10 +1,10 @@
 
-set(EXECUTABLE_NAME hellgroundcore)
+set(EXECUTABLE_NAME mangosd)
 file(GLOB_RECURSE EXECUTABLE_SRCS RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} *.cpp *.h)
 
 if(WIN32)
   list(APPEND EXECUTABLE_SRCS
-    HellgroundCore.rc
+    mangosd.rc
   )
 endif()
 
