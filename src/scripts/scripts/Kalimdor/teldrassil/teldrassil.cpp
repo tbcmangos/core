@@ -1,7 +1,7 @@
 /*
  * Copyright (C) 2006-2009 ScriptDev2 <https://scriptdev2.svn.sourceforge.net/>
  * Copyright (C) 2008-2010 TrinityCore <http://www.trinitycore.org/>
- * Copyright (C) 2008-2014 Hellground <http://hellground.net/>
+ * Copyright (C) 2008-2015 Hellground <http://hellground.net/>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -70,7 +70,7 @@ struct npc_mistAI : public FollowerAI
     {
         FollowerAI::MoveInLineOfSight(pWho);
 
-        if (!me->getVictim() && !HasFollowState(STATE_FOLLOW_COMPLETE | STATE_FOLLOW_POSTEVENT) && pWho->GetEntry() == NPC_ARYNIA)
+        if (!me->GetVictim() && !HasFollowState(STATE_FOLLOW_COMPLETE | STATE_FOLLOW_POSTEVENT) && pWho->GetEntry() == NPC_ARYNIA)
         {
             if (me->IsWithinDistInMap(pWho, INTERACTION_DISTANCE))
             {
@@ -108,7 +108,7 @@ struct npc_mistAI : public FollowerAI
                     m_uiPostEventTimer = 3000;
 
                     Unit *pArynia = Unit::GetUnit(*me, AryniaGUID);
-                    if (!pArynia || !pArynia->isAlive())
+                    if (!pArynia || !pArynia->IsAlive())
                     {
                         SetFollowComplete();
                         return;

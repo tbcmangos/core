@@ -1,7 +1,7 @@
 /*
  * Copyright (C) 2005-2011 MaNGOS <http://getmangos.com/>
  * Copyright (C) 2008-2009 TrinityCore <http://www.trinitycore.org/>
- * Copyright (C) 2008-2014 Hellground <http://hellground.net/>
+ * Copyright (C) 2008-2017 Hellground <http://wow-hellground.com/>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -31,7 +31,6 @@
 #include "Mail.h"
 #include "Util.h"
 #include "Chat.h"
-#include "luaengine/HookMgr.h"
 
 //please DO NOT use iterator++, because it is slower than ++iterator!!!
 //post-incrementation is always slower than pre-incrementation !
@@ -52,7 +51,7 @@ void WorldSession::HandleAuctionHelloOpcode(WorldPacket & recv_data)
     }
 
     // remove fake death
-    if (GetPlayer()->hasUnitState(UNIT_STAT_DIED))
+    if (GetPlayer()->HasFlag(UNIT_FIELD_FLAGS_2, UNIT_FLAG2_FEIGN_DEATH))
         GetPlayer()->RemoveSpellsCausingAura(SPELL_AURA_FEIGN_DEATH);
 
     SendAuctionHello(unit);
@@ -274,7 +273,7 @@ void WorldSession::HandleAuctionSellItem(WorldPacket & recv_data)
     }
 
     // remove fake death
-    if (GetPlayer()->hasUnitState(UNIT_STAT_DIED))
+    if (GetPlayer()->HasFlag(UNIT_FIELD_FLAGS_2, UNIT_FLAG2_FEIGN_DEATH))
         GetPlayer()->RemoveSpellsCausingAura(SPELL_AURA_FEIGN_DEATH);
 
     if (!itemGuid)
@@ -328,12 +327,6 @@ void WorldSession::HandleAuctionSellItem(WorldPacket & recv_data)
         sLog.outCommand(GetAccountId(),"GM %s (Account: %u) create auction: %s (Entry: %u Count: %u)",
             GetPlayerName(), GetAccountId(), it->GetProto()->Name1, it->GetEntry(), it->GetCount());
     }
-
-    if (_player->GetSession()->IsAccountFlagged(ACC_SPECIAL_LOG))
-    {
-        sLog.outLog(LOG_SPECIAL, "Player %s (Account: %u) create auction: %s (Entry: %u Count: %u)",
-            GetPlayerName(), GetAccountId(), it->GetProto()->Name1, it->GetEntry(), it->GetCount());
-    }
 /*  else
     {
         sLog.outLog(LOG_AUCTION, "Player %s (Account: %u) create auction: %s (Entry: %u Count: %u)",
@@ -344,9 +337,6 @@ void WorldSession::HandleAuctionSellItem(WorldPacket & recv_data)
     pl->ModifyMoney(-int32(deposit));
 
     AuctionEntry* AH = auctionHouse->AddAuction(auctionHouseEntry, it, etime, bid, buyout, deposit, pl);
-
-    // used by eluna
-    sHookMgr->OnAdd(auctionHouse);
 
     SendAuctionCommandResult(AH, AUCTION_STARTED, AUCTION_OK);
 }
@@ -373,7 +363,7 @@ void WorldSession::HandleAuctionPlaceBid(WorldPacket & recv_data)
     AuctionHouseObject* auctionHouse = sAuctionMgr.GetAuctionsMap(auctionHouseEntry);
 
     // remove fake death
-    if (GetPlayer()->hasUnitState(UNIT_STAT_DIED))
+    if (GetPlayer()->HasFlag(UNIT_FIELD_FLAGS_2, UNIT_FLAG2_FEIGN_DEATH))
         GetPlayer()->RemoveSpellsCausingAura(SPELL_AURA_FEIGN_DEATH);
 
     AuctionEntry *auction = auctionHouse->GetAuction(auctionId);
@@ -449,7 +439,7 @@ void WorldSession::HandleAuctionRemoveItem(WorldPacket & recv_data)
     AuctionHouseObject* auctionHouse = sAuctionMgr.GetAuctionsMap(auctionHouseEntry);
 
     // remove fake death
-    if (GetPlayer()->hasUnitState(UNIT_STAT_DIED))
+    if (GetPlayer()->HasFlag(UNIT_FIELD_FLAGS_2, UNIT_FLAG2_FEIGN_DEATH))
         GetPlayer()->RemoveSpellsCausingAura(SPELL_AURA_FEIGN_DEATH);
 
     AuctionEntry *auction = auctionHouse->GetAuction(auctionId);
@@ -500,10 +490,6 @@ void WorldSession::HandleAuctionRemoveItem(WorldPacket & recv_data)
     RealmDataDatabase.CommitTransaction();
     sAuctionMgr.RemoveAItem(auction->itemGuidLow);
     auctionHouse->RemoveAuction(auction->Id);
-    
-    // used by eluna
-    sHookMgr->OnRemove(auctionHouse);
-
     delete auction;
 }
 
@@ -533,7 +519,7 @@ void WorldSession::HandleAuctionListBidderItems(WorldPacket & recv_data)
     AuctionHouseObject* auctionHouse = sAuctionMgr.GetAuctionsMap(auctionHouseEntry);
 
     // remove fake death
-    if (GetPlayer()->hasUnitState(UNIT_STAT_DIED))
+    if (GetPlayer()->HasFlag(UNIT_FIELD_FLAGS_2, UNIT_FLAG2_FEIGN_DEATH))
         GetPlayer()->RemoveSpellsCausingAura(SPELL_AURA_FEIGN_DEATH);
 
     WorldPacket data(SMSG_AUCTION_BIDDER_LIST_RESULT, (4+4+4));
@@ -580,7 +566,7 @@ void WorldSession::HandleAuctionListOwnerItems(WorldPacket & recv_data)
     AuctionHouseObject* auctionHouse = sAuctionMgr.GetAuctionsMap(auctionHouseEntry);
 
     // remove fake death
-    if (GetPlayer()->hasUnitState(UNIT_STAT_DIED))
+    if (GetPlayer()->HasFlag(UNIT_FIELD_FLAGS_2, UNIT_FLAG2_FEIGN_DEATH))
         GetPlayer()->RemoveSpellsCausingAura(SPELL_AURA_FEIGN_DEATH);
 
     WorldPacket data(SMSG_AUCTION_OWNER_LIST_RESULT, (4+4+4));
@@ -655,7 +641,7 @@ void WorldSession::HandleAuctionListItems(WorldPacket & recv_data)
     }
 
     // remove fake death
-    if (GetPlayer()->hasUnitState(UNIT_STAT_DIED))
+    if (GetPlayer()->HasFlag(UNIT_FIELD_FLAGS_2, UNIT_FLAG2_FEIGN_DEATH))
         GetPlayer()->RemoveSpellsCausingAura(SPELL_AURA_FEIGN_DEATH);
 
     //DEBUG_LOG("Auctionhouse search %s list from: %u, searchedname: %s, levelmin: %u, levelmax: %u, auctionSlotID: %u, auctionMainCategory: %u, auctionSubCategory: %u, quality: %u, usable: %u",

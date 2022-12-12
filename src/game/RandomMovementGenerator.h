@@ -1,7 +1,7 @@
 /*
  * Copyright (C) 2005-2008 MaNGOS <http://getmangos.com/>
  * Copyright (C) 2008 TrinityCore <http://www.trinitycore.org/>
- * Copyright (C) 2008-2014 Hellground <http://hellground.net/>
+ * Copyright (C) 2008-2017 Hellground <http://wow-hellground.com/>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -27,8 +27,8 @@ template<class T>
 class RandomMovementGenerator : public MovementGeneratorMedium< T, RandomMovementGenerator<T> >
 {
     public:
-        explicit RandomMovementGenerator(const Unit &) : i_nextMoveTime(0) {}
-        explicit RandomMovementGenerator(float dist) : i_nextMoveTime(0), wander_distance(dist) {}
+        explicit RandomMovementGenerator(const Unit &) : i_nextMoveTime(0), i_wanderDistance(5.0f), i_wanderSteps(0) {}
+        explicit RandomMovementGenerator(float dist) : i_nextMoveTime(0), i_wanderDistance(dist), i_wanderSteps(0) {}
 
         void _setRandomLocation(T &);
         void Initialize(T &);
@@ -45,8 +45,8 @@ class RandomMovementGenerator : public MovementGeneratorMedium< T, RandomMovemen
     private:
         TimeTrackerSmall i_nextMoveTime;
         uint32 i_nextMove;
-
-        float wander_distance;
+        float i_wanderDistance;
+        uint8 i_wanderSteps;
 };
 
 #endif

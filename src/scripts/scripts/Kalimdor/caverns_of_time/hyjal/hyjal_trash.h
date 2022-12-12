@@ -1,5 +1,5 @@
 /* 
- * Copyright (C) 2008-2014 Hellground <http://hellground.net/>
+ * Copyright (C) 2008-2015 Hellground <http://hellground.net/>
  * 
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -37,7 +37,6 @@ struct hyjal_trashAI : public npc_escortAI
     public:
         ScriptedInstance* pInstance;
         bool IsEvent;
-        uint32 Delay;
         uint32 LastOverronPos;
         bool IsOverrun;
         bool SetupOverrun;

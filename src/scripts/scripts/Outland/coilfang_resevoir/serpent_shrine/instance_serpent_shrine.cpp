@@ -1,6 +1,6 @@
 /* 
  * Copyright (C) 2006-2008 ScriptDev2 <https://scriptdev2.svn.sourceforge.net/>
- * Copyright (C) 2008-2014 Hellground <http://hellground.net/>
+ * Copyright (C) 2008-2015 Hellground <http://hellground.net/>
  * 
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -46,18 +46,25 @@ EndScriptData */
 bool GOUse_go_bridge_console(Player *player, GameObject* go)
 {
     ScriptedInstance* pInstance = (ScriptedInstance*)go->GetInstanceData();
-
+    player->SendCombatStats(1 << COMBAT_STATS_TEST, "using console object", NULL);
     if(!pInstance)
         return false;
+    player->SendCombatStats(1 << COMBAT_STATS_TEST, "instance found %u %u", NULL, pInstance->GetData(DATA_PREVIOUS_BOSS_DEAD), pInstance->GetData(DATA_CONTROL_CONSOLE));
+    if (pInstance->GetData(DATA_PREVIOUS_BOSS_DEAD) != DONE)
+        return true;
 
-    pInstance->SetData(DATA_CONTROL_CONSOLE, DONE);
+    if (pInstance->GetData(DATA_CONTROL_CONSOLE) != DONE)
+    {
+        pInstance->SetData(DATA_CONTROL_CONSOLE, DONE);
+        return false;
+    }
 
     return true;
 }
 
 struct instance_serpentshrine_cavern : public ScriptedInstance
 {
-    instance_serpentshrine_cavern(Map *map) : ScriptedInstance(map) {Initialize();};
+    instance_serpentshrine_cavern(Map *map) : ScriptedInstance(map),m_gbk(map) {Initialize();};
 
     uint64 LurkerBelow;
     uint64 Sharkkis;
@@ -73,18 +80,19 @@ struct instance_serpentshrine_cavern : public ScriptedInstance
     uint64 ControlConsole;
     uint64 BridgePart[3];
     uint32 StrangePool;
-    uint32 FishingTimer;
+    Timer FishingTimer;
     uint32 LurkerSubEvent;
-    uint32 WaterCheckTimer;
-    uint32 FrenzySpawnTimer;
-    uint32 PlayerInWaterTimer;
+    Timer WaterCheckTimer;
+    Timer FrenzySpawnTimer;
+    Timer PlayerInWaterTimer;
     uint32 Water;
-    uint32 trashCheckTimer;
-    uint32 ScaldingWaterDelayer;
+    Timer trashCheckTimer;
+    Timer ScaldingWaterDelayer;
 
     bool ShieldGeneratorDeactivated[4];
     uint32 Encounters[ENCOUNTERS];
     bool DoSpawnFrenzy;
+    GBK_handler m_gbk;
 
     void Initialize()
     {
@@ -161,19 +169,29 @@ struct instance_serpentshrine_cavern : public ScriptedInstance
                     SetData(DATA_STRANGE_POOL, DONE);
                 break;
             case GAMEOBJECT_FISHINGNODE_ENTRY:
-                if(LurkerSubEvent == LURKER_NOT_STARTED)
+            {
+                if (!go->GetOwner())
+                    return;
+
+                Player* player = go->GetOwner()->ToPlayer();
+
+                if (!player || player->GetSkillValue(SKILL_FISHING) < 300 || rand() % 3)
+                    return;
+
+                if (LurkerSubEvent == LURKER_NOT_STARTED)
                 {
                     if (Unit *pTemp = instance->GetCreature(LurkerBelow))
                     {
                         if (go->GetDistance2d(pTemp) > 16.0f)
                             return;
 
-                        FishingTimer = 10000+rand()%30000;//random time before lurker emerges
+                        FishingTimer = 3000;//10000+rand()%30000;//random time before lurker emerges
                         LurkerSubEvent = LURKER_FISHING;
                     }
                 }
-                break;
 
+                break;
+            }
         }
     }
 
@@ -262,6 +280,20 @@ struct instance_serpentshrine_cavern : public ScriptedInstance
         return 0;
     }
 
+    GBK_Encounters EncounterForGBK(uint32 enc)
+    {
+        switch (enc)
+        {
+        case DATA_HYDROSSTHEUNSTABLEEVENT:  return GBK_HYDROSS_THE_UNSTABLE;
+        case DATA_LEOTHERASTHEBLINDEVENT:   return GBK_LEOTHERAS_THE_BLIND;
+        case DATA_THELURKERBELOWEVENT:      return GBK_LURKER_BELOW;
+        case DATA_KARATHRESSEVENT:          return GBK_FATHOMLORD_KARATHRESS;
+        case DATA_MOROGRIMTIDEWALKEREVENT:  return GBK_MOROGRIM_TIDEWALKER;
+        case DATA_LADYVASHJEVENT:           return GBK_LADY_VASHJ;
+        }
+        return GBK_NONE;
+    }
+
     void SetData(uint32 type, uint32 data)
     {
         switch(type)
@@ -281,7 +313,6 @@ struct instance_serpentshrine_cavern : public ScriptedInstance
                     OpenDoor(BridgePart[1], true);
                     OpenDoor(BridgePart[2], true);
                 }
-                ControlConsole = data;
                 break;
             case DATA_HYDROSSTHEUNSTABLEEVENT:
                 if(Encounters[0] != DONE)
@@ -321,6 +352,17 @@ struct instance_serpentshrine_cavern : public ScriptedInstance
             case DATA_SHIELDGENERATOR4:ShieldGeneratorDeactivated[3] = (data) ? true : false;   break;
         }
 
+        GBK_Encounters gbkEnc = EncounterForGBK(type);
+        if (gbkEnc != GBK_NONE)
+        {
+            if (data == DONE)
+                m_gbk.StopCombat(gbkEnc, true);
+            else if (data == NOT_STARTED)
+                m_gbk.StopCombat(gbkEnc, false);
+            else if (data == IN_PROGRESS)
+                m_gbk.StartCombat(gbkEnc);
+        }
+        
         if (data == DONE)
             SaveToDB();
     }
@@ -346,6 +388,9 @@ struct instance_serpentshrine_cavern : public ScriptedInstance
                 break;
             case DATA_STRANGE_POOL:             return StrangePool;
             case DATA_WATER:                    return Water;
+            case DATA_PREVIOUS_BOSS_DEAD:
+                return (Encounters[0] == DONE && Encounters[1] == DONE && Encounters[2] == DONE && Encounters[3] == DONE &&
+                    Encounters[4] == DONE) ? DONE : NOT_STARTED;
         }
         return 0;
     }
@@ -389,16 +434,14 @@ struct instance_serpentshrine_cavern : public ScriptedInstance
         //Lurker Fishing event
         if (LurkerSubEvent == LURKER_FISHING)
         {
-            if (FishingTimer < diff)
+            if (FishingTimer.Expired(diff))
             {
                 LurkerSubEvent = LURKER_HOOKED;
                 SetData(DATA_STRANGE_POOL, IN_PROGRESS);//just fished, signal Lurker script to emerge and start fight, we use IN_PROGRESS so it won't get saved and lurker will be alway invis at start if server restarted
             }
-            else
-                FishingTimer -= diff;
         }
 
-        if (trashCheckTimer < diff)
+        if (trashCheckTimer.Expired(diff))
         {
             if (Encounters[2] == NOT_STARTED)   // check and change water state only if lurker event is not started
             {
@@ -415,11 +458,10 @@ struct instance_serpentshrine_cavern : public ScriptedInstance
             
             trashCheckTimer = 5000;
         }
-        else
-            trashCheckTimer -= diff;
+        
 
         //Water checks
-        if (WaterCheckTimer < diff)
+        if (WaterCheckTimer.Expired(diff))
         {
             Map::PlayerList const &PlayerList = instance->GetPlayers();
             if (PlayerList.isEmpty())
@@ -430,28 +472,26 @@ struct instance_serpentshrine_cavern : public ScriptedInstance
             {
                 if(Player* pPlayer = i->getSource())
                 {
-                    if (pPlayer->isAlive() && pPlayer->IsInWater())
+                    if (pPlayer->IsAlive() && pPlayer->IsInWater())
                     {
                         PlayerInWater = true;
                         if (Water == WATERSTATE_SCALDING)
                         {
                             if (!pPlayer->HasAura(SPELL_SCALDINGWATER))
                             {
-                               if (ScaldingWaterDelayer < diff) // this timer (delayer) prevents multiple application of this buff when player jumps in water (sometimes >3k damage)
+                                if (ScaldingWaterDelayer.Expired(diff)) // this timer (delayer) prevents multiple application of this buff when player jumps in water (sometimes >3k damage)
                                {
                                   pPlayer->CastSpell(pPlayer, SPELL_SCALDINGWATER, true);
                                   ScaldingWaterDelayer = 500;
                                   break;
                                }
-                               else
-                                  ScaldingWaterDelayer -= diff;
                                break;
                             }
                         }
                         else if (Water == WATERSTATE_FRENZY)
                         {
                             //spawn frenzy
-                            if (DoSpawnFrenzy && !pPlayer->isGameMaster())
+                            if (DoSpawnFrenzy && !pPlayer->IsGameMaster())
                             {
                                if (Creature* frenzy = pPlayer->SummonCreature(MOB_COILFANG_FRENZY,pPlayer->GetPositionX(),pPlayer->GetPositionY(),pPlayer->GetPositionZ(),pPlayer->GetOrientation(), TEMPSUMMON_TIMED_DESPAWN_OUT_OF_COMBAT,5000))
                                   frenzy->AI()->AttackStart(pPlayer);
@@ -471,27 +511,37 @@ struct instance_serpentshrine_cavern : public ScriptedInstance
                 PlayerInWaterTimer = 5000;
             else
             {
-                if (PlayerInWaterTimer <= diff)
+                if (PlayerInWaterTimer.Expired(diff))
                     PlayerInWaterTimer = 0;
-                else
-                    PlayerInWaterTimer -= diff;
             }
 
-            if (PlayerInWaterTimer)
+            if (PlayerInWaterTimer.GetInterval())  //FIXME: after changing to imp.PCAT not sure if that will work
                 WaterCheckTimer = 1;
             else
                 WaterCheckTimer = 1000; //remove stress from core
         }
-        else
-            WaterCheckTimer -= diff;
+        
 
-        if (FrenzySpawnTimer < diff)
+        if (FrenzySpawnTimer.Expired(diff))
         {
             DoSpawnFrenzy = true;
             FrenzySpawnTimer = 500;
         }
-        else
-            FrenzySpawnTimer -= diff;
+    }
+
+    void OnPlayerDealDamage(Player* plr, uint32 amount)
+    {
+        m_gbk.DamageDone(plr->GetGUIDLow(), amount);
+    }
+
+    void OnPlayerHealDamage(Player* plr, uint32 amount)
+    {
+        m_gbk.HealingDone(plr->GetGUIDLow(), amount);
+    }
+
+    void OnPlayerDeath(Player* plr)
+    {
+        m_gbk.PlayerDied(plr->GetGUIDLow());
     }
 };
 

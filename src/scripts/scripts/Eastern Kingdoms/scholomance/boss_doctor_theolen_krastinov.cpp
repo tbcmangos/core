@@ -1,6 +1,6 @@
 /* 
  * Copyright (C) 2006-2008 ScriptDev2 <https://scriptdev2.svn.sourceforge.net/>
- * Copyright (C) 2008-2014 Hellground <http://hellground.net/>
+ * Copyright (C) 2008-2015 Hellground <http://hellground.net/>
  * 
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -35,9 +35,9 @@ struct boss_theolenkrastinovAI : public ScriptedAI
 {
     boss_theolenkrastinovAI(Creature *c) : ScriptedAI(c) {}
 
-    uint32 Rend_Timer;
-    uint32 Blackhand_Timer;
-    uint32 Frenzy_Timer;
+    int32 Rend_Timer;
+    int32 Blackhand_Timer;
+    int32 Frenzy_Timer;
 
     void Reset()
     {
@@ -67,29 +67,31 @@ struct boss_theolenkrastinovAI : public ScriptedAI
         if (!UpdateVictim())
             return;
 
-        //Rend_Timer
-        if (Rend_Timer < diff)
+        Rend_Timer -= diff;
+        if (Rend_Timer <= diff)
         {
-            DoCast(m_creature->getVictim(),SPELL_REND);
-            Rend_Timer = 10000;
-        }else Rend_Timer -= diff;
+            DoCast(m_creature->GetVictim(),SPELL_REND);
+            Rend_Timer += 10000;
+        }
 
-        if (Blackhand_Timer < diff)
+        Blackhand_Timer -= diff;
+        if (Blackhand_Timer <= diff)
         {
-            DoCast(m_creature->getVictim(), SPELL_BLACKHAND);
-            Blackhand_Timer = 10000;
-        }else Blackhand_Timer -= diff;
+            DoCast(m_creature->GetVictim(), SPELL_BLACKHAND);
+            Blackhand_Timer += 10000;
+        }
 
         //Frenzy_Timer
         if ( m_creature->GetHealth()*100 / m_creature->GetMaxHealth() < 26 )
         {
-            if (Frenzy_Timer < diff)
+            Frenzy_Timer -= diff;
+            if (Frenzy_Timer <= diff)
             {
                 DoCast(m_creature,SPELL_FRENZY);
                 DoTextEmote("goes into a killing frenzy!",NULL);
 
-                Frenzy_Timer = 8000;
-            }else Frenzy_Timer -= diff;
+                Frenzy_Timer += 8000;
+            }
         }
 
         DoMeleeAttackIfReady();

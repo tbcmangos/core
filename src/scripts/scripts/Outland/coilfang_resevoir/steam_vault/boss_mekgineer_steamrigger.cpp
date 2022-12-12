@@ -1,6 +1,6 @@
 /* 
  * Copyright (C) 2006-2008 ScriptDev2 <https://scriptdev2.svn.sourceforge.net/>
- * Copyright (C) 2008-2014 Hellground <http://hellground.net/>
+ * Copyright (C) 2008-2015 Hellground <http://hellground.net/>
  * 
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -64,32 +64,32 @@ struct boss_mekgineer_steamriggerAI : public ScriptedAI
     boss_mekgineer_steamriggerAI(Creature *c) : ScriptedAI(c)
     {
         pInstance = (c->GetInstanceData());
-        HeroicMode = me->GetMap()->IsHeroic();
     }
 
     ScriptedInstance *pInstance;
-    bool HeroicMode;
 
-    uint32 Shrink_Timer;
-    uint32 Saw_Blade_Timer;
-    uint32 Electrified_Net_Timer;
-    uint32 Berserk_timer;
+    Timer Shrink_Timer;
+    Timer Saw_Blade_Timer;
+    Timer Electrified_Net_Timer;
+    Timer Berserk_timer;
+    Timer Heroic_gnomes_timer;
     bool Summon75;
     bool Summon50;
     bool Summon25;
 
     void Reset()
     {
-        Shrink_Timer = 20000;
-        Saw_Blade_Timer = 15000;
-        Electrified_Net_Timer = 10000;
-        Berserk_timer = 300000;
+        Shrink_Timer.Reset(20000);
+        Saw_Blade_Timer.Reset(15000);
+        Electrified_Net_Timer.Reset(10000);
+        Berserk_timer.Reset(300000);
+        Heroic_gnomes_timer.Reset(7000);
 
         Summon75 = false;
         Summon50 = false;
         Summon25 = false;
 
-        if (pInstance && me->isAlive())
+        if (pInstance && me->IsAlive())
             pInstance->SetData(TYPE_MEKGINEER_STEAMRIGGER, NOT_STARTED);
     }
 
@@ -134,36 +134,42 @@ struct boss_mekgineer_steamriggerAI : public ScriptedAI
         if (!UpdateVictim())
             return;
 
-        if (Shrink_Timer < diff)
+        if (Shrink_Timer.Expired(diff))
         {
-            DoCast(me->getVictim(),SPELL_SUPER_SHRINK_RAY);
+            DoCast(me->GetVictim(),SPELL_SUPER_SHRINK_RAY);
             Shrink_Timer = 20000;
-        }else Shrink_Timer -= diff;
+        }
 
-        if (Saw_Blade_Timer < diff)
+        if (Saw_Blade_Timer.Expired(diff))
         {
             if (Unit* target = SelectUnit(SELECT_TARGET_RANDOM, 0, 200, true, me->getVictimGUID()))
                 DoCast(target,SPELL_SAW_BLADE);
             else
-                DoCast(me->getVictim(),SPELL_SAW_BLADE);
+                DoCast(me->GetVictim(),SPELL_SAW_BLADE);
 
             Saw_Blade_Timer = 15000;
-        } else Saw_Blade_Timer -= diff;
+        } 
 
-        if (Electrified_Net_Timer < diff)
+        if (Electrified_Net_Timer.Expired(diff))
         {
-            DoCast(me->getVictim(),SPELL_ELECTRIFIED_NET);
+            DoCast(me->GetVictim(),SPELL_ELECTRIFIED_NET);
             Electrified_Net_Timer = 10000;
         }
-        else Electrified_Net_Timer -= diff;
+        
 
-        if (Berserk_timer < diff)
+        if (Berserk_timer.Expired(diff))
         {
             if (HeroicMode)
                 DoCast(me, H_SPELL_ENRAGE);
 
             Berserk_timer = 300000+rand()%10000;
-        }else Berserk_timer -=diff;
+        }
+
+        if (HeroicMode && Heroic_gnomes_timer.Expired(diff))
+        {
+            me->SummonCreature(ENTRY_STREAMRIGGER_MECHANIC, Pos[0].x, Pos[0].y, Pos[0].z, 0, TEMPSUMMON_TIMED_OR_CORPSE_DESPAWN, 240000);
+            Heroic_gnomes_timer = urand(7000, 10000);
+        }
 
         if (!Summon75)
         {
@@ -211,17 +217,15 @@ struct mob_steamrigger_mechanicAI : public ScriptedAI
     mob_steamrigger_mechanicAI(Creature *c) : ScriptedAI(c)
     {
         pInstance = (c->GetInstanceData());
-        HeroicMode = me->GetMap()->IsHeroic();
     }
 
     ScriptedInstance* pInstance;
-    bool HeroicMode;
 
-    uint32 Repair_Timer;
+    Timer Repair_Timer;
 
     void Reset()
     {
-        Repair_Timer = irand(1500, 2500);
+        Repair_Timer.Reset(irand(1500, 2500));
 
         if (Unit* Mekgineer = Unit::GetUnit((*me), pInstance->GetData64(DATA_MEKGINEERSTEAMRIGGER)))
         {
@@ -247,7 +251,7 @@ struct mob_steamrigger_mechanicAI : public ScriptedAI
 
     void UpdateAI(const uint32 diff)
     {
-        if (Repair_Timer < diff)
+        if (Repair_Timer.Expired(diff))
         {
             if (pInstance && pInstance->GetData64(DATA_MEKGINEERSTEAMRIGGER) && pInstance->GetData(TYPE_MEKGINEER_STEAMRIGGER) == IN_PROGRESS)
             {
@@ -257,11 +261,11 @@ struct mob_steamrigger_mechanicAI : public ScriptedAI
                     {
                         DoCast(Mekgineer, SPELL_REPAIR);
 
-                        Repair_Timer = irand(1500, 3000);
+                        Repair_Timer = 5000;
                     }
                 }
             }else Repair_Timer = irand(1500, 3000);
-        }else Repair_Timer -= diff;
+        }
 
         if (!UpdateVictim())
             return;

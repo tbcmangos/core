@@ -1,7 +1,7 @@
 /*
  * Copyright (C) 2005-2008 MaNGOS <http://getmangos.com/>
  * Copyright (C) 2008 TrinityCore <http://www.trinitycore.org/>
- * Copyright (C) 2008-2014 Hellground <http://hellground.net/>
+ * Copyright (C) 2008-2017 Hellground <http://wow-hellground.com/>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -28,7 +28,6 @@
 #include "ObjectAccessor.h"
 #include "UpdateMask.h"
 #include "SpellAuras.h"
-#include "luaengine/HookMgr.h"
 
 void WorldSession::HandleLearnTalentOpcode(WorldPacket & recv_data)
 {
@@ -61,7 +60,7 @@ void WorldSession::HandleLearnTalentOpcode(WorldPacket & recv_data)
     if ((player->getClassMask() & talentTabInfo->ClassMask) == 0)
         return;
 
-    if (!player->isAlive())
+    if (!player->IsAlive())
         return;
 
     // prevent skip talent ranks (cheating)
@@ -136,7 +135,7 @@ void WorldSession::HandleLearnTalentOpcode(WorldPacket & recv_data)
         return;
 
     // learn! (other talent ranks will unlearned at learning)
-    GetPlayer()->learnSpell(spellid);
+    GetPlayer()->LearnSpell(spellid);
     sLog.outDetail("TalentID: %u Rank: %u Spell: %u\n", talent_id, requested_rank, spellid);
 
     // update free talent points
@@ -159,7 +158,7 @@ void WorldSession::HandleTalentWipeOpcode(WorldPacket & recv_data)
     }
 
     // remove fake death
-    if (GetPlayer()->hasUnitState(UNIT_STAT_DIED))
+    if (GetPlayer()->HasFlag(UNIT_FIELD_FLAGS_2, UNIT_FLAG2_FEIGN_DEATH))
         GetPlayer()->RemoveSpellsCausingAura(SPELL_AURA_FEIGN_DEATH);
 
     if (!(_player->resetTalents()))

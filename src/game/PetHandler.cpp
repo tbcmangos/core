@@ -1,7 +1,7 @@
 /*
  * Copyright (C) 2005-2008 MaNGOS <http://getmangos.com/>
  * Copyright (C) 2008 TrinityCore <http://www.trinitycore.org/>
- * Copyright (C) 2008-2014 Hellground <http://hellground.net/>
+ * Copyright (C) 2008-2017 Hellground <http://wow-hellground.com/>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -46,10 +46,10 @@ void WorldSession::HandlePetAction(WorldPacket & recv_data)
     recv_data >> charmGUID;                                 // pet guid
     recv_data >> spellId;
     recv_data >> flag;                                      // delete = 0x0700 CastSpell = C100
-    recv_data >> targetGUID;                                // tag guid
-
+    recv_data >> targetGUID;                                // tag guid    
     // used also for charmed creature
     Unit* pCharm = pPlayer->GetUnit(charmGUID);
+    
     if (!pCharm || (charmGUID != pPlayer->GetPetGUID() && charmGUID != pPlayer->GetCharmGUID()))
     {
         sLog.outLog(LOG_DEFAULT, "ERROR: PetHandler:: charm(%u), player doesn't have such pet/charm.", uint32(GUID_LOPART(charmGUID)));
@@ -57,7 +57,7 @@ void WorldSession::HandlePetAction(WorldPacket & recv_data)
     }
 
     // charm is dead, ignore
-    if (!pCharm->isAlive())
+    if (!pCharm->IsAlive())
         return;
 
     // charmed player can perform only attack
@@ -77,8 +77,8 @@ void WorldSession::HandlePetAction(WorldPacket & recv_data)
     switch (flag)
     {
         case ACT_COMMAND:                                   //0x0700
-            // Possessed or shared vision pets are only able to attack
-            if ((pCharm->isPossessed() || pCharm->HasAuraType(SPELL_AURA_BIND_SIGHT)) && spellId != COMMAND_ATTACK)
+            // Possessed or shared vision pets are only able to attack or be abandoned
+            if ((pCharm->isPossessed() || pCharm->HasAuraType(SPELL_AURA_BIND_SIGHT)) && spellId != COMMAND_ATTACK && spellId != COMMAND_ABANDON)
                 return;
 
             switch (spellId)
@@ -111,6 +111,11 @@ void WorldSession::HandlePetAction(WorldPacket & recv_data)
             switch (spellId)
             {
                 case REACT_PASSIVE:                         //passive
+                    if (pCharm->ToPet() && pCharm->ToPet()->GetReactState() != REACT_PASSIVE)
+                        pCharm->ToPet()->AI()->JustDied(NULL); // calls only petAI::_stopAttack()
+                    else
+                        pCharmInfo->HandleFollowCommand();
+                    // no break intended
                 case REACT_DEFENSIVE:                       //recovery
                 case REACT_AGGRESSIVE:                      //activete
                     if (pCharm->GetTypeId() == TYPEID_UNIT)
@@ -160,13 +165,6 @@ void WorldSession::SendPetNameQuery(uint64 petguid, uint32 petnumber)
     }
 
     char const* name = pet->GetName();
-
-    // creature pets have localization like other creatures
-    if (!IS_PLAYER_GUID(pet->GetOwnerGUID()))
-    {
-        int loc_idx = GetSessionDbLocaleIndex();
-        sObjectMgr.GetCreatureLocaleStrings(pet->GetEntry(), loc_idx, &name);
-    }
 
     WorldPacket data(SMSG_PET_NAME_QUERY_RESPONSE, (4+4+strlen(name)+1));
     data << uint32(petnumber);
@@ -340,7 +338,7 @@ void WorldSession::HandlePetAbandon(WorldPacket & recv_data)
 
     if (!_player->IsInWorld())
         return;
-
+    
     // pet/charmed
     Creature* pet = _player->GetMap()->GetCreatureOrPet(guid);
     if (pet)
@@ -401,7 +399,7 @@ void WorldSession::HandlePetUnlearnOpcode(WorldPacket& recvPacket)
         pet->removeSpell(spell_id);
     }
 
-    pet->SetTP(pet->getLevel() * (pet->GetLoyaltyLevel() - 1));
+    pet->SetTP(pet->GetLevel() * (pet->GetLoyaltyLevel() - 1));
 
     for (uint8 i = 0; i < 10; i++)
     {
@@ -502,7 +500,8 @@ void WorldSession::HandlePetCastSpellOpcode(WorldPacket& recvPacket)
         return;
 
     if (spellInfo->StartRecoveryCategory > 0) //Check if spell is affected by GCD
-        if (caster->GetTypeId() == TYPEID_UNIT && caster->GetCharmInfo() && caster->GetCharmInfo()->GetCooldownMgr().HasGlobalCooldown(spellInfo))
+        if (caster->GetTypeId() == TYPEID_UNIT && 
+            _player->GetCooldownMgr().HasGlobalCooldown(PETS_GCD_CATEGORY))
         {
             caster->SendPetCastFail(spellid, SPELL_FAILED_NOT_READY);
             return;
@@ -522,7 +521,6 @@ void WorldSession::HandlePetCastSpellOpcode(WorldPacket& recvPacket)
         if (caster->GetTypeId() == TYPEID_UNIT)
         {
             Creature* pet = (Creature*)caster;
-            pet->AddCreatureSpellCooldown(spellid);
             if (pet->isPet())
             {
                 Pet* p = (Pet*)pet;
@@ -544,17 +542,13 @@ void WorldSession::HandlePetCastSpellOpcode(WorldPacket& recvPacket)
     else
     {
         caster->SendPetCastFail(spellid, result);
-        if (caster->GetTypeId() == TYPEID_PLAYER)
+        if (!_player->GetCooldownMgr().HasSpellCooldown(spellid))
         {
-            if (!((Player*)caster)->HasSpellCooldown(spellid))
-                caster->SendPetClearCooldown(spellid);
+            WorldPacket noCD(SMSG_CLEAR_COOLDOWN, (4 + 8));
+            noCD << uint32(spellid);
+            noCD << uint64(guid);
+            SendPacket(&noCD);
         }
-        else
-        {
-            if (!((Creature*)caster)->HasSpellCooldown(spellid))
-                caster->SendPetClearCooldown(spellid);
-        }
-
         spell->finish(false);
         delete spell;
     }

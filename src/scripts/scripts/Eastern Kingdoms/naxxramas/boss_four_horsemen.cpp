@@ -1,6 +1,6 @@
 /* 
  * Copyright (C) 2006-2008 ScriptDev2 <https://scriptdev2.svn.sourceforge.net/>
- * Copyright (C) 2008-2014 Hellground <http://hellground.net/>
+ * Copyright (C) 2008-2015 Hellground <http://hellground.net/>
  * 
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -219,7 +219,7 @@ struct boss_highlord_mograineAI : public BossAI
         instance->SetData(DATA_THE_FOUR_HORSEMEN, IN_PROGRESS);
     }
 
-    void DamageMade(Unit* target, uint32 & damage, bool direct_damage)
+    void DamageMade(Unit* target, uint32 & damage, bool direct_damage, uint8 school_mask)
     {
         if (direct_damage && roll_chance_f(25.0f))
             me->CastSpell(target, SPELL_RIGHTEOUS_FIRE, true);

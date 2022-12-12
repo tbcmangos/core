@@ -1,6 +1,6 @@
 /* 
  * Copyright (C) 2006-2008 ScriptDev2 <https://scriptdev2.svn.sourceforge.net/>
- * Copyright (C) 2008-2014 Hellground <http://hellground.net/>
+ * Copyright (C) 2008-2015 Hellground <http://hellground.net/>
  * 
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -44,11 +44,11 @@ struct boss_broodlordAI : public ScriptedAI
     }
 
     ScriptedInstance * pInstance;
-    uint32 Cleave_Timer;
-    uint32 BlastWave_Timer;
-    uint32 MortalStrike_Timer;
-    uint32 KnockBack_Timer;
-    uint32 LeashCheck_Timer;
+    int32 Cleave_Timer;
+    int32 BlastWave_Timer;
+    int32 MortalStrike_Timer;
+    int32 KnockBack_Timer;
+    int32 LeashCheck_Timer;
     WorldLocation wLoc;
 
     void Reset()
@@ -83,8 +83,8 @@ struct boss_broodlordAI : public ScriptedAI
         if (!UpdateVictim())
             return;
 
-        //LeashCheck_Timer
-        if (LeashCheck_Timer < diff)
+        LeashCheck_Timer -= diff;
+        if (LeashCheck_Timer <= diff)
         {
             if (!m_creature->IsWithinDistInMap(&wLoc, 250))
             {
@@ -92,39 +92,40 @@ struct boss_broodlordAI : public ScriptedAI
                 EnterEvadeMode();
                 return;
             }
-            LeashCheck_Timer = 2000;
-        }else LeashCheck_Timer -= diff;
+            LeashCheck_Timer += 2000;
+        }
 
-        //Cleave_Timer
-        if (Cleave_Timer < diff)
+        Cleave_Timer -= diff;
+        if (Cleave_Timer <= diff)
         {
-            DoCast(m_creature->getVictim(),SPELL_CLEAVE);
-            Cleave_Timer = 7000;
-        }else Cleave_Timer -= diff;
+            DoCast(m_creature->GetVictim(),SPELL_CLEAVE);
+            Cleave_Timer += 7000;
+        }
 
-        // BlastWave
-        if (BlastWave_Timer < diff)
+        BlastWave_Timer -= diff;
+        if (BlastWave_Timer <= diff)
         {
-            DoCast(m_creature->getVictim(),SPELL_BLASTWAVE);
-            BlastWave_Timer = 8000 + rand()%8000;
-        }else BlastWave_Timer -= diff;
+            DoCast(m_creature->GetVictim(),SPELL_BLASTWAVE);
+            BlastWave_Timer += 8000 + rand()%8000;
+        }
 
-        //MortalStrike_Timer
-        if (MortalStrike_Timer < diff)
+        MortalStrike_Timer -= diff;
+        if (MortalStrike_Timer <= diff)
         {
-            DoCast(m_creature->getVictim(),SPELL_MORTALSTRIKE);
-            MortalStrike_Timer = 25000 + rand()%10000;
-        }else MortalStrike_Timer -= diff;
+            DoCast(m_creature->GetVictim(),SPELL_MORTALSTRIKE);
+            MortalStrike_Timer += 25000 + rand()%10000;
+        }
 
-        if (KnockBack_Timer < diff)
+        KnockBack_Timer -= diff;
+        if (KnockBack_Timer <= diff)
         {
-            DoCast(m_creature->getVictim(),SPELL_KNOCKBACK);
+            DoCast(m_creature->GetVictim(),SPELL_KNOCKBACK);
             //Drop 50% aggro
-            if (DoGetThreat(m_creature->getVictim()))
-                DoModifyThreatPercent(m_creature->getVictim(),-50);
+            if (DoGetThreat(m_creature->GetVictim()))
+                DoModifyThreatPercent(m_creature->GetVictim(),-50);
 
-            KnockBack_Timer = 15000 + rand()%15000;
-        }else KnockBack_Timer -= diff;
+            KnockBack_Timer += 15000 + rand()%15000;
+        }
 
         DoMeleeAttackIfReady();
     }

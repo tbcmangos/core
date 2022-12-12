@@ -1,6 +1,6 @@
 /* 
  * Copyright (C) 2006-2008 ScriptDev2 <https://scriptdev2.svn.sourceforge.net/>
- * Copyright (C) 2008-2014 Hellground <http://hellground.net/>
+ * Copyright (C) 2008-2015 Hellground <http://hellground.net/>
  * 
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -44,10 +44,10 @@ struct boss_magistrate_barthilasAI : public ScriptedAI
 
     ScriptedInstance* pInstance;
 
-    uint32 DrainingBlow_Timer;
-    uint32 CrowdPummel_Timer;
-    uint32 MightyBlow_Timer;
-    uint32 FuriousAnger_Timer;
+    int32 DrainingBlow_Timer;
+    int32 CrowdPummel_Timer;
+    int32 MightyBlow_Timer;
+    int32 FuriousAnger_Timer;
     uint32 AngerCount;
 
     void Reset()
@@ -58,7 +58,7 @@ struct boss_magistrate_barthilasAI : public ScriptedAI
         FuriousAnger_Timer = 5000;
         AngerCount = 0;
 
-        if (m_creature->isAlive())
+        if (m_creature->IsAlive())
             m_creature->SetUInt32Value(UNIT_FIELD_DISPLAYID, MODEL_NORMAL);
         else
             m_creature->SetUInt32Value(UNIT_FIELD_DISPLAYID, MODEL_HUMAN);
@@ -86,36 +86,37 @@ struct boss_magistrate_barthilasAI : public ScriptedAI
         if (!UpdateVictim())
             return;
 
-        if (FuriousAnger_Timer < diff)
+        FuriousAnger_Timer -= diff;
+        if (FuriousAnger_Timer <= diff)
         {
-            FuriousAnger_Timer = 4000;
+            FuriousAnger_Timer += 4000;
             if (AngerCount > 25)
                 return;
 
             ++AngerCount;
             m_creature->CastSpell(m_creature,SPELL_FURIOUS_ANGER,false);
-        }else FuriousAnger_Timer -= diff;
+        }
 
-        //DrainingBlow
-        if (DrainingBlow_Timer < diff)
+        DrainingBlow_Timer -= diff;
+        if (DrainingBlow_Timer <= diff)
         {
-            DoCast(m_creature->getVictim(),SPELL_DRAININGBLOW);
-            DrainingBlow_Timer = 15000;
-        }else DrainingBlow_Timer -= diff;
+            DoCast(m_creature->GetVictim(),SPELL_DRAININGBLOW);
+            DrainingBlow_Timer += 15000;
+        }
 
-        //CrowdPummel
-        if (CrowdPummel_Timer < diff)
+        CrowdPummel_Timer -= diff;
+        if (CrowdPummel_Timer <= diff)
         {
-            DoCast(m_creature->getVictim(),SPELL_CROWDPUMMEL);
-            CrowdPummel_Timer = 15000;
-        }else CrowdPummel_Timer -= diff;
+            DoCast(m_creature->GetVictim(),SPELL_CROWDPUMMEL);
+            CrowdPummel_Timer += 15000;
+        }
 
-        //MightyBlow
-        if (MightyBlow_Timer < diff)
+        MightyBlow_Timer -= diff;
+        if (MightyBlow_Timer <= diff)
         {
-            DoCast(m_creature->getVictim(),SPELL_MIGHTYBLOW);
-            MightyBlow_Timer = 20000;
-        }else MightyBlow_Timer -= diff;
+            DoCast(m_creature->GetVictim(),SPELL_MIGHTYBLOW);
+            MightyBlow_Timer += 20000;
+        }
 
         DoMeleeAttackIfReady();
     }

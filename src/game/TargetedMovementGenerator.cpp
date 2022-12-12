@@ -1,7 +1,7 @@
 /*
  * Copyright (C) 2005-2009 MaNGOS <http://getmangos.com/>
  * Copyright (C) 2008-2012 TrinityCore <http://www.trinitycore.org/>
- * Copyright (C) 2008-2014 Hellground <http://hellground.net/>
+ * Copyright (C) 2008-2017 Hellground <http://wow-hellground.com/>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -51,7 +51,7 @@ void TargetedMovementGeneratorMedium<T,D>::_setTargetLocation(T &owner)
     }
     else if (!_offset)
     {
-        if (_target->IsWithinMeleeRange(&owner))
+        if (_target->IsWithinMeleeRange(&owner, MELEE_RANGE - 0.5f))
         {
             if (!owner.IsStopped())
                 owner.StopMoving();
@@ -80,17 +80,28 @@ void TargetedMovementGeneratorMedium<T,D>::_setTargetLocation(T &owner)
         _target->GetNearPoint(x, y, z, owner.GetObjectSize(), _offset, _angle);
     }
 
+    if (abs(_target->GetPositionZ() - z) > 5.0f) // get nearpoint is normalizing position for ground, enable fly and swim
+        z = _target->GetPositionZ();
+
+    if (!_offset && targetIsVictim && (!owner.CanReachWithMeleeAutoAttackAtPosition(_target.getTarget(), x, y, z) || !_target->IsWithinLOS(x, y, z)))
+        _target->GetPosition(x, y, z);
+
     if (!_path)
         _path = new PathFinder(&owner);
 
     // allow pets following their master to cheat while generating paths
-    bool forceDest = (owner.GetObjectGuid().IsPet() && owner.hasUnitState(UNIT_STAT_FOLLOW));
+    bool forceDest = (owner.GetObjectGuid().IsPet() && owner.HasUnitState(UNIT_STAT_FOLLOW));
     bool result = _path->calculate(x, y, z, forceDest);
-    if (!result || _path->getPathType() & PATHFIND_NOPATH)
+    //if (!result || _path->getPathType() & PATHFIND_NOPATH)
+    //    return;
+    if (!forceDest && _path->getPathType() & PATHFIND_NOPATH)
+        result = _path->calculate(x, y, z, true);
+    if (!result)
         return;
 
     _targetReached = false;
     static_cast<MovementGenerator*>(this)->_recalculateTravel = false;
+    _target->GetPosition(m_fTargetLastX, m_fTargetLastY, m_fTargetLastZ);
 
     Movement::MoveSplineInit init(owner);
     init.MovebyPath(_path->getPath());
@@ -130,7 +141,7 @@ bool TargetedMovementGeneratorMedium<T,D>::Update(T &owner, const uint32 & time_
     if (!_target.isValid() || !_target->IsInWorld())
         return false;
 
-    if (!owner.isAlive())
+    if (!owner.IsAlive())
         return true;
 
     // prevent crash after creature killed pet
@@ -141,7 +152,7 @@ bool TargetedMovementGeneratorMedium<T,D>::Update(T &owner, const uint32 & time_
     if (_recheckDistance.Passed())
     {
         uint32 recheckTimer = sWorld.getConfig(CONFIG_TARGET_POS_RECHECK_TIMER);
-        uint32 recalculateRange = sWorld.getConfig(CONFIG_TARGET_POS_RECALCULATION_RANGE);
+        float recalculateRange = sWorld.getConfig(CONFIG_TARGET_POS_RECALCULATION_RANGE);
 
          if (owner.GetObjectGuid().IsPet())
          {
@@ -151,20 +162,10 @@ bool TargetedMovementGeneratorMedium<T,D>::Update(T &owner, const uint32 & time_
 
         _recheckDistance.Reset(recheckTimer);
 
-        float allowed_dist = _offset + owner.GetObjectBoundingRadius() + recalculateRange;
-
-        G3D::Vector3 dest = owner.movespline->FinalDestination();
-        
-        bool targetMoved = !_target->IsWithinDist3d(dest.x, dest.y, dest.z, allowed_dist);
-        if (owner.getVictimGUID() == _target->GetGUID())
-        {
-            Unit* victim = owner.getVictim();
-            if (!victim || !victim->isAlive())
-                return false;
-
-            if (owner.GetObjectGuid().IsPet() || owner.GetObjectGuid().IsCreature() && owner.IsStopped())
-                targetMoved = !owner.IsWithinMeleeRange(victim, MELEE_RANGE + _offset);
-        }
+        bool targetMoved = !_target->IsWithinDist3d(m_fTargetLastX, m_fTargetLastY, m_fTargetLastZ, recalculateRange);
+        if (targetMoved || owner.IsStopped()) // Chase movement may be interrupted
+            targetMoved = _offset ? !_target->_IsWithinDist(&owner, _offset * 2, true) : 
+                                    !_target->IsWithinMeleeRange(&owner, MELEE_RANGE - 0.5f);
 
         if (targetMoved)
             _setTargetLocation(owner);
@@ -172,8 +173,19 @@ bool TargetedMovementGeneratorMedium<T,D>::Update(T &owner, const uint32 & time_
 
     if (owner.IsStopped())
     {
-        if (_angle == 0.f && !owner.HasInArc(0.01f, _target.getTarget()))
-            owner.SetInFront(_target.getTarget());
+        if (this->GetMovementGeneratorType() == CHASE_MOTION_TYPE)
+        {
+            if (owner.IsCreature())
+            {
+                if (!owner.HasInArc(0.01f, _target.getTarget()))
+                    owner.SetInFront(_target.getTarget());
+            }
+            else
+            {
+                if (!owner.HasInArc(M_PI_F / 2.0f, _target.getTarget()))
+                    owner.SetFacingTo(owner.GetAngle(_target.getTarget()));
+            }  
+        }
 
         if (!_targetReached)
         {
@@ -234,9 +246,6 @@ void ChaseMovementGenerator<T>::Finalize(T &owner)
 
         if (creature->isPet())
             return;
-
-        if (!creature->isInCombat())
-            creature->GetMotionMaster()->MoveTargetedHome();
     }
 }
 
@@ -244,7 +253,7 @@ template<class T>
 void ChaseMovementGenerator<T>::Interrupt(T &owner)
 {
     owner.StopMoving();
-    owner.clearUnitState(UNIT_STAT_CHASE);
+    owner.ClearUnitState(UNIT_STAT_CHASE);
 }
 
 template<class T>
@@ -327,7 +336,7 @@ void FollowMovementGenerator<T>::Interrupt(T &owner)
 {
     owner.StopMoving();
 
-    owner.clearUnitState(UNIT_STAT_FOLLOW);
+    owner.ClearUnitState(UNIT_STAT_FOLLOW);
     _updateSpeed(owner);
 }
 

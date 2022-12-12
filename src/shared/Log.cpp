@@ -1,7 +1,7 @@
 /*
  * Copyright (C) 2005-2008 MaNGOS <http://getmangos.com/>
  * Copyright (C) 2008 TrinityCore <http://www.trinitycore.org/>
- * Copyright (C) 2008-2014 Hellground <http://hellground.net/>
+ * Copyright (C) 2008-2015 Hellground <http://hellground.net/>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -27,27 +27,52 @@
 #include "Util.h"
 
 const char* logToStr[LOG_MAX_FILES][3] =
-{     // file name conf    mode  timestamp conf name
-    { "GMLogFile",          "a", "GmLogTimestamp" },    // LOG_GM
-    { "LogFile",            "w", "LogTimestamp" },      // LOG_DEFAULT
-    { "StatusParserFile",   "w", NULL },                // LOG_STATUS
-    { "CharLogFile",        "a", "CharLogTimestamp" },  // LOG_CHAR
-    { "DBErrorLogFile",     "a", NULL },                // LOG_DB_ERR
-    { "ArenaLogFile",       "a", NULL },                // LOG_ARENA
-    { "CheatLogFile",       "a", NULL },                // LOG_CHEAT
-    { "SpecialLogFile",     "a", NULL },                // LOG_SPECIAL
-    { "MailLogFile",        "a", NULL },                // LOG_MAIL
-    { "GannLogFile",        "a", NULL },                // LOG_GUILD_ANN
-    { "BossLogFile",        "a", NULL },                // LOG_BOSS
-    { "WardenLogFile",      "a", NULL },                // LOG_WARDEN
-    { "AuctionLogFile",     "a", NULL },                // LOG_AUCTION
-    { "DiffLogFile",        "a", NULL },                // LOG_DIFF
-    { "SessionDiffLogFile", "a", NULL },                // LOG_SESSION_DIFF
-    { "CrashLogFile",       "a", NULL },                // LOG_CRASH
-    { "DBDiffFile",         "a", NULL },                // LOG_DB_DIFF
-    { "ExpLogFile",         "a", NULL },                // LOG_EXP
-    { "TradeLogFile",       "a", NULL },                // LOG_TRADE
-    { "RaceChangeLogFile",  "a", NULL }                 // LOG_RACE_CHANGE
+{     // file name conf        mode  timestamp conf name
+    { "GMLogFile",              "a", "GmLogTimestamp" },    // LOG_GM
+    { "LogFile",                "w", "LogTimestamp" },      // LOG_DEFAULT
+    { "StatusParserFile",       "w", NULL },                // LOG_STATUS
+    { "CharLogFile",            "a", "CharLogTimestamp" },  // LOG_CHAR
+    { "DBErrorLogFile",         "a", NULL },                // LOG_DB_ERR
+    { "ArenaLogFile",           "a", NULL },                // LOG_ARENA
+    { "CheatLogFile",           "a", NULL },                // LOG_CHEAT
+    { "SpecialLogFile",         "a", NULL },                // LOG_SPECIAL
+    { "MailLogFile",            "a", NULL },                // LOG_MAIL
+    { "GannLogFile",            "a", NULL },                // LOG_GUILD_ANN
+    { "BossLogFile",            "a", NULL },                // LOG_BOSS
+    { "WardenLogFile",          "a", NULL },                // LOG_WARDEN
+    { "AuctionLogFile",         "a", NULL },                // LOG_AUCTION
+    { "DiffLogFile",            "a", NULL },                // LOG_DIFF
+    { "SessionDiffLogFile",     "a", NULL },                // LOG_SESSION_DIFF
+    { "CrashLogFile",           "a", NULL },                // LOG_CRASH
+    { "DBDiffFile",             "a", NULL },                // LOG_DB_DIFF
+    { "ExpLogFile",             "a", NULL },                // LOG_EXP
+    { "TradeLogFile",           "a", NULL },                // LOG_TRADE
+    { "RaceChangeLogFile",      "a", NULL },                // LOG_RACE_CHANGE
+    { "ExploitsCheatsLogFile",  "a", NULL },                // LOG_EXPLOITS_AND_CHEATS
+    { "RaidBindsLogFile",       "a", NULL },                // LOG_RAID_BINDS
+    { "ServerRecordsLogFile",   "a", NULL }                 // LOG_SERVER_RECORDS
+};
+
+const char* chatLogFilenames[LOG_CHAT_MAX] =
+{
+    "chatlog_sayA.log",
+    "chatlog_sayH.log",
+    "chatlog_localA.log",
+    "chatlog_localH.log",
+    "chatlog_worldA.log",
+    "chatlog_worldH.log",
+    "chatlog_lfgA.log",
+    "chatlog_lfgH.log",
+    "chatlog_partyA.log",
+    "chatlog_partyH.log",
+    "chatlog_raidA.log",
+    "chatlog_raidH.log",
+    "chatlog_bgA.log",
+    "chatlog_bgH.log",
+    "chatlog_tradeA.log",
+    "chatlog_tradeH.log",
+    "chatlog_guildA.log",
+    "chatlog_guildH.log",
 };
 
 Log::Log() : m_includeTime(false), m_gmlog_per_account(false)
@@ -77,6 +102,8 @@ void Log::Initialize()
         if((m_logsDir.at(m_logsDir.length()-1)!='/') && (m_logsDir.at(m_logsDir.length()-1)!='\\'))
             m_logsDir.append("/");
     }
+
+    m_chatLogsDir = sConfig.GetStringDefault("ChatLogsDir", "");
 
     m_logsTimestamp = "_" + GetTimestampStr();
 
@@ -117,8 +144,15 @@ void Log::Initialize()
     for (uint8 i = LOG_DEFAULT; i < LOG_MAX_FILES; ++i)
         logFile[i] = openLogFile(LogNames(i));
 
+    m_chatLogEnabled = sConfig.GetBoolDefault("ChatLogsEnabled");
+
+    if (m_chatLogEnabled)
+        for (uint8 i = 0; i < LOG_CHAT_MAX; i++)
+            chatLogFile[i] = openLogFile(ChatLogs(i));
+    
     // Main log file settings
     m_includeTime  = sConfig.GetBoolDefault("LogTime", false);
+    m_logLevel = sConfig.GetIntDefault("LogLevel", 0);
     m_logFileLevel = sConfig.GetIntDefault("LogFileLevel", 0);
 
     m_logFilter = 0;
@@ -149,6 +183,12 @@ FILE* Log::openLogFile(LogNames log)
 
     logFileNames[log] = m_logsDir + logfn;
     return fopen(logFileNames[log].c_str(), logToStr[log][1]);
+}
+
+FILE* Log::openLogFile(ChatLogs log)
+{
+    std::string fname = m_logsDir + m_chatLogsDir + chatLogFilenames[log];
+    return fopen(fname.c_str(), "a");
 }
 
 FILE* Log::openGmlogPerAccount(uint32 account)
@@ -195,7 +235,7 @@ bool Log::outTimestamp(FILE* file)
     //       HH     hour (2 digits 00-23)
     //       MM     minutes (2 digits 00-59)
     //       SS     seconds (2 digits 00-59)
-    if (fprintf(file, "%-4d-%02d-%02d %02d:%02d:%02d ", aTm->tm_year+1900, aTm->tm_mon+1, aTm->tm_mday, aTm->tm_hour, aTm->tm_min, aTm->tm_sec) < 0)
+    if (fprintf(file, "%-4d-%02d-%02d %02d:%02d:%02d ", aTm->tm_year + 1900, aTm->tm_mon + 1, aTm->tm_mday, aTm->tm_hour, aTm->tm_min, aTm->tm_sec) < 0)
         return false;
 
     return true;
@@ -236,8 +276,7 @@ void Log::outTitle( const char * str)
 
     if(logFile[LOG_DEFAULT])
     {
-        fprintf(logFile[LOG_DEFAULT], str);
-        fprintf(logFile[LOG_DEFAULT], "\n" );
+        fprintf(logFile[LOG_DEFAULT], "%s\n", str);
         fflush(logFile[LOG_DEFAULT]);
     }
 }
@@ -287,6 +326,16 @@ void Log::outBasic(const char * str, ...)
     if (!str)
         return;
 
+    if (m_logLevel >= LOG_LVL_BASIC)
+    {
+        if (m_includeTime)
+            outTime();
+
+        UTF8PRINTF(stdout, str, );
+
+        printf("\n");
+    }
+    
     if (logFile[LOG_DEFAULT] && m_logFileLevel > 0)
     {
         va_list ap;
@@ -303,6 +352,16 @@ void Log::outDetail(const char * str, ...)
 {
     if (!str)
         return;
+
+    if (m_logLevel >= LOG_LVL_DETAIL)
+    {
+        if (m_includeTime)
+            outTime();
+
+        UTF8PRINTF(stdout, str, );
+
+        printf("\n");
+    }
 
     if (logFile[LOG_DEFAULT] && m_logFileLevel > 1)
     {
@@ -335,6 +394,16 @@ void Log::outDebug(const char * str, ...)
     if(!str)
         return;
 
+    if (m_logLevel >= LOG_LVL_DEBUG)
+    {
+        if (m_includeTime)
+            outTime();
+
+        UTF8PRINTF(stdout, str, );
+
+        printf("\n");
+    }
+
     if (logFile[LOG_DEFAULT] && m_logFileLevel > 2)
     {
         outTimestamp(logFile[LOG_DEFAULT]);
@@ -353,6 +422,16 @@ void Log::outCommand(uint32 account, const char * str, ...)
 {
     if (!str)
         return;
+
+    if (m_logLevel >= LOG_LVL_DETAIL)
+    {
+        if (m_includeTime)
+            outTime();
+
+        UTF8PRINTF(stdout, str, );
+
+        printf("\n");
+    }
 
     if (logFile[LOG_DEFAULT] && m_logFileLevel > 1)
     {
@@ -404,11 +483,43 @@ void Log::outWhisp(uint32 account, const char * str, ...)
     }
 }
 
+void Log::outLog(LogNames log)
+{
+    if (logFile[log])
+    {
+        // check for errors
+        if (log == LOG_STATUS)
+        {
+            // we need to reopen file
+            logFile[log] = freopen(logFileNames[log].c_str(), logToStr[log][1], logFile[log]);
+        }
+        else if (!outTimestamp(logFile[log]))
+        {
+            // if error reopen file
+            logFile[log] = freopen(logFileNames[log].c_str(), logToStr[log][1], logFile[log]);
+            outTimestamp(logFile[log]);
+        }
+
+        fprintf(logFile[log], "\n" );
+        fflush(logFile[log]);
+    }
+}
+
 void Log::outLog(LogNames log, const char * str, ...)
 {
     if (!str)
         return;
 
+    if (log == LOG_DEFAULT)
+    {
+        if (m_includeTime)
+            outTime();
+
+        UTF8PRINTF(stdout, str, );
+
+        printf("\n");
+    }
+    
     if (logFile[log])
     {
         // check for errors
@@ -434,6 +545,30 @@ void Log::outLog(LogNames log, const char * str, ...)
     }
 }
 
+void Log::outChat(uint32 type, uint32 faction, const char* who, const char* str)
+{
+    if (!str)
+        return;
+
+    if (type >= LOG_CHAT_MAX)
+        return;
+
+    if (!m_chatLogEnabled)
+        return;
+
+    if (chatLogFile[type])
+    {
+        outTimestamp(chatLogFile[type]);
+        fprintf(chatLogFile[type], "%s: %s\n",who,str);
+        fflush(chatLogFile[type]);
+    }
+}
+
+void outstring_log()
+{
+    sLog.outString();
+}
+
 void outstring_log(const char * str, ...)
 {
     if (!str)
@@ -445,7 +580,7 @@ void outstring_log(const char * str, ...)
     vsnprintf(buf,256, str, ap);
     va_end(ap);
 
-    sLog.outString(buf);
+    sLog.outString("%s", buf);
 }
 
 void detail_log(const char * str, ...)
@@ -459,7 +594,7 @@ void detail_log(const char * str, ...)
     vsnprintf(buf,256, str, ap);
     va_end(ap);
 
-    sLog.outDetail(buf);
+    sLog.outDetail("%s", buf);
 }
 
 void debug_log(const char * str, ...)
@@ -473,7 +608,7 @@ void debug_log(const char * str, ...)
     vsnprintf(buf,256, str, ap);
     va_end(ap);
 
-    sLog.outDebug(buf);
+    sLog.outDebug("%s", buf);
 }
 
 void error_log(const char * str, ...)
@@ -487,7 +622,7 @@ void error_log(const char * str, ...)
     vsnprintf(buf,256, str, ap);
     va_end(ap);
 
-    sLog.outLog(LOG_DEFAULT, buf);
+    sLog.outLog(LOG_DEFAULT, "%s", buf);
 }
 
 void error_db_log(const char * str, ...)
@@ -501,5 +636,5 @@ void error_db_log(const char * str, ...)
     vsnprintf(buf,256, str, ap);
     va_end(ap);
 
-    sLog.outLog(LOG_DB_ERR, buf);
+    sLog.outLog(LOG_DB_ERR, "%s", buf);
 }

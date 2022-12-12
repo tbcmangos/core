@@ -1,20 +1,21 @@
 /*
- * Copyright (C) 2005-2011 MaNGOS <http://getmangos.com/>
- *
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public License
- * as published by the Free Software Foundation; either version 2
- * of the License, or (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
- */
+* Copyright (C) 2005-2011 MaNGOS <http://getmangos.com/>
+* Copyright (C) 2008-2015 Hellground <http://hellground.net/>
+*
+* This program is free software; you can redistribute it and/or modify
+* it under the terms of the GNU General Public License as published by
+* the Free Software Foundation; either version 2 of the License, or
+* (at your option) any later version.
+*
+* This program is distributed in the hope that it will be useful,
+* but WITHOUT ANY WARRANTY; without even the implied warranty of
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+* GNU General Public License for more details.
+*
+* You should have received a copy of the GNU General Public License
+* along with this program; if not, write to the Free Software
+* Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+*/
 
 #include "Config/Config.h"
 #include "PosixDaemon.h"
@@ -80,9 +81,14 @@ void startDaemon(const char * name, uint32_t timeout)
 
     printf("%s Daemon starting...", name);
 
-    freopen("/dev/null", "rt", stdin);
-    freopen("/dev/null", "wt", stdout);
-    freopen("/dev/null", "wt", stderr);
+    if (!freopen("/dev/null", "rt", stdin))
+        exit(EXIT_FAILURE);
+
+    if (!freopen("/dev/null", "wt", stdout))
+        exit(EXIT_FAILURE);
+
+    if (!freopen("/dev/null", "wt", stderr))
+        exit(EXIT_FAILURE);
 }
 
 void stopDaemon()

@@ -1,6 +1,6 @@
 /* 
 * Copyright (C) 2009 TrinityCore <http://www.trinitycore.org/>
-* Copyright (C) 2008-2014 Hellground <http://hellground.net/>
+* Copyright (C) 2008-2015 Hellground <http://hellground.net/>
 * 
 * This program is free software; you can redistribute it and/or modify
 * it under the terms of the GNU General Public License as published by
@@ -104,7 +104,7 @@ enum Creatures
     BOSS_ENTROPIUS              = 25840
 };
 
-uint32 EnrageTimer = 600000;
+Timer EnrageTimer = 600000;
 
 struct boss_muruAI : public Scripted_NoMovementAI
 {
@@ -117,28 +117,28 @@ struct boss_muruAI : public Scripted_NoMovementAI
     ScriptedInstance* pInstance;
     SummonList Summons;
 
-    uint32 ResetTimer;
-    uint32 HumanoidStart;
-    uint32 TransitionTimer;
+    Timer ResetTimer;
+    Timer HumanoidStart;
+    Timer TransitionTimer;
 
     void Reset()
     {
         ResetTimer = 0;
-        EnrageTimer = 600000;
-        HumanoidStart = 10000;
+        EnrageTimer.Reset(600000);
+        HumanoidStart.Reset(10000);
         TransitionTimer = 0;
         Summons.DespawnAll();
 
         if(pInstance->GetData(DATA_EREDAR_TWINS_EVENT) == DONE)
         {
             me->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
-            me->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
+            me->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_SPAWNING);
             me->SetVisibility(VISIBILITY_ON);
         }
         else
         {
             me->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
-            me->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
+            me->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_SPAWNING);
             me->SetVisibility(VISIBILITY_OFF);
         }
 
@@ -147,19 +147,17 @@ struct boss_muruAI : public Scripted_NoMovementAI
 
     void EnterEvadeMode()
     {
-        CreatureAI::EnterEvadeMode();
-        pInstance->SetData(DATA_MURU_EVENT, NOT_STARTED);
+        CreatureAI::_EnterEvadeMode();
         me->SetVisibility(VISIBILITY_OFF);
         me->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
-        me->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
+        me->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_SPAWNING);
         Summons.DespawnAll();
-        HumanoidStart = 10000;
-        ResetTimer = 30000;
+        ResetTimer.Reset(30000);
     }
 
     void EnterCombat(Unit *who)
     {
-        me->SetIngoreVictimSelection(true);
+        me->SetIgnoreVictimSelection(true);
         DoCast(me, SPELL_NEGATIVE_ENERGY_PERIODIC);
         DoCast(me, SPELL_OPEN_PORTAL_PERIODIC);
         DoCast(me, SPELL_DARKNESS_PERIODIC);
@@ -167,7 +165,7 @@ struct boss_muruAI : public Scripted_NoMovementAI
 
     void MoveInLineOfSight(Unit *who)
     {
-        if(ResetTimer)
+        if(ResetTimer.GetInterval())
             return;
         if(pInstance->GetData(DATA_EREDAR_TWINS_EVENT) != DONE)
             return;
@@ -194,18 +192,12 @@ struct boss_muruAI : public Scripted_NoMovementAI
 
     void UpdateAI(const uint32 diff)
     {
-        if(ResetTimer)
+
+        if (ResetTimer.Expired(diff))
         {
-            if(ResetTimer <= diff)
-            {
-                me->SetVisibility(VISIBILITY_ON);
-                me->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
-                me->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
-                ResetTimer = 0;
-            }
-            else
-                ResetTimer -= diff;
+            Reset();
         }
+        
 
         if (!UpdateVictim())
             return;
@@ -213,46 +205,40 @@ struct boss_muruAI : public Scripted_NoMovementAI
         DoSpecialThings(diff, DO_COMBAT_N_EVADE, 80.0f);
 
         if (me->GetSelection())
-            me->SetSelection(NULL);
+            me->SetSelection(0);
 
-        if (EnrageTimer < diff)
+        if (EnrageTimer.Expired(diff))
         {
             DoCast(me, SPELL_ENRAGE, true);
             EnrageTimer = 60000;
         }
-        else
-            EnrageTimer -= diff;
+        
 
-        if(HumanoidStart)
+        if (HumanoidStart.Expired(diff))
         {
-            if(HumanoidStart <= diff)
-            {
-                pInstance->SetData(DATA_MURU_EVENT, IN_PROGRESS);
-                // if anyone trapped outside front door, evade
-                if(Unit* target = SelectUnit(SELECT_TARGET_RANDOM, 0, 400, true, 0, 60))
+            pInstance->SetData(DATA_MURU_EVENT, IN_PROGRESS);
+            // if anyone trapped outside front door, evade
+            if (Unit* target = SelectUnit(SELECT_TARGET_RANDOM, 0, 400, true, 0, 60))
                 {
                     EnterEvadeMode();
                     return;
-                }
-                DoCast(me, SPELL_SUMMON_BLOOD_ELVES_PERIODIC, true);
-                HumanoidStart = 0;
             }
-            else
-                HumanoidStart -= diff;
+            DoCast(me, SPELL_SUMMON_BLOOD_ELVES_PERIODIC, true);
+            HumanoidStart = 0;
         }
+        
 
-        if(TransitionTimer)
+ 
+      
+        // SOMEHOW we had 2x entropius spawned, so better check it
+        if (TransitionTimer.Expired(diff) && !GetClosestCreatureWithEntry(me, BOSS_ENTROPIUS, 400.0f))
         {
-            if(TransitionTimer <= diff)
-            {
-                DoCast(me, SPELL_ENTROPIUS_COSMETIC_SPAWN);
-                DoCast(me, SPELL_SUMMON_ENTROPIUS);
-                me->RemoveAllAuras();
-                TransitionTimer = 0;
-            }
-            else
-                TransitionTimer -= diff;
+            DoCast(me, SPELL_ENTROPIUS_COSMETIC_SPAWN);
+            DoCast(me, SPELL_SUMMON_ENTROPIUS);
+            me->RemoveAllAuras();
+            TransitionTimer = 0;
         }
+        
     }
 };
 
@@ -271,17 +257,17 @@ struct boss_entropiusAI : public ScriptedAI
     ScriptedInstance* pInstance;
     SummonList Summons;
 
-    uint32 TransitionTimer;
-    uint32 DarknessTimer;
-    uint32 BlackHole;
+    Timer TransitionTimer;
+    Timer DarknessTimer;
+    Timer BlackHole;
 
     void Reset()
     {
         me->GetMotionMaster()->MoveIdle();
         DoZoneInCombat(80);
-        DarknessTimer = urand(6000, 8000);
-        BlackHole = urand(4000, 10000);
-        TransitionTimer = 3000;
+        DarknessTimer.Reset(urand(6000, 8000));
+        BlackHole.Reset(urand(4000, 10000));
+        TransitionTimer.Reset(3000);
         me->SetRooted(true);
     }
 
@@ -315,22 +301,20 @@ struct boss_entropiusAI : public ScriptedAI
 
     void UpdateAI(const uint32 diff)
     {
-        if (TransitionTimer)
+        if (TransitionTimer.GetInterval())
         {
-            if (TransitionTimer <= diff)
+            if (TransitionTimer.Expired(diff))
             {
                 if(Unit* Muru = me->GetUnit(pInstance->GetData64(DATA_MURU)))
                 {
                     Muru->SetVisibility(VISIBILITY_OFF);
-                    Muru->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
+                    Muru->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_SPAWNING);
                 }
                 me->SetRooted(false);
-                AttackStart(me->getVictim());
+                AttackStart(me->GetVictim());
                 DoCast(me, SPELL_NEGATIVE_ENERGY_PERIODIC_E);
                 TransitionTimer = 0;
             }
-            else
-                TransitionTimer -= diff;
             return;
         }
 
@@ -339,31 +323,26 @@ struct boss_entropiusAI : public ScriptedAI
 
         DoSpecialThings(diff, DO_COMBAT_N_EVADE, 100.0f);
 
-        if (EnrageTimer < diff)
+        if (EnrageTimer.Expired(diff))
         {
             AddSpellToCast(me, SPELL_ENRAGE);
             EnrageTimer = 60000;
         }
-        else
-            EnrageTimer -= diff;
-
-        if (DarknessTimer < diff)
+        
+        if (DarknessTimer.Expired(diff))
         {
             if(Unit* target = SelectUnit(SELECT_TARGET_RANDOM, 0, 100, true))
                 AddSpellToCast(target, SPELL_DARKNESS);
             DarknessTimer = 15000;
         }
-        else
-            DarknessTimer -= diff;
-
-        if (BlackHole < diff)
+        
+        if (BlackHole.Expired(diff))
         {
             if(Unit* target = SelectUnit(SELECT_TARGET_RANDOM, 0, 100, true, me->getVictimGUID(), 10.0))
                 AddSpellToCast(target, SPELL_BLACK_HOLE);
             BlackHole = urand(15000, 18000);
         }
-        else
-            BlackHole -= diff;
+        
 
         DoMeleeAttackIfReady();
         CastNextSpellIfAnyAndReady();
@@ -385,15 +364,21 @@ struct npc_muru_portalAI : public Scripted_NoMovementAI
 
     ScriptedInstance* pInstance;
     Creature* Muru;
-    uint32 SummonTimer;
-    uint32 TransformTimer;
-    uint32 CheckTimer;
+    Timer SummonTimer;
+    Timer TransformTimer;
+    Timer CheckTimer;
 
     void Reset()
     {
         SummonTimer = 0;
         TransformTimer = 0;
-        CheckTimer = 1000;
+        CheckTimer.Reset(1000);
+        me->SetReactState(REACT_PASSIVE);
+
+        if (Creature* Muru = me->GetCreature(pInstance->GetData64(DATA_MURU)))
+            me->SetFacingToObject(Muru);
+
+        me->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_DISABLE_ROTATE);
     }
 
     void EnterCombat(Unit *who) {}
@@ -403,8 +388,8 @@ struct npc_muru_portalAI : public Scripted_NoMovementAI
         if (summoned->GetEntry() == 25782)  // Void Summoner
             DoCast(summoned, SPELL_SUMMON_VOID_SENTINEL_SUMMONER_VISUAL);
 
-        if( Unit* Muru = me->GetUnit(pInstance->GetData64(DATA_MURU)))
-            ((boss_muruAI*)Muru)->JustSummoned(summoned);
+        if (Creature* Muru = me->GetCreature(pInstance->GetData64(DATA_MURU)))
+            Muru->ToCreature()->AI()->JustSummoned(summoned);
     }
 
     void SpellHit(Unit* caster, const SpellEntry* Spell)
@@ -424,39 +409,28 @@ struct npc_muru_portalAI : public Scripted_NoMovementAI
 
     void UpdateAI(const uint32 diff)
     {
-        if(me->isInCombat())
+        if(me->IsInCombat())
         {
-            if (CheckTimer < diff)
+            if (CheckTimer.Expired(diff))
             {
                 if (pInstance->GetData(DATA_MURU_EVENT) == DONE || pInstance->GetData(DATA_MURU_EVENT) == NOT_STARTED)
                     EnterEvadeMode();
                 CheckTimer = 1000;
             }
-            else
-                CheckTimer -= diff;
         }
 
-        if(SummonTimer)
+        if (SummonTimer.Expired(diff) && pInstance->GetData(DATA_MURU_EVENT) == IN_PROGRESS)
         {
-            if(SummonTimer <= diff)
-            {
-                DoCast(me, SPELL_SUMMON_VOID_SENTINEL_SUMMONER);
-                SummonTimer = 0;
-            }
-            else
-                SummonTimer -= diff;
+            DoCast(me, SPELL_SUMMON_VOID_SENTINEL_SUMMONER);
+            SummonTimer = 0;
         }
 
-        if (TransformTimer)
+        if (TransformTimer.Expired(diff))
         {
-            if(TransformTimer <= diff)
-            {
-                DoCast(me, SPELL_TRANSFORM_VISUAL_MISSILE_PERIODIC);
-                TransformTimer = 0;
-            }
-            else
-                TransformTimer -= diff;
+            DoCast(me, SPELL_TRANSFORM_VISUAL_MISSILE_PERIODIC);
+            TransformTimer = 0;
         }
+       
     }
 };
 
@@ -472,29 +446,33 @@ struct npc_void_summonerAI : public Scripted_NoMovementAI
         pInstance = c->GetInstanceData();
     }
 
-    uint32 SummonTimer;
+    Timer SummonTimer;
     ScriptedInstance* pInstance;
 
     void Reset()
     {
-        SummonTimer = 2000;
+        SummonTimer.Reset(2000);
     }
 
     void JustSummoned(Creature* summoned)
     {
-        if( Unit* Muru = me->GetUnit(pInstance->GetData64(DATA_MURU)))
-            ((boss_muruAI*)Muru)->JustSummoned(summoned);
+        if (Creature* Muru = me->GetCreature(pInstance->GetData64(DATA_MURU)))
+            Muru->ToCreature()->AI()->JustSummoned(summoned);
+    }
+
+    void IsSummonedBy(Unit*)
+    {
+        if (Creature* Muru = me->GetCreature(pInstance->GetData64(DATA_MURU)))
+            Muru->ToCreature()->AI()->JustSummoned(me);
     }
 
     void UpdateAI(const uint32 diff)
-    {
-        if (SummonTimer < diff)
+    {    
+        if (SummonTimer.Expired(diff))
         {
             DoCast(me, SPELL_SUMMON_VOID_SENTINEL);
             SummonTimer = 10000;
         }
-        else
-            SummonTimer -= diff;
     }
 };
 
@@ -511,14 +489,14 @@ struct npc_dark_fiendAI : public ScriptedAI
     }
 
     ScriptedInstance* pInstance;
-    uint32 ActivationTimer;
-    uint32 CheckTimer;
-    uint32 DespawnTimer;
+    Timer ActivationTimer;
+    Timer CheckTimer;
+    Timer DespawnTimer;
 
     void Reset()
     {
-        ActivationTimer = 2000;
-        CheckTimer = 500;
+        ActivationTimer.Reset(2000);
+        CheckTimer.Reset(500);
         DespawnTimer = 0;
         me->SetRooted(true);
         DoCast(me, SPELL_DARKFIEND_SKIN);
@@ -532,12 +510,13 @@ struct npc_dark_fiendAI : public ScriptedAI
     {
         me->DisappearAndDie();
     }
-
-    void IsSummonedBy(Unit* Muru)
+    
+    void IsSummonedBy(Unit*)
     {
-        Muru->ToCreature()->AI()->JustSummoned(me);
+        if (Creature* Muru = me->GetCreature(pInstance->GetData64(DATA_MURU)))
+            Muru->ToCreature()->AI()->JustSummoned(me);
     }
-
+    
     void DamageTaken(Unit* /*done_by*/, uint32 &damage)
     {
         if(damage > me->GetHealth())
@@ -552,7 +531,7 @@ struct npc_dark_fiendAI : public ScriptedAI
 
     void UpdateAI(const uint32 diff)
     {
-        if(!me->HasAura(SPELL_DARKFIEND_SKIN) && !DespawnTimer)
+        if(!me->HasAura(SPELL_DARKFIEND_SKIN) && !DespawnTimer.GetInterval())
         {
             me->SetRooted(true);
             me->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
@@ -561,9 +540,9 @@ struct npc_dark_fiendAI : public ScriptedAI
             ActivationTimer = 0;
         }
 
-        if(ActivationTimer)
+        if(ActivationTimer.GetInterval())
         {
-            if(ActivationTimer <= diff)
+            if (ActivationTimer.Expired(diff))
             {
                 if(Unit* target = SelectUnit(SELECT_TARGET_NEAREST, 0, 100, true))
                 {
@@ -573,28 +552,23 @@ struct npc_dark_fiendAI : public ScriptedAI
                 }
                 ActivationTimer = 0;
             }
-            else
-                ActivationTimer -= diff;
             return;
         }
 
-        if(DespawnTimer)
+        if (DespawnTimer.Expired(diff))
         {
-            if(DespawnTimer <= diff)
-            {
-                me->DisappearAndDie();
-                DespawnTimer = 0;
-            }
-            else
-                DespawnTimer -= diff;
+            me->DisappearAndDie();
+            DespawnTimer = 0;
         }
+        
 
-        if (!UpdateVictim() || DespawnTimer)
+        if (!UpdateVictim() || DespawnTimer.GetInterval())
             return;
 
-        if(CheckTimer < diff)
+        
+        if (CheckTimer.Expired(diff))
         {
-            if(me->IsWithinDistInMap(me->getVictim(), 1.0))
+            if(me->IsWithinDistInMap(me->GetVictim(), 1.0))
             {
                 DoCast(((Unit*)NULL), SPELL_DARKFIEND_AOE);
                 me->SetRooted(true);
@@ -603,8 +577,6 @@ struct npc_dark_fiendAI : public ScriptedAI
             }
             CheckTimer = 500;
         }
-        else
-            CheckTimer -= diff;
     }
 };
 
@@ -621,8 +593,8 @@ struct npc_void_sentinelAI : public ScriptedAI
     }
 
     ScriptedInstance* pInstance;
-    uint32 VoidBlastTimer;
-    uint32 ActivationTimer;
+    Timer VoidBlastTimer;
+    Timer ActivationTimer;
 
     void Reset()
     {
@@ -630,8 +602,8 @@ struct npc_void_sentinelAI : public ScriptedAI
         me->GetHomePosition(x,y,z,o);
         DoTeleportTo(x,y,71);
         DoCast(me, SPELL_SHADOW_PULSE_PERIODIC);
-        VoidBlastTimer = urand(8000, 12000);
-        ActivationTimer = 1500;
+        VoidBlastTimer.Reset(urand(8000, 12000));
+        ActivationTimer.Reset(1500);
         me->SetRooted(true);
         if(pInstance->GetData(DATA_MURU_EVENT) == NOT_STARTED)
             me->DisappearAndDie();
@@ -642,9 +614,9 @@ struct npc_void_sentinelAI : public ScriptedAI
         me->DisappearAndDie();
     }
 
-    void IsSummonedBy(Unit* summoner)
+    void IsSummonedBy(Unit*)
     {
-        if(Unit* Muru = me->GetUnit(pInstance->GetData64(DATA_MURU)))
+        if (Creature* Muru = me->GetCreature(pInstance->GetData64(DATA_MURU)))
             Muru->ToCreature()->AI()->JustSummoned(me);
     }
 
@@ -655,35 +627,32 @@ struct npc_void_sentinelAI : public ScriptedAI
             damage = 0;
             for(uint8 i = 0; i < 8; ++i)
                 DoCast(me, SPELL_SUMMON_VOID_SPAWN, true);
-            me->Kill(me, false);
+            me->DisappearAndDie();
         }
     }
 
     void UpdateAI(const uint32 diff)
     {
-        if(ActivationTimer)
+        if(ActivationTimer.GetInterval())
         {
-            if(ActivationTimer <= diff)
+            if (ActivationTimer.Expired(diff))
             {
                 ActivationTimer = 0;
                 DoZoneInCombat(100);
                 me->SetRooted(false);
             }
-            else
-                ActivationTimer -= diff;
             return;
         }
 
         if (!UpdateVictim())
             return;
 
-        if (VoidBlastTimer < diff)
+        
+        if (VoidBlastTimer.Expired(diff))
         {
-            DoCast(me->getVictim(), SPELL_VOID_BLAST, false);
+            DoCast(me->GetVictim(), SPELL_VOID_BLAST, false);
             VoidBlastTimer = 30000;
         }
-        else
-            VoidBlastTimer -= diff;
 
         DoMeleeAttackIfReady();
     }
@@ -702,18 +671,24 @@ struct mob_void_spawnAI : public ScriptedAI
     }
 
     ScriptedInstance* pInstance;
-    uint32 Volley;
-    uint32 ActivationTimer;
+    Timer Volley;
+    Timer ActivationTimer;
 
     void EnterEvadeMode()
     {
         me->DisappearAndDie();
     }
-
+    
+    void IsSummonedBy(Unit*)
+    {
+        if (Creature* Muru = me->GetCreature(pInstance->GetData64(DATA_MURU)))
+            Muru->ToCreature()->AI()->JustSummoned(me);
+    }
+    
     void Reset()
     {
-        Volley = urand(3000, 7000);
-        ActivationTimer = 2000;
+        Volley.Reset(urand(3000, 7000));
+        ActivationTimer.Reset(2000);
         me->SetRooted(true);
         DoZoneInCombat(100);
         if(pInstance->GetData(DATA_MURU_EVENT) == NOT_STARTED)
@@ -722,29 +697,26 @@ struct mob_void_spawnAI : public ScriptedAI
 
     void UpdateAI(const uint32 diff)
     {
-        if(ActivationTimer)
+        if(ActivationTimer.GetInterval())
         {
-            if(ActivationTimer <= diff)
+            if (ActivationTimer.Expired(diff))
             {
                 ActivationTimer = 0;
                 DoZoneInCombat(100);
                 me->SetRooted(false);
             }
-            else
-                ActivationTimer -= diff;
             return;
         }
 
         if (!UpdateVictim())
             return;
 
-        if (Volley < diff)
+       
+        if (Volley.Expired(diff))
         {
             DoCast(me, SPELL_SHADOW_BOLT_VOLLEY);
             Volley = urand(5000, 10000);
         }
-        else
-            Volley -= diff;
 
         DoMeleeAttackIfReady();
     }
@@ -763,34 +735,34 @@ struct npc_blackholeAI : public ScriptedAI
     }
 
     ScriptedInstance* pInstance;
-    uint32 DespawnTimer;
-    uint32 VisualTimer;
-    uint32 ActivationTimer;
-    uint32 ChasingTimer;
+    Timer DespawnTimer;
+    Timer VisualTimer;
+    Timer ActivationTimer;
+    Timer ChasingTimer;
     uint64 victimGUID;
 
     void Reset()
     {
-        DespawnTimer = urand(15000, 17000);
+        DespawnTimer.Reset(urand(15000, 17000));
         me->SetLevitate(true);
         me->SetSpeed(MOVE_FLIGHT, 0.5);
         me->setFaction(14);
         float x,y,z,o;
         me->GetHomePosition(x,y,z,o);
         DoTeleportTo(x,y,72);
-        VisualTimer = 2000;
-        ActivationTimer = 2000;
+        VisualTimer.Reset(2000);
+        ActivationTimer.Reset(2000);
         ChasingTimer = 0;
         victimGUID = 0;
         me->SetFloatValue(OBJECT_FIELD_SCALE_X, 1.0f);
-        me->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
+        me->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_SPAWNING);
         me->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
         me->GetMotionMaster()->MoveIdle();
     }
 
     void MoveInLineOfSight(Unit *who)
     {
-        if(!ChasingTimer)
+        if(!ChasingTimer.GetInterval())
             return;
         ScriptedAI::MoveInLineOfSight(who);
     }
@@ -799,51 +771,49 @@ struct npc_blackholeAI : public ScriptedAI
 
     void IsSummonedBy(Unit*)
     {
+        if (Creature* Muru = me->GetCreature(pInstance->GetData64(DATA_MURU)))
+            Muru->ToCreature()->AI()->JustSummoned(me);
+
         DoCast(me, SPELL_BLACK_HOLE_SUMMON_VISUAL, true);
     }
 
     void UpdateAI(const uint32 diff)
     {
-        if(VisualTimer)
+        if(VisualTimer.GetInterval())
         {
-            if(VisualTimer <= diff)
+            if (VisualTimer.Expired(diff))
             {
                 DoCast(me, SPELL_BLACK_HOLE_SUMMON_VISUAL, true);
                 DoCast(me, SPELL_BLACK_HOLE_SUMMON_VISUAL_2, true);
                 VisualTimer = 0;
             }
-            else
-                VisualTimer -= diff;
             return;
         }
 
-        if(ActivationTimer)
-        {
-            if(ActivationTimer <= diff)
-            {
-                DoCast(me, SPELL_BLACK_HOLE_VISUAL_2, true);
-                DoCast(me, SPELL_BLACK_HOLE_PASSIVE, true);
-                ActivationTimer = 0;
-                if(Player* victim = GetClosestPlayer(me, 100))
-                {
-                    victimGUID = victim->GetGUID();
-                    me->GetMotionMaster()->MovePoint(0, victim->GetPositionX(), victim->GetPositionY(), 72.0, false);
-                }
-                ChasingTimer = 1000;
-            }
-            else
-                ActivationTimer -= diff;
-        }
 
-        if(victimGUID && ChasingTimer)
+        if (ActivationTimer.Expired(diff))
         {
-            if(ChasingTimer <= diff)
+            DoCast(me, SPELL_BLACK_HOLE_VISUAL_2, true);
+            DoCast(me, SPELL_BLACK_HOLE_PASSIVE, true);
+            ActivationTimer = 0;
+            if (Player* victim = GetClosestPlayer(me, 100))
+            {
+                victimGUID = victim->GetGUID();
+                me->GetMotionMaster()->MovePoint(0, victim->GetPositionX(), victim->GetPositionY(), 72.0, false);
+            }
+            ChasingTimer = 1000;
+        }
+        
+
+        if(victimGUID && ChasingTimer.GetInterval())
+        {
+            if (ChasingTimer.Expired(diff))
             {
                 if (Unit* victim = me->GetUnit(victimGUID))
                 {
                     if(me->IsWithinDistInMap(victim, 5.0))
                     {
-                        if(Unit* victim = SelectUnit(SELECT_TARGET_NEAREST, 0, 200, true, me->getVictimGUID(), 10.0))
+                        if(Unit* victim = SelectUnit(SELECT_TARGET_NEAREST, 0, 200, true, me->getVictimGUID(), 8.0))
                         {
                             victimGUID = victim->GetGUID();
                             me->GetMotionMaster()->MovePoint(0, victim->GetPositionX(), victim->GetPositionY(), 72.0, false);
@@ -854,17 +824,14 @@ struct npc_blackholeAI : public ScriptedAI
                 }
                 ChasingTimer = 2000;
             }
-            else
-                ChasingTimer -= diff;
         }
 
-        if (DespawnTimer < diff)
+        if (DespawnTimer.Expired(diff))
         {
             me->Kill(me, false);
             me->RemoveCorpse();
         }
-        else
-            DespawnTimer -= diff;
+        
     }
 };
 
@@ -881,38 +848,41 @@ struct npc_darknessAI : public Scripted_NoMovementAI
     }
 
     ScriptedInstance* pInstance;
-    uint32 VoidZoneTimer;
-    uint32 CheckTimer;
+    Timer VoidZoneTimer;
+    Timer CheckTimer;
 
     void Reset()
     {
         DoCast(me, SPELL_VOID_ZONE_PRE_EFFECT_VISUAL, true);
-        VoidZoneTimer = 3000;
-        CheckTimer = 1000;
+        VoidZoneTimer.Reset(3000);
+        CheckTimer.Reset(1000);
+    }
+
+    void IsSummonedBy(Unit*)
+    {
+        if (Creature* Muru = me->GetCreature(pInstance->GetData64(DATA_MURU)))
+            Muru->ToCreature()->AI()->JustSummoned(me);
     }
 
     void UpdateAI(const uint32 diff)
     {
-        if(VoidZoneTimer)
+
+        if (VoidZoneTimer.Expired(diff))
         {
-            if(VoidZoneTimer <= diff)
-            {
-                DoCast(me, SPELL_VOID_ZONE_PERIODIC);
-                DoCast(me, SPELL_SUMMON_DARK_FIEND);
-                me->RemoveAurasDueToSpell(SPELL_VOID_ZONE_PRE_EFFECT_VISUAL);
-                VoidZoneTimer = 0;
-            }
-            else
-                VoidZoneTimer -= diff;
+            DoCast(me, SPELL_VOID_ZONE_PERIODIC);
+            DoCast(me, SPELL_SUMMON_DARK_FIEND);
+            me->RemoveAurasDueToSpell(SPELL_VOID_ZONE_PRE_EFFECT_VISUAL);
+            VoidZoneTimer = 0;
         }
-        if (CheckTimer)
+        
+    
+        if (CheckTimer.Expired(diff))
         {
             if (pInstance->GetData(DATA_MURU_EVENT) == DONE || pInstance->GetData(DATA_MURU_EVENT) == NOT_STARTED)
                 me->DisappearAndDie();
             CheckTimer = 1000;
         }
-        else
-            CheckTimer -= diff;
+        
     }
 };
 
@@ -939,8 +909,8 @@ struct mob_shadowsword_fury_mageAI : public ScriptedAI
     }
 
     ScriptedInstance* pInstance;
-    uint32 SpellFury;
-    uint32 ActivationTimer;
+    Timer SpellFury;
+    Timer ActivationTimer;
     WorldLocation wLoc;
 
     void Reset()
@@ -954,7 +924,7 @@ struct mob_shadowsword_fury_mageAI : public ScriptedAI
         }
         else
             DoZoneInCombat(400.0f);
-        SpellFury = urand(25000, 35000);
+        SpellFury.Reset(urand(25000, 35000));
     }
 
     void OnAuraApply(Aura* aur, Unit* caster, bool stackApply)
@@ -985,42 +955,45 @@ struct mob_shadowsword_fury_mageAI : public ScriptedAI
         }
     }
 
+    void IsSummonedBy(Unit*)
+    {
+        if (Creature* Muru = me->GetCreature(pInstance->GetData64(DATA_MURU)))
+            Muru->ToCreature()->AI()->JustSummoned(me);
+    }
+
     void UpdateAI(const uint32 diff)
     {
         if (me->GetMotionMaster()->GetCurrentMovementGeneratorType() == POINT_MOTION_TYPE)
         {
             if (me->GetSelection())
-                me->SetSelection(NULL);
+                me->SetSelection(0);
             return;
         }
 
-        if(ActivationTimer)
+        if(ActivationTimer.GetInterval())
         {
-            if(ActivationTimer <= diff)
+            if (ActivationTimer.Expired(diff))
             {
                 ActivationTimer = 0;
                 DoZoneInCombat(400);
                 me->SetRooted(false);
-                if(me->getVictim())
-                    DoStartMovement(me->getVictim());
+                if(me->GetVictim())
+                    DoStartMovement(me->GetVictim());
                 SetAutocast(SPELL_FEL_FIREBALL, RAND(6300, 8300), true);
             }
-            else
-                ActivationTimer -= diff;
             return;
         }
 
         if(!UpdateVictim())
             return;
 
-        if(SpellFury < diff)
+
+        if (SpellFury.Expired(diff))
         {
             ClearCastQueue();
             AddSpellToCast(SPELL_SPELL_FURY, CAST_SELF);
             SpellFury = 60000;
         }
-        else
-            SpellFury -= diff;
 
         CastNextSpellIfAnyAndReady(diff);
         DoMeleeAttackIfReady();
@@ -1051,8 +1024,8 @@ struct mob_shadowsword_berserkerAI : public ScriptedAI
 
     ScriptedInstance* pInstance;
     WorldLocation wLoc;
-    uint32 Flurry;
-    uint32 ActivationTimer;
+    Timer Flurry;
+    Timer ActivationTimer;
 
     void Reset()
     {
@@ -1066,7 +1039,12 @@ struct mob_shadowsword_berserkerAI : public ScriptedAI
         else
             DoZoneInCombat(400.0f);
         DoCast(me, SPELL_DUAL_WIELD, true);
-        Flurry = urand(16000, 20000);
+        Flurry.Reset(urand(16000, 20000));
+    }
+    void IsSummonedBy(Unit*)
+    {
+        if (Creature* Muru = me->GetCreature(pInstance->GetData64(DATA_MURU)))
+            Muru->ToCreature()->AI()->JustSummoned(me);
     }
 
     void MovementInform(uint32 Type, uint32 Id)
@@ -1084,35 +1062,33 @@ struct mob_shadowsword_berserkerAI : public ScriptedAI
         if (me->GetMotionMaster()->GetCurrentMovementGeneratorType() == POINT_MOTION_TYPE)
         {
             if (me->GetSelection())
-                me->SetSelection(NULL);
+                me->SetSelection(0);
             return;
         }
 
-        if(ActivationTimer)
+        if(ActivationTimer.GetInterval())
         {
-            if(ActivationTimer <= diff)
+            if (ActivationTimer.Expired(diff))
             {
                 ActivationTimer = 0;
                 DoZoneInCombat(400);
                 me->SetRooted(false);
-                if(me->getVictim())
-                    DoStartMovement(me->getVictim());
+                if(me->GetVictim())
+                    DoStartMovement(me->GetVictim());
             }
-            else
-                ActivationTimer -= diff;
             return;
         }
 
         if(!UpdateVictim())
             return;
 
-        if(Flurry < diff)
+        
+        if (Flurry.Expired(diff))
         {
             DoCast(me, SPELL_FLURRY);
             Flurry = urand(15000, 20000);
         }
-        else
-            Flurry -= diff;
+        
 
         DoMeleeAttackIfReady();
     }

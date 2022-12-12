@@ -1,6 +1,6 @@
 /* 
  * Copyright (C) 2006-2008 ScriptDev2 <https://scriptdev2.svn.sourceforge.net/>
- * Copyright (C) 2008-2014 Hellground <http://hellground.net/>
+ * Copyright (C) 2008-2015 Hellground <http://hellground.net/>
  * 
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -34,10 +34,10 @@ struct boss_general_angerforgeAI : public ScriptedAI
 {
     boss_general_angerforgeAI(Creature *c) : ScriptedAI(c) {}
 
-    uint32 MightyBlow_Timer;
-    uint32 HamString_Timer;
-    uint32 Cleave_Timer;
-    uint32 Adds_Timer;
+    int32 MightyBlow_Timer;
+    int32 HamString_Timer;
+    int32 Cleave_Timer;
+    int32 Adds_Timer;
     bool Medics;
     int Rand1;
     int Rand1X;
@@ -109,54 +109,50 @@ struct boss_general_angerforgeAI : public ScriptedAI
         if (!UpdateVictim() )
             return;
 
-        //MightyBlow_Timer
-        if (MightyBlow_Timer < diff)
+        MightyBlow_Timer -= diff;
+        if (MightyBlow_Timer <= diff)
         {
-            DoCast(me->getVictim(),SPELL_MIGHTYBLOW);
-            MightyBlow_Timer = 18000;
+            DoCast(me->GetVictim(),SPELL_MIGHTYBLOW);
+            MightyBlow_Timer += 18000;
         }
-        else
-            MightyBlow_Timer -= diff;
+        
 
-        //HamString_Timer
-        if (HamString_Timer < diff)
+        HamString_Timer -= diff;
+        if (HamString_Timer <= diff)
         {
-            DoCast(me->getVictim(),SPELL_HAMSTRING);
-            HamString_Timer = 15000;
+            DoCast(me->GetVictim(),SPELL_HAMSTRING);
+            HamString_Timer += 15000;
         }
-        else
-            HamString_Timer -= diff;
+        
 
-        //Cleave_Timer
-        if (Cleave_Timer < diff)
+        Cleave_Timer -= diff;
+        if (Cleave_Timer <= diff)
         {
-            DoCast(me->getVictim(),SPELL_CLEAVE);
-            Cleave_Timer = 9000;
+            DoCast(me->GetVictim(),SPELL_CLEAVE);
+            Cleave_Timer += 9000;
         }
-        else
-            Cleave_Timer -= diff;
+        
 
         //Adds_Timer
         if ( me->GetHealth()*100 / me->GetMaxHealth() < 21 )
         {
-            if (Adds_Timer < diff)
+            Adds_Timer -= diff;
+            if (Adds_Timer <= diff)
             {
                 // summon 3 Adds every 25s
-                SummonAdds(me->getVictim());
-                SummonAdds(me->getVictim());
-                SummonAdds(me->getVictim());
+                SummonAdds(me->GetVictim());
+                SummonAdds(me->GetVictim());
+                SummonAdds(me->GetVictim());
 
-                Adds_Timer = 25000;
+                Adds_Timer += 25000;
             }
-            else
-                Adds_Timer -= diff;
         }
 
         //Summon Medics
         if ( !Medics && me->GetHealth()*100 / me->GetMaxHealth() < 21 )
         {
-            SummonMedics(me->getVictim());
-            SummonMedics(me->getVictim());
+            SummonMedics(me->GetVictim());
+            SummonMedics(me->GetVictim());
             Medics = true;
         }
 

@@ -1,7 +1,7 @@
-/* 
+/*
  * Copyright (C) 2006-2008 ScriptDev2 <https://scriptdev2.svn.sourceforge.net/>
- * Copyright (C) 2008-2014 Hellground <http://hellground.net/>
- * 
+ * Copyright (C) 2008-2015 Hellground <http://hellground.net/>
+ *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 2 of the License, or
@@ -50,13 +50,13 @@ struct boss_marliAI : public ScriptedAI
 
     ScriptedInstance *pInstance;
 
-    uint32 SpawnStartSpiders_Timer;
-    uint32 PoisonVolley_Timer;
-    uint32 SpawnSpider_Timer;
-    uint32 Charge_Timer;
-    uint32 Aspect_Timer;
-    uint32 Transform_Timer;
-    uint32 TransformBack_Timer;
+    int32 SpawnStartSpiders_Timer;
+    int32 PoisonVolley_Timer;
+    int32 SpawnSpider_Timer;
+    int32 Charge_Timer;
+    int32 Aspect_Timer;
+    int32 Transform_Timer;
+    int32 TransformBack_Timer;
 
     Creature *Spider;
     bool Spawned;
@@ -95,25 +95,27 @@ struct boss_marliAI : public ScriptedAI
         if(!UpdateVictim())
             return;
 
-        if(m_creature->getVictim() && m_creature->isAlive())
+        if(m_creature->GetVictim() && m_creature->IsAlive())
         {
-            if(PoisonVolley_Timer < diff)
+            PoisonVolley_Timer -= diff;
+            if(PoisonVolley_Timer <= diff)
             {
-                DoCast(m_creature->getVictim(),SPELL_POISONVOLLEY);
-                PoisonVolley_Timer = 10000 + rand()%10000;
+                DoCast(m_creature->GetVictim(),SPELL_POISONVOLLEY);
+                PoisonVolley_Timer += 10000 + rand()%10000;
             }
-            else
-                PoisonVolley_Timer -= diff;
 
-            if(!PhaseTwo && Aspect_Timer < diff)
+
+            Aspect_Timer -= diff;
+            if(!PhaseTwo && Aspect_Timer <= diff)
             {
-                DoCast(m_creature->getVictim(),SPELL_ASPECT_OF_MARLI);
-                Aspect_Timer = 13000 + rand()%5000;
+                DoCast(m_creature->GetVictim(),SPELL_ASPECT_OF_MARLI);
+                Aspect_Timer += 13000 + rand()%5000;
             }
-            else
-                Aspect_Timer -= diff;
 
-            if(!Spawned && SpawnStartSpiders_Timer < diff)
+
+
+            SpawnStartSpiders_Timer -= diff;
+            if(!Spawned && SpawnStartSpiders_Timer <= diff)
             {
                 DoScriptText(SAY_SPIDER_SPAWN, m_creature);
 
@@ -136,10 +138,9 @@ struct boss_marliAI : public ScriptedAI
 
                 Spawned = true;
             }
-            else
-                SpawnStartSpiders_Timer -= diff;
 
-            if(SpawnSpider_Timer < diff)
+            SpawnSpider_Timer -= diff;
+            if(SpawnSpider_Timer <= diff)
             {
                 Unit* target = SelectUnit(SELECT_TARGET_RANDOM,0);
                 if(!target)
@@ -148,12 +149,11 @@ struct boss_marliAI : public ScriptedAI
                 Spider = m_creature->SummonCreature(15041,target->GetPositionX(), target->GetPositionY(), target->GetPositionZ(),0, TEMPSUMMON_TIMED_DESPAWN_OUT_OF_COMBAT, 15000);
                 if(Spider)
                     Spider->AI()->AttackStart(target);
-                SpawnSpider_Timer = 12000 + rand()%5000;
+                SpawnSpider_Timer += 12000 + rand()%5000;
             }
-            else
-                SpawnSpider_Timer -= diff;
 
-            if(!PhaseTwo && Transform_Timer < diff)
+            Transform_Timer -= diff;
+            if(!PhaseTwo && Transform_Timer <= diff)
             {
                 DoScriptText(SAY_TRANSFORM, m_creature);
                 DoCast(m_creature,SPELL_SPIDER_FORM);
@@ -161,20 +161,20 @@ struct boss_marliAI : public ScriptedAI
                 m_creature->SetBaseWeaponDamage(BASE_ATTACK, MINDAMAGE, (cinfo->mindmg +((cinfo->mindmg/100) * 35)));
                 m_creature->SetBaseWeaponDamage(BASE_ATTACK, MAXDAMAGE, (cinfo->maxdmg +((cinfo->maxdmg/100) * 35)));
                 m_creature->UpdateDamagePhysical(BASE_ATTACK);
-                DoCast(m_creature->getVictim(),SPELL_ENVOLWINGWEB);
+                DoCast(m_creature->GetVictim(),SPELL_ENVOLWINGWEB);
 
-                if(DoGetThreat(m_creature->getVictim()))
-                    DoModifyThreatPercent(m_creature->getVictim(),-100);
+                if(DoGetThreat(m_creature->GetVictim()))
+                    DoModifyThreatPercent(m_creature->GetVictim(),-100);
 
                 PhaseTwo = true;
-                Transform_Timer = 35000 + rand()%25000;
+                Transform_Timer += 35000 + rand()%25000;
             }
-            else
-                Transform_Timer -= diff;
+
 
             if(PhaseTwo)
             {
-                if(Charge_Timer < diff)
+                Charge_Timer -= diff;
+                if(Charge_Timer <= diff)
                 {
                     Unit* target = NULL;
                     int i = 0 ;
@@ -183,7 +183,7 @@ struct boss_marliAI : public ScriptedAI
                         ++i;                                //not aggro leader
                         target = SelectUnit(SELECT_TARGET_RANDOM,1, GetSpellMaxRange(SPELL_CHARGE), true, m_creature->getVictimGUID());
                         if(target)
-                            if (target->getPowerType() == POWER_MANA)
+                            if (target->GetPowerType() == POWER_MANA)
                                 i=3;
                     }
 
@@ -195,12 +195,12 @@ struct boss_marliAI : public ScriptedAI
                         AttackStart(target);
                     }
 
-                    Charge_Timer = 8000;
+                    Charge_Timer += 8000;
                 }
-                else
-                    Charge_Timer -= diff;
 
-                if(TransformBack_Timer < diff)
+
+                TransformBack_Timer -= diff;
+                if(TransformBack_Timer <= diff)
                 {
                     m_creature->SetUInt32Value(UNIT_FIELD_DISPLAYID,15220);
                     const CreatureInfo *cinfo = m_creature->GetCreatureInfo();
@@ -209,11 +209,8 @@ struct boss_marliAI : public ScriptedAI
                     m_creature->UpdateDamagePhysical(BASE_ATTACK);
 
                     PhaseTwo = false;
-                    TransformBack_Timer = 25000 + rand()%15000;
+                    TransformBack_Timer += 25000 + rand()%15000;
                 }
-                else
-                    TransformBack_Timer -= diff;
-
             }
 
             DoMeleeAttackIfReady();
@@ -226,7 +223,7 @@ struct mob_spawn_of_marliAI : public ScriptedAI
 {
     mob_spawn_of_marliAI(Creature *c) : ScriptedAI(c) {}
 
-    uint32 LevelUp_Timer;
+    int32 LevelUp_Timer;
 
     void Reset()
     {
@@ -243,12 +240,12 @@ struct mob_spawn_of_marliAI : public ScriptedAI
         if (!UpdateVictim() )
             return;
 
-        //LevelUp_Timer
-        if(LevelUp_Timer < diff)
+        LevelUp_Timer -= diff;
+        if(LevelUp_Timer <= diff)
         {
             DoCast(m_creature,SPELL_LEVELUP);
-            LevelUp_Timer = 3000;
-        }else LevelUp_Timer -= diff;
+            LevelUp_Timer += 3000;
+        }
 
         DoMeleeAttackIfReady();
     }

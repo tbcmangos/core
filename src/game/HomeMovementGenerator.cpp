@@ -1,7 +1,7 @@
 /*
  * Copyright (C) 2005-2008 MaNGOS <http://getmangos.com/>
  * Copyright (C) 2008 TrinityCore <http://www.trinitycore.org/>
- * Copyright (C) 2008-2014 Hellground <http://hellground.net/>
+ * Copyright (C) 2008-2017 Hellground <http://wow-hellground.com/>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -41,7 +41,7 @@ void HomeMovementGenerator<Creature>::Reset(Creature &)
 
 void HomeMovementGenerator<Creature>::_setTargetLocation(Creature & owner)
 {
-    if (owner.hasUnitState(UNIT_STAT_NOT_MOVE))
+    if (owner.HasUnitState(UNIT_STAT_NOT_MOVE))
         return;
 
     Movement::MoveSplineInit init(owner);
@@ -57,7 +57,7 @@ void HomeMovementGenerator<Creature>::_setTargetLocation(Creature & owner)
     init.Launch();
 
     arrived = false;
-    owner.clearUnitState(UNIT_STAT_ALL_STATE);
+    owner.ClearUnitState(UNIT_STAT_ALL_STATE);
 }
 
 bool HomeMovementGenerator<Creature>::Update(Creature &owner, const uint32& time_diff)
@@ -68,7 +68,7 @@ bool HomeMovementGenerator<Creature>::Update(Creature &owner, const uint32& time
 
 void HomeMovementGenerator<Creature>::Finalize(Creature& owner)
 {
-    owner.clearUnitState(UNIT_STAT_IGNORE_ATTACKERS);
+    owner.ClearUnitState(UNIT_STAT_IGNORE_ATTACKERS);
 
     if (arrived)
     {

@@ -1,6 +1,6 @@
 /* 
  * Copyright (C) 2006-2008 ScriptDev2 <https://scriptdev2.svn.sourceforge.net/>
- * Copyright (C) 2008-2014 Hellground <http://hellground.net/>
+ * Copyright (C) 2008-2015 Hellground <http://hellground.net/>
  * 
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -250,7 +250,7 @@ struct npc_highlord_bolvar_fordragonAI : public ScriptedAI
 {
     npc_highlord_bolvar_fordragonAI(Creature *c) : ScriptedAI(c) {}
 
-    uint32 speechTimer;
+    Timer speechTimer;
     uint8 step;
 
     void Reset()
@@ -289,9 +289,9 @@ struct npc_highlord_bolvar_fordragonAI : public ScriptedAI
                 return 6000;
             case 6:
                 me->SetFlag(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_QUESTGIVER);
-                return 0;
+                return 1;
             default:
-                return 0;
+                return 1;
         }
     }
 
@@ -299,15 +299,12 @@ struct npc_highlord_bolvar_fordragonAI : public ScriptedAI
 
     void UpdateAI(const uint32 diff)
     {
-        if(speechTimer)
+        if (speechTimer.Expired(diff))
         {
-            if(speechTimer <= diff)
-            {
-                speechTimer = DoSpeech(step);
-                step++;
-            }
-            else speechTimer -= diff;
+            speechTimer = DoSpeech(step);
+            step++;
         }
+
 
         if(!UpdateVictim())
             return;
@@ -352,6 +349,7 @@ enum eLordGregorLescovar
     NPC_MARZON_BLADE         = 1755,
     NPC_LORD_GREGOR_LESCOVAR = 1754,
     NPC_TYRION               = 7766,
+    NPC_TYRION_SPYBOT        = 8856,
 
     QUEST_THE_ATTACK    = 434
 };
@@ -367,14 +365,14 @@ struct npc_lord_gregor_lescovarAI : public npc_escortAI
         pCreature->RestoreFaction();
     }
 
-    uint32 uiTimer;
+    int32 uiTimer;
     uint32 uiPhase;
 
     uint64 MarzonGUID;
 
     void Reset()
     {
-        me->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
+        me->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_SPAWNING);
         uiTimer = 0;
         uiPhase = 0;
 
@@ -387,18 +385,18 @@ struct npc_lord_gregor_lescovarAI : public npc_escortAI
 
         if (Creature *pMarzon = Unit::GetCreature(*me, MarzonGUID))
         {
-            if (pMarzon->isAlive())
+            if (pMarzon->IsAlive())
                 pMarzon->DisappearAndDie();
         }
     }
 
     void EnterCombat(Unit* pWho)
     {
-        me->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
+        me->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_SPAWNING);
         DoScriptText(SAY_LESCOVAR_5, me);
         if (Creature *pMarzon = Unit::GetCreature(*me, MarzonGUID))
         {
-            if (pMarzon->isAlive() && !pMarzon->isInCombat())
+            if (pMarzon->IsAlive() && !pMarzon->IsInCombat())
                 pMarzon->AI()->AttackStart(pWho);
         }
     }
@@ -447,6 +445,7 @@ struct npc_lord_gregor_lescovarAI : public npc_escortAI
     {
         if (uiPhase)
         {
+            uiTimer -= uiDiff;
             if (uiTimer <= uiDiff)
             {
                 switch(uiPhase)
@@ -460,7 +459,7 @@ struct npc_lord_gregor_lescovarAI : public npc_escortAI
                         break;
                     case 2:
                         me->RestoreFaction();
-                        me->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
+                        me->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_SPAWNING);
                         uiTimer = 2000;
                         uiPhase = 3;
                         break;
@@ -471,8 +470,8 @@ struct npc_lord_gregor_lescovarAI : public npc_escortAI
                         break;
                     case 4:
                         DoScriptText(SAY_LESCOVAR_3, me);
-                        uiTimer = 0;
-                        uiPhase = 0;
+                        uiTimer = 5000;
+                        uiPhase = 5;
                         break;
                     case 5:
                         if (Creature *pMarzon = Unit::GetCreature(*me, MarzonGUID))
@@ -482,8 +481,6 @@ struct npc_lord_gregor_lescovarAI : public npc_escortAI
                         break;
                     case 6:
                         DoScriptText(SAY_LESCOVAR_4, me);
-                        if (Player* pPlayer = GetPlayerForEscort())
-                            pPlayer->AreaExploredOrEventHappens(QUEST_THE_ATTACK);
                         uiTimer = 2000;
                         uiPhase = 7;
                         break;
@@ -497,7 +494,7 @@ struct npc_lord_gregor_lescovarAI : public npc_escortAI
                         uiPhase = 0;
                         break;
                 }
-            } else uiTimer -= uiDiff;
+            } 
         }
         npc_escortAI::UpdateAI(uiDiff);
 
@@ -531,8 +528,8 @@ struct npc_marzon_silent_bladeAI : public ScriptedAI
 
         if (Creature* pLord = GetClosestCreatureWithEntry(me, NPC_LORD_GREGOR_LESCOVAR, 30.0f))
         {
-            if (pLord && pLord->isAlive() && !pLord->isInCombat())
-                CAST_CRE(pLord)->AI()->AttackStart(pWho);
+            if (pLord && pLord->IsAlive() && !pLord->IsInCombat())
+                pLord->AI()->AttackStart(pWho);
         }
     }
 
@@ -542,20 +539,8 @@ struct npc_marzon_silent_bladeAI : public ScriptedAI
 
         if (Creature* pLord = GetClosestCreatureWithEntry(me, NPC_LORD_GREGOR_LESCOVAR, 30.0f))
         {
-            if (pLord && pLord->isAlive())
-                CAST_CRE(pLord)->DisappearAndDie();
-        }
-    }
-
-    void MovementInform(uint32 uiType, uint32 /*uiId*/)
-    {
-        if (uiType != POINT_MOTION_TYPE)
-            return;
-
-        if (Creature* pLord = GetClosestCreatureWithEntry(me, NPC_LORD_GREGOR_LESCOVAR, 30.0f))
-        {
-            CAST_AI(npc_lord_gregor_lescovarAI, CAST_CRE(pLord)->AI())->uiTimer = 2000;
-            CAST_AI(npc_lord_gregor_lescovarAI, CAST_CRE(pLord)->AI())->uiPhase = 5;
+            if (pLord && pLord->IsAlive())
+                pLord->DisappearAndDie();
         }
     }
 
@@ -719,11 +704,6 @@ CreatureAI* GetAI_npc_tyrion_spybot(Creature* pCreature)
 ## npc_tyrion
 ######*/
 
-enum eTyrion
-{
-    NPC_TYRION_SPYBOT = 8856
-};
-
 bool QuestAccept_npc_tyrion(Player* pPlayer, Creature* pCreature, Quest const *pQuest)
 {
     if (pQuest->GetQuestId() == QUEST_THE_ATTACK)
@@ -750,29 +730,36 @@ bool QuestAccept_npc_tyrion(Player* pPlayer, Creature* pCreature, Quest const *p
 
 #define REGINALD_SPAWN_COORDS       -9179.8, 308.65, 78.92
 
-struct npc_squire_roweAI : public npc_escortAI
+struct npc_squire_roweAI : public ScriptedAI
 {
-    npc_squire_roweAI(Creature *c) : npc_escortAI(c)
+    npc_squire_roweAI(Creature *c) : ScriptedAI(c)
     {
-        c->GetPosition(wLoc);
     }
 
-    WorldLocation wLoc;
-    uint8 event;
-    uint32 eventTimer;
-    uint32 resetTimer;
+    uint8 eventStage;
+    Timer eventTimer;
+    uint64 playerGUID;
 
-    void WaypointReached(uint32 i)
+    void MovementInform(uint32 type, uint32 i)
     {
-        Player* player = GetPlayerForEscort();
-        if(!player)
+        if (type != POINT_MOTION_TYPE)
             return;
 
         switch(i)
         {
-            case 1:
-                event = 1;
-                SetEscortPaused(true);
+        case 1:
+            eventStage = 2;
+            eventTimer = 1;
+            break;
+        case 2:
+            eventStage = 3;
+            eventTimer = 2000;
+            break;
+        case 3:
+            m_creature->SetOrientation(2.23f);
+            Reset();
+            break;
+        default:
             break;
         }
     }
@@ -780,93 +767,83 @@ struct npc_squire_roweAI : public npc_escortAI
     void Reset()
     {
         me->setActive(true);
-        event = 0;
-        eventTimer = 2000;
-        resetTimer = 0;
-    }
-
-    bool inProgress()
-    {
-        return event || resetTimer;
+        eventStage = 0;
+        eventTimer = 0;
+        playerGUID = 0;
     }
 
     void EnterCombat(Unit* who){}
 
     void JustDied(Unit *slayer){}
 
+    void StartEvent(uint64 plGUID)
+    {
+        if (!plGUID)
+            return;
+        playerGUID = plGUID;
+        eventStage = 1;
+        m_creature->GetMotionMaster()->MovePoint(1, -9057, 441.2, 93.1);
+    }
+
     void UpdateAI(const uint32 diff)
     {
-        Player* player = GetPlayerForEscort();
-        npc_escortAI::UpdateAI(diff);
-
-        if(!player || (!event && !resetTimer))
+        if(!eventStage)
             return;
 
-        if (resetTimer)
+        if (eventTimer.Expired(diff))
         {
-            if (resetTimer <= diff)
+            switch(eventStage)
             {
-                resetTimer = 0;
-                SetEscortPaused(false);
-            }
-            else
-                resetTimer -= diff;
-            return;
-        }
-
-        if (eventTimer <= diff)
-        {
-            switch(event)
-            {
-                case 1:
-                {
-                    m_creature->SetStandState(PLAYER_STATE_KNEEL);
-                }
-                break;
                 case 2:
                 {
+                    m_creature->GetMotionMaster()->MovePoint(2, -9086, 419.0, 92.4);
+                    eventTimer = 0;
+                    break;
+                }
+                case 3:
+                {
+                    m_creature->SetStandState(PLAYER_STATE_KNEEL);
+                    eventStage++;
+                    eventTimer = 4000;
+                    break;
+                }
+                case 4:
+                {
                     m_creature->SetStandState(PLAYER_STATE_NONE);
-                    event = 0;
                     Creature* pUnit = m_creature->SummonCreature(NPC_REGINAL_WINDSOR, REGINALD_SPAWN_COORDS, 0, TEMPSUMMON_CORPSE_TIMED_DESPAWN, 900);
                     if (pUnit)
                     {
-                        ((npc_escortAI*)pUnit->AI())->Start(false, true, player->GetGUID());
+                        ((npc_escortAI*)pUnit->AI())->Start(false, true, playerGUID);
                         ((npc_escortAI*)pUnit->AI())->SetMaxPlayerDistance(200);
                     }
-
-                    m_creature->StopMoving();
-                    m_creature->GetMotionMaster()->Clear();
-                    m_creature->GetMotionMaster()->MoveTargetedHome();
-                    resetTimer = MINUTE*10*1000;
+                    eventStage++;
+                    eventTimer = 10000;
+                    break;
                 }
-                break;
+                case 5:
+                {
+                    eventTimer = 0;
+                    m_creature->GetMotionMaster()->MovePoint(3, -9042, 434.2, 93.4);
+                    break;
+                }
+                default:
+                    break;
             }
-            eventTimer = 4000;
-            event++;
         }
-        else
-            eventTimer -= diff;
     }
 };
 
 CreatureAI* GetAI_npc_squire_rowe(Creature *_Creature)
 {
-    npc_squire_roweAI* squire_roweAI = new npc_squire_roweAI(_Creature);
-
-    squire_roweAI->AddWaypoint(0, -9057, 441.2, 93.1, 0);
-    squire_roweAI->AddWaypoint(1, -9086, 419.0, 92.4, 0);
-    squire_roweAI->AddWaypoint(2, -9042, 434.2, 93.4, 0);
-
-    return (CreatureAI*)squire_roweAI;
+    return new npc_squire_roweAI(_Creature);
 }
 
 bool GossipHello_npc_squire_rowe(Player *player, Creature *_Creature)
 {
-    if (((npc_squire_roweAI*)_Creature->AI())->inProgress())
+    if (((npc_squire_roweAI*)_Creature->AI())->eventStage)
         return false;
 
-    if ((player->GetQuestStatus(QUEST_STORMWIND_RENDEZVOUS)
-         == QUEST_STATUS_COMPLETE)
+    if (player->GetQuestStatus(QUEST_STORMWIND_RENDEZVOUS)
         && !player->IsActiveQuest(QUEST_THE_GREAT_THE_MASQUERADE))
     {
         player->ADD_GOSSIP_ITEM(0, GOSSIP_SQUIRE_ROWE_REGINALD, GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF);
@@ -883,8 +860,7 @@ bool GossipSelect_npc_squire_rowe(Player *player, Creature *_Creature, uint32 se
     switch (action)
     {
         case GOSSIP_ACTION_INFO_DEF:
-            ((npc_squire_roweAI*)_Creature->AI())->Start(false, true, player->GetGUID(), NULL, true);
-            ((npc_squire_roweAI*)_Creature->AI())->SetMaxPlayerDistance(10000);
+            ((npc_squire_roweAI*)_Creature->AI())->StartEvent(player->GetGUID());
             break;
     }
     return true;
@@ -894,16 +870,16 @@ bool GossipSelect_npc_squire_rowe(Player *player, Creature *_Creature, uint32 se
 * Stormwind Elite Guard
 *****/
 
-float StormwindEliteGuardMoveCoords[6][4] =
+static float StormwindEliteGuardMoveCoords[6][4] =
 {
     // right
-    {-8970.5, 520.3, 96.7, 5.38},
-    {-8972.0, 519.2, 96.7, 5.38},
-    {-8974.3, 517.4, 96.7, 5.38},
+    {-8970.5f, 520.3f, 96.7f, 5.38f},
+    {-8972.0f, 519.2f, 96.7f, 5.38f},
+    {-8974.3f, 517.4f, 96.7f, 5.38f},
     // left
-    {-8958.3, 505.4, 96.7, 2.24},
-    {-8960.2, 504.1, 96.7, 2.24},
-    {-8962.0, 502.6, 96.7, 2.24}
+    {-8958.3f, 505.4f, 96.7f, 2.24f},
+    {-8960.2f, 504.1f, 96.7f, 2.24f},
+    {-8962.0f, 502.6f, 96.7f, 2.24f}
 };
 
 struct npc_stormwind_elite_guardAI : public ScriptedAI
@@ -1029,18 +1005,18 @@ enum Event
     EVENT_ONYXIA            = 4
 };
 
-float StormwindGuardsCoords[7][4] =
+static float StormwindGuardsCoords[7][4] =
 {
     // Marcus
-    {-8966.6, 511.3, 96.4, 3.78},
+    {-8966.6f, 511.3f, 96.4f, 3.78f},
     // right
-    {-8968.1, 513.0, 96.4, 3.78},
-    {-8969.8, 515.1, 96.6, 3.78},
-    {-8972.9, 518.3, 96.7, 3.78},
+    {-8968.1f, 513.0f, 96.4f, 3.78f},
+    {-8969.8f, 515.1f, 96.6f, 3.78f},
+    {-8972.9f, 518.3f, 96.7f, 3.78f},
     // left
-    {-8965.0, 509.0, 96.4, 3.78},
-    {-8963.6, 507.3, 96.6, 3.78},
-    {-8960.7, 503.6, 96.7, 3.78}
+    {-8965.0f, 509.0f, 96.4f, 3.78f},
+    {-8963.6f, 507.3f, 96.6f, 3.78f},
+    {-8960.7f, 503.6f, 96.7f, 3.78f}
 };
 
 struct npc_reginald_windsorAI : public npc_escortAI
@@ -1049,14 +1025,21 @@ struct npc_reginald_windsorAI : public npc_escortAI
 
     uint8 event;
     uint8 eventPhase;
-    uint32 phaseTimer;
+    Timer phaseTimer;
     uint8 onyxiaDespawnEvent;
     bool onyxia;
     bool marcusEventEnd;
-    uint32 onyxiaDespawnTimer;
+    Timer onyxiaDespawnTimer;
     uint64 npcLeft[3];
     uint64 npcRight[3];
     std::list<uint64> npcSay;
+
+    void GetDebugInfo(ChatHandler& reader)
+    {
+        std::ostringstream str;
+        str << "Event " << event << " Phase " << eventPhase << " Timer " << phaseTimer.GetTimeLeft() << " " << phaseTimer.GetInterval();
+        reader.SendSysMessage(str.str().c_str());
+    }
 
     void WaypointReached(uint32 i)
     {
@@ -1066,10 +1049,6 @@ struct npc_reginald_windsorAI : public npc_escortAI
 
         switch(i)
         {
-            /*case 0:
-                m_creature->Mount(305);
-                m_creature->SetUInt32Value(UNIT_FIELD_MOUNTDISPLAYID, 305);
-            break;*/
             case 3:
                 event = EVENT_STORMWIND;
                 eventPhase = 0;
@@ -1182,13 +1161,32 @@ struct npc_reginald_windsorAI : public npc_escortAI
 
     void SpawnGuards()
     {
-        Creature * tmpCreature;
-        Map * tmpMap = m_creature->GetMap();
-        event = EVENT_NONE;
+        SetEscortPaused(false);
+        SetRun(false);
+        SetMaxPlayerDistance(30);
+        m_creature->SetUInt64Value(UNIT_FIELD_TARGET, 0);
+        m_creature->Yell(SAY_REGINALD_1_3, LANG_UNIVERSAL, 0);
+        Map* tmpMap = m_creature->GetMap();
+        Creature* tmpCreature = tmpMap->GetCreatureById(NPC_MAJESTY_ID);
+
+
+        if (tmpCreature)
+        {
+            if (!tmpCreature->IsAlive())
+                tmpCreature->Respawn();
+            tmpCreature->SetVisibility(VISIBILITY_ON);
+        }
+
+        if (tmpCreature = tmpMap->GetCreatureById(NPC_LADY_KATRANA_ID))
+        {
+            if (!tmpCreature->IsAlive())
+                tmpCreature->Respawn();
+            tmpCreature->SetVisibility(VISIBILITY_ON);
+        }
 
         if (tmpMap)
         {
-            tmpCreature = tmpMap->GetCreature(tmpMap->GetCreatureGUID(NPC_MARCUS_ID));
+            tmpCreature = tmpMap->GetCreatureById(NPC_MARCUS_ID);
             if (tmpCreature)
             {
                 tmpCreature->Unmount();
@@ -1206,6 +1204,9 @@ struct npc_reginald_windsorAI : public npc_escortAI
             else
                 npcLeft[i - 3] = tmpCreature->GetGUID();
         }
+
+        event = EVENT_NONE;
+        phaseTimer = 60000; // dont let despawn, event will be changed on waypointreached
     }
 
     void SpellHit(Unit * caster, const SpellEntry * spell)
@@ -1242,7 +1243,7 @@ struct npc_reginald_windsorAI : public npc_escortAI
 
         if (onyxiaDespawnEvent)
         {
-            if (onyxiaDespawnTimer <= diff)
+            if (onyxiaDespawnTimer.Expired(diff))
             {
                 tmpMap = me->GetMap();
                 if (tmpMap)
@@ -1284,17 +1285,15 @@ struct npc_reginald_windsorAI : public npc_escortAI
                 else
                     me->Say("Jakas dziwna ta mapa oO bo nima jej :P", LANG_UNIVERSAL, 0);
             }
-            else
-                onyxiaDespawnTimer -= diff;
         }
 
         switch(event)
         {
             case EVENT_STORMWIND:
             {
-                if (phaseTimer <= diff)
+                if (phaseTimer.Expired(diff))
                 {
-                    switch(eventPhase)
+                    switch (eventPhase)
                     {
                         case 0:
                             m_creature->Unmount();
@@ -1304,7 +1303,7 @@ struct npc_reginald_windsorAI : public npc_escortAI
                             phaseTimer = 2000;
                             break;
                         case 1:
-                            if(Creature * horse = m_creature->SummonCreature(305, HORSE_COORDS, me->GetOrientation(), TEMPSUMMON_TIMED_DESPAWN, 10000))
+                            if (Creature * horse = m_creature->SummonCreature(305, HORSE_COORDS, me->GetOrientation(), TEMPSUMMON_TIMED_DESPAWN, 10000))
                                 horse->GetMotionMaster()->MovePoint(0, REGINALD_SPAWN_COORDS);
 
                             m_creature->Say(SAY_REGINALD_1_1, LANG_UNIVERSAL, player->GetGUID());
@@ -1326,19 +1325,17 @@ struct npc_reginald_windsorAI : public npc_escortAI
                     }
                     eventPhase++;
                 }
-                else
-                    phaseTimer -= diff;
             }
             break;
             case EVENT_GENERAL_MARCUS:
             {
-                if (phaseTimer <= diff)
+                if (phaseTimer.Expired(diff))
                 {
                     Creature * marcus = NULL;
                     if (!(tmpMap = m_creature->GetMap()))
                         break;
 
-                    if (!(marcus = tmpMap->GetCreature(tmpMap->GetCreatureGUID(NPC_MARCUS_ID))))
+                    if (!(marcus = tmpMap->GetCreatureById(NPC_MARCUS_ID)))
                         break;
 
                     switch (eventPhase)
@@ -1449,13 +1446,11 @@ struct npc_reginald_windsorAI : public npc_escortAI
                     }
                     eventPhase++;
                 }
-                else
-                    phaseTimer -= diff;
             }
             break;
             case EVENT_STORMWIND_KEEP:
             {
-                if (phaseTimer <= diff)
+                if (phaseTimer.Expired(diff))
                 {
                     switch (eventPhase)
                     {
@@ -1476,16 +1471,13 @@ struct npc_reginald_windsorAI : public npc_escortAI
                     }
                     eventPhase++;
                 }
-                else
-                    phaseTimer -= diff;
             }
             break;
             case EVENT_ONYXIA:
             {
                 Creature * ladyOnyxia = NULL;
                 Creature * fordragon = NULL;
-
-                if (phaseTimer <= diff)
+                if (phaseTimer.Expired(diff))
                 {
                     if (!(tmpMap = m_creature->GetMap()))
                         break;
@@ -1611,7 +1603,7 @@ struct npc_reginald_windsorAI : public npc_escortAI
                                     tmpc = ladyOnyxia->SummonCreature(NPC_LADY_ONYXIA_GUARD_ID, guardWLoc.coord_x, guardWLoc.coord_y, guardWLoc.coord_z, guardWLoc.orientation, TEMPSUMMON_TIMED_OR_CORPSE_DESPAWN, 15000);
                                     //if (tmpc)
                                     //{
-                                    //    tmpc->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
+                                    //    tmpc->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_SPAWNING);
                                     //    tmpc->SetNoCallAssistance(true);
                                     //}
 
@@ -1636,7 +1628,7 @@ struct npc_reginald_windsorAI : public npc_escortAI
                                 std::list<Player*>::iterator tmpItr = itr;
                                 ++itr;
 
-                                if (!(*tmpItr) || !(*tmpItr)->isAlive())
+                                if (!(*tmpItr) || !(*tmpItr)->IsAlive())
                                     playerList.erase(tmpItr);
                             }
 
@@ -1656,7 +1648,7 @@ struct npc_reginald_windsorAI : public npc_escortAI
                                         (*i)->AI()->AttackStart(*tmpItr);
                                     }
 
-                                    //(*i)->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
+                                    //(*i)->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_SPAWNING);
                                 }
                             }
 
@@ -1667,7 +1659,7 @@ struct npc_reginald_windsorAI : public npc_escortAI
                             break;
                         }
                         case 15:
-                            if (player->isInCombat() || fordragon->isInCombat())
+                            if (player->IsInCombat() || fordragon->IsInCombat())
                                 eventPhase--;
                             phaseTimer = 2000;
                             break;
@@ -1711,8 +1703,6 @@ struct npc_reginald_windsorAI : public npc_escortAI
                     }
                     eventPhase++;
                 }
-                else
-                    phaseTimer -= diff;
             }
             break;
         }
@@ -1816,27 +1806,7 @@ bool QuestAccept_npc_reginald_windsor(Player * player, Creature * creature, Ques
     {
         creature->RemoveFlag(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_GOSSIP);
         creature->RemoveFlag(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_QUESTGIVER);
-        ((npc_reginald_windsorAI*)creature->AI())->SetEscortPaused(false);
-        ((npc_reginald_windsorAI*)creature->AI())->SetRun(false);
         ((npc_reginald_windsorAI*)creature->AI())->SpawnGuards();
-        ((npc_reginald_windsorAI*)creature->AI())->SetMaxPlayerDistance(15);
-        creature->SetUInt64Value(UNIT_FIELD_TARGET, 0);
-        creature->Yell(SAY_REGINALD_1_3, LANG_UNIVERSAL, 0);
-        Creature * tmpC = creature->GetMap()->GetCreature(creature->GetMap()->GetCreatureGUID(NPC_MAJESTY_ID));
-
-        if (tmpC)
-        {
-            if (!tmpC->isAlive())
-                tmpC->Respawn();
-            tmpC->SetVisibility(VISIBILITY_ON);
-        }
-
-        if (tmpC = creature->GetMap()->GetCreature(creature->GetMap()->GetCreatureGUID(NPC_LADY_KATRANA_ID)))
-        {
-            if (!tmpC->isAlive())
-                tmpC->Respawn();
-            tmpC->SetVisibility(VISIBILITY_ON);
-        }
     }
 
     return true;

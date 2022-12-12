@@ -1,7 +1,7 @@
 /*
  * Copyright (C) 2005-2008 MaNGOS <http://getmangos.com/>
  * Copyright (C) 2008 TrinityCore <http://www.trinitycore.org/>
- * Copyright (C) 2008-2014 Hellground <http://hellground.net/>
+ * Copyright (C) 2008-2017 Hellground <http://wow-hellground.com/>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -276,8 +276,8 @@ class BattleGroundAB : public BattleGround
             4: horde occupied     */
         uint8             m_Nodes[BG_AB_DYNAMIC_NODES_COUNT];
         uint8             m_prevNodes[BG_AB_DYNAMIC_NODES_COUNT];
-        BG_AB_BannerTimer m_BannerTimers[BG_AB_DYNAMIC_NODES_COUNT];
-        int32             m_NodeTimers[BG_AB_DYNAMIC_NODES_COUNT];
+        BG_AB_BannerTimer m_BannerTimers[BG_AB_DYNAMIC_NODES_COUNT]; //TODO: export it to [Timer] or change this structure to work on [Timer]
+        Timer             m_NodeTimers[BG_AB_DYNAMIC_NODES_COUNT];
         uint32            m_TeamScores[2];
         uint32            m_lastTick[2];
         uint32            m_HonorScoreTics[2];

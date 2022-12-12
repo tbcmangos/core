@@ -1,6 +1,6 @@
 /* 
  * Copyright (C) 2006-2008 ScriptDev2 <https://scriptdev2.svn.sourceforge.net/>
- * Copyright (C) 2008-2014 Hellground <http://hellground.net/>
+ * Copyright (C) 2008-2015 Hellground <http://hellground.net/>
  * 
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -46,33 +46,27 @@ struct boss_chrono_lord_dejaAI : public ScriptedAI
     boss_chrono_lord_dejaAI(Creature *c) : ScriptedAI(c)
     {
         pInstance = (c->GetInstanceData());
-        HeroicMode = m_creature->GetMap()->IsHeroic();
     }
 
     ScriptedInstance *pInstance;
-    bool HeroicMode;
 
-    uint32 ArcaneBlast_Timer;
-    uint32 ArcaneDischarge_Timer;
-    uint32 Attraction_Timer;
-    uint32 TimeLapse_Timer;
-
-    bool arcane;
+    Timer ArcaneBlast_Timer;
+    Timer ArcaneDischarge_Timer;
+    Timer Attraction_Timer;
+    Timer TimeLapse_Timer;
 
     void Reset()
     {
         if (HeroicMode)
         {
-            GetSpellRangeStore();
-            ArcaneBlast_Timer = 2000;
-            Attraction_Timer = 18000;
+            ArcaneBlast_Timer.Reset(2000);
+            Attraction_Timer.Reset(18000);
         }
         else
-            ArcaneBlast_Timer = 20000;
+            ArcaneBlast_Timer.Reset(20000);
 
-        ArcaneDischarge_Timer = 10000;
-        TimeLapse_Timer = 15000;
-        arcane = false;
+        ArcaneDischarge_Timer.Reset(10000);
+        TimeLapse_Timer.Reset(15000);
         m_creature->setActive(true);
 
         SayIntro();
@@ -93,10 +87,10 @@ struct boss_chrono_lord_dejaAI : public ScriptedAI
         //Despawn Time Keeper
         if (who->GetTypeId() == TYPEID_UNIT && who->GetEntry() == C_TIME_KEEPER)
         {
-            if (m_creature->IsWithinDistInMap(who,20.0f))
+            if (me->IsAlive() && m_creature->IsWithinDistInMap(who,20.0f))
             {
                 DoScriptText(SAY_BANISH, m_creature);
-                m_creature->DealDamage(who, who->GetHealth(), DIRECT_DAMAGE, SPELL_SCHOOL_MASK_NORMAL, NULL, false);
+                who->ToCreature()->ForcedDespawn();
             }
         }
 
@@ -126,57 +120,45 @@ struct boss_chrono_lord_dejaAI : public ScriptedAI
         //Arcane Blast && Attraction on heroic mode
         if (!HeroicMode)
         {
-            if (ArcaneBlast_Timer < diff)
+            if (ArcaneBlast_Timer.Expired(diff))
             {
-                AddSpellToCast(m_creature->getVictim(), SPELL_ARCANE_BLAST, true);
+                AddSpellToCast(m_creature->GetVictim(), SPELL_ARCANE_BLAST, true);
                 ArcaneBlast_Timer = urand(20000, 25000);
             }
-            else
-                ArcaneBlast_Timer -= diff;
         }
         else
         {
-            if (Attraction_Timer < diff)
+            if (Attraction_Timer.Expired(diff))
             {
-                if (Unit *target = SelectUnit(SELECT_TARGET_RANDOM, 0, GetSpellMaxRange(SPELL_ATTRACTION), true))
-                    if (!arcane)
-                    {
-                        AddSpellToCast(target, SPELL_ATTRACTION, true);
-                        arcane = true;
-                    }
-
-                if (ArcaneBlast_Timer < diff)
-                {
-                    AddSpellToCast(m_creature->getVictim(), H_SPELL_ARCANE_BLAST, true);
-
-                    arcane = false;
-                    Attraction_Timer = urand(18000, 23000);
-                    ArcaneBlast_Timer = 2000;
-                }
-                else
-                    ArcaneBlast_Timer -= diff;
+                if (Unit *target = SelectUnit(SELECT_TARGET_RANDOM, 0, 50, true))
+                    AddSpellToCast(target, SPELL_ATTRACTION, true);
+                ArcaneBlast_Timer = 2000;
+                Attraction_Timer = 0;
             }
-            else
-                Attraction_Timer -= diff;
+
+
+            if (ArcaneBlast_Timer.Expired(diff))
+            {
+                AddSpellToCast(m_creature->GetVictim(), H_SPELL_ARCANE_BLAST, true);
+                Attraction_Timer = urand(18000, 23000);
+                ArcaneBlast_Timer = 0;
+            }
         }
 
-        //Arcane Discharge
-        if (ArcaneDischarge_Timer < diff)
+        
+        if (ArcaneDischarge_Timer.Expired(diff))
         {
             AddSpellToCast(m_creature, HeroicMode ? H_SPELL_ARCANE_DISCHARGE : SPELL_ARCANE_DISCHARGE);
             ArcaneDischarge_Timer = urand(15000, 25000);
         }
-        else
-            ArcaneDischarge_Timer -= diff;
+        
 
-        //Time Lapse
-        if (TimeLapse_Timer < diff)
+        if (TimeLapse_Timer.Expired(diff))
         {
             AddSpellToCastWithScriptText(m_creature, SPELL_TIME_LAPSE, SAY_BANISH);
             TimeLapse_Timer = urand(15000, 25000);
         }
-        else
-            TimeLapse_Timer -= diff;
+        
 
         //if event failed, remove boss from instance
         if (pInstance->GetData(TYPE_MEDIVH) == FAIL)

@@ -1,7 +1,7 @@
-/* 
+/*
  * Copyright (C) 2006-2009 ScriptDev2 <https://scriptdev2.svn.sourceforge.net/>
- * Copyright (C) 2008-2014 Hellground <http://hellground.net/>
- * 
+ * Copyright (C) 2008-2015 Hellground <http://hellground.net/>
+ *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 2 of the License, or
@@ -25,18 +25,17 @@ EndScriptData */
 
 #include "precompiled.h"
 
-#define YELL_AGGRO                        -2100019
-#define YELL_EVADE                        -2100020
+#define YELL_AGGRO                        -1001019
+#define YELL_EVADE                        -1001020
 
-#define SPELL_ARCANE_EXPLOSION            46608
-#define SPELL_CONE_OF_COLD                38384
-#define SPELL_FIREBALL                    46988
-#define SPELL_FROSTBOLT                   46987
-#define SPELL_WATER_ELEMENTAL             45067
-
-#define SPELL_ICE_BLOCK                   46604
-#define SPELL_HYPOTHERMIA                 41425
-
+enum Balinda
+{
+    SPELL_ARCANE_EXPLOSION  = 46608,
+    SPELL_CONE_OF_COLD      = 38384,
+    SPELL_FIREBALL          = 46988,
+    SPELL_FROSTBOLT         = 46987,
+    SPELL_WATER_ELEMENTAL   = 45067
+};
 
 struct boss_balindaAI : public ScriptedAI
 {
@@ -45,23 +44,21 @@ struct boss_balindaAI : public ScriptedAI
         m_creature->GetPosition(wLoc);
     }
 
-    uint32 CoCTimer;
-    uint32 CheckTimer;
-    uint32 IceBlockTimer;
-    uint32 WaterElementalTimer;
-    uint32 CastTimer;
+    Timer CoCTimer;
+    Timer CheckTimer;
+    Timer WaterElementalTimer;
+    Timer CastTimer;
     uint32 SpellId;
     WorldLocation wLoc;
     SummonList summons;
 
     void Reset()
     {
-        IceBlockTimer       = 10000;
-        CoCTimer            = 8000;
-        CheckTimer          = 2000;
-        CastTimer            = 0;
-        SpellId             = 0;
-        WaterElementalTimer = 0;
+        CoCTimer.Reset(8000);
+        CheckTimer.Reset(2000);
+        CastTimer.Reset(1);
+        SpellId = 0;
+        WaterElementalTimer.Reset(1);
 
         summons.DespawnAll();
     }
@@ -82,10 +79,10 @@ struct boss_balindaAI : public ScriptedAI
         {
             summons.Summon(summ);
             summ->setFaction(me->getFaction());
-            summ->SetLevel(me->getLevel());
-            summ->SetMaxHealth(6300 + (summ->getLevel() - 60)*360);
-            summ->SetPower(POWER_MANA, 6000 + (summ->getLevel() - 60)*300);
-            summ->AI()->AttackStart(me->getVictim());
+            summ->SetLevel(me->GetLevel());
+            summ->SetMaxHealth(6300 + (summ->GetLevel() - 60)*360);
+            summ->SetPower(POWER_MANA, 6000 + (summ->GetLevel() - 60)*300);
+            summ->AI()->AttackStart(me->GetVictim());
         }
     }
 
@@ -94,7 +91,7 @@ struct boss_balindaAI : public ScriptedAI
         if (!UpdateVictim())
             return;
 
-        if (CheckTimer < diff)
+        if (CheckTimer.Expired(diff))
         {
             if (!m_creature->IsWithinDistInMap(&wLoc, 20))
             {
@@ -104,67 +101,41 @@ struct boss_balindaAI : public ScriptedAI
             }
             CheckTimer = 2000;
         }
-        else
-            CheckTimer -= diff;
 
-        if (WaterElementalTimer < diff)
+        if (WaterElementalTimer.Expired(diff))
         {
             ForceSpellCast(m_creature, SPELL_WATER_ELEMENTAL);
             WaterElementalTimer = 90000; // 90s
         }
-        else
-            WaterElementalTimer -= diff;
-
-        if (IceBlockTimer < diff)
-        {
-            if (!m_creature->HasAura(SPELL_HYPOTHERMIA, 0))
-            {
-                uint32 negativeAuras = m_creature->GetAurasAmountByType(SPELL_AURA_PERIODIC_DAMAGE) + m_creature->GetAurasAmountByType(SPELL_AURA_PERIODIC_LEECH);
-                // cast if no hypothermia && has 3 or more dot/leech auras
-                if (negativeAuras >= 3)
-                {
-                    m_creature->InterruptNonMeleeSpells(false);
-                    ForceSpellCast(m_creature, SPELL_HYPOTHERMIA, DONT_INTERRUPT, true);
-                    ForceSpellCast(m_creature, SPELL_ICE_BLOCK);
-                    IceBlockTimer = 60000; // 60s
-                }
-            }
-        }
-        else
-            IceBlockTimer -= diff;
 
         // update CoC timer
-        if (CoCTimer > diff)
-            CoCTimer -= diff;
-        else
+        if (CoCTimer.Expired(diff))
             CoCTimer = 0;
 
         // select spell
-        if (CastTimer < diff)
+        if (CastTimer.Expired(diff))
         {
             // if victim is in range of 6.5 yards and there are 3 attackers cast explosion or CoC if ready
-            if (m_creature->getAttackers().size() >= 3 && m_creature->IsWithinDistInMap(m_creature->getVictim(), 6.5f, false))
+            if (m_creature->GetAttackers().size() >= 3 && m_creature->IsWithinDistInMap(m_creature->GetVictim(), 6.5f, false))
             {
-                if (!CoCTimer)
+                if (!CoCTimer.GetInterval())
                 {
-                    ForceSpellCast(me->getVictim(), SPELL_CONE_OF_COLD);
+                    ForceSpellCast(me->GetVictim(), SPELL_CONE_OF_COLD);
                     CoCTimer = urand(8000, 12000);
-                    CastTimer = 0;
+                    CastTimer = 1;
                 }
                 else
                 {
-                    ForceSpellCast(me->getVictim(), SPELL_ARCANE_EXPLOSION);
+                    ForceSpellCast(me->GetVictim(), SPELL_ARCANE_EXPLOSION);
                     CastTimer = 2000;
                 }
             }
             else
             {
-                AddSpellToCast(m_creature->getVictim(), RAND(SPELL_FROSTBOLT, SPELL_FIREBALL));
+                AddSpellToCast(m_creature->GetVictim(), RAND(SPELL_FROSTBOLT, SPELL_FIREBALL));
                 CastTimer = 2500;
             }
         }
-        else
-            CastTimer -= diff;
 
         CastNextSpellIfAnyAndReady();
         //DoMeleeAttackIfReady();
@@ -178,7 +149,10 @@ CreatureAI* GetAI_boss_balinda(Creature *_Creature)
 
 // WATER ELEMENTAL
 
-#define SPELL_WATER_BOLT                46983
+enum WaterElemental
+{
+    SPELL_WATER_BOLT    = 46983
+};
 
 struct mob_av_water_elementalAI : public ScriptedAI
 {
@@ -200,12 +174,10 @@ struct mob_av_water_elementalAI : public ScriptedAI
     }
 };
 
-
 CreatureAI* GetAI_mob_av_water_elemental(Creature *_Creature)
 {
     return new mob_av_water_elementalAI (_Creature);
 }
-
 
 void AddSC_boss_balinda()
 {

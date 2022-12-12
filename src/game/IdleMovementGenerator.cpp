@@ -1,7 +1,7 @@
 /*
  * Copyright (C) 2005-2008 MaNGOS <http://getmangos.com/>
  * Copyright (C) 2008 TrinityCore <http://www.trinitycore.org/>
- * Copyright (C) 2008-2014 Hellground <http://hellground.net/>
+ * Copyright (C) 2008-2017 Hellground <http://wow-hellground.com/>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -30,16 +30,16 @@ void IdleMovementGenerator::Reset(Unit& /*owner*/)
 
 void RotateMovementGenerator::Interrupt(Unit& unit)
 {
-    unit.clearUnitState(UNIT_STAT_ROTATING);
+    unit.ClearUnitState(UNIT_STAT_ROTATING);
 }
 
 void RotateMovementGenerator::Initialize(Unit& owner)
 {
-    //if (owner.hasUnitState(UNIT_STAT_MOVE))
-    //    owner.StopMoving();
+    if (!owner.HasUnitState(UNIT_STAT_NOT_MOVE))
+        owner.StopMoving();
 
-    if (owner.getVictim())
-        owner.SetInFront(owner.getVictim());
+    if (owner.GetVictim() && !owner.ToCreature()->hasIgnoreVictimSelection())
+        owner.SetInFront(owner.GetVictim());
 
     owner.addUnitState(UNIT_STAT_ROTATING);
     owner.AttackStop(); 
@@ -78,7 +78,7 @@ bool RotateMovementGenerator::Update(Unit& owner, const uint32& diff)
 
 void RotateMovementGenerator::Finalize(Unit &unit)
 {
-    unit.clearUnitState(UNIT_STAT_ROTATING);
+    unit.ClearUnitState(UNIT_STAT_ROTATING);
     if (unit.GetTypeId() == TYPEID_UNIT)
         ((Creature*)&unit)->AI()->MovementInform(ROTATE_MOTION_TYPE, 0);
 
@@ -92,7 +92,7 @@ void DistractMovementGenerator::Initialize(Unit& owner)
 
 void DistractMovementGenerator::Finalize(Unit& owner)
 {
-    owner.clearUnitState(UNIT_STAT_DISTRACTED);
+    owner.ClearUnitState(UNIT_STAT_DISTRACTED);
     owner.AddEvent(new AttackResumeEvent(owner), ATTACK_DISPLAY_DELAY);
 }
 
@@ -116,7 +116,7 @@ bool DistractMovementGenerator::Update(Unit& /*owner*/, const uint32& time_diff)
 
 void AssistanceDistractMovementGenerator::Finalize(Unit &unit)
 {
-    unit.clearUnitState(UNIT_STAT_DISTRACTED);
+    unit.ClearUnitState(UNIT_STAT_DISTRACTED);
     ((Creature*)&unit)->SetReactState(REACT_AGGRESSIVE);
 
     unit.AddEvent(new AttackResumeEvent(unit), ATTACK_DISPLAY_DELAY);

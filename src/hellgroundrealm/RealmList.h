@@ -1,6 +1,6 @@
 /*
  * Copyright (C) 2005-2011 MaNGOS <http://getmangos.com/>
- * Copyright (C) 2008-2014 Hellground <http://hellground.net/>
+ * Copyright (C) 2008-2015 Hellground <http://hellground.net/>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -79,7 +79,7 @@ class RealmList
         void UpdateRealms(bool init);
         void UpdateRealm(uint32 ID, const std::string& name, const std::string& address, uint32 port, uint8 icon, RealmFlags realmflags, uint8 timezone, uint64 requiredPermissionMask, float popu, const std::string& builds);
     private:
-        RealmMap m_realms;                                  ///< Internal map of realms
+        RealmMap m_realms;                                  /// Internal map of realms
         uint32   m_UpdateInterval;
         time_t   m_NextUpdateTime;
         std::string m_ChatboxOsName;

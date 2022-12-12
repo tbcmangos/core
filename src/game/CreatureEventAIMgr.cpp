@@ -1,6 +1,6 @@
 /*
  * Copyright (C) 2005-2009 MaNGOS <http://getmangos.com/>
- * Copyright (C) 2008-2014 Hellground <http://hellground.net/>
+ * Copyright (C) 2008-2017 Hellground <http://wow-hellground.com/>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -65,7 +65,7 @@ void CreatureEventAIMgr::LoadCreatureEventAI_Texts(bool check_entry_use)
             }
 
             // range negative (don't must be happen, loaded from same table)
-            if (!sObjectMgr.GetHellgroundStringLocale(i))
+            if (!sObjectMgr.HasHellgroundString(i))
             {
                 sLog.outLog(LOG_DB_ERR, "CreatureEventAI:  Entry %i in table `creature_ai_texts` not found",i);
                 continue;

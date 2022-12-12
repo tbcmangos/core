@@ -1,6 +1,6 @@
 /* 
  * Copyright (C) 2006-2008 ScriptDev2 <https://scriptdev2.svn.sourceforge.net/>
- * Copyright (C) 2008-2014 Hellground <http://hellground.net/>
+ * Copyright (C) 2008-2015 Hellground <http://hellground.net/>
  * 
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -408,7 +408,12 @@ bool GOUse_go_resonite_cask(Player *pPlayer, GameObject *pGO)
 
 bool GOUse_go_darkmoon_cannon(Player *player, GameObject* _GO)
 {
-    // player->Relocate(    //przeniesc gracza na czubek armaty :]
+    Position pos;
+    _GO->GetPosition(pos);
+    float angle = _GO->GetOrientation() + 0.0f;
+    pos.x += 7.0f * cos(angle);
+    pos.x += 7.0f * sin(angle);
+    player->Relocate(pos);
     player->CastSpell(player,SPELL_WINGS,true);
     return false;
 }
@@ -596,7 +601,7 @@ bool GOUse_go_draconic_for_dummies(Player* pPlayer, GameObject* pGO)
             default:
                 return true;
         }
-        pPlayer->ADD_GOSSIP_ITEM(NULL, GOSSIP_BOOK_HELLO, GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF+1);
+        pPlayer->ADD_GOSSIP_ITEM(0, GOSSIP_BOOK_HELLO, GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF+1);
         pPlayer->SEND_GOSSIP_MENU(50010, pGO->GetGUID());
     }
     return true;

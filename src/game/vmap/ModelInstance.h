@@ -1,6 +1,6 @@
 /*
  * Copyright (C) 2005-2010 MaNGOS <http://getmangos.com/>
- * Copyright (C) 2008-2014 Hellground <http://hellground.net/>
+ * Copyright (C) 2008-2017 Hellground <http://wow-hellground.com/>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -68,7 +68,7 @@ namespace VMAP
             ModelInstance(): iModel(0) {}
             ModelInstance(const ModelSpawn &spawn, WorldModel *model);
             void setUnloaded() { iModel = 0; }
-            bool intersectRay(const G3D::Ray& pRay, float& pMaxDist, bool pStopAtFirstHit) const;
+            bool intersectRay(const G3D::Ray& pRay, float& pMaxDist, bool pStopAtFirstHit, bool alsoM2) const;
             void intersectPoint(const G3D::Vector3& p, AreaInfo &info) const;
             bool GetLocationInfo(const G3D::Vector3& p, LocationInfo &info) const;
             bool GetLiquidLevel(const G3D::Vector3& p, LocationInfo &info, float &liqHeight) const;

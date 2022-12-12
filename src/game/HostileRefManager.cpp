@@ -1,7 +1,7 @@
 /*
  * Copyright (C) 2005-2008 MaNGOS <http://getmangos.com/>
  * Copyright (C) 2008 TrinityCore <http://www.trinitycore.org/>
- * Copyright (C) 2008-2014 Hellground <http://hellground.net/>
+ * Copyright (C) 2008-2017 Hellground <http://wow-hellground.com/>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -36,7 +36,7 @@ HostileRefManager::~HostileRefManager()
 
 void HostileRefManager::threatAssist(Unit *pVictim, float pThreat, SpellEntry const *pThreatSpell, bool pSingleTarget)
 {
-    if (iOwner->hasUnitState(UNIT_STAT_IGNORE_ATTACKERS))
+    if (iOwner->HasUnitState(UNIT_STAT_IGNORE_ATTACKERS))
         return;
 
     HostileReference* ref;

@@ -1,7 +1,7 @@
 /*
  * Copyright (C) 2005-2008 MaNGOS <http://getmangos.com/>
  * Copyright (C) 2008 TrinityCore <http://www.trinitycore.org/>
- * Copyright (C) 2008-2014 Hellground <http://hellground.net/>
+ * Copyright (C) 2008-2017 Hellground <http://wow-hellground.com/>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -22,35 +22,28 @@
 #include "ObjectMgr.h"
 #include "World.h"
 #include "SocialMgr.h"
+#include "Chat.h"
 
-Channel::Channel(const std::string& name, uint32 channel_id)
-: m_announce(true), m_moderate(false), m_name(name), m_flags(0), m_channelId(channel_id), m_ownerGUID(0)
+Channel::Channel(const std::string& name)
+: m_announce(false), m_moderate(false), m_name(name), m_ownerGUID(0)
 {
-    // set special flags if built-in channel
-    ChatChannelsEntry const* ch = GetChannelEntryFor(channel_id);
-    if (ch)                                                  // it's built-in channel
-    {
-        channel_id = ch->ChannelID;                         // built-in channel
-        m_announce = false;                                 // no join/leave announces
-
-        m_flags |= CHANNEL_FLAG_GENERAL;                    // for all built-in channels
-
-        if (ch->flags & CHANNEL_DBC_FLAG_TRADE)              // for trade channel
-            m_flags |= CHANNEL_FLAG_TRADE;
-
-        if (ch->flags & CHANNEL_DBC_FLAG_CITY_ONLY2)         // for city only channels
-            m_flags |= CHANNEL_FLAG_CITY;
-
-        if (ch->flags & CHANNEL_DBC_FLAG_LFG)                // for LFG channel
-            m_flags |= CHANNEL_FLAG_LFG;
-        else                                                // for all other channels
-            m_flags |= CHANNEL_FLAG_NOT_LFG;
-    }
-    else                                                    // it's custom channel
-    {
-        m_flags |= CHANNEL_FLAG_CUSTOM;
-        m_announce = false;
-    }
+    // DO NOT TRUST channel ids send from client!!
+    if (name == "world")
+        m_channelId = CHANNEL_ID_WORLD;
+    else if (name.substr(0, 7) == "General")
+        m_channelId = CHANNEL_ID_GENERAL;
+    else if (name.substr(0, 5) == "Trade")
+        m_channelId = CHANNEL_ID_TRADE;
+    else if (name.substr(0, 12) == "LocalDefense")
+        m_channelId = CHANNEL_ID_LOCALDEFENSE;
+    else if (name == "WorldDefense")
+        m_channelId = CHANNEL_ID_WORLDDEFENSE;
+    else if (name.substr(0, 16) == "GuildRecruitment")
+        m_channelId = CHANNEL_ID_GUILDRECRUITMENT;
+    else if (name == "LookingForGroup")
+        m_channelId = CHANNEL_ID_LFG;
+    else                                                 // it's custom channel
+        m_channelId = CHANNEL_ID_CUSTOM;
 }
 
 void Channel::Join(uint64 p, const char *pass)
@@ -68,7 +61,7 @@ void Channel::Join(uint64 p, const char *pass)
 
     Player *plr = sObjectMgr.GetPlayer(p);
 
-    if ((!plr || !plr->isGameMaster()) && !IsConstant() && m_name != "world" && m_name != "engworld" && m_name != "handel")
+    if ((!plr || !plr->IsGameMaster()) && !IsConstant())
     {
         uint32 limitCount = sWorld.getConfig(CONFIG_PRIVATE_CHANNEL_LIMIT);
 
@@ -87,14 +80,14 @@ void Channel::Join(uint64 p, const char *pass)
         return;
     }
 
-    if (IsBanned(p) && (!plr || !plr->isGameMaster()))
+    if (IsBanned(p) && (!plr || !plr->IsGameMaster()))
     {
         MakeBanned(&data);
         SendToOne(&data, p);
         return;
     }
 
-    if (m_password.length() > 0 && strcmp(pass, m_password.c_str()) && (!plr || !plr->isGameMaster()))
+    if (m_password.length() > 0 && strcmp(pass, m_password.c_str()) && (!plr || !plr->IsGameMaster()))
     {
         MakeWrongPassword(&data);
         SendToOne(&data, p);
@@ -111,9 +104,6 @@ void Channel::Join(uint64 p, const char *pass)
             SendToOne(&data, p);
             return;
         }
-
-        if (plr->GetGuildId() && (GetFlags() == 0x38))
-            return;
 
         plr->JoinedChannel(this);
     }
@@ -462,7 +452,7 @@ void Channel::List(Player* player)
         WorldPacket data(SMSG_CHANNEL_LIST, 1+(GetName().size()+1)+1+4+players.size()*(8+1));
         data << uint8(1);                                   // channel type?
         data << GetName();                                  // channel name
-        data << uint8(GetFlags());                          // channel flags?
+        data << uint8(0);                          // channel flags?
 
         size_t pos = data.wpos();
         data << uint32(0);                                  // size of list, placeholder
@@ -560,6 +550,9 @@ void Channel::Say(uint64 p, const char *what, uint32 lang)
 {
     if (!what)
         return;
+    if (IsConstant() && ChatHandler::ContainsNotAllowedSigns(what,true))
+        return;
+
     if (sWorld.getConfig(CONFIG_ALLOW_TWO_SIDE_INTERACTION_CHANNEL))
         lang = LANG_UNIVERSAL;
 
@@ -603,8 +596,8 @@ void Channel::Say(uint64 p, const char *what, uint32 lang)
 
         if (!plr || !plr->IsTrollmuted())
         {
-            // exclude LFG from two-side channels
-            if (sWorld.getConfig(CONFIG_ALLOW_TWO_SIDE_INTERACTION_CHANNEL) && IsLFG() && plr)
+            // exclude LFG and Trade from two-side channels
+            if (sWorld.getConfig(CONFIG_ALLOW_TWO_SIDE_INTERACTION_CHANNEL) && (IsLFG() || m_channelId == CHANNEL_ID_TRADE) && plr)
             {
                 uint32 fromteam = plr->GetTeam();
                 for (PlayerList::iterator i = players.begin(); i != players.end(); ++i)
@@ -622,6 +615,27 @@ void Channel::Say(uint64 p, const char *what, uint32 lang)
         }
         else
             plr->SendPacketToSelf(&data);
+        
+        if (lang == LANG_ADDON)
+            return;
+
+        switch (m_channelId)
+        {
+        case CHANNEL_ID_LFG:
+            sLog.outChat(LOG_CHAT_LFG_A, plr->GetTeam(), plr->GetName(), what);
+            break;
+        case CHANNEL_ID_TRADE:
+            sLog.outChat(LOG_CHAT_TRADE_A, plr->GetTeam(), plr->GetName(), what);
+            break;
+        case CHANNEL_ID_WORLD:
+            sLog.outChat(LOG_CHAT_WORLD_A, plr->GetTeam(), plr->GetName(), what);
+            break;
+        case CHANNEL_ID_CUSTOM:
+            break;
+        default: // general, localdefense, worlddefense, guildrecruitment
+            sLog.outChat(LOG_CHAT_LOCAL_A, plr->GetTeam(), plr->GetName(), what);
+            break;
+        }
     }
 }
 
@@ -772,7 +786,7 @@ void Channel::MakeLeft(WorldPacket *data, uint64 guid)
 void Channel::MakeYouJoined(WorldPacket *data)
 {
     MakeNotifyPacket(data, CHAT_YOU_JOINED_NOTICE);
-    *data << uint8(GetFlags());
+    *data << uint8(0);
     *data << uint32(GetChannelId());
     *data << uint32(0);
 }
@@ -1017,7 +1031,7 @@ void Channel::JoinNotify(uint64 guid)
 
     data << uint64(guid);
     data << uint8(GetPlayerFlags(guid));
-    data << uint8(GetFlags());
+    data << uint8(0);
     data << uint32(GetNumPlayers());
     data << GetName();
     SendToAll(&data);
@@ -1027,7 +1041,7 @@ void Channel::LeaveNotify(uint64 guid)
 {
     WorldPacket data(SMSG_USERLIST_REMOVE, 8+1+4+GetName().size()+1);
     data << uint64(guid);
-    data << uint8(GetFlags());
+    data << uint8(0);
     data << uint32(GetNumPlayers());
     data << GetName();
     SendToAll(&data);

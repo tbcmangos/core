@@ -1,6 +1,6 @@
 /* 
  * Copyright (C) 2006-2008 ScriptDev2 <https://scriptdev2.svn.sourceforge.net/>
- * Copyright (C) 2008-2014 Hellground <http://hellground.net/>
+ * Copyright (C) 2008-2015 Hellground <http://hellground.net/>
  * 
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -104,10 +104,10 @@ struct instance_mechanar : public ScriptedInstance
     uint64 MoargDoor2;
     uint64 NethermancerDoor;
     uint64 PathaleonGUID;
-    uint32 CheckTimer;
+    Timer CheckTimer;
     bool CleanupCharges;
-    uint32 BridgeEventTimer;
-    uint32 EventTimer;
+    Timer BridgeEventTimer;
+    Timer EventTimer;
     uint8 BridgeEventPhase;
 
     std::list<uint64> BridgeTrashGuidList;
@@ -271,7 +271,7 @@ struct instance_mechanar : public ScriptedInstance
                                 case 3:
                                 case 4:
                                 case 5:
-                                    if (player->isAlive())
+                                    if (player->IsAlive())
                                         temp->AI()->AttackStart(player);
                                     break;
                             }
@@ -299,13 +299,13 @@ struct instance_mechanar : public ScriptedInstance
     {
         if(Heroic && GetData(DATA_MECHANO_LORD_EVENT) == IN_PROGRESS)
         {
-            if(CheckTimer < diff)
+            if(CheckTimer.Expired(diff))
             {
                 const Map::PlayerList& players = instance->GetPlayers();
                 for(Map::PlayerList::const_iterator i = players.begin(); i != players.end(); ++i)
                 {
                     Player *sourcePlayer = i->getSource();
-                    if(sourcePlayer->isGameMaster())
+                    if(sourcePlayer->IsGameMaster())
                         continue;
 
                     sourcePlayer->RemoveAurasDueToSpell(39089);
@@ -318,7 +318,7 @@ struct instance_mechanar : public ScriptedInstance
                     for(Map::PlayerList::const_iterator j = players.begin(); j != players.end(); ++j)
                     {
                         Player *checkPlayer = j->getSource();
-                        if(checkPlayer->isGameMaster() || sourcePlayer == checkPlayer)
+                        if(checkPlayer->IsGameMaster() || sourcePlayer == checkPlayer)
                             continue;
 
                         if(chargeid == GET_CHARGE_ID(checkPlayer) && sourcePlayer->IsWithinDist(checkPlayer, 10))
@@ -329,16 +329,16 @@ struct instance_mechanar : public ScriptedInstance
                 }
 
                 CheckTimer = 3000;
-            } else
-                CheckTimer -= diff;
+            }
         }
+
         if(Heroic && CleanupCharges)
         {
             const Map::PlayerList& players = instance->GetPlayers();
             for(Map::PlayerList::const_iterator i = players.begin(); i != players.end(); ++i)
             {
                 Player *sourcePlayer = i->getSource();
-                if(sourcePlayer->isGameMaster())
+                if(sourcePlayer->IsGameMaster())
                     continue;
 
                 sourcePlayer->RemoveAurasDueToSpell(39089);
@@ -347,55 +347,45 @@ struct instance_mechanar : public ScriptedInstance
             CleanupCharges = false;
         }
 
-        if (BridgeEventTimer)
+        if (BridgeEventTimer.Expired(diff))
         {
-            if (BridgeEventTimer <= diff)
-            {
-                DoSpawnBridgeWave();
-                BridgeEventTimer = 0;
-                EventTimer = 2000;
+            DoSpawnBridgeWave();
+            BridgeEventTimer = 0;
+            EventTimer = 2000;
 
-                if (GetData(DATA_BRIDGE_EVENT) != DONE)
-                    SetData(DATA_BRIDGE_EVENT, DONE);
-            }
-            else
-                BridgeEventTimer -= diff;
+            if (GetData(DATA_BRIDGE_EVENT) != DONE)
+                SetData(DATA_BRIDGE_EVENT, DONE);
         }
 
-        if (EventTimer)
+        if (EventTimer.Expired(diff))
         {
-            if (EventTimer <= diff)
+            bool alive = false;
+            for (std::list<uint64>::iterator itr = BridgeTrashGuidList.begin(); itr != BridgeTrashGuidList.end(); ++itr)
             {
-                bool alive = false;
-                for (std::list<uint64>::iterator itr = BridgeTrashGuidList.begin(); itr != BridgeTrashGuidList.end(); ++itr)
+                if (Creature *tmp = instance->GetCreature(*itr))
                 {
-                    if (Creature *tmp = instance->GetCreature(*itr))
+                    if (tmp->IsAlive())
                     {
-                        if (tmp->isAlive())
-                        {
-                            alive = true;
-                            break;
-                        }
+                        alive = true;
+                        break;
                     }
                 }
-
-                EventTimer = 2000;
-
-                if (!alive)
-                {
-                    if (BridgeEventPhase == 3)
-                    {
-                        BridgeEventTimer = 10000;
-                        EventTimer = 0;
-                        return;
-                    }
-                    else
-                        DoSpawnBridgeWave();
-                }
-
             }
-            else
-                EventTimer -= diff;
+
+            EventTimer = 2000;
+
+            if (!alive)
+            {
+                if (BridgeEventPhase == 3)
+                {
+                    BridgeEventTimer = 10000;
+                    EventTimer = 0;
+                    return;
+                }
+                else
+                    DoSpawnBridgeWave();
+            }
+
         }
     }
 
@@ -456,7 +446,7 @@ bool GOUse_go_cache_of_the_legion(Player *player, GameObject* _GO)
             for (Map::PlayerList::const_iterator i = players.begin(); i != players.end(); ++i)
             {
                 Player *player = i->getSource();
-                if (player->isGameMaster())
+                if (player->IsGameMaster())
                     continue;
 
                 ItemPosCountVec dest;

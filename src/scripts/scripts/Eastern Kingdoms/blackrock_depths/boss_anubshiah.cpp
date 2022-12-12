@@ -1,6 +1,6 @@
 /* 
  * Copyright (C) 2006-2008 ScriptDev2 <https://scriptdev2.svn.sourceforge.net/>
- * Copyright (C) 2008-2014 Hellground <http://hellground.net/>
+ * Copyright (C) 2008-2015 Hellground <http://hellground.net/>
  * 
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -36,11 +36,11 @@ struct boss_anubshiahAI : public ScriptedAI
 {
     boss_anubshiahAI(Creature *c) : ScriptedAI(c) {}
 
-    uint32 ShadowBolt_Timer;
-    uint32 CurseOfTongues_Timer;
-    uint32 CurseOfWeakness_Timer;
-    uint32 DemonArmor_Timer;
-    uint32 EnvelopingWeb_Timer;
+    int32 ShadowBolt_Timer;
+    int32 CurseOfTongues_Timer;
+    int32 CurseOfWeakness_Timer;
+    int32 DemonArmor_Timer;
+    int32 EnvelopingWeb_Timer;
 
     void Reset()
     {
@@ -61,53 +61,49 @@ struct boss_anubshiahAI : public ScriptedAI
         if (!UpdateVictim() )
             return;
 
-        //ShadowBolt_Timer
-        if (ShadowBolt_Timer < diff)
+        ShadowBolt_Timer -= diff;
+        if (ShadowBolt_Timer <= diff)
         {
-            DoCast(me->getVictim(),SPELL_SHADOWBOLT);
+            DoCast(me->GetVictim(),SPELL_SHADOWBOLT);
             ShadowBolt_Timer = 7000;
         }
-        else
-            ShadowBolt_Timer -= diff;
+            
 
-        //CurseOfTongues_Timer
-        if (CurseOfTongues_Timer < diff)
+        CurseOfTongues_Timer -= diff;
+        if (CurseOfTongues_Timer <= diff)
         {
             if(Unit *target = SelectUnit(SELECT_TARGET_RANDOM,0, 200, true))
                 DoCast(target,SPELL_CURSEOFTONGUES);
-            CurseOfTongues_Timer = 18000;
+            CurseOfTongues_Timer += 18000;
         }
-        else
-            CurseOfTongues_Timer -= diff;
+        
 
-        //CurseOfWeakness_Timer
-        if (CurseOfWeakness_Timer < diff)
+        CurseOfWeakness_Timer -= diff;
+        if (CurseOfWeakness_Timer <= diff)
         {
-            DoCast(me->getVictim(),SPELL_CURSEOFWEAKNESS);
-            CurseOfWeakness_Timer = 45000;
+            DoCast(me->GetVictim(),SPELL_CURSEOFWEAKNESS);
+            CurseOfWeakness_Timer += 45000;
         }
-        else
-            CurseOfWeakness_Timer -= diff;
+        
 
-        //DemonArmor_Timer
-        if (DemonArmor_Timer < diff)
+        DemonArmor_Timer -= diff;
+        if (DemonArmor_Timer <= diff)
         {
             DoCast(me,SPELL_DEMONARMOR);
-            DemonArmor_Timer = 300000;
+            DemonArmor_Timer += 300000;
         }
-        else
-            DemonArmor_Timer -= diff;
+        
+           
 
-        //EnvelopingWeb_Timer
-        if (EnvelopingWeb_Timer < diff)
+        EnvelopingWeb_Timer -= diff;
+        if (EnvelopingWeb_Timer <= diff)
         {
             Unit* target = NULL;
             target = SelectUnit(SELECT_TARGET_RANDOM,0);
             if (target) DoCast(target,SPELL_ENVELOPINGWEB);
-            EnvelopingWeb_Timer = 12000;
+            EnvelopingWeb_Timer += 12000;
         }
-        else
-            EnvelopingWeb_Timer -= diff;
+        
 
         DoMeleeAttackIfReady();
     }

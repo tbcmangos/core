@@ -1,7 +1,7 @@
 /*
  * Copyright (C) 2005-2008 MaNGOS <http://getmangos.com/>
  * Copyright (C) 2008 TrinityCore <http://www.trinitycore.org/>
- * Copyright (C) 2008-2014 Hellground <http://hellground.net/>
+ * Copyright (C) 2008-2017 Hellground <http://wow-hellground.com/>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -161,7 +161,7 @@ uint32 Quest::XPValue(Player *pPlayer) const
     {
         if (RewMoneyMaxLevel > 0)
         {
-            uint32 pLevel = pPlayer->getLevel();
+            uint32 pLevel = pPlayer->GetLevel();
             uint32 qLevel = (QuestLevel > 0) ? QuestLevel : pLevel;
             float fullxp = 0;
             if (qLevel >= 65)

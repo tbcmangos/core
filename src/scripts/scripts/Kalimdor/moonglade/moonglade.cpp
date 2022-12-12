@@ -1,6 +1,6 @@
 /* 
  * Copyright (C) 2006-2008 ScriptDev2 <https://scriptdev2.svn.sourceforge.net/>
- * Copyright (C) 2008-2014 Hellground <http://hellground.net/>
+ * Copyright (C) 2008-2015 Hellground <http://hellground.net/>
  * 
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -44,7 +44,7 @@ EndContentData */
 
 bool GossipHello_npc_bunthen_plainswind(Player *player, Creature *_Creature)
 {
-    if(player->getClass() != CLASS_DRUID)
+    if(player->GetClass() != CLASS_DRUID)
         player->SEND_GOSSIP_MENU(4916,_Creature->GetGUID());
     else if(player->GetTeam() != HORDE)
     {
@@ -53,7 +53,7 @@ bool GossipHello_npc_bunthen_plainswind(Player *player, Creature *_Creature)
 
         player->SEND_GOSSIP_MENU(4917,_Creature->GetGUID());
     }
-    else if(player->getClass() == CLASS_DRUID && player->GetTeam() == HORDE)
+    else if(player->GetClass() == CLASS_DRUID && player->GetTeam() == HORDE)
     {
         player->ADD_GOSSIP_ITEM( 0, GOSSIP_BP2, GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF + 1);
 
@@ -72,7 +72,7 @@ bool GossipSelect_npc_bunthen_plainswind(Player *player, Creature *_Creature, ui
         case GOSSIP_ACTION_INFO_DEF + 1:
         {
             player->CLOSE_GOSSIP_MENU();
-            if (player->getClass() == CLASS_DRUID && player->GetTeam() == HORDE)
+            if (player->GetClass() == CLASS_DRUID && player->GetTeam() == HORDE)
             {
                 std::vector<uint32> nodes;
 
@@ -151,7 +151,7 @@ bool GossipSelect_npc_great_bear_spirit(Player *player, Creature *_Creature, uin
 #define GOSSIP_SF2 "I'd like to fly to Rut'theran Village."
 bool GossipHello_npc_silva_filnaveth(Player *player, Creature *_Creature)
 {
-    if(player->getClass() != CLASS_DRUID)
+    if(player->GetClass() != CLASS_DRUID)
         player->SEND_GOSSIP_MENU(4913,_Creature->GetGUID());
     else if(player->GetTeam() != ALLIANCE)
     {
@@ -160,7 +160,7 @@ bool GossipHello_npc_silva_filnaveth(Player *player, Creature *_Creature)
 
         player->SEND_GOSSIP_MENU(4915,_Creature->GetGUID());
     }
-    else if(player->getClass() == CLASS_DRUID && player->GetTeam() == ALLIANCE)
+    else if(player->GetClass() == CLASS_DRUID && player->GetTeam() == ALLIANCE)
     {
         player->ADD_GOSSIP_ITEM( 0, GOSSIP_SF2, GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF + 1);
 
@@ -179,7 +179,7 @@ bool GossipSelect_npc_silva_filnaveth(Player *player, Creature *_Creature, uint3
         case GOSSIP_ACTION_INFO_DEF + 1:
         {
             player->CLOSE_GOSSIP_MENU();
-            if (player->getClass() == CLASS_DRUID && player->GetTeam() == ALLIANCE)
+            if (player->GetClass() == CLASS_DRUID && player->GetTeam() == ALLIANCE)
             {
                 std::vector<uint32> nodes;
 
@@ -204,50 +204,50 @@ bool GossipSelect_npc_silva_filnaveth(Player *player, Creature *_Creature, uint3
 ## npc_clintar_spirit
 ######*/
 
-float Clintar_spirit_WP[41][5] =
+static float Clintar_spirit_WP[41][5] =
 {
  //pos_x   pos_y    pos_z    orien waitTime
-{7465.28, -3115.46, 439.327, 0.83, 4000},
-{7476.49, -3101,    443.457, 0.89, 0},
-{7486.57, -3085.59, 439.478, 1.07, 0},
-{7472.19, -3085.06, 443.142, 3.07, 0},
-{7456.92, -3085.91, 438.862, 3.24, 0},
-{7446.68, -3083.43, 438.245, 2.40, 0},
-{7446.17, -3080.21, 439.826, 1.10, 6000},
-{7452.41, -3085.8,  438.984, 5.78, 0},
-{7469.11, -3084.94, 443.048, 6.25, 0},
-{7483.79, -3085.44, 439.607, 6.25, 0},
-{7491.14, -3090.96, 439.983, 5.44, 0},
-{7497.62, -3098.22, 436.854, 5.44, 0},
-{7498.72, -3113.41, 434.596, 4.84, 0},
-{7500.06, -3122.51, 434.749, 5.17, 0},
-{7504.96, -3131.53, 434.475, 4.74, 0},
-{7504.31, -3133.53, 435.693, 3.84, 6000},
-{7504.55, -3133.27, 435.476, 0.68, 15000},
-{7501.99, -3126.01, 434.93,  1.83, 0},
-{7490.76, -3114.97, 434.431, 2.51, 0},
-{7479.64, -3105.51, 431.123, 1.83, 0},
-{7474.63, -3086.59, 428.994, 1.83, 2000},
-{7472.96, -3074.18, 427.566, 1.57, 0},
-{7472.25, -3063,    428.268, 1.55, 0},
-{7473.46, -3054.22, 427.588, 0.36, 0},
-{7475.08, -3053.6,  428.653, 0.36, 6000},
-{7474.66, -3053.56, 428.433, 3.19, 4000},
-{7471.81, -3058.84, 427.073, 4.29, 0},
-{7472.16, -3064.91, 427.772, 4.95, 0},
-{7471.56, -3085.36, 428.924, 4.72, 0},
-{7473.56, -3093.48, 429.294, 5.04, 0},
-{7478.94, -3104.29, 430.638, 5.23, 0},
-{7484.46, -3109.61, 432.769, 5.79, 0},
-{7490.23, -3111.08, 434.431, 0.02, 0},
-{7496.29, -3108,    434.783, 1.15, 0},
-{7497.46, -3100.66, 436.191, 1.50, 0},
-{7495.64, -3093.39, 438.349, 2.10, 0},
-{7492.44, -3086.01, 440.267, 1.38, 0},
-{7498.26, -3076.44, 440.808, 0.71, 0},
-{7506.4,  -3067.35, 443.64,  0.77, 0},
-{7518.37, -3057.42, 445.584, 0.74, 0},
-{7517.51, -3056.3,  444.568, 2.49, 4500}
+{7465.28f, -3115.46f, 439.327f, 0.83f, 4000},
+{7476.49f, -3101,    443.457f, 0.89f, 0},
+{7486.57f, -3085.59f, 439.478f, 1.07f, 0},
+{7472.19f, -3085.06f, 443.142f, 3.07f, 0},
+{7456.92f, -3085.91f, 438.862f, 3.24f, 0},
+{7446.68f, -3083.43f, 438.245f, 2.40f, 0},
+{7446.17f, -3080.21f, 439.826f, 1.10f, 6000},
+{7452.41f, -3085.8f,  438.984f, 5.78f, 0},
+{7469.11f, -3084.94f, 443.048f, 6.25f, 0},
+{7483.79f, -3085.44f, 439.607f, 6.25f, 0},
+{7491.14f, -3090.96f, 439.983f, 5.44f, 0},
+{7497.62f, -3098.22f, 436.854f, 5.44f, 0},
+{7498.72f, -3113.41f, 434.596f, 4.84f, 0},
+{7500.06f, -3122.51f, 434.749f, 5.17f, 0},
+{7504.96f, -3131.53f, 434.475f, 4.74f, 0},
+{7504.31f, -3133.53f, 435.693f, 3.84f, 6000},
+{7504.55f, -3133.27f, 435.476f, 0.68f, 15000},
+{7501.99f, -3126.01f, 434.93f,  1.83f, 0},
+{7490.76f, -3114.97f, 434.431f, 2.51f, 0},
+{7479.64f, -3105.51f, 431.123f, 1.83f, 0},
+{7474.63f, -3086.59f, 428.994f, 1.83f, 2000},
+{7472.96f, -3074.18f, 427.566f, 1.57f, 0},
+{7472.25f, -3063,    428.268f, 1.55f, 0},
+{7473.46f, -3054.22f, 427.588f, 0.36f, 0},
+{7475.08f, -3053.6f,  428.653f, 0.36f, 6000},
+{7474.66f, -3053.56f, 428.433f, 3.19f, 4000},
+{7471.81f, -3058.84f, 427.073f, 4.29f, 0},
+{7472.16f, -3064.91f, 427.772f, 4.95f, 0},
+{7471.56f, -3085.36f, 428.924f, 4.72f, 0},
+{7473.56f, -3093.48f, 429.294f, 5.04f, 0},
+{7478.94f, -3104.29f, 430.638f, 5.23f, 0},
+{7484.46f, -3109.61f, 432.769f, 5.79f, 0},
+{7490.23f, -3111.08f, 434.431f, 0.02f, 0},
+{7496.29f, -3108,    434.783f, 1.15f, 0},
+{7497.46f, -3100.66f, 436.191f, 1.50f, 0},
+{7495.64f, -3093.39f, 438.349f, 2.10f, 0},
+{7492.44f, -3086.01f, 440.267f, 1.38f, 0},
+{7498.26f, -3076.44f, 440.808f, 0.71f, 0},
+{7506.4f,  -3067.35f, 443.64f,  0.77f, 0},
+{7518.37f, -3057.42f, 445.584f, 0.74f, 0},
+{7517.51f, -3056.3f,  444.568f, 2.49f, 4500}
 };
 
 #define ASPECT_RAVEN 22915
@@ -275,8 +275,8 @@ public:
 
     uint32 Step;
     uint32 CurrWP;
-    uint32 Event_Timer;
-    uint32 checkPlayer_Timer;
+    int32 Event_Timer;
+    int32 checkPlayer_Timer;
 
     uint64 PlayerGUID;
 
@@ -312,9 +312,9 @@ public:
     void EnterEvadeMode()
     {
         Player* pPlayer = Unit::GetPlayer(PlayerGUID);
-        if (pPlayer && pPlayer->isInCombat() && pPlayer->getAttackerForHelper())
+        if (pPlayer && pPlayer->IsInCombat() && pPlayer->GetAttackerForHelper())
         {
-            AttackStart(pPlayer->getAttackerForHelper());
+            AttackStart(pPlayer->GetAttackerForHelper());
             return;
         }
         npc_escortAI::EnterEvadeMode();
@@ -357,162 +357,165 @@ public:
             return;
         }
 
-        if (!m_creature->isInCombat() && !Event_onWait)
+        if (!m_creature->IsInCombat() && !Event_onWait)
         {
-            if (checkPlayer_Timer < diff)
+            checkPlayer_Timer -= diff;
+            if (checkPlayer_Timer <= diff)
             {
                 Player* pPlayer = Unit::GetPlayer(PlayerGUID);
-                if (pPlayer && pPlayer->isInCombat() && pPlayer->getAttackerForHelper())
-                    AttackStart(pPlayer->getAttackerForHelper());
+                if (pPlayer && pPlayer->IsInCombat() && pPlayer->GetAttackerForHelper())
+                    AttackStart(pPlayer->GetAttackerForHelper());
 
-                checkPlayer_Timer = 1000;
+                checkPlayer_Timer += 1000;
             }
-            else
-                checkPlayer_Timer -= diff;
         }
 
-        if(Event_onWait && Event_Timer < diff)
+        if (Event_onWait)
         {
-            Player* pPlayer = Unit::GetPlayer(PlayerGUID);
-            if (!pPlayer || (pPlayer && pPlayer->GetQuestStatus(10965) == QUEST_STATUS_NONE))
+            Event_Timer -= diff;
+            if (Event_Timer <= diff)
             {
-                m_creature->setDeathState(JUST_DIED);
-                return;
-            }
+                Player* pPlayer = Unit::GetPlayer(PlayerGUID);
+                if (!pPlayer || (pPlayer && pPlayer->GetQuestStatus(10965) == QUEST_STATUS_NONE))
+                {
+                    m_creature->setDeathState(JUST_DIED);
+                    return;
+                }
 
-            switch(CurrWP)
-            {
-                case 0:
-                    switch(Step)
-                    {
-                        case 0:
-                            m_creature->Say(CLINTAR_SPIRIT_SAY_START,0,PlayerGUID);
-                            Event_Timer = 8000;
-                            Step = 1;
-                            break;
-                        case 1:
-                            Event_onWait = false;
-                            break;
-                    }
-                    break;
-                case 6:
-                    switch(Step)
-                    {
-                        case 0:
-                            m_creature->SetUInt32Value(UNIT_NPC_EMOTESTATE, 133);
-                            Event_Timer = 5000;
-                            Step = 1;
-                            break;
-                        case 1:
-                            m_creature->SetUInt32Value(UNIT_NPC_EMOTESTATE, 0);
-                            DoScriptText(CLINTAR_SPIRIT_SAY_GET_ONE, m_creature, pPlayer);
-                            Event_onWait = false;
-                            break;
-                    }
-                    break;
-                case 15:
-                    switch(Step)
-                    {
-                        case 0:
-                            m_creature->SetUInt32Value(UNIT_NPC_EMOTESTATE, 133);
-                            Event_Timer = 5000;
-                            Step = 1;
-                            break;
-                        case 1:
-                            m_creature->SetUInt32Value(UNIT_NPC_EMOTESTATE, 0);
-                            Event_onWait = false;
-                            break;
-                    }
-                    break;
-                case 16:
-                    switch(Step)
-                    {
-                        case 0:
-                            DoScriptText(CLINTAR_SPIRIT_SAY_GET_TWO, m_creature, pPlayer);
-                            Event_Timer = 15000;
-                            Step = 1;
-                            break;
-                        case 1:
-                            Event_onWait = false;
-                            break;
-                    }
-                    break;
-                case 20:
-                    switch(Step)
-                    {
-                        case 0:
+                switch (CurrWP)
+                {
+                    case 0:
+                        switch (Step)
+                        {
+                            case 0:
+                                m_creature->Say(CLINTAR_SPIRIT_SAY_START, 0, PlayerGUID);
+                                Event_Timer = 8000;
+                                Step = 1;
+                                break;
+                            case 1:
+                                Event_onWait = false;
+                                break;
+                        }
+                        break;
+                    case 6:
+                        switch (Step)
+                        {
+                            case 0:
+                                m_creature->SetUInt32Value(UNIT_NPC_EMOTESTATE, 133);
+                                Event_Timer = 5000;
+                                Step = 1;
+                                break;
+                            case 1:
+                                m_creature->SetUInt32Value(UNIT_NPC_EMOTESTATE, 0);
+                                DoScriptText(CLINTAR_SPIRIT_SAY_GET_ONE, m_creature, pPlayer);
+                                Event_onWait = false;
+                                break;
+                        }
+                        break;
+                    case 15:
+                        switch (Step)
+                        {
+                            case 0:
+                                m_creature->SetUInt32Value(UNIT_NPC_EMOTESTATE, 133);
+                                Event_Timer = 5000;
+                                Step = 1;
+                                break;
+                            case 1:
+                                m_creature->SetUInt32Value(UNIT_NPC_EMOTESTATE, 0);
+                                Event_onWait = false;
+                                break;
+                        }
+                        break;
+                    case 16:
+                        switch (Step)
+                        {
+                            case 0:
+                                DoScriptText(CLINTAR_SPIRIT_SAY_GET_TWO, m_creature, pPlayer);
+                                Event_Timer = 15000;
+                                Step = 1;
+                                break;
+                            case 1:
+                                Event_onWait = false;
+                                break;
+                        }
+                        break;
+                    case 20:
+                        switch (Step)
+                        {
+                            case 0:
                             {
-                            Creature *mob = m_creature->SummonCreature(ASPECT_RAVEN, ASPECT_RAVEN_SUMMON_X, ASPECT_RAVEN_SUMMON_Y, ASPECT_RAVEN_SUMMON_Z, 0, TEMPSUMMON_CORPSE_TIMED_DESPAWN, 2000);
-                            if(mob)
-                            {
-                                mob->AddThreat(m_creature,10000.0f);
-                                mob->AI()->AttackStart(m_creature);
+                                Creature *mob = m_creature->SummonCreature(ASPECT_RAVEN, ASPECT_RAVEN_SUMMON_X, ASPECT_RAVEN_SUMMON_Y, ASPECT_RAVEN_SUMMON_Z, 0, TEMPSUMMON_CORPSE_TIMED_DESPAWN, 2000);
+                                if (mob)
+                                {
+                                    mob->AddThreat(m_creature, 10000.0f);
+                                    mob->AI()->AttackStart(m_creature);
+                                }
+                                Event_Timer = 2000;
+                                Step = 1;
+                                break;
                             }
-                            Event_Timer = 2000;
-                            Step = 1;
-                            break;
-                            }
-                        case 1:
-                            Event_onWait = false;
-                            break;
-                    }
-                    break;
-                case 24:
-                    switch(Step)
-                    {
-                        case 0:
-                            m_creature->SetUInt32Value(UNIT_NPC_EMOTESTATE, 133);
-                            Event_Timer = 5000;
-                            Step = 1;
-                            break;
-                        case 1:
-                            m_creature->SetUInt32Value(UNIT_NPC_EMOTESTATE, 0);
-                            Event_onWait = false;
-                            break;
-                    }
-                    break;
-                case 25:
-                    switch(Step)
-                    {
-                        case 0:
-                            DoScriptText(CLINTAR_SPIRIT_SAY_GET_THREE, m_creature, pPlayer);
-                            Event_Timer = 4000;
-                            Step = 1;
-                            break;
-                        case 1:
-                            Event_onWait = false;
-                            break;
-                    }
-                    break;
-                case 40:
-                    switch(Step)
-                    {
-                        case 0:
-                            m_creature->SetUInt32Value(UNIT_NPC_EMOTESTATE, 2);
-                            DoScriptText(CLINTAR_SPIRIT_SAY_GET_FINAL, m_creature, pPlayer);
-                            pPlayer->CompleteQuest(10965);
-                            Event_Timer = 1500;
-                            Step = 1;
-                            break;
-                        case 1:
-                            m_creature->SetUInt32Value(UNIT_NPC_EMOTESTATE, 0);
-                            Event_Timer = 3000;
-                            Step = 2;
-                            break;
-                        case 2:
-                            pPlayer->TalkedToCreature(m_creature->GetEntry(), m_creature->GetGUID());
-                            PlayerGUID = 0;
-                            Reset();
-                            m_creature->setDeathState(JUST_DIED);
-                            break;
-                    }
-                    break;
-                default:
-                    Event_onWait = false;
-                    break;
-            }
+                            case 1:
+                                Event_onWait = false;
+                                break;
+                        }
+                        break;
+                    case 24:
+                        switch (Step)
+                        {
+                            case 0:
+                                m_creature->SetUInt32Value(UNIT_NPC_EMOTESTATE, 133);
+                                Event_Timer = 5000;
+                                Step = 1;
+                                break;
+                            case 1:
+                                m_creature->SetUInt32Value(UNIT_NPC_EMOTESTATE, 0);
+                                Event_onWait = false;
+                                break;
+                        }
+                        break;
+                    case 25:
+                        switch (Step)
+                        {
+                            case 0:
+                                DoScriptText(CLINTAR_SPIRIT_SAY_GET_THREE, m_creature, pPlayer);
+                                Event_Timer = 4000;
+                                Step = 1;
+                                break;
+                            case 1:
+                                Event_onWait = false;
+                                break;
+                        }
+                        break;
+                    case 40:
+                        switch (Step)
+                        {
+                            case 0:
+                                m_creature->SetUInt32Value(UNIT_NPC_EMOTESTATE, 2);
+                                DoScriptText(CLINTAR_SPIRIT_SAY_GET_FINAL, m_creature, pPlayer);
+                                pPlayer->CompleteQuest(10965);
+                                Event_Timer = 1500;
+                                Step = 1;
+                                break;
+                            case 1:
+                                m_creature->SetUInt32Value(UNIT_NPC_EMOTESTATE, 0);
+                                Event_Timer = 3000;
+                                Step = 2;
+                                break;
+                            case 2:
+                                pPlayer->TalkedToCreature(m_creature->GetEntry(), m_creature->GetGUID());
+                                PlayerGUID = 0;
+                                Reset();
+                                m_creature->setDeathState(JUST_DIED);
+                                break;
+                        }
+                        break;
+                    default:
+                        Event_onWait = false;
+                        break;
+                }
 
-        } else if(Event_onWait) Event_Timer -= diff;
+            }
+        }
     }
 
     void WaypointReached(uint32 id)
@@ -661,13 +664,13 @@ struct npc_remulosAI : public npc_escortAI
 
     uint64 EranikusGUID;
     uint32 uiPhase;
-    uint32 EventTimer;
-    uint32 FindVictimTimer;
-    uint32 StarfireTimer;
-    uint32 HealingTouchTimer;
-    uint32 RegrowthTimer;
-    uint32 RejuvenationTimer;
-    uint32 TranquilityTimer;
+    int32 EventTimer;
+    int32 FindVictimTimer;
+    int32 StarfireTimer;
+    int32 HealingTouchTimer;
+    int32 RegrowthTimer;
+    int32 RejuvenationTimer;
+    int32 TranquilityTimer;
     uint32 DeadPhantasmsCount;
     bool PhantasmPhase;
     bool EranikusPhase;
@@ -684,7 +687,6 @@ struct npc_remulosAI : public npc_escortAI
             EventTimer = 0;
             uiPhase = 0;
             FindVictimTimer = 2000;
-            DeadPhantasmsCount = 0;
             StarfireTimer = urand(7000, 10000);
             HealingTouchTimer = 4000;
             RegrowthTimer = urand(5000, 10000);
@@ -742,7 +744,7 @@ struct npc_remulosAI : public npc_escortAI
 
     void FindVictim(Creature* pCreature)
     {
-        if (!pCreature->getVictim())
+        if (!pCreature->GetVictim())
         {
             if (PhantasmPhase)
             {
@@ -775,16 +777,15 @@ struct npc_remulosAI : public npc_escortAI
             {
                 if (Creature *pPhantasm = Unit::GetCreature(*me,*itr))
                 {
-                    if (!pPhantasm->isAlive())
+                    if (!pPhantasm->IsAlive())
                     {
                         PhantasmsList.erase(itr);
-                        DeadPhantasmsCount++;
                         break;
                     }
                 }
             }
         }
-        if (DeadPhantasmsCount >=15)
+        if (PhantasmsList.empty())
         {
             PhantasmsList.clear();
             EventTimer = 10000;
@@ -835,6 +836,7 @@ struct npc_remulosAI : public npc_escortAI
 
         if (uiPhase)
         {
+            EventTimer -= diff;
             if (EventTimer <= diff)
             {
                 Player* pPlayer = GetPlayerForEscort();
@@ -844,196 +846,201 @@ struct npc_remulosAI : public npc_escortAI
 
                 switch (uiPhase)
                 {
-                case 1:
-                    DoScriptText(REMULOS_SAY_2, me);
-                    uiPhase = 0;
-                    SetEscortPaused(false);
-                    break;
-                case 2:
-                    DoScriptText(REMULOS_SAY_4, me);
-                    uiPhase = 3;
-                    EventTimer = 10000;
-                    break;
-                case 3:
-                    DoScriptText(REMULOS_SAY_5, me);
-                    DoCast(me, SPELL_C0NJURE_DREAM_RIFT);
-                    uiPhase = 4;
-                    EventTimer = 10000;
-                    break;
-                case 4:
-                    if (Creature* pEranikus = me->SummonCreature(NPC_ERANIKUS, 7867.44f, -2671.37f, 498.042f, 0.51f, TEMPSUMMON_CORPSE_TIMED_DESPAWN, 60000))
-                    {
-                        //TODO: now must be server-wide emote
-                        DoScriptText(ERANIKUS_ZONE_EMOTE_ENTER, pEranikus);
-                        pEranikus->SetReactState(REACT_PASSIVE);
-                        pEranikus->SetFlying(true);
-                        pEranikus->AI()->IsSummonedBy(me);
-                        pEranikus->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE | UNIT_FLAG_NOT_SELECTABLE);
-                        EranikusGUID = pEranikus->GetGUID();
-                    }
-                    else me->ForcedDespawn();
-                    uiPhase = 5;
-                    EventTimer = 10000;
-                    break;
-                case 5:
-                    if (Creature* pEranikus = Unit::GetCreature(*me, EranikusGUID))
-                        DoScriptText(ERANIKUS_YELL_1, pEranikus);
-                    uiPhase = 6;
-                    EventTimer = 10000;
-                    break;
-                case 6:
-                    DoScriptText(REMULOS_YELL_1, me);
-                    uiPhase = 7;
-                    EventTimer = 5000;
-                    break;
-                case 7:
-                    if (Creature* pEranikus = Unit::GetCreature(*me, EranikusGUID))
-                    {
-                        DoScriptText(ERANIKUS_EMOTE_LAUGHT, pEranikus);
-                        DoScriptText(ERANIKUS_YELL_2, pEranikus);
-                    }
-                    uiPhase = 8;
-                    EventTimer = 8000;
-                    break;
-                case 8:
-                    DoScriptText(REMULOS_YELL_2, me);
-                    uiPhase = 9;
-                    EventTimer = 9000;
-                    break;
-                case 9:
-                    if (Creature* pEranikus = Unit::GetCreature(*me, EranikusGUID))
-                    {
-                        DoScriptText(ERANIKUS_EMOTE_LAUGHT, pEranikus);
-                        DoScriptText(ERANIKUS_YELL_3, pEranikus);
-                        pEranikus->GetMotionMaster()->MovePoint(POINT_NIGHTRAVEN, 7926.28f, -2573.13f, 501.655f);
-                        pEranikus->SetHomePosition(7926.28f, -2573.13f, 501.655f, 2.88f);
-                    }
-                    uiPhase = 10;
-                    EventTimer = 5000;
-                    break;
-                case 10:
-                    DoScriptText(REMULOS_SAY_6, me, pPlayer);
-                    SetEscortPaused(false);
-                    uiPhase = 0;
-                    break;
-                case 11:
-                    SetEscortPaused(false);
-                    if (Creature* pEranikus = Unit::GetCreature(*me, EranikusGUID))
-                    {
-                        DoScriptText(ERANIKUS_YELL_4, pEranikus);
-                        DoScriptText(REMULOS_SAY_8, me);
-                    }
-
-                    for (int i = 0; i < NPC_NIGHTMARE_PHANTASMS_COUNT; i++)
-                    {
-                        uint32 r = urand(0, 5);
-                        float collision = (float)urand(4, 8);
-                        me->SummonCreature(NPC_NIGHTMARE_PHANTASM,
-                            PhantasmsSpawnpos[r][0]+collision, PhantasmsSpawnpos[r][1]+collision,
-                            PhantasmsSpawnpos[r][2] + 2, PhantasmsSpawnpos[r][3], TEMPSUMMON_CORPSE_TIMED_DESPAWN, 10000);
-                    }
-                    SetCanAttack(true);
-                    PhantasmPhase = true;
-                    me->SetSpeed(MOVE_RUN, 2.0f);
-                    SetRun(true);
-                    uiPhase = 12;
-                    EventTimer = 5000;
-                    break;
-                case 12:
-                    if (Creature* pEranikus = Unit::GetCreature(*me, EranikusGUID))
-                        DoScriptText(ERANIKUS_YELL_5, pEranikus);
-                    for (int i = 0; i < NPC_MOONGLADE_WARDENS_COUNT; i++)
-                    {
-                        float collision = (float)urand(4, 8);
-                        uint32 r = urand(0, 1) ? 1 : 0;
-                        if (Creature* pWarden = me->SummonCreature(NPC_MOONGLADE_WARDEN,
-                            PhantasmsSpawnpos[r][0]+collision, PhantasmsSpawnpos[r][1]+collision,
-                            PhantasmsSpawnpos[r][2], PhantasmsSpawnpos[r][3], TEMPSUMMON_CORPSE_TIMED_DESPAWN, 20000))
-                            FindVictim(pWarden);
-                    }
-                    uiPhase = 13;
-                    EventTimer = 10000;
-                    break;
-                case 13:
-                    CheckNightmare();
-                    EventTimer = 500;
-                    break;
-                case 14:
-                    if (DeadPhantasmsCount >= NPC_NIGHTMARE_PHANTASMS_COUNT)
-                    {
-                        EranikusPhase = true;
-                        PhantasmPhase = false;
-                        SetCanAttack(false);
+                    case 1:
+                        DoScriptText(REMULOS_SAY_2, me);
+                        uiPhase = 0;
                         SetEscortPaused(false);
-                        SetRun(false);
-                        uiPhase = 15;
+                        break;
+                    case 2:
+                        DoScriptText(REMULOS_SAY_4, me);
+                        uiPhase = 3;
+                        EventTimer += 10000;
+                        break;
+                    case 3:
+                        DoScriptText(REMULOS_SAY_5, me);
+                        DoCast(me, SPELL_C0NJURE_DREAM_RIFT);
+                        uiPhase = 4;
+                        EventTimer += 10000;
+                        break;
+                    case 4:
+                        if (Creature* pEranikus = me->SummonCreature(NPC_ERANIKUS, 7867.44f, -2671.37f, 498.042f, 0.51f, TEMPSUMMON_CORPSE_TIMED_DESPAWN, 60000))
+                        {
+                            //TODO: now must be server-wide emote
+                            DoScriptText(ERANIKUS_ZONE_EMOTE_ENTER, pEranikus);
+                            pEranikus->SetReactState(REACT_PASSIVE);
+                            pEranikus->SetFlying(true);
+                            pEranikus->AI()->IsSummonedBy(me);
+                            pEranikus->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_SPAWNING | UNIT_FLAG_NOT_SELECTABLE);
+                            EranikusGUID = pEranikus->GetGUID();
+                        }
+                        else me->ForcedDespawn();
+                        uiPhase = 5;
+                        EventTimer += 10000;
+                        break;
+                    case 5:
+                        if (Creature* pEranikus = Unit::GetCreature(*me, EranikusGUID))
+                            DoScriptText(ERANIKUS_YELL_1, pEranikus);
+                        uiPhase = 6;
+                        EventTimer += 10000;
+                        break;
+                    case 6:
+                        DoScriptText(REMULOS_YELL_1, me);
+                        uiPhase = 7;
+                        EventTimer += 5000;
+                        break;
+                    case 7:
                         if (Creature* pEranikus = Unit::GetCreature(*me, EranikusGUID))
                         {
-                            DoScriptText(ERANIKUS_YELL_6, pEranikus);
-                            pEranikus->GetMotionMaster()->MovePoint(POINT_COMBAT_START, 7901.51f, -2565.71f, 488.046f);
-                            pEranikus->SetHomePosition(7901.51f, -2565.71f, 488.046f, 3.17f);
+                            DoScriptText(ERANIKUS_EMOTE_LAUGHT, pEranikus);
+                            DoScriptText(ERANIKUS_YELL_2, pEranikus);
                         }
-                    }
-                    EventTimer = 10000;
-                    break;
-                case 15:
-                    if (Creature* pEranikus = Unit::GetCreature(*me, EranikusGUID))
-                    {
+                        uiPhase = 8;
+                        EventTimer += 8000;
+                        break;
+                    case 8:
+                        DoScriptText(REMULOS_YELL_2, me);
+                        uiPhase = 9;
+                        EventTimer += 9000;
+                        break;
+                    case 9:
+                        if (Creature* pEranikus = Unit::GetCreature(*me, EranikusGUID))
+                        {
+                            DoScriptText(ERANIKUS_EMOTE_LAUGHT, pEranikus);
+                            DoScriptText(ERANIKUS_YELL_3, pEranikus);
+                            pEranikus->GetMotionMaster()->MovePoint(POINT_NIGHTRAVEN, 7926.28f, -2573.13f, 501.655f);
+                            pEranikus->SetHomePosition(7926.28f, -2573.13f, 501.655f, 2.88f);
+                        }
+                        uiPhase = 10;
+                        EventTimer += 5000;
+                        break;
+                    case 10:
+                        DoScriptText(REMULOS_SAY_6, me, pPlayer);
+                        SetEscortPaused(false);
+                        uiPhase = 0;
+                        break;
+                    case 11:
+                        SetEscortPaused(false);
+                        if (Creature* pEranikus = Unit::GetCreature(*me, EranikusGUID))
+                        {
+                            DoScriptText(ERANIKUS_YELL_4, pEranikus);
+                            DoScriptText(REMULOS_SAY_8, me);
+                        }
+
+                        for (int i = 0; i < NPC_NIGHTMARE_PHANTASMS_COUNT; i++)
+                        {
+                            uint32 r = urand(0, 5);
+                            float collision = (float)urand(4, 8);
+                            me->SummonCreature(NPC_NIGHTMARE_PHANTASM,
+                                PhantasmsSpawnpos[r][0] + collision, PhantasmsSpawnpos[r][1] + collision,
+                                PhantasmsSpawnpos[r][2] + 2, PhantasmsSpawnpos[r][3], TEMPSUMMON_CORPSE_TIMED_DESPAWN, 10000);
+                        }
+                        SetCanAttack(true);
+                        PhantasmPhase = true;
+                        me->SetSpeed(MOVE_RUN, 2.0f);
+                        SetRun(true);
+                        uiPhase = 12;
+                        EventTimer += 5000;
+                        break;
+                    case 12:
+                        if (Creature* pEranikus = Unit::GetCreature(*me, EranikusGUID))
+                            DoScriptText(ERANIKUS_YELL_5, pEranikus);
                         for (int i = 0; i < NPC_MOONGLADE_WARDENS_COUNT; i++)
-                            me->SummonCreature(NPC_MOONGLADE_WARDEN,
-                                pEranikus->GetPositionX(), pEranikus->GetPositionY(),
-                                pEranikus->GetPositionZ(), 0.02, TEMPSUMMON_CORPSE_TIMED_DESPAWN, 10000);
-                    }
-                    EventTimer = 60000;
-                    break;
+                        {
+                            float collision = (float)urand(4, 8);
+                            uint32 r = urand(0, 1) ? 1 : 0;
+                            if (Creature* pWarden = me->SummonCreature(NPC_MOONGLADE_WARDEN,
+                                PhantasmsSpawnpos[r][0] + collision, PhantasmsSpawnpos[r][1] + collision,
+                                PhantasmsSpawnpos[r][2], PhantasmsSpawnpos[r][3], TEMPSUMMON_CORPSE_TIMED_DESPAWN, 20000))
+                                FindVictim(pWarden);
+                        }
+                        uiPhase = 13;
+                        EventTimer += 10000;
+                        break;
+                    case 13:
+                        CheckNightmare();
+                        EventTimer += 500;
+                        break;
+                    case 14:
+                        if (DeadPhantasmsCount >= NPC_NIGHTMARE_PHANTASMS_COUNT)
+                        {
+                            EranikusPhase = true;
+                            PhantasmPhase = false;
+                            SetCanAttack(false);
+                            SetEscortPaused(false);
+                            SetRun(false);
+                            uiPhase = 15;
+                            if (Creature* pEranikus = Unit::GetCreature(*me, EranikusGUID))
+                            {
+                                DoScriptText(ERANIKUS_YELL_6, pEranikus);
+                                pEranikus->GetMotionMaster()->MovePoint(POINT_COMBAT_START, 7901.51f, -2565.71f, 488.046f);
+                                pEranikus->SetHomePosition(7901.51f, -2565.71f, 488.046f, 3.17f);
+                            }
+                        }
+                        EventTimer += 10000;
+                        break;
+                    case 15:
+                        if (Creature* pEranikus = Unit::GetCreature(*me, EranikusGUID))
+                        {
+                            for (int i = 0; i < NPC_MOONGLADE_WARDENS_COUNT; i++)
+                                me->SummonCreature(NPC_MOONGLADE_WARDEN,
+                                    pEranikus->GetPositionX(), pEranikus->GetPositionY(),
+                                    pEranikus->GetPositionZ(), 0.02, TEMPSUMMON_CORPSE_TIMED_DESPAWN, 10000);
+                        }
+                        EventTimer += 60000;
+                        break;
                 }
             }
-            else EventTimer -= diff;
         }
 
         if (GetTargetForHeal())
         {
+            RegrowthTimer -= diff;
             if (RegrowthTimer <= diff)
             {
                 DoCast(GetTargetForHeal(), SPELL_REGROWTH);
-                RegrowthTimer = urand(5000, 10000);
-            } else RegrowthTimer -= diff;
+                RegrowthTimer += urand(5000, 10000);
+            } 
 
+            RejuvenationTimer -= diff;
             if (RejuvenationTimer <= diff)
             {
                 DoCast(GetTargetForHeal(), SPELL_REJUVENATION);
-                RejuvenationTimer = urand(5000, 10000);
-            } else RejuvenationTimer -= diff;
+                RejuvenationTimer += urand(5000, 10000);
+            } 
 
+            TranquilityTimer -= diff;
             if (TranquilityTimer <= diff)
             {
                 DoCast(GetTargetForHeal(), SPELL_TRANQUILITY);
-                TranquilityTimer = urand(20000, 30000);
-            } else TranquilityTimer -= diff;
+                TranquilityTimer += urand(20000, 30000);
+            } 
 
+            HealingTouchTimer -= diff;
             if (HealingTouchTimer <= diff)
             {
                 DoCast(GetTargetForHeal(), SPELL_HEALING_TOUCH);
-                HealingTouchTimer = 3500;
-            } else HealingTouchTimer -= diff;
+                HealingTouchTimer += 3500;
+            } 
         }
 
         if (!UpdateVictim())
         {
+            FindVictimTimer -= diff;
             if (FindVictimTimer <= diff)
             {
                 FindVictim(me);
-                FindVictimTimer = 2000;
+                FindVictimTimer += 2000;
                 return;
-            } else FindVictimTimer -= diff;
+            } 
             return;
         }
 
+        StarfireTimer -= diff;
         if (StarfireTimer <= diff)
         {
-            DoCast(me->getVictim(), SPELL_STARFIRE);
-            StarfireTimer = urand(7000, 10000);
-        } else StarfireTimer -= diff;
+            DoCast(me->GetVictim(), SPELL_STARFIRE);
+            StarfireTimer += urand(7000, 10000);
+        } 
 
         DoMeleeAttackIfReady();
     }
@@ -1055,7 +1062,7 @@ struct npc_remulosAI : public npc_escortAI
         {
             if (Creature* pEranikus = Unit::GetCreature(*me, EranikusGUID))
             {
-                if (Unit* pTarget = pEranikus->getVictim())
+                if (Unit* pTarget = pEranikus->GetVictim())
                     if (pTarget->GetHealth()*100 < pTarget->GetMaxHealth()*90)
                         return pTarget;
                 return NULL;
@@ -1100,11 +1107,11 @@ struct npc_eranikusAI : public ScriptedAI
 public:
     npc_eranikusAI(Creature *c) : ScriptedAI(c) {}
 
-    uint32 ShadowBoltTimer;
-    uint32 AcidBreathTimer;
-    uint32 NoxiusBreathTimer;
-    uint32 EventTimer;
-    uint32 FindVictimTimer;
+    int32 ShadowBoltTimer;
+    int32 AcidBreathTimer;
+    int32 NoxiusBreathTimer;
+    int32 EventTimer;
+    int32 FindVictimTimer;
     uint32 uiPhase;
     uint64 TyrandeGUID;
     uint64 RemulosGUID;
@@ -1129,6 +1136,7 @@ public:
 
     void UpdateAI(const uint32 diff)
     {
+        EventTimer -= diff;
         if (EventTimer <= diff)
         {
             switch (uiPhase)
@@ -1145,7 +1153,7 @@ public:
                     }
                     uiPhase++;
                 }
-                EventTimer = 3000;
+                EventTimer += 3000;
                 break;
             case 1:
                 if (HealthBelowPct(70))
@@ -1154,7 +1162,7 @@ public:
                         DoScriptText(TYRANDE_YELL_2, pTyrande);
                     uiPhase++;
                 }
-                EventTimer = 3000;
+                EventTimer += 3000;
                 break;
             case 2:
                 if (HealthBelowPct(60))
@@ -1163,7 +1171,7 @@ public:
                         DoScriptText(TYRANDE_YELL_3, pTyrande);
                     uiPhase++;
                 }
-                EventTimer = 3000;
+                EventTimer += 3000;
                 break;
             case 3:
                 if (HealthBelowPct(40))
@@ -1172,7 +1180,7 @@ public:
                         DoScriptText(TYRANDE_SAY_2, pTyrande);
                     uiPhase++;
                 }
-                EventTimer = 3000;
+                EventTimer += 3000;
                 break;
             case 4:
                 if (HealthBelowPct(25))
@@ -1180,7 +1188,7 @@ public:
                     DoScriptText(ERANIKUS_YELL_8, me);
                     uiPhase++;
                 }
-                EventTimer = 3000;
+                EventTimer += 3000;
                 break;
             case 5:
                 if (HealthBelowPct(22))
@@ -1188,7 +1196,7 @@ public:
                     DoScriptText(ERANIKUS_YELL_9, me);
                     uiPhase++;
                 }
-                EventTimer = 3000;
+                EventTimer += 3000;
                 break;
             case 6:
                 if (HealthBelowPct(20))
@@ -1200,7 +1208,7 @@ public:
                         CAST_AI(npc_remulosAI, pRemulos->AI())->SetEscortPaused(false);
                     }
                     DoScriptText(ERANIKUS_YELL_10, me);
-                    for (std::set<Unit*>::const_iterator itr = me->getAttackers().begin(); itr != me->getAttackers().end(); ++itr)
+                    for (std::set<Unit*>::const_iterator itr = me->GetAttackers().begin(); itr != me->GetAttackers().end(); ++itr)
                     {
                         float collision = (float)urand(-8, 8);
                         uint32 r = urand(0, 1) ? 1 : 0;
@@ -1223,7 +1231,7 @@ public:
                     me->DeleteThreatList();
                     me->RemoveAllAuras();
                     me->SetReactState(REACT_PASSIVE);
-                    me->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
+                    me->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_SPAWNING);
                     if (Creature* pTyrande = Unit::GetCreature(*me, TyrandeGUID))
                     {
                         pTyrande->SetVisibility(VISIBILITY_ON);
@@ -1242,10 +1250,10 @@ public:
                             pPristess->GetMotionMaster()->MoveTargetedHome();
                         }
                     }
-                    EventTimer = 3000;
+                    EventTimer += 3000;
                     uiPhase++;
                 } else
-                    EventTimer = 3000;
+                    EventTimer += 3000;
                 break;
             case 7:
                 me->SetUInt64Value(UNIT_FIELD_TARGET, 0);
@@ -1256,7 +1264,7 @@ public:
                 DoScriptText(ERANIKUS_ZONE_EMOTE_CONSUMED, me);
                 if (Creature* pTyrande = Unit::GetCreature(*me, TyrandeGUID))
                     me->SetFacingToObject(pTyrande);
-                EventTimer = 3000;
+                EventTimer += 3000;
                 uiPhase++;
                 break;
             case 8:
@@ -1267,7 +1275,7 @@ public:
                     pTyrande->SetStandState(UNIT_STAND_STATE_KNEEL);
                     DoScriptText(TYRANDE_YELL_4, pTyrande);
                 }
-                EventTimer = 3000;
+                EventTimer += 3000;
                 uiPhase++;
                 break;
             case 9:
@@ -1282,22 +1290,22 @@ public:
                 me->UpdateEntry(NPC_ERANIKUS_THE_REDEEMED);
                 me->SetDisplayId(6984);
                 DoScriptText(ERANIKUS_SAY_1, me);
-                EventTimer = 8000;
+                EventTimer += 8000;
                 uiPhase++;
                 break;
             case 10:
                 DoScriptText(ERANIKUS_SAY_2, me);
-                EventTimer = 5000;
+                EventTimer += 5000;
                 uiPhase++;
                 break;
             case 11:
                 DoScriptText(ERANIKUS_SAY_3, me);
-                EventTimer = 10000;
+                EventTimer += 10000;
                 uiPhase++;
                 break;
             case 12:
                 DoScriptText(ERANIKUS_SAY_4, me);
-                EventTimer = 8000;
+                EventTimer += 8000;
                 uiPhase++;
                 break;
             case 13:
@@ -1327,38 +1335,41 @@ public:
                 me->ForcedDespawn();
                 break;
             }
-        } else EventTimer -= diff;
-
+        }
         if (CanAttack)
         {
             if (!UpdateVictim())
             {
+                FindVictimTimer -= diff;
                 if (FindVictimTimer <= diff)
                 {
                     FindVictim();
-                    FindVictimTimer = 2000;
+                    FindVictimTimer += 2000;
                     return;
-                } else FindVictimTimer -= diff;
+                } 
                 return;
             }
 
+            ShadowBoltTimer -= diff;
             if (ShadowBoltTimer <= diff)
             {
-                DoCast(me->getVictim(), ERANIKUS_SPELL_SHADOW_BOLT_VOLLEY);
-                ShadowBoltTimer = urand(7000, 12000);
-            } else ShadowBoltTimer -= diff;
+                DoCast(me->GetVictim(), ERANIKUS_SPELL_SHADOW_BOLT_VOLLEY);
+                ShadowBoltTimer += urand(7000, 12000);
+            } 
 
+            AcidBreathTimer -= diff;
             if (AcidBreathTimer <= diff)
             {
-                DoCast(me->getVictim(), ERANIKUS_SPELL_ACID_BREATH);
-                AcidBreathTimer = urand(5000, 15000);
-            } else AcidBreathTimer -= diff;
+                DoCast(me->GetVictim(), ERANIKUS_SPELL_ACID_BREATH);
+                AcidBreathTimer += urand(5000, 15000);
+            } 
 
+            NoxiusBreathTimer -= diff;
             if (NoxiusBreathTimer <= diff)
             {
-                DoCast(me->getVictim(), ERANIKUS_SPELL_NOXIUS_BREATH);
-                NoxiusBreathTimer = urand(10000, 20000);
-            } else NoxiusBreathTimer -= diff;
+                DoCast(me->GetVictim(), ERANIKUS_SPELL_NOXIUS_BREATH);
+                NoxiusBreathTimer += urand(10000, 20000);
+            } 
 
             DoMeleeAttackIfReady();
         }
@@ -1380,7 +1391,7 @@ public:
             CanAttack = true;
             me->SetFlying(false);
             me->SetReactState(REACT_AGGRESSIVE);
-            me->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE | UNIT_FLAG_NOT_SELECTABLE);
+            me->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_SPAWNING | UNIT_FLAG_NOT_SELECTABLE);
         }
     }
 
@@ -1388,7 +1399,7 @@ public:
     {
         if (Creature* pTyrande = Unit::GetCreature(*me, TyrandeGUID))
         {
-            if (pTyrande->isAlive())
+            if (pTyrande->IsAlive())
                 pTyrande->ForcedDespawn();
         }
 
@@ -1416,7 +1427,7 @@ public:
 
     void FindVictim()
     {
-        if (!me->getVictim())
+        if (!me->GetVictim())
         {
             if (Unit *pTarget = me->SelectNearestTarget(20))
             {

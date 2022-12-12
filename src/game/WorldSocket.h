@@ -1,7 +1,7 @@
 /*
  * Copyright (C) 2005-2008 MaNGOS <http://getmangos.com/>
  * Copyright (C) 2008 TrinityCore <http://www.trinitycore.org/>
- * Copyright (C) 2008-2014 Hellground <http://hellground.net/>
+ * Copyright (C) 2008-2017 Hellground <http://wow-hellground.com/>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -182,7 +182,7 @@ class WorldSocket : protected WorldHandler
         bool iFlushPacketQueue ();
 
         // Use to check if custom chat only client can use such opcode
-        bool IsChatOpcode(uint16 opcode);
+        static bool IsChatOpcode(uint16 opcode);
 
         static uint32 IPToLocation(const std::string& IP);
     private:

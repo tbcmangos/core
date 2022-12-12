@@ -1,6 +1,6 @@
 /* 
  * Copyright (C) 2006-2008 ScriptDev2 <https://scriptdev2.svn.sourceforge.net/>
- * Copyright (C) 2008-2014 Hellground <http://hellground.net/>
+ * Copyright (C) 2008-2015 Hellground <http://hellground.net/>
  * 
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -50,10 +50,12 @@ struct instance_sethekk_halls : public ScriptedInstance
     LakkaStatus Lakka;
 
     uint64 IkissDoorGUID;
+    uint64 AnzuGUID;
 
     void Initialize()
     {
         IkissDoorGUID = 0;
+        AnzuGUID = 0;
         Lakka = LAKKA_NOT_SUMMONED;
 
         for(uint8 i = 0; i < ENCOUNTERS; i++)
@@ -70,10 +72,10 @@ struct instance_sethekk_halls : public ScriptedInstance
 
     void OnPlayerEnter(Player* player)
     {
-        if (player->isGameMaster())
+        if (player->IsGameMaster())
             return;
 
-        if (player->GetQuestStatus(QUEST_BROTHER) == QUEST_STATUS_INCOMPLETE && Lakka == LAKKA_NOT_SUMMONED && !player->GetMap()->IsHeroic())
+        if (player->GetQuestStatus(QUEST_BROTHER) == QUEST_STATUS_INCOMPLETE && Lakka == LAKKA_NOT_SUMMONED)
            Lakka = LAKKA_WAIT_FOR_SUMMON;
     }
 
@@ -82,11 +84,10 @@ struct instance_sethekk_halls : public ScriptedInstance
         switch(entry)
         {
             case 23035:
-                if(GetData(DATA_ANZUEVENT) == DONE)
-                {
-                    creature->Kill(creature);
-                    creature->RemoveCorpse();
-                }
+                if (GetData(DATA_ANZUEVENT) == DONE || AnzuGUID)
+                    creature->DisappearAndDie();
+                else
+                    AnzuGUID = creature->GetGUID();
                 break;
         }
     }
@@ -114,7 +115,7 @@ struct instance_sethekk_halls : public ScriptedInstance
                 if (Player* player = itr->getSource())
                 {
                     if (player->GetQuestStatus(QUEST_BROTHER) == QUEST_STATUS_INCOMPLETE)
-                        player->KilledMonster(NPC_LAKKA, NULL);
+                        player->KilledMonster(NPC_LAKKA, 0);
                 }
             }
         }
@@ -131,6 +132,8 @@ struct instance_sethekk_halls : public ScriptedInstance
                     Encounter[0] = data;
                 if(data == DONE)
                     HandleGameObject(IkissDoorGUID, true);
+                if (data == IN_PROGRESS && Encounter[2] != DONE)
+                    LogPossibleCheaters("SH-Auch Ikiss in combat with Syth alive");
                 break;
             case DATA_ANZUEVENT:
                 if(Encounter[1] != DONE)

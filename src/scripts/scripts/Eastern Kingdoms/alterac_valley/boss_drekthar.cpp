@@ -1,6 +1,6 @@
 /* 
  * Copyright (C) 2006-2009 ScriptDev2 <https://scriptdev2.svn.sourceforge.net/>
- * Copyright (C) 2008-2014 Hellground <http://hellground.net/>
+ * Copyright (C) 2008-2015 Hellground <http://hellground.net/>
  * 
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -25,16 +25,16 @@ EndScriptData */
 
 #include "precompiled.h"
 
-#define YELL_AGGRO             -2100000
+#define YELL_AGGRO             -1001000
 
-#define YELL_EVADE             -2100001
-#define YELL_RESPAWN           -2100002
+#define YELL_EVADE             -1001001
+#define YELL_RESPAWN           -1001002
 
-#define YELL_RANDOM1           -2100003
-#define YELL_RANDOM2           -2100004
-#define YELL_RANDOM3           -2100005
-#define YELL_RANDOM4           -2100006
-#define YELL_RANDOM5           -2100007
+#define YELL_RANDOM1           -1001003
+#define YELL_RANDOM2           -1001004
+#define YELL_RANDOM3           -1001005
+#define YELL_RANDOM4           -1001006
+#define YELL_RANDOM5           -1001007
 
 
 #define SPELL_WHIRLWIND        15589
@@ -64,22 +64,22 @@ struct boss_drektharAI : public ScriptedAI
         m_creature->GetPosition(wLoc);
     }
 
-    uint32 WhirlwindTimer;
-    uint32 Whirlwind2Timer;
-    uint32 KnockdownTimer;
-    uint32 FrenzyTimer;
-    uint32 YellTimer;
-    uint32 CheckTimer;
+    Timer WhirlwindTimer;
+    Timer Whirlwind2Timer;
+    Timer KnockdownTimer;
+    Timer FrenzyTimer;
+    Timer YellTimer;
+    Timer CheckTimer;
     WorldLocation wLoc;
 
     void Reset()
     {
-        WhirlwindTimer          = urand(0, 10000);
-        Whirlwind2Timer         = urand(0, 15000);
-        KnockdownTimer          = 12000;
-        FrenzyTimer             = 6000;
-        YellTimer               = urand(20000, 30000); //20 to 30 seconds
-        CheckTimer              = 2000;
+        WhirlwindTimer.Reset(urand(0, 10000));
+        Whirlwind2Timer.Reset(urand(0, 15000));
+        KnockdownTimer.Reset(12000);
+        FrenzyTimer.Reset(6000);
+        YellTimer.Reset(urand(20000, 30000)); //20 to 30 seconds
+        CheckTimer.Reset(2000);
     }
 
     void EnterCombat(Unit *who)
@@ -94,7 +94,7 @@ struct boss_drektharAI : public ScriptedAI
                             return;
 
                         Creature * c = me->GetMap()->GetCreatureById(a);
-                        if (c && c->isAlive() && c->IsAIEnabled && c->AI())
+                        if (c && c->IsAlive() && c->IsAIEnabled && c->AI())
                             c->AI()->AttackStart(who);
                   });
     }
@@ -107,7 +107,7 @@ struct boss_drektharAI : public ScriptedAI
 
     void EnterEvadeMode()
     {
-        if (!me->isInCombat() || me->IsInEvadeMode())
+        if (!me->IsInCombat() || me->IsInEvadeMode())
             return;
 
         CreatureAI::EnterEvadeMode();
@@ -120,7 +120,7 @@ struct boss_drektharAI : public ScriptedAI
                             return;
 
                         Creature * c = me->GetMap()->GetCreatureById(a);
-                        if (c && c->isInCombat() && c->IsAIEnabled && c->AI())
+                        if (c && c->IsInCombat() && c->IsAIEnabled && c->AI())
                             c->AI()->EnterEvadeMode();
                   });
     }
@@ -130,7 +130,7 @@ struct boss_drektharAI : public ScriptedAI
         if (!UpdateVictim())
             return;
 
-        if (CheckTimer < diff)
+        if (CheckTimer.Expired(diff))
         {
             if(!m_creature->IsWithinDistInMap(&wLoc, 20.0f))
                 EnterEvadeMode();
@@ -140,48 +140,41 @@ struct boss_drektharAI : public ScriptedAI
 
             CheckTimer = 2000;
         }
-        else
-            CheckTimer -= diff;
+        
 
-        if (WhirlwindTimer < diff)
+        if (WhirlwindTimer.Expired(diff))
         {
-            AddSpellToCast(m_creature->getVictim(), SPELL_WHIRLWIND);
+            AddSpellToCast(m_creature->GetVictim(), SPELL_WHIRLWIND);
             WhirlwindTimer =  urand(8000, 18000);
         }
-        else
-            WhirlwindTimer -= diff;
-
-        if (Whirlwind2Timer < diff)
+        
+        if (Whirlwind2Timer.Expired(diff))
         {
-            AddSpellToCast(m_creature->getVictim(), SPELL_WHIRLWIND2);
+            AddSpellToCast(m_creature->GetVictim(), SPELL_WHIRLWIND2);
             Whirlwind2Timer = urand(7000, 25000);
         }
-        else
-            Whirlwind2Timer -= diff;
-
-        if (KnockdownTimer < diff)
+        
+        
+        if (KnockdownTimer.Expired(diff))
         {
-            AddSpellToCast(m_creature->getVictim(), SPELL_KNOCKDOWN);
+            AddSpellToCast(m_creature->GetVictim(), SPELL_KNOCKDOWN);
             KnockdownTimer = urand(10000, 15000);
         }
-        else
-            KnockdownTimer -= diff;
-
-        if (FrenzyTimer < diff)
+        
+        
+        if (FrenzyTimer.Expired(diff))
         {
-            AddSpellToCast(m_creature->getVictim(), SPELL_FRENZY);
+            AddSpellToCast(m_creature->GetVictim(), SPELL_FRENZY);
             FrenzyTimer = urand(20000, 25000);
         }
-        else
-            FrenzyTimer -= diff;
-
-        if (YellTimer < diff)
+        
+        
+        if (YellTimer.Expired(diff))
         {
             DoScriptText(RAND(YELL_RANDOM1, YELL_RANDOM2, YELL_RANDOM3, YELL_RANDOM4, YELL_RANDOM5), m_creature);
             YellTimer = urand(20000, 30000); //20 to 30 seconds
         }
-        else
-            YellTimer -= diff;
+        
 
         CastNextSpellIfAnyAndReady();
         DoMeleeAttackIfReady();
@@ -204,20 +197,20 @@ struct boss_drektharOfficerAI : public ScriptedAI
         m_creature->GetPosition(wLoc);
     }
 
-    uint32 chargeTimer;
-    uint32 cleaveTimer;
-    uint32 demoShoutTimer;
-    uint32 whirlwindTimer;
-    uint32 CheckTimer;
+    Timer chargeTimer;
+    Timer cleaveTimer;
+    Timer demoShoutTimer;
+    Timer whirlwindTimer;
+    Timer CheckTimer;
     WorldLocation wLoc;
 
     void Reset()
     {
-        chargeTimer             = urand(7500, 20000);
-        cleaveTimer             = urand(5000, 10000);
-        demoShoutTimer          = urand(2000, 4000);
-        whirlwindTimer          = urand(9000, 13000);
-        CheckTimer              = 2000;
+        chargeTimer.Reset(urand(7500, 20000));
+        cleaveTimer.Reset(urand(5000, 10000));
+        demoShoutTimer.Reset(urand(2000, 4000));
+        whirlwindTimer.Reset(urand(9000, 13000));
+        CheckTimer.Reset(2000);
     }
 
     void EnterCombat(Unit *who)
@@ -230,7 +223,7 @@ struct boss_drektharOfficerAI : public ScriptedAI
                             return;
 
                         Creature * c = me->GetMap()->GetCreatureById(a);
-                        if (c && c->isAlive() && c->IsAIEnabled && c->AI())
+                        if (c && c->IsAlive() && c->IsAIEnabled && c->AI())
                             c->AI()->AttackStart(who);
                   });
     }
@@ -242,7 +235,7 @@ struct boss_drektharOfficerAI : public ScriptedAI
 
     void EnterEvadeMode()
     {
-        if (!me->isInCombat() || me->IsInEvadeMode())
+        if (!me->IsInCombat() || me->IsInEvadeMode())
             return;
 
         CreatureAI::EnterEvadeMode();
@@ -255,7 +248,7 @@ struct boss_drektharOfficerAI : public ScriptedAI
                             return;
 
                         Creature * c = me->GetMap()->GetCreatureById(a);
-                        if (c && c->isInCombat() && c->IsAIEnabled && c->AI())
+                        if (c && c->IsInCombat() && c->IsAIEnabled && c->AI())
                             c->AI()->EnterEvadeMode();
                   });
     }
@@ -265,7 +258,8 @@ struct boss_drektharOfficerAI : public ScriptedAI
         if (!UpdateVictim())
             return;
 
-        if (CheckTimer < diff)
+        
+        if (CheckTimer.Expired(diff))
         {
             if (!m_creature->IsWithinDistInMap(&wLoc, 20.0f))
                 EnterEvadeMode();
@@ -275,10 +269,8 @@ struct boss_drektharOfficerAI : public ScriptedAI
 
             CheckTimer = 2000;
         }
-        else
-            CheckTimer -= diff;
-
-        if (chargeTimer < diff)
+        
+        if (chargeTimer.Expired(diff))
         {
             Unit * target = SelectUnit(SELECT_TARGET_RANDOM, 0, 25.0f, true, 0, 8.0f);
 
@@ -287,32 +279,29 @@ struct boss_drektharOfficerAI : public ScriptedAI
 
             chargeTimer = urand(7500, 20000);
         }
-        else
-            chargeTimer -= diff;
-
-        if (cleaveTimer < diff)
+        
+        
+        if (cleaveTimer.Expired(diff))
         {
             AddSpellToCast(AV_DT_CLEAVE, CAST_TANK);
             cleaveTimer = urand(5000, 10000);
         }
-        else
-            cleaveTimer -= diff;
-
-        if (demoShoutTimer < diff)
+        
+        
+        if (demoShoutTimer.Expired(diff))
         {
             AddSpellToCast(AV_DT_DEMOSHOUT, CAST_NULL);
             demoShoutTimer = urand(14000, 25000);
         }
-        else
-            demoShoutTimer -= diff;
-
-        if (whirlwindTimer < diff)
+        
+        
+        if (whirlwindTimer.Expired(diff))
         {
             AddSpellToCast(AV_DT_WHIRLWIND, CAST_SELF);
             whirlwindTimer = urand(9000, 13000);
         }
-        else
-            whirlwindTimer -= diff;
+        
+           
 
         CastNextSpellIfAnyAndReady();
         DoMeleeAttackIfReady();

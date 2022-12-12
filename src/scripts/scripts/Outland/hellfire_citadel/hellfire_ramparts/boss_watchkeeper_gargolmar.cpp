@@ -1,6 +1,6 @@
 /* 
  * Copyright (C) 2006-2008 ScriptDev2 <https://scriptdev2.svn.sourceforge.net/>
- * Copyright (C) 2008-2014 Hellground <http://hellground.net/>
+ * Copyright (C) 2008-2015 Hellground <http://hellground.net/>
  * 
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -47,25 +47,21 @@ struct boss_watchkeeper_gargolmarAI : public ScriptedAI
     boss_watchkeeper_gargolmarAI(Creature *c) : ScriptedAI(c)
     {
         pInstance = (c->GetInstanceData());
-        HeroicMode = me->GetMap()->IsHeroic();
     }
 
     ScriptedInstance* pInstance;
-
-    bool HeroicMode;
-
-    uint32 Surge_Timer;
-    uint32 MortalWound_Timer;
-    uint32 Retaliation_Timer;
+    Timer Surge_Timer;
+    Timer MortalWound_Timer;
+    Timer Retaliation_Timer;
 
     bool HasTaunted;
     bool YelledForHeal;
 
     void Reset()
     {
-        Surge_Timer = 5000;
-        MortalWound_Timer = 4000;
-        Retaliation_Timer = 0;
+        Surge_Timer.Reset(5000);
+        MortalWound_Timer.Reset(4000);
+        Retaliation_Timer = 1;
 
         HasTaunted = false;
         YelledForHeal = false;
@@ -84,7 +80,7 @@ struct boss_watchkeeper_gargolmarAI : public ScriptedAI
 
     void MoveInLineOfSight(Unit* who)
     {
-        if (!me->getVictim() && who->isTargetableForAttack() && ( me->IsHostileTo( who )) && who->isInAccessiblePlacefor(me) )
+        if (!me->GetVictim() && who->isTargetableForAttack() && ( me->IsHostileTo( who )) && who->isInAccessiblePlacefor(me) )
         {
             if (!me->CanFly() && me->GetDistanceZ(who) > CREATURE_Z_ATTACK_RANGE)
                 return;
@@ -126,13 +122,13 @@ struct boss_watchkeeper_gargolmarAI : public ScriptedAI
         if (!UpdateVictim())
             return;
 
-        if (MortalWound_Timer < diff)
+        if (MortalWound_Timer.Expired(diff))
         {
-            DoCast(me->getVictim(),HeroicMode ? H_SPELL_MORTAL_WOUND : SPELL_MORTAL_WOUND);
+            DoCast(me->GetVictim(),HeroicMode ? H_SPELL_MORTAL_WOUND : SPELL_MORTAL_WOUND);
             MortalWound_Timer = 5000+rand()%8000;
-        }else MortalWound_Timer -= diff;
+        }
 
-        if (Surge_Timer < diff)
+        if (Surge_Timer.Expired(diff))
         {
             DoScriptText(SAY_SURGE, me);
 
@@ -140,15 +136,15 @@ struct boss_watchkeeper_gargolmarAI : public ScriptedAI
                 DoCast(target,SPELL_SURGE);
 
             Surge_Timer = 5000+rand()%8000;
-        }else Surge_Timer -= diff;
+        }
 
         if ((me->GetHealth()*100) / me->GetMaxHealth() < 20)
         {
-            if (Retaliation_Timer < diff)
+            if (Retaliation_Timer.Expired(diff))
             {
                 DoCast(me,SPELL_RETALIATION);
                 Retaliation_Timer = 30000;
-            }else Retaliation_Timer -= diff;
+            }
         }
 
         if (!YelledForHeal)

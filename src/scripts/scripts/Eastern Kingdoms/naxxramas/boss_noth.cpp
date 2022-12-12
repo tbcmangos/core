@@ -1,6 +1,6 @@
 /* 
  * Copyright (C) 2006-2008 ScriptDev2 <https://scriptdev2.svn.sourceforge.net/>
- * Copyright (C) 2008-2014 Hellground <http://hellground.net/>
+ * Copyright (C) 2008-2015 Hellground <http://hellground.net/>
  * 
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -76,11 +76,11 @@ enum NothPhases
     NOTH_PHASE_BALCONY      = 2
 };
 
-const float NothSummonLocations[3][4] =
+static const float NothSummonLocations[3][4] =
 {
-    { 2724.83, -3526.62, 261.96, 3.00 },
-    { 2716.68, -3463.05, 262.05, 4.14 },
-    { 2646.88, -3461.90, 263.53, 5.28 }
+    { 2724.83f, -3526.62f, 261.96f, 3.00f },
+    { 2716.68f, -3463.05f, 262.05f, 4.14f },
+    { 2646.88f, -3461.90f, 263.53f, 5.28f }
 };
 
 struct boss_nothAI : public BossAI
@@ -138,7 +138,7 @@ struct boss_nothAI : public BossAI
         BossAI::SummonedCreatureDespawn(summoned);
 
         // if all summons was killed we should teleport back
-        if (checkSummons && m_creature->isAlive() && events.GetPhase() == NOTH_PHASE_BALCONY && summons.isEmpty())
+        if (checkSummons && m_creature->IsAlive() && events.GetPhase() == NOTH_PHASE_BALCONY && summons.empty())
             events.RescheduleEvent(EVENT_TELEPORT_BACK, 1000, 0, NOTH_PHASE_BALCONY);
     }
 
@@ -218,7 +218,7 @@ struct boss_nothAI : public BossAI
                     m_creature->NearTeleportTo(BALCONY_LOC);
                     events.ScheduleEvent(EVENT_SUMMON_1, 2000, 0, NOTH_PHASE_BALCONY);
                     events.SetPhase(NOTH_PHASE_BALCONY);
-                    m_creature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
+                    m_creature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_SPAWNING);
                     m_creature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
 
                     ++tpCount;
@@ -247,7 +247,7 @@ struct boss_nothAI : public BossAI
                     events.SetPhase(NOTH_PHASE_NORMAL);
                     checkSummons = false;
 
-                    m_creature->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
+                    m_creature->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_SPAWNING);
                     m_creature->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
                     break;
                 }

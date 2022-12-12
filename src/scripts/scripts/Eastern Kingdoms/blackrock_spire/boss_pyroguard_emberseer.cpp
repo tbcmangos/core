@@ -1,6 +1,6 @@
 /* 
  * Copyright (C) 2006-2008 ScriptDev2 <https://scriptdev2.svn.sourceforge.net/>
- * Copyright (C) 2008-2014 Hellground <http://hellground.net/>
+ * Copyright (C) 2008-2015 Hellground <http://hellground.net/>
  * 
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -86,8 +86,8 @@ struct boss_pyroguard_emberseerAI : public BossAI
         events.Reset();
         pInstance->SetData(DATA_EMBERSEER, DONE);
 
-        if (Creature *warden = GetClosestCreatureWithEntry(me, 99999, 60.0))
-           warden->Kill(warden);
+        if (Creature *dementor = GetClosestCreatureWithEntry(me, 99999, 1000.0))
+            dementor->Kill(dementor);
     }
 
     void EnterEvadeMode()
@@ -111,8 +111,8 @@ struct boss_pyroguard_emberseerAI : public BossAI
                 }
                 case EMBERSEER_EVENT_TRANSFORM:
                 {
-                    DoScriptText(-2100023, me);
-                    DoScriptText(-2100024, me);
+                    DoScriptText(-1001023, me);
+                    DoScriptText(-1001024, me);
                     me->CastSpell(me, SPELL_TRANSFORM, true);
                     me->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
                     me->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_PASSIVE);

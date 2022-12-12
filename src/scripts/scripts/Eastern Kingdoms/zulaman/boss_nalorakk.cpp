@@ -1,6 +1,6 @@
 /* 
  * Copyright (C) 2006-2008 ScriptDev2 <https://scriptdev2.svn.sourceforge.net/>
- * Copyright (C) 2008-2014 Hellground <http://hellground.net/>
+ * Copyright (C) 2008-2015 Hellground <http://hellground.net/>
  * 
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -29,16 +29,16 @@ EndScriptData */
 #include "GridNotifiers.h"
 
 //Trash Waves
-float NalorakkWay[8][3] =
+static float NalorakkWay[8][3] =
 {
-    { 18.569, 1414.512, 11.42},// waypoint 1
-    {-17.264, 1419.551, 12.62},
-    {-52.642, 1419.357, 27.31},// waypoint 2
-    {-69.908, 1419.721, 27.31},
-    {-79.929, 1395.958, 27.31},
-    {-80.072, 1374.555, 40.87},// waypoint 3
-    {-80.072, 1314.398, 40.87},
-    {-80.072, 1295.775, 48.60} // waypoint 4
+    { 18.569f, 1414.512f, 11.42f},// waypoint 1
+    {-17.264f, 1419.551f, 12.62f},
+    {-52.642f, 1419.357f, 27.31f},// waypoint 2
+    {-69.908f, 1419.721f, 27.31f},
+    {-79.929f, 1395.958f, 27.31f},
+    {-80.072f, 1374.555f, 40.87f},// waypoint 3
+    {-80.072f, 1314.398f, 40.87f},
+    {-80.072f, 1295.775f, 48.60f} // waypoint 4
 };
 
 #define YELL_NALORAKK_WAVE1     -1800472
@@ -101,24 +101,24 @@ struct boss_nalorakkAI : public ScriptedAI
 
     ScriptedInstance *pInstance;
 
-    uint32 BrutalSwipe_Timer;
-    uint32 Mangle_Timer;
-    uint32 Surge_Timer;
-
-    uint32 LaceratingSlash_Timer;
-    uint32 RendFlesh_Timer;
-    uint32 DeafeningRoar_Timer;
-
-    uint32 ShapeShift_Timer;
-    uint32 Berserk_Timer;
+    Timer BrutalSwipe_Timer;
+    Timer Mangle_Timer;
+    Timer Surge_Timer;
+    
+    Timer LaceratingSlash_Timer;
+    Timer RendFlesh_Timer;
+    Timer DeafeningRoar_Timer;
+    
+    Timer ShapeShift_Timer;
+    Timer Berserk_Timer;
 
     bool inBearForm;
     bool MoveEvent;
     bool inMove;
     uint32 MovePhase;
-    uint32 waitTimer;
+    Timer waitTimer;
 
-    uint32 checkTimer;
+    Timer checkTimer;
     WorldLocation wLoc;
 
     void Reset()
@@ -126,26 +126,27 @@ struct boss_nalorakkAI : public ScriptedAI
         if(MoveEvent)
         {
             m_creature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
-            m_creature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
+            m_creature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_SPAWNING);
             inMove = false;
             waitTimer = 0;
-            m_creature->SetSpeed(MOVE_RUN,2);
+            m_creature->SetSpeed(MOVE_RUN, 2);
             m_creature->SetWalk(false);
-        }else
+        }
+        else
         {
-            (*m_creature).GetMotionMaster()->MovePoint(0,NalorakkWay[7][0],NalorakkWay[7][1],NalorakkWay[7][2]);
+            m_creature->GetMotionMaster()->MovePoint(0, NalorakkWay[7][0], NalorakkWay[7][1], NalorakkWay[7][2]);
         }
 
-        if(pInstance && pInstance->GetData(DATA_NALORAKKEVENT) != DONE)
+        if (pInstance && pInstance->GetData(DATA_NALORAKKEVENT) != DONE)
             pInstance->SetData(DATA_NALORAKKEVENT, NOT_STARTED);
 
-        Surge_Timer = 15000 + rand()%5000;
-        BrutalSwipe_Timer = 7000 + rand()%5000;
-        Mangle_Timer = 10000 + rand()%5000;
-        ShapeShift_Timer = 45000 + rand()%5000;
-        Berserk_Timer = 600000;
+        Surge_Timer.Reset(15000 + rand() % 5000);
+        BrutalSwipe_Timer.Reset(7000 + rand() % 5000);
+        Mangle_Timer.Reset(10000 + rand() % 5000);
+        ShapeShift_Timer.Reset(45000 + rand() % 5000);
+        Berserk_Timer.Reset(600000);
 
-        checkTimer = 3000;
+        checkTimer.Reset(3000);
 
         inBearForm = false;
         m_creature->SetUInt32Value(UNIT_VIRTUAL_ITEM_SLOT_DISPLAY + 1, 5122);
@@ -186,9 +187,9 @@ struct boss_nalorakkAI : public ScriptedAI
     {
         if(aur->GetId() == SPELL_BEARFORM && aur->GetEffIndex() == 0)
         {
-            LaceratingSlash_Timer = 2000;               // dur 18s
-            RendFlesh_Timer = 3000;                     // dur 5s
-            DeafeningRoar_Timer = 5000 + rand()%5000;   // dur 2s
+            LaceratingSlash_Timer.Reset(2000);               // dur 18s
+            RendFlesh_Timer.Reset(3000);                     // dur 5s
+            DeafeningRoar_Timer.Reset(5000 + rand()%5000);   // dur 2s
             inBearForm = true;
             DoScriptText(EMOTE_SHIFTEDTOBEAR, m_creature);
             m_creature->SetUInt32Value(UNIT_VIRTUAL_ITEM_SLOT_DISPLAY + 1, 0);
@@ -202,10 +203,10 @@ struct boss_nalorakkAI : public ScriptedAI
         {
             m_creature->SetUInt32Value(UNIT_VIRTUAL_ITEM_SLOT_DISPLAY + 1, 5122);
             DoScriptText(YELL_SHIFTEDTOTROLL, m_creature);
-            Surge_Timer = 15000 + rand()%5000;
-            BrutalSwipe_Timer = 7000 + rand()%5000;
-            Mangle_Timer = 10000 + rand()%5000;
-            ShapeShift_Timer = 45000 + rand()%5000;
+            Surge_Timer.Reset(15000 + rand()%5000);
+            BrutalSwipe_Timer.Reset(7000 + rand()%5000);
+            Mangle_Timer.Reset(10000 + rand()%5000);
+            ShapeShift_Timer.Reset(45000 + rand()%5000);
             inBearForm = false;
             ClearCastQueue();
         }
@@ -230,7 +231,7 @@ struct boss_nalorakkAI : public ScriptedAI
                             {
                                 DoScriptText(YELL_NALORAKK_WAVE1, m_creature);
 
-                                (*m_creature).GetMotionMaster()->MovePoint(1,NalorakkWay[1][0],NalorakkWay[1][1],NalorakkWay[1][2]);
+                                m_creature->GetMotionMaster()->MovePoint(1,NalorakkWay[1][0],NalorakkWay[1][1],NalorakkWay[1][2]);
                                 MovePhase ++;
                                 inMove = true;
 
@@ -242,7 +243,7 @@ struct boss_nalorakkAI : public ScriptedAI
                             {
                                 DoScriptText(YELL_NALORAKK_WAVE2, m_creature);
 
-                                (*m_creature).GetMotionMaster()->MovePoint(3,NalorakkWay[3][0],NalorakkWay[3][1],NalorakkWay[3][2]);
+                                m_creature->GetMotionMaster()->MovePoint(3,NalorakkWay[3][0],NalorakkWay[3][1],NalorakkWay[3][2]);
                                 MovePhase ++;
                                 inMove = true;
 
@@ -254,7 +255,7 @@ struct boss_nalorakkAI : public ScriptedAI
                             {
                                 DoScriptText(YELL_NALORAKK_WAVE3, m_creature);
 
-                                (*m_creature).GetMotionMaster()->MovePoint(6,NalorakkWay[6][0],NalorakkWay[6][1],NalorakkWay[6][2]);
+                                m_creature->GetMotionMaster()->MovePoint(6,NalorakkWay[6][0],NalorakkWay[6][1],NalorakkWay[6][2]);
                                 MovePhase ++;
                                 inMove = true;
 
@@ -269,7 +270,7 @@ struct boss_nalorakkAI : public ScriptedAI
                                 DoScriptText(YELL_NALORAKK_WAVE4, m_creature);
 
                                 m_creature->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
-                                m_creature->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
+                                m_creature->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_SPAWNING);
 
                                 MoveEvent = false;
                             }
@@ -345,22 +346,21 @@ struct boss_nalorakkAI : public ScriptedAI
 
     void UpdateAI(const uint32 diff)
     {
-        if(waitTimer)
-        {
-            if(inMove)
-                if(waitTimer < diff)
-                {
-                    (*m_creature).GetMotionMaster()->MovementExpired();
-                    (*m_creature).GetMotionMaster()->MovePoint(MovePhase,NalorakkWay[MovePhase][0],NalorakkWay[MovePhase][1],NalorakkWay[MovePhase][2]);
-                    waitTimer = 0;
-                }else 
-                    waitTimer -= diff;
-        }
+
+        if (inMove)
+            if (waitTimer.Expired(diff))
+            {
+                m_creature->GetMotionMaster()->MovementExpired();
+                m_creature->GetMotionMaster()->MovePoint(MovePhase, NalorakkWay[MovePhase][0], NalorakkWay[MovePhase][1], NalorakkWay[MovePhase][2]);
+                waitTimer = 0;
+            }
+        
 
         if(!UpdateVictim())
             return;
 
-        if (checkTimer < diff)
+        
+        if (checkTimer.Expired(diff))
         {
             if (!m_creature->IsWithinDistInMap(&wLoc, 75) && !MoveEvent)
                 EnterEvadeMode();
@@ -369,77 +369,72 @@ struct boss_nalorakkAI : public ScriptedAI
             m_creature->SetSpeed(MOVE_RUN,2);
             checkTimer = 3000;
         }
-        else
-            checkTimer -= diff;
+        
 
-        if(Berserk_Timer < diff)
+    
+        if (Berserk_Timer.Expired(diff))
         {
             AddSpellToCastWithScriptText(m_creature, SPELL_BERSERK, YELL_BERSERK, true);
             Berserk_Timer = 600000;
-        }else 
-            Berserk_Timer -= diff;
+        }
 
         if(!inBearForm)
         {
-            if(BrutalSwipe_Timer < diff)
+            if (BrutalSwipe_Timer.Expired(diff))
             {
-                AddSpellToCast(m_creature->getVictim(), SPELL_BRUTALSWIPE);
+                AddSpellToCast(m_creature->GetVictim(), SPELL_BRUTALSWIPE);
                 BrutalSwipe_Timer = 7000 + rand()%5000;
-            }else 
-                BrutalSwipe_Timer -= diff;
+            }
 
-            if(Mangle_Timer < diff)
+            if (Mangle_Timer.Expired(diff))
             {
-                if(m_creature->getVictim() && !m_creature->getVictim()->HasAura(SPELL_MANGLEEFFECT, 0))
+                if(m_creature->GetVictim() && !m_creature->GetVictim()->HasAura(SPELL_MANGLEEFFECT, 0))
                 {
-                    AddSpellToCast(m_creature->getVictim(), SPELL_MANGLE);
+                    AddSpellToCast(m_creature->GetVictim(), SPELL_MANGLE);
                     Mangle_Timer = 1000;
                 }
                 else 
                     Mangle_Timer = 10000 + rand()%5000;
-            }else 
-                Mangle_Timer -= diff;
+            }
 
-            if(Surge_Timer < diff)
+            
+            if (Surge_Timer.Expired(diff))
             {
                 if(Unit *target = SelectUnit(SELECT_TARGET_RANDOM, 1, GetSpellMaxRange(SPELL_SURGE), true, m_creature->getVictimGUID()))
                     AddSpellToCastWithScriptText(target, SPELL_SURGE, YELL_SURGE);
                 Surge_Timer = 15000 + rand()%5000;
-            }else 
-                Surge_Timer -= diff;
-
-            if(ShapeShift_Timer)
-            {
-                if(ShapeShift_Timer <= diff)
-                {
-                    AddSpellToCastWithScriptText(m_creature, SPELL_BEARFORM, YELL_SHIFTEDTOBEAR, true);
-                    ShapeShift_Timer = 0;
-                }else 
-                    ShapeShift_Timer -= diff;
             }
+
+
+            if (ShapeShift_Timer.Expired(diff))
+            {
+                AddSpellToCastWithScriptText(m_creature, SPELL_BEARFORM, YELL_SHIFTEDTOBEAR, true);
+                ShapeShift_Timer = 0;
+            }
+            
         }
         else
         {
-            if(LaceratingSlash_Timer < diff)
+            
+            if (LaceratingSlash_Timer.Expired(diff))
             {
-                AddSpellToCast(m_creature->getVictim(), SPELL_LACERATINGSLASH);
+                AddSpellToCast(m_creature->GetVictim(), SPELL_LACERATINGSLASH);
                 LaceratingSlash_Timer = 18000 + rand()%5000;
-            }else
-                LaceratingSlash_Timer -= diff;
+            }
 
-            if(RendFlesh_Timer < diff)
+            
+            if (RendFlesh_Timer.Expired(diff))
             {
-                AddSpellToCast(m_creature->getVictim(), SPELL_RENDFLESH);
+                AddSpellToCast(m_creature->GetVictim(), SPELL_RENDFLESH);
                 RendFlesh_Timer = 5000 + rand()%5000;
-            }else
-                RendFlesh_Timer -= diff;
+            }
 
-            if(DeafeningRoar_Timer < diff)
+            
+            if (DeafeningRoar_Timer.Expired(diff))
             {
-                AddSpellToCast(m_creature->getVictim(), SPELL_DEAFENINGROAR);
+                AddSpellToCast(m_creature->GetVictim(), SPELL_DEAFENINGROAR);
                 DeafeningRoar_Timer = 15000 + rand()%5000;
-            }else
-                DeafeningRoar_Timer -= diff;
+            }
         }
 
         CastNextSpellIfAnyAndReady();

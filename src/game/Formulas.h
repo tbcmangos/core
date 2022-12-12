@@ -1,7 +1,7 @@
 /*
  * Copyright (C) 2005-2008 MaNGOS <http://getmangos.com/>
  * Copyright (C) 2008 TrinityCore <http://www.trinitycore.org/>
- * Copyright (C) 2008-2014 Hellground <http://hellground.net/>
+ * Copyright (C) 2008-2017 Hellground <http://wow-hellground.com/>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -114,7 +114,7 @@ namespace Hellground
                 (((Creature*)u)->GetCreatureInfo()->flags_extra & CREATURE_FLAG_EXTRA_NO_XP_AT_KILL)))
                 return 0;
 
-            uint32 xp_gain= BaseGain(pl->getLevel(), u->getLevel(), GetContentLevelsForMapAndZone(u->GetMapId(), u->GetZoneId()));
+            uint32 xp_gain= BaseGain(pl->GetLevel(), u->GetLevel(), GetContentLevelsForMapAndZone(u->GetMapId(), u->GetZoneId()));
             if (xp_gain == 0)
                 return 0;
 
@@ -128,7 +128,7 @@ namespace Hellground
             {
                 CreatureInfo const * tmpInfo = ObjectMgr::GetCreatureTemplate(u->GetEntry());
                 sLog.outLog(LOG_EXP, "Exp calculation for Player %u and Unit %u (id: %u): xp_gain: %u, plLvl: %u, uLvl: %u, XPRate: %f, XPMod: %f (template: %f), exp calculated: %f, exp after cast: %u",
-                    pl->GetGUIDLow(), u->GetGUIDLow(), xp_gain, pl->getLevel(), u->getLevel(), u->GetEntry(), pl->GetXPRate(RATE_XP_KILL), u->GetXPMod(), tmpInfo ? tmpInfo->xpMod : -1.0f, expCalc, exp);
+                    pl->GetGUIDLow(), u->GetGUIDLow(), xp_gain, pl->GetLevel(), u->GetLevel(), u->GetEntry(), pl->GetXPRate(RATE_XP_KILL), u->GetXPMod(), tmpInfo ? tmpInfo->xpMod : -1.0f, expCalc, exp);
             }
 
             return exp;

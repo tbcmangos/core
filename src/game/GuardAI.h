@@ -1,7 +1,7 @@
 /*
  * Copyright (C) 2005-2008 MaNGOS <http://getmangos.com/>
  * Copyright (C) 2008 TrinityCore <http://www.trinitycore.org/>
- * Copyright (C) 2008-2014 Hellground <http://hellground.net/>
+ * Copyright (C) 2008-2017 Hellground <http://wow-hellground.com/>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -46,10 +46,11 @@ class GuardAI : public CreatureAI
         void UpdateAI(const uint32);
         static int Permissible(const Creature *);
 
+        void ResetGuard() { i_state = STATE_NORMAL; i_victimGuid = 0; }
+
     private:
         uint64 i_victimGuid;
         GuardState i_state;
-        TimeTracker i_tracker;
 };
 
 #endif

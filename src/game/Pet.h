@@ -1,7 +1,7 @@
 /*
  * Copyright (C) 2005-2008 MaNGOS <http://getmangos.com/>
  * Copyright (C) 2008 TrinityCore <http://www.trinitycore.org/>
- * Copyright (C) 2008-2014 Hellground <http://hellground.net/>
+ * Copyright (C) 2008-2017 Hellground <http://wow-hellground.com/>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -195,6 +195,7 @@ class Pet : public Creature
         void UpdateDamagePhysical(WeaponAttackType attType);
 
         bool canSeeOrDetect(Unit const* u, WorldObject const*, bool detect, bool inVisibleList = false, bool is3dDistance = true) const;
+        bool CanSwim() const { return true; }
 
         bool   CanTakeMoreActiveSpells(uint32 SpellIconID);
         void   ToggleAutocast(uint32 spellid, bool apply);
@@ -208,15 +209,13 @@ class Pet : public Creature
         void CastPetAuras(bool current);
         void CastPetAura(PetAura const* aura);
 
-        void _LoadSpellCooldowns();
-        void _SaveSpellCooldowns();
         void _LoadAuras(uint32 timediff);
         void _SaveAuras();
         void _LoadSpells();
         void _SaveSpells();
 
         bool addSpell(uint16 spell_id,uint16 active = ACT_DECIDE, PetSpellState state = PETSPELL_NEW, uint16 slot_id=0xffff, PetSpellType type = PETSPELL_NORMAL);
-        bool learnSpell(uint16 spell_id);
+        bool LearnSpell(uint16 spell_id);
         void removeSpell(uint16 spell_id);
         bool _removeSpell(uint16 spell_id);
 

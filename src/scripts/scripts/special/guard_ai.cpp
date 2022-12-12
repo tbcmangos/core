@@ -1,7 +1,7 @@
-/* 
+/*
  * Copyright (C) 2006-2008 ScriptDev2 <https://scriptdev2.svn.sourceforge.net/>
- * Copyright (C) 2008-2014 Hellground <http://hellground.net/>
- * 
+ * Copyright (C) 2008-2015 Hellground <http://hellground.net/>
+ *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 2 of the License, or
@@ -69,33 +69,30 @@ void guardAI::JustDied(Unit *Killer)
 void guardAI::UpdateAI(const uint32 diff)
 {
     //Always decrease our global cooldown first
-    if (GlobalCooldown > diff)
-        GlobalCooldown -= diff;
-    else GlobalCooldown = 0;
+    if (GlobalCooldown.Expired(diff))
+        GlobalCooldown = 0;
 
     //Buff timer (only buff when we are alive and not in combat
-    if (m_creature->isAlive() && !m_creature->isInCombat())
-        if (BuffTimer < diff )
-    {
-        //Find a spell that targets friendly and applies an aura (these are generally buffs)
-        SpellEntry const *info = SelectSpell(m_creature, -1, -1, SELECT_TARGET_ANY_FRIEND, 0, 0, 0, 0, SELECT_EFFECT_AURA);
-
-        if (info && !GlobalCooldown)
+    if (m_creature->IsAlive() && !m_creature->IsInCombat())
+        if (BuffTimer.Expired(diff))
         {
-            //Cast the buff spell
-            DoCastSpell(m_creature, info);
+            //Find a spell that targets friendly and applies an aura (these are generally buffs)
+            SpellEntry const *info = SelectSpell(m_creature, -1, -1, SELECT_TARGET_ANY_FRIEND, 0, 0, 0, 0, SELECT_EFFECT_AURA);
 
-            //Set our global cooldown
-            GlobalCooldown = GENERIC_CREATURE_COOLDOWN;
+            if (info && !GlobalCooldown.GetInterval())
+            {
+                //Cast the buff spell
+                DoCastSpell(m_creature, info);
 
-            //Set our timer to 10 minutes before rebuff
-            BuffTimer = 600000;
-        }                                                   //Try agian in 30 seconds
-        else
-            BuffTimer = 30000;
-    }
-    else
-        BuffTimer -= diff;
+                //Set our global cooldown
+                GlobalCooldown = GENERIC_CREATURE_COOLDOWN;
+
+                //Set our timer to 10 minutes before rebuff
+                BuffTimer = 600000;
+            }                                                   //Try agian in 30 seconds
+            else
+                BuffTimer = 30000;
+        }
 
     //Return since we have no target
     if (!UpdateVictim())
@@ -105,7 +102,7 @@ void guardAI::UpdateAI(const uint32 diff)
     if( m_creature->isAttackReady() && !m_creature->IsNonMeleeSpellCast(false))
     {
         //If we are within range melee the target
-        if( m_creature->IsWithinMeleeRange(m_creature->getVictim()))
+        if( m_creature->IsWithinMeleeRange(m_creature->GetVictim()))
         {
             bool Healing = false;
             SpellEntry const *info = NULL;
@@ -116,19 +113,19 @@ void guardAI::UpdateAI(const uint32 diff)
 
             //No healing spell available, select a hostile spell
             if (info) Healing = true;
-            else info = SelectSpell(m_creature->getVictim(), -1, -1, SELECT_TARGET_ANY_ENEMY, 0, 0, 0, 0, SELECT_EFFECT_DONTCARE);
+            else info = SelectSpell(m_creature->GetVictim(), -1, -1, SELECT_TARGET_ANY_ENEMY, 0, 0, 0, 0, SELECT_EFFECT_DONTCARE);
 
             //20% chance to replace our white hit with a spell
-            if (info && rand() % 5 == 0 && !GlobalCooldown)
+            if (info && rand() % 5 == 0 && !GlobalCooldown.GetInterval())
             {
                 //Cast the spell
                 if (Healing)DoCastSpell(m_creature, info);
-                else DoCastSpell(m_creature->getVictim(), info);
+                else DoCastSpell(m_creature->GetVictim(), info);
 
                 //Set our global cooldown
                 GlobalCooldown = GENERIC_CREATURE_COOLDOWN;
             }
-            else m_creature->AttackerStateUpdate(m_creature->getVictim());
+            else m_creature->AttackerStateUpdate(m_creature->GetVictim());
 
             m_creature->resetAttackTimer();
         }
@@ -147,28 +144,28 @@ void guardAI::UpdateAI(const uint32 diff)
 
             //No healing spell available, See if we can cast a ranged spell (Range must be greater than ATTACK_DISTANCE)
             if (info) Healing = true;
-            else info = SelectSpell(m_creature->getVictim(), -1, -1, SELECT_TARGET_ANY_ENEMY, 0, 0, NOMINAL_MELEE_RANGE, 0, SELECT_EFFECT_DONTCARE);
+            else info = SelectSpell(m_creature->GetVictim(), -1, -1, SELECT_TARGET_ANY_ENEMY, 0, 0, NOMINAL_MELEE_RANGE, 0, SELECT_EFFECT_DONTCARE);
 
             //Found a spell, check if we aren't on cooldown
-            if (info && !GlobalCooldown)
+            if (info && !GlobalCooldown.GetInterval())
             {
                 //If we are currently moving stop us and set the movement generator
-                if ((*m_creature).GetMotionMaster()->GetCurrentMovementGeneratorType()!=IDLE_MOTION_TYPE)
-                    (*m_creature).GetMotionMaster()->MoveIdle();
+                if (m_creature->GetMotionMaster()->GetCurrentMovementGeneratorType()!=IDLE_MOTION_TYPE)
+                    m_creature->GetMotionMaster()->MoveIdle();
 
                 //Cast spell
                 if (Healing) DoCastSpell(m_creature,info);
-                else DoCastSpell(m_creature->getVictim(),info);
+                else DoCastSpell(m_creature->GetVictim(),info);
 
                 //Set our global cooldown
                 GlobalCooldown = GENERIC_CREATURE_COOLDOWN;
 
             }                                               //If no spells available and we arn't moving run to target
-            else if ((*m_creature).GetMotionMaster()->GetCurrentMovementGeneratorType()!=CHASE_MOTION_TYPE)
+            else if (!m_creature->HasUnitState(UNIT_STAT_CHASE))
             {
                 //Cancel our current spell and then mutate new movement generator
                 m_creature->InterruptNonMeleeSpells(false);
-                (*m_creature).GetMotionMaster()->MoveChase(m_creature->getVictim());
+                m_creature->GetMotionMaster()->MoveChase(m_creature->GetVictim());
             }
         }
     }

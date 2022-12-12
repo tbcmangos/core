@@ -1,7 +1,7 @@
 /*
  * Copyright (C) 2005-2008 MaNGOS <http://getmangos.com/>
  * Copyright (C) 2008 TrinityCore <http://www.trinitycore.org/>
- * Copyright (C) 2008-2014 Hellground <http://hellground.net/>
+ * Copyright (C) 2008-2017 Hellground <http://wow-hellground.com/>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -38,7 +38,7 @@ void WorldSession::HandleAttackSwingOpcode(WorldPacket & recv_data)
     if (!pEnemy)
     {
         // stop attack state at client
-        SendAttackStop(NULL);
+        _player->SendMeleeAttackStop(NULL);
         return;
     }
 
@@ -47,7 +47,7 @@ void WorldSession::HandleAttackSwingOpcode(WorldPacket & recv_data)
         sLog.outDebug("WORLD: Enemy %s %u is friendly",(IS_PLAYER_GUID(guid) ? "player" : "creature"),GUID_LOPART(guid));
 
         // stop attack state at client
-        SendAttackStop(pEnemy);
+        _player->SendMeleeAttackStop(pEnemy);
         return;
     }
 
@@ -74,13 +74,3 @@ void WorldSession::HandleSetSheathedOpcode(WorldPacket & recv_data)
 
     GetPlayer()->SetSheath(sheathed);
 }
-
-void WorldSession::SendAttackStop(Unit const* enemy)
-{
-    WorldPacket data(SMSG_ATTACKSTOP, (4+20));            // we guess size
-    data << GetPlayer()->GetPackGUID();
-    data << (enemy ? enemy->GetPackGUID() : PackedGuid());  // must be packed guid
-    data << uint32(0);                                      // unk, can be 1 also
-    SendPacket(&data);
-}
-

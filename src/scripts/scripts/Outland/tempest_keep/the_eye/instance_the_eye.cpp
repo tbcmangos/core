@@ -1,6 +1,6 @@
 /* 
  * Copyright (C) 2006-2008 ScriptDev2 <https://scriptdev2.svn.sourceforge.net/>
- * Copyright (C) 2008-2014 Hellground <http://hellground.net/>
+ * Copyright (C) 2008-2015 Hellground <http://hellground.net/>
  * 
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -38,7 +38,7 @@ EndScriptData */
 
 struct instance_the_eye : public ScriptedInstance
 {
-    instance_the_eye(Map *map) : ScriptedInstance(map) {Initialize();};
+    instance_the_eye(Map *map) : ScriptedInstance(map), m_gbk(map) {Initialize();};
 
     uint64 ThaladredTheDarkener;
     uint64 LordSanguinar;
@@ -53,6 +53,7 @@ struct instance_the_eye : public ScriptedInstance
     std::list<uint64> VoidTrash;
 
     uint32 Encounters[ENCOUNTERS];
+    GBK_handler m_gbk;
 
     void Initialize()
     {
@@ -173,6 +174,18 @@ struct instance_the_eye : public ScriptedInstance
         return 0;
     }
 
+    GBK_Encounters EncounterForGBK(uint32 enc)
+    {
+        switch (enc)
+        {
+        case DATA_ALAREVENT:                    return GBK_ALAR;
+        case DATA_HIGHASTROMANCERSOLARIANEVENT: return GBK_HIGH_ASTROMANCER_SOLARIAN;
+        case DATA_VOIDREAVEREVENT:              return GBK_VOID_REAVER;
+        case DATA_KAELTHASEVENT:                return GBK_KAELTHAS_SUNSTRIDER;
+        }
+        return GBK_NONE;
+    }
+
     void SetData(uint32 type, uint32 data)
     {
         switch(type)
@@ -189,7 +202,7 @@ struct instance_the_eye : public ScriptedInstance
                         for(std::list<uint64>::iterator i = AstromancerTrash.begin(); i != AstromancerTrash.end(); ++i)
                         {
                             Creature* trashmob = GetCreature(*i);
-                            if (trashmob && trashmob->isAlive())
+                            if (trashmob && trashmob->IsAlive())
                                 trashmob->AI()->DoZoneInCombat();
                         }
                 }
@@ -202,7 +215,7 @@ struct instance_the_eye : public ScriptedInstance
                         for(std::list<uint64>::iterator i = VoidTrash.begin(); i != VoidTrash.end(); ++i)
                         {
                             Creature* trashmob = GetCreature(*i);
-                            if (trashmob && trashmob->isAlive())
+                            if (trashmob && trashmob->IsAlive())
                                 trashmob->AI()->DoZoneInCombat();
                         }
                 }
@@ -234,7 +247,18 @@ struct instance_the_eye : public ScriptedInstance
                 }
         }
 
-        if(data == DONE)
+        GBK_Encounters gbkEnc = EncounterForGBK(type);
+        if (gbkEnc != GBK_NONE)
+        {
+            if (data == DONE)
+                m_gbk.StopCombat(gbkEnc, true);
+            else if (data == NOT_STARTED)
+                m_gbk.StopCombat(gbkEnc, false);
+            else if (data == IN_PROGRESS)
+                m_gbk.StartCombat(gbkEnc);
+        }
+
+        if (data == DONE)
             SaveToDB();
     }
 
@@ -279,6 +303,21 @@ struct instance_the_eye : public ScriptedInstance
             if(Encounters[i] == IN_PROGRESS)                // Do not load an encounter as "In Progress" - reset it instead.
                 Encounters[i] = NOT_STARTED;
         OUT_LOAD_INST_DATA_COMPLETE;
+    }
+
+    void OnPlayerDealDamage(Player* plr, uint32 amount)
+    {
+        m_gbk.DamageDone(plr->GetGUIDLow(), amount);
+    }
+
+    void OnPlayerHealDamage(Player* plr, uint32 amount)
+    {
+        m_gbk.HealingDone(plr->GetGUIDLow(), amount);
+    }
+
+    void OnPlayerDeath(Player* plr)
+    {
+        m_gbk.PlayerDied(plr->GetGUIDLow());
     }
 };
 

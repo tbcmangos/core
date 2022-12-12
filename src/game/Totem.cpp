@@ -1,7 +1,7 @@
 /*
  * Copyright (C) 2005-2008 MaNGOS <http://getmangos.com/>
  * Copyright (C) 2008 TrinityCore <http://www.trinitycore.org/>
- * Copyright (C) 2008-2014 Hellground <http://hellground.net/>
+ * Copyright (C) 2008-2017 Hellground <http://wow-hellground.com/>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -27,7 +27,6 @@
 #include "ObjectMgr.h"
 #include "SpellMgr.h"
 #include "CreatureAI.h"
-#include "luaengine/HookMgr.h"
 
 Totem::Totem() : Creature()
 {
@@ -38,8 +37,10 @@ Totem::Totem() : Creature()
 
 void Totem::Update(uint32 update_diff, uint32 diff)
 {
+    SendHeartBeat();
+    UpdateVisibilityAndView();
     Unit *owner = GetOwner();
-    if (!owner || !owner->isAlive() || !this->isAlive())
+    if (!owner || !owner->IsAlive() || !this->IsAlive())
     {
         UnSummon();                                         // remove self
         return;
@@ -96,7 +97,8 @@ void Totem::Summon(Unit* owner)
         case TOTEM_PASSIVE:
             if (GetSpell(1))
                 CastSpell(this, GetSpell(1), true);
-            CastSpell(this, GetSpell(), false);
+            if (GetSpell())
+                CastSpell(this, GetSpell(), false);
             break;
         case TOTEM_STATUE:  CastSpell(GetOwner(), GetSpell(), true); break;
         default: break;
@@ -108,9 +110,6 @@ void Totem::Summon(Unit* owner)
     // call JustSummoned function when totem summoned from spell
     if (owner->GetTypeId() == TYPEID_UNIT && ((Creature*)owner)->IsAIEnabled)
         ((Creature*)owner)->AI()->JustSummoned(this);
-
-    if (Unit* summoner = owner->ToUnit())
-        sHookMgr->OnSummoned(this, summoner);
 }
 
 void Totem::UnSummon()
@@ -166,7 +165,7 @@ void Totem::SetOwner(uint64 guid)
     if (Unit *owner = GetOwner())
     {
         this->setFaction(owner->getFaction());
-        this->SetLevel(owner->getLevel());
+        this->SetLevel(owner->GetLevel());
     }
 }
 

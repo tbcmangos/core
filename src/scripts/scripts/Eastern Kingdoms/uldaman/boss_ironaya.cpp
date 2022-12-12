@@ -1,6 +1,6 @@
 /* 
  * Copyright (C) 2006-2008 ScriptDev2 <https://scriptdev2.svn.sourceforge.net/>
- * Copyright (C) 2008-2014 Hellground <http://hellground.net/>
+ * Copyright (C) 2008-2015 Hellground <http://hellground.net/>
  * 
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -37,7 +37,7 @@ struct boss_ironayaAI : public ScriptedAI
 {
     boss_ironayaAI(Creature *c) : ScriptedAI(c) {}
 
-    uint32 Arcing_Timer;
+    int32 Arcing_Timer;
     bool hasCastWstomp;
     bool hasCastKnockaway;
 
@@ -63,12 +63,12 @@ struct boss_ironayaAI : public ScriptedAI
         //If we are <50% hp do knockaway ONCE
         if (!hasCastKnockaway && m_creature->GetHealth()*2 < m_creature->GetMaxHealth())
         {
-            m_creature->CastSpell(m_creature->getVictim(),SPELL_KNOCKAWAY, true);
+            m_creature->CastSpell(m_creature->GetVictim(),SPELL_KNOCKAWAY, true);
 
             // current aggro target is knocked away pick new target
             Unit* Target = SelectUnit(SELECT_TARGET_TOPAGGRO, 0);
 
-            if (!Target || Target == m_creature->getVictim())
+            if (!Target || Target == m_creature->GetVictim())
                 Target = SelectUnit(SELECT_TARGET_TOPAGGRO, 1);
 
             if (Target)
@@ -78,12 +78,12 @@ struct boss_ironayaAI : public ScriptedAI
             hasCastKnockaway = true;
         }
 
-        //Arcing_Timer
-        if (Arcing_Timer < diff)
+        Arcing_Timer -= diff;
+        if (Arcing_Timer <= diff)
         {
             DoCast(m_creature,SPELL_ARCINGSMASH);
-            Arcing_Timer = 13000;
-        }else Arcing_Timer -= diff;
+            Arcing_Timer += 13000;
+        }
 
         if (!hasCastWstomp && m_creature->GetHealth()*4 < m_creature->GetMaxHealth())
         {

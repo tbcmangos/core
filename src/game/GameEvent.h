@@ -1,7 +1,7 @@
 /*
  * Copyright (C) 2005-2008 MaNGOS <http://getmangos.com/>
  * Copyright (C) 2008 TrinityCore <http://www.trinitycore.org/>
- * Copyright (C) 2008-2014 Hellground <http://hellground.net/>
+ * Copyright (C) 2008-2017 Hellground <http://wow-hellground.com/>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -140,9 +140,7 @@ class GameEventMgr
         bool hasGameObjectActiveEventExcept(uint32 go_guid, uint16 event_id);
     protected:
         typedef std::list<uint32> GuidList;
-        typedef std::list<uint16> IdList;
         typedef std::vector<GuidList> GameEventGuidMap;
-        typedef std::vector<IdList> GameEventIdMap;
         typedef std::pair<uint32, ModelEquip> ModelEquipPair;
         typedef std::list<ModelEquipPair> ModelEquipList;
         typedef std::vector<ModelEquipList> GameEventModelEquipMap;
@@ -164,7 +162,6 @@ class GameEventMgr
         GameEventModelEquipMap mGameEventModelEquip;
         GameEventGuidMap  mGameEventCreatureGuids;
         GameEventGuidMap  mGameEventGameobjectGuids;
-        GameEventIdMap    mGameEventPoolIds;
         GameEventDataMap  mGameEvent;
         GameEventBitmask  mGameEventBattleGroundHolidays;
         QuestIdToEventConditionMap mQuestToEventConditions;

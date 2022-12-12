@@ -1,6 +1,6 @@
 /* 
  * Copyright (C) 2006-2008 ScriptDev2 <https://scriptdev2.svn.sourceforge.net/>
- * Copyright (C) 2008-2014 Hellground <http://hellground.net/>
+ * Copyright (C) 2008-2015 Hellground <http://hellground.net/>
  * 
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -173,11 +173,11 @@ struct mob_broodlingessenceAI : public ScriptedAI
     mob_broodlingessenceAI(Creature *c) : ScriptedAI(c) {}
 
     bool onSpellEffect;
-    uint32 Fireball_Timer;
+    Timer Fireball_Timer;
 
     void Reset()
     {
-        Fireball_Timer = 0;
+        Fireball_Timer.Reset(0);
         onSpellEffect = false;
     }
 
@@ -206,14 +206,14 @@ struct mob_broodlingessenceAI : public ScriptedAI
         if (!UpdateVictim() )
             return;
 
-        //Fireball_Timer
-        if (Fireball_Timer < diff)
+
+        if (Fireball_Timer.Expired(diff))
         {
-            DoCast(m_creature->getVictim(),SPELL_FIREBALL);
+            DoCast(m_creature->GetVictim(),SPELL_FIREBALL);
             Fireball_Timer = 10000;
         }
-        else
-            Fireball_Timer -= diff;
+        
+            
 
         DoMeleeAttackIfReady();
     }

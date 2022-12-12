@@ -1,6 +1,6 @@
 /* 
  * Copyright (C) 2006-2008 ScriptDev2 <https://scriptdev2.svn.sourceforge.net/>
- * Copyright (C) 2008-2014 Hellground <http://hellground.net/>
+ * Copyright (C) 2008-2015 Hellground <http://hellground.net/>
  * 
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -51,16 +51,16 @@ enum GluthEvents
     EVENT_ENRAGE            = 7
 };
 
-float GluthAddPos[9][3] = {
-        {3269.590, -3161.287, 297.423},
-        {3277.797, -3170.352, 297.423},
-        {3267.049, -3172.820, 297.423},
-        {3252.157, -3132.135, 297.423},
-        {3259.990, -3126.590, 297.423},
-        {3259.815, -3137.576, 297.423},
-        {3308.030, -3132.135, 297.423},
-        {3303.046, -3180.682, 297.423},
-        {3313.283, -3180.766, 297.423}};
+static float GluthAddPos[9][3] = {
+        {3269.590f, -3161.287f, 297.423f},
+        {3277.797f, -3170.352f, 297.423f},
+        {3267.049f, -3172.820f, 297.423f},
+        {3252.157f, -3132.135f, 297.423f},
+        {3259.990f, -3126.590f, 297.423f},
+        {3259.815f, -3137.576f, 297.423f},
+        {3308.030f, -3132.135f, 297.423f},
+        {3303.046f, -3180.682f, 297.423f},
+        {3313.283f, -3180.766f, 297.423f}};
 
 struct boss_gluthAI : public BossAI
 {
@@ -92,7 +92,7 @@ struct boss_gluthAI : public BossAI
 
     void KilledUnit(Unit * unit)
     {
-        if (m_creature->isAlive() && unit->GetTypeId() == TYPEID_UNIT && unit->GetEntry() == ZOMBIE_CHOW_ID)
+        if (m_creature->IsAlive() && unit->GetTypeId() == TYPEID_UNIT && unit->GetEntry() == ZOMBIE_CHOW_ID)
             m_creature->ModifyHealth(m_creature->GetMaxHealth()*0.05);  // if zombie was eaten grow hp by 5%
     }
 
@@ -110,7 +110,7 @@ struct boss_gluthAI : public BossAI
             {
                 case EVENT_MORTALWOUND:
                 {
-                    AddSpellToCast(me->getVictim(), SPELL_MORTALWOUND);
+                    AddSpellToCast(me->GetVictim(), SPELL_MORTALWOUND);
                     events.ScheduleEvent(EVENT_MORTALWOUND, 10000);
                     break;
                 }

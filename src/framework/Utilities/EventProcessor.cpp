@@ -1,7 +1,7 @@
 /*
  * Copyright (C) 2005-2008 MaNGOS <http://getmangos.com/>
  * Copyright (C) 2008 TrinityCore <http://www.trinitycore.org/>
- * Copyright (C) 2008-2014 Hellground <http://hellground.net/>
+ * Copyright (C) 2008-2015 Hellground <http://hellground.net/>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -31,8 +31,9 @@ EventProcessor::~EventProcessor()
     KillAllEvents(true);
 }
 
-void EventProcessor::Update(uint32 p_time)
+uint32 EventProcessor::Update(uint32 p_time)
 {
+    uint32 count = 0;
     // update time
     m_time += p_time;
 
@@ -40,6 +41,7 @@ void EventProcessor::Update(uint32 p_time)
     EventList::iterator i;
     while (((i = m_events.begin()) != m_events.end()) && i->first <= m_time)
     {
+        count++;
         // get and remove event from queue
         BasicEvent* Event = i->second;
         m_events.erase(i);
@@ -58,6 +60,7 @@ void EventProcessor::Update(uint32 p_time)
             delete Event;
         }
     }
+    return count;
 }
 
 void EventProcessor::KillAllEvents(bool force)
@@ -89,13 +92,12 @@ void EventProcessor::KillAllEvents(bool force)
 
 void EventProcessor::AddEvent(BasicEvent* Event, uint64 e_time, bool set_addtime)
 {
-    if (set_addtime) Event->m_addTime = m_time;
+    if (set_addtime)
+    {
+        e_time += m_time;
+    }
     Event->m_execTime = e_time;
     m_events.insert(std::pair<uint64, BasicEvent*>(e_time, Event));
 }
 
-uint64 EventProcessor::CalculateTime(uint64 t_offset)
-{
-    return(m_time + t_offset);
-}
 

@@ -1,7 +1,7 @@
 /*
  * Copyright (C) 2005-2008 MaNGOS <http://getmangos.com/>
  * Copyright (C) 2008 TrinityCore <http://www.trinitycore.org/>
- * Copyright (C) 2008-2014 Hellground <http://hellground.net/>
+ * Copyright (C) 2008-2015 Hellground <http://hellground.net/>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -32,6 +32,7 @@ Tokens StrSplit(const std::string &src, const std::string &sep);
 
 void stripLineInvisibleChars(std::string &src);
 
+std::string msToTimeString(uint32 ms);
 std::string secsToTimeString(uint32 timeInSecs, bool shortText = false, bool hoursOnly = false);
 uint32 TimeStringToSecs(const std::string& timestring);
 std::string TimeToTimestampStr(time_t t);
@@ -60,6 +61,8 @@ int32 rand32();
  * With an FPU, there is usually no difference in performance between float and double. */
 double rand_norm(void);
 
+float rand_norm_f(void);
+
 /* Return a random double from 0.0 to 99.9999999999999. Floats support only 7 valid decimal digits.
  * A double supports up to 15 valid decimal digits and is used internaly (RAND32_MAX has 10 digits).
  * With an FPU, there is usually no difference in performance between float and double. */
@@ -75,6 +78,22 @@ inline bool roll_chance_f(float chance)
 inline bool roll_chance_i(int chance)
 {
     return chance > irand(0, 99);
+}
+
+// Select a random element from a container. Note: make sure you explicitly empty check the container
+template <class C>
+typename C::value_type const& SelectRandomContainerElement(C const& container)
+{
+    typename C::const_iterator it = container.begin();
+    std::advance(it, urand(0, container.size() - 1));
+    return *it;
+}
+
+template<typename T, typename... Args>
+T PickRandomValue(T first, Args ...rest)
+{
+    T array[sizeof...(rest)+1] = { first, rest... };
+    return array[urand(0, (sizeof...(rest)))];
 }
 
 inline void ApplyModUInt32Var(uint32& var, int32 val, bool apply)
@@ -175,6 +194,11 @@ inline bool isEastAsianCharacter(wchar_t wchar)
     if(wchar >= 0xFF01 && wchar <= 0xFFEE)                  // Halfwidth forms
         return true;
     return false;
+}
+
+inline bool isWhiteSpace(char c)
+{
+    return ::isspace(int(c)) != 0;
 }
 
 inline bool isNumeric(wchar_t wchar)

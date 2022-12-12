@@ -1,6 +1,6 @@
 /* 
  * Copyright (C) 2006-2008 ScriptDev2 <https://scriptdev2.svn.sourceforge.net/>
- * Copyright (C) 2008-2014 Hellground <http://hellground.net/>
+ * Copyright (C) 2008-2015 Hellground <http://hellground.net/>
  * 
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -41,31 +41,31 @@ EndScriptData */
 #define SPELL_FROST_ATTACK              45195
 #define SPELL_ARCANE_BLAST              35314
 #define SPELL_DRAGONS_BREATH            35250
-//#define SPELL_SOLARBURN                 35267 // its an NPC ability, not this boss
+#define SPELL_SOLARBURN                 (HeroicMode ? 38930 : 35267)
 
 struct boss_nethermancer_sepethreaAI : public ScriptedAI
 {
     boss_nethermancer_sepethreaAI(Creature *c) : ScriptedAI(c), summons(me)
     {
         pInstance = c->GetInstanceData();
-        HeroicMode = me->GetMap()->IsHeroic();
     }
 
     ScriptedInstance *pInstance;
 
-    bool HeroicMode;
 
-    uint32 arcane_blast_Timer;
-    uint32 dragons_breath_Timer;
-    uint32 yell_timer;
+    Timer arcane_blast_Timer;
+    Timer dragons_breath_Timer;
+    Timer yell_timer;
+    Timer solarburn_timer;
 
     SummonList summons;
 
     void Reset()
     {
-        arcane_blast_Timer = urand(12000, 18000);
-        dragons_breath_Timer = urand(22000, 28000);
-        yell_timer = 5000;
+        arcane_blast_Timer.Reset(urand(12000, 18000));
+        dragons_breath_Timer.Reset(urand(22000, 28000));
+        yell_timer.Reset(5000);
+        solarburn_timer.Reset(7000);
 
         pInstance->SetData(DATA_NETHERMANCER_EVENT, NOT_STARTED);
 
@@ -113,33 +113,30 @@ struct boss_nethermancer_sepethreaAI : public ScriptedAI
             return;
 
         //Arcane Blast with knockback, reducing threat by 50%
-        if (arcane_blast_Timer < diff)
+        if (arcane_blast_Timer.Expired(diff))
         {
             AddSpellToCast(SPELL_ARCANE_BLAST, CAST_TANK);
             arcane_blast_Timer = urand(25000, 35000);
-            me->getThreatManager().modifyThreatPercent(me->getVictim(), -50.0f);
+            me->getThreatManager().modifyThreatPercent(me->GetVictim(), -50.0f);
         }
-        else
-            arcane_blast_Timer -= diff;
 
         //Dragons Breath
-        if (dragons_breath_Timer < diff)
+        if (dragons_breath_Timer.Expired(diff))
         {
             AddSpellToCastWithScriptText(SPELL_DRAGONS_BREATH, CAST_TANK, RAND(SAY_DRAGONS_BREATH_1, SAY_DRAGONS_BREATH_2, 0, 0));
             dragons_breath_Timer = urand(30000, 35000);
         }
-        else
-            dragons_breath_Timer -= diff;
 
-        if(yell_timer)
+        if (yell_timer.Expired(diff))
         {
-            if (yell_timer <= diff)
-            {
-                DoScriptText(SAY_SUMMON, me);
-                yell_timer = 0;
-            }
-            else
-                yell_timer -= diff;
+            DoScriptText(SAY_SUMMON, me);
+            yell_timer = 0;
+        }
+
+        if (solarburn_timer.Expired(diff))
+        {
+            AddSpellToCast(SPELL_SOLARBURN);
+            solarburn_timer = urand(12000, 15000);
         }
 
         CastNextSpellIfAnyAndReady();
@@ -160,19 +157,17 @@ struct mob_ragin_flamesAI : public ScriptedAI
     mob_ragin_flamesAI(Creature *c) : ScriptedAI(c)
     {
         pInstance = (c->GetInstanceData());
-        HeroicMode = me->GetMap()->IsHeroic();
     }
 
     ScriptedInstance *pInstance;
 
-    bool HeroicMode;
     bool canMelee;
-    uint32 infernoTimer;
+    Timer infernoTimer;
     uint64 currentTarget;
 
     void Reset()
     {
-        infernoTimer = urand(8000,13000);
+        infernoTimer.Reset(urand(8000, 13000));
         canMelee = true;
 
         me->ApplySpellImmune(0, IMMUNITY_DAMAGE, SPELL_SCHOOL_MASK_MAGIC, true);
@@ -228,15 +223,14 @@ struct mob_ragin_flamesAI : public ScriptedAI
 
         DoSpecialThings(diff, DO_COMBAT_N_SPEED, 200.0f, HeroicMode ? 0.8f : 0.5f);
 
-        if (infernoTimer < diff)
+        if (infernoTimer.Expired(diff))
         {
             AddSpellToCast(SPELL_INFERNO, CAST_SELF);
             infernoTimer = urand(16000,21000);
         }
-        else
-            infernoTimer -= diff;
 
         CastNextSpellIfAnyAndReady(diff);
+
         if(canMelee)
             DoMeleeAttackIfReady();
     }

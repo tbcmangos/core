@@ -1,7 +1,7 @@
 /*
  * Copyright (C) 2005-2008 MaNGOS <http://getmangos.com/>
  * Copyright (C) 2008 TrinityCore <http://www.trinitycore.org/>
- * Copyright (C) 2008-2014 Hellground <http://hellground.net/>
+ * Copyright (C) 2008-2017 Hellground <http://wow-hellground.com/>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -161,6 +161,12 @@ void WorldSession::HandleAutoEquipItemOpcode(WorldPacket & recv_data)
     if (!pSrcItem)
         return;                                             // only at cheat
 
+    if (pSrcItem->GetProto()->Class == ITEM_CLASS_WEAPON && _player->IsNonMeleeSpellCast(false)
+        && _player->GetCurrentSpell(CURRENT_GENERIC_SPELL))
+    {
+        _player->InterruptNonMeleeSpells(false); // interrupt spell when equiping weapon as of 2.4.3
+    }
+
     if (pSrcItem->m_lootGenerated)                           // prevent swap looting item
     {
         //best error message found for attempting to swap while looting
@@ -303,19 +309,13 @@ void WorldSession::HandleItemQuerySingleOpcode(WorldPacket & recv_data)
     ItemPrototype const *pProto = ObjectMgr::GetItemPrototype(item);
     if (pProto)
     {
-        int loc_idx = GetSessionDbLocaleIndex();
-
-        std::string name = pProto->Name1;
-        std::string description = pProto->Description;
-        sObjectMgr.GetItemLocaleStrings(pProto->ItemId, loc_idx, &name, &description);
-
                                                             // guess size
         WorldPacket data(SMSG_ITEM_QUERY_SINGLE_RESPONSE, 600);
         data << pProto->ItemId;
         data << pProto->Class;
         data << pProto->SubClass;
         data << uint32(-1);                                 // new 2.0.3, not exist in wdb cache?
-        data << name;
+        data << pProto->Name1;
         data << uint8(0x00);                                //pProto->Name2; // blizz not send name there, just uint8(0x00); <-- \0 = empty string = empty name...
         data << uint8(0x00);                                //pProto->Name3; // blizz not send name there, just uint8(0x00);
         data << uint8(0x00);                                //pProto->Name4; // blizz not send name there, just uint8(0x00);
@@ -334,8 +334,15 @@ void WorldSession::HandleItemQuerySingleOpcode(WorldPacket & recv_data)
         data << pProto->RequiredSpell;
         data << pProto->RequiredHonorRank;
         data << pProto->RequiredCityRank;
-        data << pProto->RequiredReputationFaction;
-        data << pProto->RequiredReputationRank;
+        if (sWorld.getConfig(CONFIG_HAPPY_TESTING))
+        {
+            data << uint32(0) << uint32(0);
+        }
+        else
+        {
+            data << pProto->RequiredReputationFaction;
+            data << pProto->RequiredReputationRank;
+        }
         data << pProto->MaxCount;
         data << pProto->Stackable;
         data << pProto->ContainerSlots;
@@ -403,7 +410,7 @@ void WorldSession::HandleItemQuerySingleOpcode(WorldPacket & recv_data)
             }
         }
         data << pProto->Bonding;
-        data << description;
+        data << pProto->Description;
         data << pProto->PageText;
         data << pProto->LanguageID;
         data << pProto->PageMaterial;
@@ -516,7 +523,7 @@ void WorldSession::HandleSellItemOpcode(WorldPacket & recv_data)
     }
 
     // remove fake death
-    if (GetPlayer()->hasUnitState(UNIT_STAT_DIED))
+    if (GetPlayer()->HasFlag(UNIT_FIELD_FLAGS_2, UNIT_FLAG2_FEIGN_DEATH))
         GetPlayer()->RemoveSpellsCausingAura(SPELL_AURA_FEIGN_DEATH);
 
     Item *pItem = _player->GetItemByGuid(itemguid);
@@ -621,7 +628,7 @@ void WorldSession::HandleBuybackItem(WorldPacket & recv_data)
     }
 
     // remove fake death
-    if (GetPlayer()->hasUnitState(UNIT_STAT_DIED))
+    if (GetPlayer()->HasFlag(UNIT_FIELD_FLAGS_2, UNIT_FLAG2_FEIGN_DEATH))
         GetPlayer()->RemoveSpellsCausingAura(SPELL_AURA_FEIGN_DEATH);
 
     Item *pItem = _player->GetItemFromBuyBackSlot(slot);
@@ -687,7 +694,7 @@ void WorldSession::HandleListInventoryOpcode(WorldPacket & recv_data)
 
     recv_data >> guid;
 
-    if (!GetPlayer()->isAlive())
+    if (!GetPlayer()->IsAlive())
         return;
 
     sLog.outDebug( "WORLD: Recvd CMSG_LIST_INVENTORY");
@@ -708,8 +715,9 @@ void WorldSession::SendListInventory(uint64 vendorguid)
     }
 
     // remove fake death
-    if (GetPlayer()->hasUnitState(UNIT_STAT_DIED))
+    if (GetPlayer()->HasFlag(UNIT_FIELD_FLAGS_2, UNIT_FLAG2_FEIGN_DEATH))
         GetPlayer()->RemoveSpellsCausingAura(SPELL_AURA_FEIGN_DEATH);
+    GetPlayer()->RemoveAurasWithInterruptFlags(AURA_INTERRUPT_FLAG_TALK);
 
     // Stop the npc if moving
     pCreature->StopMoving();
@@ -740,7 +748,7 @@ void WorldSession::SendListInventory(uint64 vendorguid)
         {
             if (ItemPrototype const *pProto = ObjectMgr::GetItemPrototype(crItem->item))
             {
-                if ((pProto->AllowableClass & _player->getClassMask()) == 0 && pProto->Bonding == BIND_WHEN_PICKED_UP && !_player->isGameMaster())
+                if ((pProto->AllowableClass & _player->getClassMask()) == 0 && pProto->Bonding == BIND_WHEN_PICKED_UP && !_player->IsGameMaster())
                     continue;
 
                 ++count;
@@ -932,7 +940,7 @@ void WorldSession::HandleSetAmmoOpcode(WorldPacket & recv_data)
 {
     CHECK_PACKET_SIZE(recv_data,4);
 
-    if (!GetPlayer()->isAlive())
+    if (!GetPlayer()->IsAlive())
     {
         GetPlayer()->SendEquipError(EQUIP_ERR_YOU_ARE_DEAD, NULL, NULL);
         return;
@@ -981,14 +989,10 @@ void WorldSession::HandleItemNameQueryOpcode(WorldPacket & recv_data)
     ItemPrototype const *pProto = ObjectMgr::GetItemPrototype(itemid);
     if (pProto)
     {
-        int loc_idx = GetSessionDbLocaleIndex();
-        std::string name = pProto->Name1;
-        sObjectMgr.GetItemLocaleStrings(pProto->ItemId, loc_idx, &name);
-
                                                             // guess size
         WorldPacket data(SMSG_ITEM_NAME_QUERY_RESPONSE, (4+10));
         data << uint32(pProto->ItemId);
-        data << name;
+        data << pProto->Name1;
         data << uint32(pProto->InventoryType);
         SendPacket(&data);
         return;

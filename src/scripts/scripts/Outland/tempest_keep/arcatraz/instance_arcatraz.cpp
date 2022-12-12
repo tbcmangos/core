@@ -1,6 +1,6 @@
 /* 
  * Copyright (C) 2006-2008 ScriptDev2 <https://scriptdev2.svn.sourceforge.net/>
- * Copyright (C) 2008-2014 Hellground <http://hellground.net/>
+ * Copyright (C) 2008-2015 Hellground <http://hellground.net/>
  * 
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -153,7 +153,7 @@ struct instance_arcatraz : public ScriptedInstance
                     HandleGameObject(Pod_Delta,false);
                     HandleGameObject(Pod_Omega,false);
                     HandleGameObject(GoSphereGUID,true);
-                    if (GetCreature(MellicharGUID) && GetCreature(MellicharGUID)->isDead())
+                    if (GetCreature(MellicharGUID) && GetCreature(MellicharGUID)->IsDead())
                         GetCreature(MellicharGUID)->Respawn();
                 }
                 Encounter[3] = data;

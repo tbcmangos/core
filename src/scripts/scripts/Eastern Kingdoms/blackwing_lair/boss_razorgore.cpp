@@ -1,6 +1,6 @@
 /* 
  * Copyright (C) 2006-2008 ScriptDev2 <https://scriptdev2.svn.sourceforge.net/>
- * Copyright (C) 2008-2014 Hellground <http://hellground.net/>
+ * Copyright (C) 2008-2015 Hellground <http://hellground.net/>
  * 
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -47,10 +47,10 @@ struct boss_razorgoreAI : public ScriptedAI
     }
 
     ScriptedInstance * pInstance;
-    uint32 Cleave_Timer;
-    uint32 WarStomp_Timer;
-    uint32 FireballVolley_Timer;
-    uint32 Conflagration_Timer;
+    int32 Cleave_Timer;
+    int32 WarStomp_Timer;
+    int32 FireballVolley_Timer;
+    int32 Conflagration_Timer;
 
     void Reset()
     {
@@ -82,38 +82,38 @@ struct boss_razorgoreAI : public ScriptedAI
         if (!UpdateVictim() )
             return;
 
-        //Cleave_Timer
-        if (Cleave_Timer < diff)
+        Cleave_Timer -= diff;
+        if (Cleave_Timer <= diff)
         {
-            DoCast(m_creature->getVictim(),SPELL_CLEAVE);
-            Cleave_Timer = 7000 + rand()%3000;
-        }else Cleave_Timer -= diff;
+            DoCast(m_creature->GetVictim(),SPELL_CLEAVE);
+            Cleave_Timer += 7000 + rand()%3000;
+        }
 
-        //WarStomp_Timer
-        if (WarStomp_Timer < diff)
+        WarStomp_Timer -= diff;
+        if (WarStomp_Timer <= diff)
         {
-            DoCast(m_creature->getVictim(),SPELL_WARSTOMP);
-            WarStomp_Timer = 15000 + rand()%10000;
-        }else WarStomp_Timer -= diff;
+            DoCast(m_creature->GetVictim(),SPELL_WARSTOMP);
+            WarStomp_Timer += 15000 + rand()%10000;
+        }
 
-        //FireballVolley_Timer
-        if (FireballVolley_Timer < diff)
+        FireballVolley_Timer -= diff;
+        if (FireballVolley_Timer <= diff)
         {
-            DoCast(m_creature->getVictim(),SPELL_FIREBALLVOLLEY);
-            FireballVolley_Timer = 12000 + rand()%3000;
-        }else FireballVolley_Timer -= diff;
+            DoCast(m_creature->GetVictim(),SPELL_FIREBALLVOLLEY);
+            FireballVolley_Timer += 12000 + rand()%3000;
+        }
 
-        //Conflagration_Timer
-        if (Conflagration_Timer < diff)
+        Conflagration_Timer -= diff;
+        if (Conflagration_Timer <= diff)
         {
-            DoCast(m_creature->getVictim(),SPELL_CONFLAGRATION);
+            DoCast(m_creature->GetVictim(),SPELL_CONFLAGRATION);
             //We will remove this threat reduction and add an aura check.
 
-            //if(DoGetThreat(m_creature->getVictim()))
-            //DoModifyThreatPercent(m_creature->getVictim(),-50);
+            //if(DoGetThreat(m_creature->GetVictim()))
+            //DoModifyThreatPercent(m_creature->GetVictim(),-50);
 
-            Conflagration_Timer = 12000;
-        }else Conflagration_Timer -= diff;
+            Conflagration_Timer += 12000;
+        }
 
         DoMeleeAttackIfReady();
     }

@@ -1,5 +1,5 @@
 /* 
- * Copyright (C) 2008-2014 Hellground <http://hellground.net/>
+ * Copyright (C) 2008-2015 Hellground <http://hellground.net/>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -94,7 +94,7 @@ struct npc_galen_goodwardAI : public npc_escortAI
         {
             if (m_uiPostEventTimer && m_uiPostEventTimer <= uiDiff)
             {
-                if (!me->getVictim() && me->isAlive())
+                if (!me->GetVictim() && me->IsAlive())
                 {
                     Player* pPlayer = GetPlayerForEscort();
 

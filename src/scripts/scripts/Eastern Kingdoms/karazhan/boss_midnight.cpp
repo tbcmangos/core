@@ -1,6 +1,6 @@
 /* 
  * Copyright (C) 2006-2008 ScriptDev2 <https://scriptdev2.svn.sourceforge.net/>
- * Copyright (C) 2008-2014 Hellground <http://hellground.net/>
+ * Copyright (C) 2008-2015 Hellground <http://hellground.net/>
  * 
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -41,12 +41,19 @@ EndScriptData */
 
 #define SPELL_SHADOWCLEAVE          29832
 #define SPELL_INTANGIBLE_PRESENCE   29833
-#define SPELL_BERSERKER_CHARGE      26561                   //Only when mounted
+#define SPELL_BERSERKER_CHARGE      29847                   //Only when mounted
+#define SPELL_KNOCKDOWN             29711
 
 #define MOUNTED_DISPLAYID           16040
 
 //Attumen (TODO: Use the summoning spell instead of creature id. It works , but is not convenient for us)
 #define SUMMON_ATTUMEN 15550
+
+bool attumancheckPosition(WorldObject* obj) // returns false if outside of "proper" zone
+{
+    if (!obj) return true;
+    return obj->GetPositionY() < (obj->GetPositionX()*(-2.154f) - 25849);
+}
 
 struct boss_midnightAI : public ScriptedAI
 {
@@ -60,6 +67,7 @@ struct boss_midnightAI : public ScriptedAI
     uint8 Phase;
     uint32 Mount_Timer;
     uint32 CheckTimer;
+    Timer knockdownTimer;
 
     ScriptedInstance *pInstance;
     WorldLocation wLoc;
@@ -70,8 +78,9 @@ struct boss_midnightAI : public ScriptedAI
         Attumen = 0;
         Mount_Timer = 0;
         CheckTimer = 3000;
+        knockdownTimer = 5000;
 
-        m_creature->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
+        m_creature->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_SPAWNING);
         m_creature->SetVisibility(VISIBILITY_ON);
 
         if(pInstance->GetData(DATA_ATTUMEN_EVENT) != DONE)
@@ -102,7 +111,7 @@ struct boss_midnightAI : public ScriptedAI
 
         if (CheckTimer < diff)
         {
-            if (!m_creature->IsWithinDistInMap(&wLoc, 50.0f))
+            if (!m_creature->IsWithinDistInMap(&wLoc, 50.0f) || !attumancheckPosition(m_creature) || !attumancheckPosition(me->GetVictim()))
                 EnterEvadeMode();
             else
                 DoZoneInCombat();
@@ -123,7 +132,7 @@ struct boss_midnightAI : public ScriptedAI
                     if (pAttumen)
                     {
                         Attumen = pAttumen->GetGUID();
-                        pAttumen->AI()->AttackStart(m_creature->getVictim());
+                        pAttumen->AI()->AttackStart(m_creature->GetVictim());
                         SetMidnight(pAttumen, m_creature->GetGUID());
 
                         DoScriptText(RAND(SAY_APPEAR1, SAY_APPEAR2, SAY_APPEAR3), pAttumen);
@@ -150,10 +159,10 @@ struct boss_midnightAI : public ScriptedAI
                         if (Creature *pAttumen = Unit::GetCreature(*m_creature, Attumen))
                         {
                             pAttumen->SetUInt32Value(UNIT_FIELD_DISPLAYID, MOUNTED_DISPLAYID);
-                            pAttumen->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
-                            if (pAttumen->getVictim())
+                            pAttumen->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_SPAWNING);
+                            if (pAttumen->GetVictim())
                             {
-                                pAttumen->GetMotionMaster()->MoveChase(pAttumen->getVictim());
+                                pAttumen->GetMotionMaster()->MoveChase(pAttumen->GetVictim());
                                 pAttumen->SetSelection(pAttumen->getVictimGUID());
                             }
                             pAttumen->SetFloatValue(OBJECT_FIELD_SCALE_X,1);
@@ -166,6 +175,13 @@ struct boss_midnightAI : public ScriptedAI
             }
         }
 
+        if (Phase < 3 && knockdownTimer.Expired(diff))
+        {
+            DoCast(me->GetVictim(), SPELL_KNOCKDOWN);
+            knockdownTimer = urand(15000, 20000);
+        }
+            
+
         DoMeleeAttackIfReady();
     }
 
@@ -173,8 +189,8 @@ struct boss_midnightAI : public ScriptedAI
     {
         DoScriptText(SAY_MOUNT, pAttumen);
         Phase = 3;
-        m_creature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
-        pAttumen->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
+        m_creature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_SPAWNING);
+        pAttumen->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_SPAWNING);
         float angle = m_creature->GetAngle(pAttumen);
         float distance = m_creature->GetDistance2d(pAttumen);
         float newX = m_creature->GetPositionX() + cos(angle)*(distance/2) ;
@@ -192,6 +208,8 @@ struct boss_midnightAI : public ScriptedAI
         //pAttumen->Relocate(newX,newY,newZ,-angle);
         //pAttumen->SendMonsterMove(newX, newY, newZ, 0, true, 1000);
         Mount_Timer = 1000;
+        ((ScriptedAI*)(pAttumen->ToCreature()->AI()))->DoResetThreat();
+        
     }
 
     void SetMidnight(Creature *, uint64);                   //Below ..
@@ -214,10 +232,13 @@ struct boss_attumenAI : public ScriptedAI
         RandomYellTimer = urand(30000, 61000);         //Occasionally yell
         ChargeTimer = 20000;
         ResetTimer = 0;
+        checkTimer.Reset(5000);
     }
 
     ScriptedInstance *pInstance;
 
+    Timer knockdownTimer;
+    Timer checkTimer;
     uint64 Midnight;
     uint8 Phase;
     uint32 CleaveTimer;
@@ -228,6 +249,7 @@ struct boss_attumenAI : public ScriptedAI
 
     void Reset()
     {
+        knockdownTimer = 5000;
         ResetTimer = 2000;
     }
 
@@ -255,7 +277,7 @@ struct boss_attumenAI : public ScriptedAI
                 Unit *pMidnight = Unit::GetUnit(*m_creature, Midnight);
                 if (pMidnight)
                 {
-                    pMidnight->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
+                    pMidnight->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_SPAWNING);
                     pMidnight->SetVisibility(VISIBILITY_ON);
                 }
                 Midnight = 0;
@@ -270,12 +292,19 @@ struct boss_attumenAI : public ScriptedAI
         if (!UpdateVictim())
             return;
 
-        if (m_creature->HasFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE | UNIT_FLAG_NOT_SELECTABLE ))
+        if (checkTimer.Expired(diff))
+        {
+            if (!attumancheckPosition(m_creature) || !attumancheckPosition(me->GetVictim()))
+                m_creature->ForcedDespawn();
+            checkTimer = 5000;
+        }
+
+        if (m_creature->HasFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_SPAWNING | UNIT_FLAG_NOT_SELECTABLE ))
             return;
 
         if (CleaveTimer < diff)
         {
-            AddSpellToCast(m_creature->getVictim(), SPELL_SHADOWCLEAVE);
+            AddSpellToCast(m_creature->GetVictim(), SPELL_SHADOWCLEAVE);
             CleaveTimer = urand(10000, 16000);
         }
         else
@@ -283,7 +312,7 @@ struct boss_attumenAI : public ScriptedAI
 
         if (CurseTimer < diff)
         {
-            AddSpellToCast(m_creature->getVictim(), SPELL_INTANGIBLE_PRESENCE);
+            AddSpellToCast(m_creature->GetVictim(), SPELL_INTANGIBLE_PRESENCE);
             CurseTimer = 30000;
         }
         else
@@ -309,6 +338,12 @@ struct boss_attumenAI : public ScriptedAI
             }
             else
                 ChargeTimer -= diff;
+
+            if (knockdownTimer.Expired(diff))
+            {
+                AddSpellToCast(SPELL_KNOCKDOWN);
+                knockdownTimer = urand(15000, 20000);
+            }
         }
         else
         {

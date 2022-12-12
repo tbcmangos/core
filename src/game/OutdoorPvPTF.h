@@ -1,6 +1,6 @@
 /*
  * Copyright (C) 2008 TrinityCore <http://www.trinitycore.org/>
- * Copyright (C) 2008-2014 Hellground <http://hellground.net/>
+ * Copyright (C) 2008-2017 Hellground <http://wow-hellground.com/>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -47,11 +47,11 @@ enum OutdoorPvPTF_TowerType{
 };
 
 const go_type TFCapturePoints[TF_TOWER_NUM] = {
-    {183104,530,-3081.65,5335.03,17.1853,-2.14675,0,0,0.878817,-0.477159},
-    {183411,530,-2939.9,4788.73,18.987,2.77507,0,0,0.983255,0.182236},
-    {183412,530,-3174.94,4440.97,16.2281,1.86750,0,0.803857,0.594823},
-    {183413,530,-3603.31,4529.15,20.9077,0.994838,0,0,0.477159,0.878817},
-    {183414,530,-3812.37,4899.3,17.7249,0.087266,0,0,0.043619,0.999048}
+    {183104,530,-3081.65f,5335.03f,17.1853f,-2.14675f,0,0,0.878817f,-0.477159f},
+    {183411,530,-2939.9f,4788.73f,18.987f,2.77507f,0,0,0.983255f,0.182236f},
+    {183412,530,-3174.94f,4440.97f,16.2281f,1.86750f,0,0.803857f,0.594823f},
+    {183413,530,-3603.31f,4529.15f,20.9077f,0.994838f,0,0,0.477159f,0.878817f},
+    {183414,530,-3812.37f,4899.3f,17.7249f,0.087266f,0,0,0.043619f,0.999048f}
 };
 
 struct tf_tower_world_state{
@@ -125,8 +125,8 @@ public:
     void SendRemoveWorldStates(Player * plr);
 private:
     bool m_IsLocked;
-    uint32 m_LockTimer;
-    uint32 m_LockTimerUpdate;
+    Timer m_LockTimer;
+    Timer m_LockTimerUpdate;
     uint32 m_AllianceTowersControlled;
     uint32 m_HordeTowersControlled;
     uint32 hours_left, second_digit, first_digit;

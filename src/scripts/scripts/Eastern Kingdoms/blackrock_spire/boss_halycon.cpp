@@ -1,6 +1,6 @@
 /* 
  * Copyright (C) 2006-2008 ScriptDev2 <https://scriptdev2.svn.sourceforge.net/>
- * Copyright (C) 2008-2014 Hellground <http://hellground.net/>
+ * Copyright (C) 2008-2015 Hellground <http://hellground.net/>
  * 
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -38,8 +38,8 @@ struct boss_halyconAI : public ScriptedAI
 {
     boss_halyconAI(Creature *c) : ScriptedAI(c) {}
 
-    uint32 CrowdPummel_Timer;
-    uint32 MightyBlow_Timer;
+    int32 CrowdPummel_Timer;
+    int32 MightyBlow_Timer;
     bool Summoned;
 
     void Reset()
@@ -59,21 +59,20 @@ struct boss_halyconAI : public ScriptedAI
         if (!UpdateVictim() )
             return;
 
-        //CrowdPummel_Timer
-        if (CrowdPummel_Timer < diff)
+        CrowdPummel_Timer -= diff;
+        if (CrowdPummel_Timer <= diff)
         {
-            DoCast(m_creature->getVictim(),SPELL_CROWDPUMMEL);
-            CrowdPummel_Timer = 14000;
+            DoCast(m_creature->GetVictim(),SPELL_CROWDPUMMEL);
+            CrowdPummel_Timer += 14000;
         }
-        else
-            CrowdPummel_Timer -= diff;
 
-        //MightyBlow_Timer
-        if (MightyBlow_Timer < diff)
+
+        MightyBlow_Timer -= diff;
+        if (MightyBlow_Timer <= diff)
         {
-            DoCast(m_creature->getVictim(),SPELL_MIGHTYBLOW);
-            MightyBlow_Timer = 10000;
-        }else MightyBlow_Timer -= diff;
+            DoCast(m_creature->GetVictim(),SPELL_MIGHTYBLOW);
+            MightyBlow_Timer += 10000;
+        }
 
         //Summon Gizrul
         if ( !Summoned && m_creature->GetHealth()*100 / m_creature->GetMaxHealth() < 25 )

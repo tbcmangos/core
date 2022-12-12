@@ -1,6 +1,6 @@
 /* 
  * Copyright (C) 2006-2008 ScriptDev2 <https://scriptdev2.svn.sourceforge.net/>
- * Copyright (C) 2008-2014 Hellground <http://hellground.net/>
+ * Copyright (C) 2008-2015 Hellground <http://hellground.net/>
  * 
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -46,25 +46,23 @@ struct boss_aeonusAI : public ScriptedAI
     boss_aeonusAI(Creature *c) : ScriptedAI(c)
     {
         pInstance = (c->GetInstanceData());
-        HeroicMode = m_creature->GetMap()->IsHeroic();
     }
 
     ScriptedInstance *pInstance;
-    bool HeroicMode;
 
-    uint32 Say_Timer;
-    uint32 Cleave_Timer;
-    uint32 SandBreath_Timer;
-    uint32 TimeStop_Timer;
-    uint32 Frenzy_Timer;
+    Timer Say_Timer;
+    Timer Cleave_Timer;
+    Timer SandBreath_Timer;
+    Timer TimeStop_Timer;
+    Timer Frenzy_Timer;
 
     void Reset()
     {
-        Say_Timer = 20000;
-        Cleave_Timer = 5000;
-        SandBreath_Timer = 30000;
-        TimeStop_Timer = 40000;
-        Frenzy_Timer = 120000;
+        Say_Timer.Reset(20000);
+        Cleave_Timer.Reset(5000);
+        SandBreath_Timer.Reset(30000);
+        TimeStop_Timer.Reset(40000);
+        Frenzy_Timer.Reset(120000);
         m_creature->setActive(true);
 
         SayIntro();
@@ -82,10 +80,10 @@ struct boss_aeonusAI : public ScriptedAI
         //Despawn Time Keeper
         if (who->GetTypeId() == TYPEID_UNIT && who->GetEntry() == C_TIME_KEEPER)
         {
-            if (m_creature->IsWithinDistInMap(who,20.0f))
+            if (me->IsAlive() && m_creature->IsWithinDistInMap(who,20.0f))
             {
                 DoScriptText(SAY_BANISH, m_creature);
-                m_creature->DealDamage(who, who->GetHealth(), DIRECT_DAMAGE, SPELL_SCHOOL_MASK_NORMAL, NULL, false);
+                who->ToCreature()->ForcedDespawn();
             }
         }
 
@@ -112,50 +110,44 @@ struct boss_aeonusAI : public ScriptedAI
         if (!UpdateVictim())
             return;
 
-        //Say Aggro
-        if (Say_Timer && Say_Timer <= diff)
+        
+        if (Say_Timer.Expired(diff))
         {
             DoScriptText(SAY_AGGRO, m_creature);
             Say_Timer = 0;
         }
-        else
-            Say_Timer -= diff;
+        
 
-        //Cleave
-        if (Cleave_Timer < diff)
+        if (Cleave_Timer.Expired(diff))
         {
-            AddSpellToCast(m_creature->getVictim(), SPELL_CLEAVE);
+            AddSpellToCast(m_creature->GetVictim(), SPELL_CLEAVE);
             Cleave_Timer = 6000+rand()%4000;
         }
-        else
-            Cleave_Timer -= diff;
+        
 
-        //Sand Breath
-        if (SandBreath_Timer < diff)
+
+        if (SandBreath_Timer.Expired(diff))
         {
-            AddSpellToCast(m_creature->getVictim(), HeroicMode ? H_SPELL_SAND_BREATH : SPELL_SAND_BREATH);
+            AddSpellToCast(m_creature->GetVictim(), HeroicMode ? H_SPELL_SAND_BREATH : SPELL_SAND_BREATH);
             SandBreath_Timer = 30000;
         }
-        else
-            SandBreath_Timer -= diff;
+        
 
-        //Time Stop
-        if (TimeStop_Timer < diff)
+
+        if (TimeStop_Timer.Expired(diff))
         {
-            AddSpellToCast(m_creature->getVictim(), SPELL_TIME_STOP);
+            AddSpellToCast(m_creature->GetVictim(), SPELL_TIME_STOP);
             TimeStop_Timer = 40000;
         }
-        else
-            TimeStop_Timer -= diff;
+        
 
-        //Frenzy
-        if (Frenzy_Timer < diff)
+
+        if (Frenzy_Timer.Expired(diff))
         {
             AddSpellToCastWithScriptText(m_creature, SPELL_ENRAGE, EMOTE_FRENZY);
             Frenzy_Timer = 120000;
         }
-        else
-            Frenzy_Timer -= diff;
+        
 
         //if event failed, remove boss from instance
         if (pInstance->GetData(TYPE_MEDIVH) == FAIL)

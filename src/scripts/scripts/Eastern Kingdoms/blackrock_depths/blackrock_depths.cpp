@@ -1,6 +1,6 @@
 /* 
  * Copyright (C) 2006-2008 ScriptDev2 <https://scriptdev2.svn.sourceforge.net/>
- * Copyright (C) 2008-2014 Hellground <http://hellground.net/>
+ * Copyright (C) 2008-2015 Hellground <http://hellground.net/>
  * 
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -47,7 +47,7 @@ EndContentData */
 //4 or 6 in total? 1+2+1 / 2+2+2 / 3+3. Depending on this, code should be changed.
 #define MOB_AMOUNT          4
 
-uint32 RingMob[]=
+static uint32 RingMob[]=
 {
     8925,                                                   // Dredge Worm
     8926,                                                   // Deep Stinger
@@ -57,7 +57,7 @@ uint32 RingMob[]=
     8932,                                                   // Borer Beetle
 };
 
-uint32 RingBoss[]=
+static uint32 RingBoss[]=
 {
     9027,                                                   // Gorosh
     9028,                                                   // Grizzle
@@ -67,14 +67,14 @@ uint32 RingBoss[]=
     9032,                                                   // Hedrum
 };
 
-float RingLocations[6][3]=
+static float RingLocations[6][3]=
 {
-    {604.802673, -191.081985, -54.058590},                  // ring
-    {604.072998, -222.106918, -52.743759},                  // first gate
-    {621.400391, -214.499054, -52.814453},                  // hiding in corner
-    {601.300781, -198.556992, -53.950256},                  // ring
-    {631.818359, -180.548126, -52.654770},                  // second gate
-    {627.390381, -201.075974, -52.692917}                   // hiding in corner
+    {604.802673f, -191.081985f, -54.058590f},                  // ring
+    {604.072998f, -222.106918f, -52.743759f},                  // first gate
+    {621.400391f, -214.499054f, -52.814453f},                  // hiding in corner
+    {601.300781f, -198.556992f, -53.950256f},                  // ring
+    {631.818359f, -180.548126f, -52.654770f},                  // second gate
+    {627.390381f, -201.075974f, -52.692917f}                   // hiding in corner
 };
 
 bool AreaTrigger_at_ring_of_law(Player *player, AreaTriggerEntry const* at)
@@ -123,7 +123,7 @@ struct npc_grimstoneAI : public npc_escortAI
 
     void Reset()
     {
-        me->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
+        me->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_SPAWNING);
 
         EventPhase = 0;
         Event_Timer = 1000;
@@ -218,8 +218,8 @@ struct npc_grimstoneAI : public npc_escortAI
 
                 if (RingBossGUID)
                 {
-                    Creature *boss = Unit::GetCreature(*me,RingBossGUID);
-                    if (boss && !boss->isAlive() && boss->isDead())
+                    Creature *boss = Unit::GetCreature(*me, RingBossGUID);
+                    if (boss && !boss->IsAlive() && boss->IsDead())
                     {
                         RingBossGUID = 0;
                         Event_Timer = 5000;
@@ -229,10 +229,10 @@ struct npc_grimstoneAI : public npc_escortAI
                     return;
                 }
 
-                for(uint8 i = 0; i < MOB_AMOUNT; i++)
+                for (uint8 i = 0; i < MOB_AMOUNT; i++)
                 {
-                    Creature *mob = Unit::GetCreature(*me,RingMobGUID[i]);
-                    if (mob && !mob->isAlive() && mob->isDead())
+                    Creature *mob = Unit::GetCreature(*me, RingMobGUID[i]);
+                    if (mob && !mob->IsAlive() && mob->IsDead())
                     {
                         RingMobGUID[i] = 0;
                         --MobCount;
@@ -254,11 +254,11 @@ struct npc_grimstoneAI : public npc_escortAI
         {
             if (Event_Timer <= diff)
             {
-                switch(EventPhase)
+                switch (EventPhase)
                 {
                 case 0:
                     DoScriptText(-1000001, me);//1
-                    DoGate(DATA_ARENA4,1);
+                    DoGate(DATA_ARENA4, 1);
                     Start(false, false);
                     CanWalk = true;
                     Event_Timer = 0;
@@ -271,7 +271,7 @@ struct npc_grimstoneAI : public npc_escortAI
                     Event_Timer = 2000;
                     break;
                 case 3:
-                    DoGate(DATA_ARENA1,0);
+                    DoGate(DATA_ARENA1, 0);
                     Event_Timer = 3000;
                     break;
                 case 4:
@@ -291,13 +291,13 @@ struct npc_grimstoneAI : public npc_escortAI
                     break;
                 case 7:
                     me->SetVisibility(VISIBILITY_ON);
-                    DoGate(DATA_ARENA1,1);
+                    DoGate(DATA_ARENA1, 1);
                     DoScriptText(-1000004, me);//4
                     CanWalk = true;
                     Event_Timer = 0;
                     break;
                 case 8:
-                    DoGate(DATA_ARENA2,0);
+                    DoGate(DATA_ARENA2, 0);
                     Event_Timer = 5000;
                     break;
                 case 9:
@@ -307,9 +307,9 @@ struct npc_grimstoneAI : public npc_escortAI
                     break;
                 case 10:
                     //if quest, complete
-                    DoGate(DATA_ARENA2,1);
-                    DoGate(DATA_ARENA3,0);
-                    DoGate(DATA_ARENA4,0);
+                    DoGate(DATA_ARENA2, 1);
+                    DoGate(DATA_ARENA3, 0);
+                    DoGate(DATA_ARENA4, 0);
                     CanWalk = true;
                     Event_Timer = 0;
                     break;
@@ -348,9 +348,9 @@ struct mob_phalanxAI : public ScriptedAI
 {
     mob_phalanxAI(Creature *c) : ScriptedAI(c) {}
 
-    uint32 ThunderClap_Timer;
-    uint32 FireballVolley_Timer;
-    uint32 MightyBlow_Timer;
+    int32 ThunderClap_Timer;
+    int32 FireballVolley_Timer;
+    int32 MightyBlow_Timer;
 
     void Reset()
     {
@@ -369,35 +369,33 @@ struct mob_phalanxAI : public ScriptedAI
         if (!UpdateVictim())
             return;
 
-        //ThunderClap_Timer
-        if (ThunderClap_Timer < diff)
+        ThunderClap_Timer -= diff;
+        if (ThunderClap_Timer <= diff)
         {
-            DoCast(me->getVictim(),SPELL_THUNDERCLAP);
-            ThunderClap_Timer = 10000;
+            DoCast(me->GetVictim(),SPELL_THUNDERCLAP);
+            ThunderClap_Timer += 10000;
         }
-        else
-            ThunderClap_Timer -= diff;
+        
+            
 
-        //FireballVolley_Timer
-        if (me->GetHealth()*100 / me->GetMaxHealth() < 51)
+        FireballVolley_Timer -= diff;
+        if (me->GetHealth() * 100 / me->GetMaxHealth() < 51)
         {
-            if (FireballVolley_Timer < diff)
+            if (FireballVolley_Timer <= diff)
             {
-                DoCast(me->getVictim(),SPELL_FIREBALLVOLLEY);
-                FireballVolley_Timer = 15000;
+                DoCast(me->GetVictim(),SPELL_FIREBALLVOLLEY);
+                FireballVolley_Timer += 15000;
             }
-            else
-                FireballVolley_Timer -= diff;
         }
 
-        //MightyBlow_Timer
-        if (MightyBlow_Timer < diff)
+        MightyBlow_Timer -= diff;
+        if (MightyBlow_Timer <= diff)
         {
-            DoCast(me->getVictim(),SPELL_MIGHTYBLOW);
-            MightyBlow_Timer = 10000;
+            DoCast(me->GetVictim(),SPELL_MIGHTYBLOW);
+            MightyBlow_Timer += 10000;
         }
-        else
-            MightyBlow_Timer -= diff;
+        
+         
 
         DoMeleeAttackIfReady();
     }
@@ -549,19 +547,19 @@ bool GossipSelect_npc_lokhtos_darkbargainer(Player *player, Creature *creature, 
 #define SPELL_DRUNKEN_RAGE  14872
 #define QUEST_ALE           4295
 
-float BarWpLocations[8][3]=
+static float BarWpLocations[8][3]=
 {
-    {883.294861, -188.926300, -43.703655},
-    {872.763550, -185.605621, -43.703655},                  //b1
-    {867.923401, -188.006393, -43.703655},                  //b2
-    {863.295898, -190.795212, -43.703655},                  //b3
-    {856.139587, -194.652756, -43.703655},                  //b4
-    {851.878906, -196.928131, -43.703655},                  //b5
-    {877.035217, -187.048080, -43.703655},
-    {891.198000, -197.924000, -43.620400}                   //home
+    {883.294861f, -188.926300f, -43.703655f},
+    {872.763550f, -185.605621f, -43.703655f},                  //b1
+    {867.923401f, -188.006393f, -43.703655f},                  //b2
+    {863.295898f, -190.795212f, -43.703655f},                  //b3
+    {856.139587f, -194.652756f, -43.703655f},                  //b4
+    {851.878906f, -196.928131f, -43.703655f},                  //b5
+    {877.035217f, -187.048080f, -43.703655f},
+    {891.198000f, -197.924000f, -43.620400f}                   //home
 };
 
-uint32 BarWpWait[8]=
+static uint32 BarWpWait[8]=
 {
     0,
     5000,
@@ -635,18 +633,18 @@ struct npc_rocknotAI : public npc_escortAI
 
         if (BreakKeg_Timer)
         {
+            BreakKeg_Timer -= diff;
             if (BreakKeg_Timer <= diff)
             {
                 DoGo(DATA_GO_BAR_KEG,0);
                 BreakKeg_Timer = 0;
                 BreakDoor_Timer = 1000;
             }
-            else
-                BreakKeg_Timer -= diff;
         }
 
         if (BreakDoor_Timer)
         {
+            BreakDoor_Timer -= diff;
             if (BreakDoor_Timer <= diff)
             {
                 DoGo(DATA_GO_BAR_DOOR,2);
@@ -662,8 +660,6 @@ struct npc_rocknotAI : public npc_escortAI
 
                 BreakDoor_Timer = 0;
             }
-            else
-                BreakDoor_Timer -= diff;
         }
 
         npc_escortAI::UpdateAI(diff);
@@ -755,7 +751,7 @@ struct npc_marshal_windsorAI : public npc_escortAI
             {
                 if (Creature* dughal = Unit::GetCreature(*me, pInstance->GetData64(DATA_DUGHAL)))
                 {
-                    if (!dughal->isAlive())
+                    if (!dughal->IsAlive())
                         dughal->Respawn();
                     dughal->SetVisibility(VISIBILITY_ON);
                     dughal->SetFlag(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_GOSSIP);
@@ -933,7 +929,7 @@ struct npc_marshal_reginald_windsorAI : public npc_escortAI
                 {
                     if (Creature* jaz = Unit::GetCreature(*me, pInstance->GetData64(DATA_JAZ)))
                     {
-                        if (!jaz->isAlive())
+                        if (!jaz->IsAlive())
                             jaz->Respawn();
                         jaz->SetVisibility(VISIBILITY_ON);
                         jaz->SetFlag(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_GOSSIP);
@@ -951,7 +947,7 @@ struct npc_marshal_reginald_windsorAI : public npc_escortAI
                 {
                     if (Creature* shill = Unit::GetCreature(*me, pInstance->GetData64(DATA_SHILL)))
                     {
-                        if (!shill->isAlive())
+                        if (!shill->IsAlive())
                             shill->Respawn();
                         shill->SetVisibility(VISIBILITY_ON);
                         shill->SetFlag(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_GOSSIP);
@@ -972,7 +968,7 @@ struct npc_marshal_reginald_windsorAI : public npc_escortAI
                 {
                     if (Creature* crest = Unit::GetCreature(*me, pInstance->GetData64(DATA_CREST)))
                     {
-                        if (!crest->isAlive())
+                        if (!crest->IsAlive())
                             crest->Respawn();
                         crest->SetVisibility(VISIBILITY_ON);
                         crest->SetFlag(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_GOSSIP);
@@ -990,7 +986,7 @@ struct npc_marshal_reginald_windsorAI : public npc_escortAI
                 {
                     if (Creature* tobias = Unit::GetCreature(*me, pInstance->GetData64(DATA_TOBIAS)))
                     {
-                        if (!tobias->isAlive())
+                        if (!tobias->IsAlive())
                             tobias->Respawn();
                         tobias->SetVisibility(VISIBILITY_ON);
                         tobias->SetFlag(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_GOSSIP);

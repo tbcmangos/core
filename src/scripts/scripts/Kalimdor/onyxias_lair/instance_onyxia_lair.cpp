@@ -1,6 +1,6 @@
 /* 
  * Copyright (C) 2006-2008 ScriptDev2 <https://scriptdev2.svn.sourceforge.net/>
- * Copyright (C) 2008-2014 Hellground <http://hellground.net/>
+ * Copyright (C) 2008-2015 Hellground <http://hellground.net/>
  * 
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -114,7 +114,7 @@ struct instance_onyxia_lair : public ScriptedInstance
 
     void DespawnWhelps()
     {
-        error_log("TSCR: Despawning Whelps in Onyxia's Lair: whelps count %u", m_whelps.size());
+        error_log("TSCR: Despawning Whelps in Onyxia's Lair: whelps count %lu", m_whelps.size());
         for (std::list<uint64>::const_iterator itr = m_whelps.begin(); itr != m_whelps.end(); ++itr)
         {
             if (Creature *whelp = instance->GetCreature(*itr))

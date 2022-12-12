@@ -1,6 +1,6 @@
 /* 
  * Copyright (C) 2006-2008 ScriptDev2 <https://scriptdev2.svn.sourceforge.net/>
- * Copyright (C) 2008-2014 Hellground <http://hellground.net/>
+ * Copyright (C) 2008-2015 Hellground <http://hellground.net/>
  * 
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -37,11 +37,11 @@ struct boss_renatakiAI : public ScriptedAI
         pInstance = c->GetInstanceData();
     }
 
-    uint32 Invisible_Timer;
-    uint32 Ambush_Timer;
-    uint32 Visible_Timer;
-    uint32 Aggro_Timer;
-    uint32 ThousandBlades_Timer;
+    int32 Invisible_Timer;
+    int32 Ambush_Timer;
+    int32 Visible_Timer;
+    int32 Aggro_Timer;
+    int32 ThousandBlades_Timer;
 
     bool Invisible;
     bool Ambushed;
@@ -77,8 +77,8 @@ struct boss_renatakiAI : public ScriptedAI
         if(!UpdateVictim())
             return;
 
-        //Invisible_Timer
-        if(Invisible_Timer < diff)
+        Invisible_Timer -= diff;
+        if(Invisible_Timer <= diff)
         {
             m_creature->InterruptSpell(CURRENT_GENERIC_SPELL);
             m_creature->SetUInt32Value( UNIT_VIRTUAL_ITEM_SLOT_DISPLAY, 0);
@@ -88,14 +88,14 @@ struct boss_renatakiAI : public ScriptedAI
             m_creature->SetUInt32Value(UNIT_FIELD_DISPLAYID,11686);
             Invisible = true;
 
-            Invisible_Timer = 15000 + rand()%15000;
+            Invisible_Timer += 15000 + rand()%15000;
         }
-        else
-            Invisible_Timer -= diff;
+        
 
         if(Invisible)
         {
-            if(Ambush_Timer < diff)
+            Ambush_Timer -= diff;
+            if(Ambush_Timer <= diff)
             {
                 if(Unit* target = SelectUnit(SELECT_TARGET_RANDOM,0))
                 {
@@ -104,15 +104,14 @@ struct boss_renatakiAI : public ScriptedAI
                 }
 
                 Ambushed = true;
-                Ambush_Timer = 3000;
+                Ambush_Timer += 3000;
             }
-            else
-                Ambush_Timer -= diff;
         }
 
         if (Ambushed)
         {
-            if (Visible_Timer < diff)
+            Visible_Timer -= diff;
+            if (Visible_Timer <= diff)
             {
                 m_creature->InterruptSpell(CURRENT_GENERIC_SPELL);
                 m_creature->SetUInt32Value(UNIT_FIELD_DISPLAYID,15268);
@@ -123,36 +122,33 @@ struct boss_renatakiAI : public ScriptedAI
                 m_creature->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
                 Invisible = false;
 
-                Visible_Timer = 4000;
+                Visible_Timer += 4000;
             }
-            else
-                Visible_Timer -= diff;
         }
 
         //Resetting some aggro so he attacks other gamers
         if(!Invisible)
         {
-            if(Aggro_Timer < diff)
+            Aggro_Timer -= diff;
+            if(Aggro_Timer <= diff)
             {
                 Unit* target = SelectUnit(SELECT_TARGET_RANDOM,1, 200, true, m_creature->getVictimGUID());
-                if(DoGetThreat(m_creature->getVictim()))
-                    DoModifyThreatPercent(m_creature->getVictim(),-50);
+                if(DoGetThreat(m_creature->GetVictim()))
+                    DoModifyThreatPercent(m_creature->GetVictim(),-50);
 
                 if(target)
                     AttackStart(target);
 
-                Aggro_Timer = 7000 + rand()%13000;
+                Aggro_Timer += 7000 + rand()%13000;
             }
-            else
-                Aggro_Timer -= diff;
+            
 
-            if(ThousandBlades_Timer < diff)
+            ThousandBlades_Timer -= diff;
+            if(ThousandBlades_Timer <= diff)
             {
-                DoCast(m_creature->getVictim(), SPELL_THOUSANDBLADES);
-                ThousandBlades_Timer = 7000 + rand()%5000;
+                DoCast(m_creature->GetVictim(), SPELL_THOUSANDBLADES);
+                ThousandBlades_Timer += 7000 + rand()%5000;
             }
-            else
-                ThousandBlades_Timer -= diff;
         }
 
         DoMeleeAttackIfReady();

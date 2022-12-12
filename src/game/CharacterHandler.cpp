@@ -1,7 +1,7 @@
 /*
  * Copyright (C) 2005-2008 MaNGOS <http://getmangos.com/>
  * Copyright (C) 2008 TrinityCore <http://www.trinitycore.org/>
- * Copyright (C) 2008-2014 Hellground <http://hellground.net/>
+ * Copyright (C) 2008-2017 Hellground <http://wow-hellground.com/>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -42,8 +42,8 @@
 #include "Chat.h"
 #include "SystemConfig.h"
 #include "GameEvent.h"
-#include "luaengine/HookMgr.h"
 #include "GuildMgr.h"
+#include "PlayerBotMgr.h"
 
 class GameEvent;
 
@@ -91,6 +91,7 @@ bool LoginQueryHolder::Initialize()
     res &= SetPQuery(PLAYER_LOGIN_QUERY_LOADMAILS,           "SELECT id,messageType,sender,receiver,subject,itemTextId,expire_time,deliver_time,money,cod,checked,stationery,mailTemplateId,has_items FROM mail WHERE receiver = '%u' ORDER BY id DESC", GUID_LOPART(m_guid));
     res &= SetPQuery(PLAYER_LOGIN_QUERY_LOADMAILEDITEMS,     "SELECT data, mail_id, item_guid, item_template FROM mail_items JOIN item_instance ON item_guid = guid WHERE receiver = '%u'", GUID_LOPART(m_guid));
     res &= SetPQuery(PLAYER_LOGIN_QUERY_LOADDAILYARENA,      "SELECT dailyarenawins FROM character_stats_ro WHERE guid = '%u'", GUID_LOPART(m_guid));
+    res &= SetPQuery(PLAYER_LOGIN_QUERY_LOADFREERESPECTIME,  "SELECT expiration_date FROM character_freerespecs WHERE guid = '%u'", GUID_LOPART(m_guid));
 
     return res;
 }
@@ -268,7 +269,7 @@ void WorldSession::HandleCharCreateOpcode(WorldPacket & recv_data)
         return;
     }
 
-    if (!HasPermissions(PERM_GMT) && sObjectMgr.IsReservedName(name))
+    if (!HasPermissions(PERM_GMT) && sObjectMgr.IsReservedName(name,GetAccountId()))
     {
         data << uint8(CHAR_NAME_RESERVED);
         SendPacket(&data);
@@ -360,7 +361,7 @@ void WorldSession::HandleCharCreateOpcode(WorldPacket & recv_data)
     recv_data >> hairStyle >> hairColor >> facialHair >> outfitId;
 
     Player * pNewChar = new Player(this);
-    if (!pNewChar->Create(sObjectMgr.GenerateLowGuid(HIGHGUID_PLAYER), name, race_, class_, gender, skin, face, hairStyle, hairColor, facialHair, outfitId))
+    if (!pNewChar->Create(sObjectMgr.GenerateLowGuid(HIGHGUID_PLAYER), name, race_, class_, gender, skin, face, hairStyle, hairColor, facialHair, outfitId ? outfitId : 255))
     {
         // Player not create (race/class problem?)
         delete pNewChar;
@@ -373,8 +374,6 @@ void WorldSession::HandleCharCreateOpcode(WorldPacket & recv_data)
 
     if ((have_same_race && skipCinematics == 1) || skipCinematics == 2)
         pNewChar->setCinematic(true);                       // not show intro
-
-    pNewChar->SetAtLoginFlag(AT_LOGIN_FIRST);               // First login
 
     // Player created, save it now
     pNewChar->SaveToDB();
@@ -396,9 +395,6 @@ void WorldSession::HandleCharCreateOpcode(WorldPacket & recv_data)
     std::string IP_str = GetRemoteAddress();
     sLog.outDetail("Account: %d (IP: %s) Create Character:[%s]",GetAccountId(),IP_str.c_str(),name.c_str());
     sLog.outLog(LOG_CHAR, "Account: %d (IP: %s) Create Character:[%s]",GetAccountId(),IP_str.c_str(),name.c_str());
-
-    // used by eluna
-    sHookMgr->OnCreate(pNewChar);
 }
 
 void WorldSession::HandleCharDeleteOpcode(WorldPacket & recv_data)
@@ -411,6 +407,14 @@ void WorldSession::HandleCharDeleteOpcode(WorldPacket & recv_data)
     // can't delete loaded character
     if (sObjectMgr.GetPlayer(guid))
         return;
+
+    if (IsAccountFlagged(ACC_LOCKED_CHAR_DELETING))
+    {
+        WorldPacket data(SMSG_CHAR_DELETE, 1);
+        data << (uint8)CHAR_DELETE_FAILED;
+        SendPacket(&data);
+        return;
+    }
 
     uint32 accountId = 0;
     std::string name;
@@ -454,9 +458,6 @@ void WorldSession::HandleCharDeleteOpcode(WorldPacket & recv_data)
     WorldPacket data(SMSG_CHAR_DELETE, 1);
     data << (uint8)CHAR_DELETE_SUCCESS;
     SendPacket(&data);
-
-    // used by eluna
-    sHookMgr->OnDelete(GUID_LOPART(guid));
 }
 
 void WorldSession::HandlePlayerLoginOpcode(WorldPacket & recv_data)
@@ -504,6 +505,10 @@ void WorldSession::HandlePlayerLogin(LoginQueryHolder * holder)
         m_playerLoading = false;
         return;
     }
+
+    if (GetBot() && !sPlayerBotMgr.IsSavingAllowed())
+        pCurrChar->m_saveDisabled = true;
+
     pCurrChar->GetCamera().Init();
     pCurrChar->GetMotionMaster()->Initialize();
     SetPlayer(pCurrChar);
@@ -617,7 +622,7 @@ void WorldSession::HandlePlayerLogin(LoginQueryHolder * holder)
         }
     }
 
-    if (!pCurrChar->isAlive())
+    if (!pCurrChar->IsAlive())
         pCurrChar->SendCorpseReclaimDelay(true);
 
     pCurrChar->SendInitialPacketsBeforeAddToMap();
@@ -627,13 +632,13 @@ void WorldSession::HandlePlayerLogin(LoginQueryHolder * holder)
     {
         pCurrChar->setCinematic(true);
 
-        if(ChrRacesEntry const* rEntry = sChrRacesStore.LookupEntry(pCurrChar->getRace()))
+        if(ChrRacesEntry const* rEntry = sChrRacesStore.LookupEntry(pCurrChar->GetRace()))
         {
             pCurrChar->SendCinematicStart(rEntry->CinematicSequence);
 
             // send new char string if not empty
             if (!sWorld.GetNewCharString().empty())
-                chH.PSendSysMessage(sWorld.GetNewCharString().c_str());
+                chH.PSendSysMessage("%s", sWorld.GetNewCharString().c_str());
         }
     }
 
@@ -683,7 +688,7 @@ void WorldSession::HandlePlayerLogin(LoginQueryHolder * holder)
     if (pCurrChar->m_deathState != ALIVE)
     {
         // not blizz like, we must correctly save and load player instead...
-        if (pCurrChar->getRace() == RACE_NIGHTELF)
+        if (pCurrChar->GetRace() == RACE_NIGHTELF)
             pCurrChar->CastSpell(pCurrChar, 20584, true, 0);// auras SPELL_AURA_INCREASE_SPEED(+speed in wisp form), SPELL_AURA_INCREASE_SWIM_SPEED(+swim speed in wisp form), SPELL_AURA_TRANSFORM (to wisp form)
         pCurrChar->CastSpell(pCurrChar, 8326, true, 0);     // auras SPELL_AURA_GHOST, SPELL_AURA_INCREASE_SPEED(why?), SPELL_AURA_INCREASE_SWIM_SPEED(why?)
 
@@ -741,11 +746,11 @@ void WorldSession::HandlePlayerLogin(LoginQueryHolder * holder)
     }
 
     // Load pet if any and player is alive and not in taxi flight
-    if (pCurrChar->isAlive() && pCurrChar->m_taxi.GetTaxiSource()==0)
+    if (pCurrChar->IsAlive() && pCurrChar->m_taxi.GetTaxiSource()==0)
         pCurrChar->LoadPet();
 
     // Set FFA PvP for non GM in non-rest mode
-    if (sWorld.IsFFAPvPRealm() && !pCurrChar->isGameMaster() && !pCurrChar->HasFlag(PLAYER_FLAGS,PLAYER_FLAGS_RESTING))
+    if (sWorld.IsFFAPvPRealm() && !pCurrChar->IsGameMaster() && !pCurrChar->HasFlag(PLAYER_FLAGS,PLAYER_FLAGS_RESTING))
         pCurrChar->SetFFAPvP(true);
 
     if (pCurrChar->HasFlag(PLAYER_FLAGS, PLAYER_FLAGS_CONTESTED_PVP))
@@ -757,13 +762,6 @@ void WorldSession::HandlePlayerLogin(LoginQueryHolder * holder)
         pCurrChar->resetSpells();
         SendNotification(LANG_RESET_SPELLS);
     }
-
-    // used by eluna
-    if (pCurrChar->HasAtLoginFlag(AT_LOGIN_FIRST))
-        sHookMgr->OnFirstLogin(pCurrChar);
-
-    if (pCurrChar->HasAtLoginFlag(AT_LOGIN_FIRST))
-        pCurrChar->RemoveAtLoginFlag(AT_LOGIN_FIRST);
 
     if (pCurrChar->HasAtLoginFlag(AT_LOGIN_RESET_TALENTS))
     {
@@ -778,7 +776,7 @@ void WorldSession::HandlePlayerLogin(LoginQueryHolder * holder)
     if (sWorld.getConfig(CONFIG_START_ALL_TAXI_PATHS))
         pCurrChar->SetTaxiCheater(true);
 
-    if (pCurrChar->isGameMaster())
+    if (pCurrChar->IsGameMaster())
         SendNotification(LANG_GM_ON);
 
     pCurrChar->CreateCharmAI();
@@ -790,9 +788,6 @@ void WorldSession::HandlePlayerLogin(LoginQueryHolder * holder)
     m_playerLoading = false;
 
     sWorld.ModifyLoggedInCharsCount(_player->GetTeamId(), 1);
-
-    // used by eluna
-    sHookMgr->OnLogin(pCurrChar);
 
     delete holder;
 }
@@ -917,7 +912,7 @@ void WorldSession::HandleChangePlayerNameOpcode(WorldPacket& recv_data)
     }
 
     // check name limitations
-    if (!HasPermissions(PERM_GMT) && sObjectMgr.IsReservedName(newname))
+    if (!HasPermissions(PERM_GMT) && sObjectMgr.IsReservedName(newname, GetAccountId()))
     {
         WorldPacket data(SMSG_CHAR_RENAME, 1);
         data << uint8(CHAR_NAME_RESERVED);

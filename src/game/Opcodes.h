@@ -1,7 +1,7 @@
 /*
  * Copyright (C) 2005-2008 MaNGOS <http://getmangos.com/>
  * Copyright (C) 2008 TrinityCore <http://www.trinitycore.org/>
- * Copyright (C) 2008-2014 Hellground <http://hellground.net/>
+ * Copyright (C) 2008-2017 Hellground <http://wow-hellground.com/>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -1077,7 +1077,7 @@ enum Opcodes
     MSG_GM_CHANGE_ARENA_RATING                      = 0x40E,
     CMSG_DECLINE_CHANNEL_INVITE                     = 0x40F,
     CMSG_GROUPACTION_THROTTLED                      = 0x410,
-    SMSG_override_LIGHT                             = 0x411,
+    SMSG_OVERRIDE_LIGHT                             = 0x411,
     SMSG_TOTEM_CREATED                              = 0x412,
     CMSG_TOTEM_DESTROYED                            = 0x413,
     CMSG_EXPIRE_RAID_INSTANCE                       = 0x414,
@@ -1104,10 +1104,10 @@ enum Opcodes
 /// Player state
 enum SessionStatus
 {
-    STATUS_AUTHED = 0,                                      ///< Player authenticated
-    STATUS_LOGGEDIN,                                        ///< Player in game
-    STATUS_TRANSFER_PENDING,                                ///< Player transferring to another map
-    STATUS_NEVER                                            ///< Opcode not accepted from client (deprecated or server side only)
+    STATUS_AUTHED = 0,                                      /// Player authenticated
+    STATUS_LOGGEDIN,                                        /// Player in game
+    STATUS_TRANSFER_PENDING,                                /// Player transferring to another map
+    STATUS_NEVER                                            /// Opcode not accepted from client (deprecated or server side only)
 };
 
 enum PacketProcessing

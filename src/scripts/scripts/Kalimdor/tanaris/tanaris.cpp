@@ -1,7 +1,7 @@
 /*
  * Copyright (C) 2006-2009 ScriptDev2 <https://scriptdev2.svn.sourceforge.net/>
  * Copyright (C) 2008-2010 TrinityCore <http://www.trinitycore.org/>
- * Copyright (C) 2008-2014 Hellground <http://hellground.net/>
+ * Copyright (C) 2008-2015 Hellground <http://hellground.net/>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -53,36 +53,46 @@ struct mob_aquementasAI : public ScriptedAI
 {
     mob_aquementasAI(Creature *c) : ScriptedAI(c) {}
 
-    uint32 SendItem_Timer;
-    uint32 SwitchFaction_Timer;
+    Timer SendItem_Timer;
+    Timer SwitchFaction_Timer;
     bool isFriendly;
 
-    uint32 FrostShock_Timer;
-    uint32 AquaJet_Timer;
+    Timer FrostShock_Timer;
+    Timer AquaJet_Timer;
 
     void Reset()
     {
-        SendItem_Timer = 0;
-        SwitchFaction_Timer = 10000;
+        SendItem_Timer.Reset(1000);
+        SwitchFaction_Timer.Reset(10000);
         me->setFaction(35);
         isFriendly = true;
 
-        AquaJet_Timer = 5000;
-        FrostShock_Timer = 1000;
+        AquaJet_Timer.Reset(5000);
+        FrostShock_Timer.Reset(1000);
     }
 
     void SendItem(Unit* receiver)
     {
-        if (CAST_PLR(receiver)->HasItemCount(11169,1,false) &&
-            CAST_PLR(receiver)->HasItemCount(11172,11,false) &&
-            CAST_PLR(receiver)->HasItemCount(11173,1,false) &&
-            !CAST_PLR(receiver)->HasItemCount(11522,1,true))
+        if (!receiver)
+            return;
+        Player* plr = receiver->GetCharmerOrOwnerPlayerOrPlayerItself();
+        if (!plr)
+            return;
+
+        if (!plr->HasItemCount(11522, 1, true) &&
+            plr->HasItemCount(11169, 1, false) &&
+            plr->HasItemCount(11172, 11, false) &&
+            plr->HasItemCount(11173, 1, false))
         {
             ItemPosCountVec dest;
-            uint8 msg = CAST_PLR(receiver)->CanStoreNewItem(NULL_BAG, NULL_SLOT, dest, 11522, 1);
-            if (msg == EQUIP_ERR_OK)
-                CAST_PLR(receiver)->StoreNewItem(dest, 11522, 1, true);
+            if (plr->CanStoreNewItem(NULL_BAG, NULL_SLOT, dest, 11522, 1) == EQUIP_ERR_OK)
+                plr->StoreNewItem(dest, 11522, 1, true);
         }
+    }
+
+    void JustDied(Unit* pKiller)
+    {
+        SendItem(pKiller);
     }
 
     void EnterCombat(Unit* who)
@@ -94,11 +104,11 @@ struct mob_aquementasAI : public ScriptedAI
     {
         if (isFriendly)
         {
-            if (SwitchFaction_Timer <= diff)
+            if (SwitchFaction_Timer.Expired(diff))
             {
                 me->setFaction(91);
                 isFriendly = false;
-            } else SwitchFaction_Timer -= diff;
+            }
         }
 
         if (!UpdateVictim())
@@ -106,25 +116,24 @@ struct mob_aquementasAI : public ScriptedAI
 
         if (!isFriendly)
         {
-            if (SendItem_Timer <= diff)
+            if (SendItem_Timer.Expired(diff))
             {
-                if (me->getVictim()->GetTypeId() == TYPEID_PLAYER)
-                    SendItem(me->getVictim());
-                SendItem_Timer = 5000;
-            } else SendItem_Timer -= diff;
+                SendItem(me->GetVictim());
+                SendItem_Timer = 1000;
+            }
         }
 
-        if (FrostShock_Timer <= diff)
+        if (FrostShock_Timer.Expired(diff))
         {
-            DoCast(me->getVictim(), SPELL_FROST_SHOCK);
+            DoCast(me->GetVictim(), SPELL_FROST_SHOCK);
             FrostShock_Timer = 15000;
-        } else FrostShock_Timer -= diff;
+        }
 
-        if (AquaJet_Timer <= diff)
+        if (AquaJet_Timer.Expired(diff))
         {
             DoCast(me, SPELL_AQUA_JET);
             AquaJet_Timer = 15000;
-        } else AquaJet_Timer -= diff;
+        } 
 
         DoMeleeAttackIfReady();
     }
@@ -366,7 +375,10 @@ struct npc_OOX17AI : public npc_escortAI
 {
     npc_OOX17AI(Creature *c) : npc_escortAI(c) {}
 
-    void Reset() {}
+    void Reset()
+    {
+        m_creature->SetStandState(UNIT_STAND_STATE_DEAD);
+    }
 
     void EnterCombat(Unit* /*who*/)
     {
@@ -562,7 +574,7 @@ struct npc_toogaAI : public FollowerAI
     {
         FollowerAI::MoveInLineOfSight(pWho);
 
-        if (!me->getVictim() && !HasFollowState(STATE_FOLLOW_COMPLETE | STATE_FOLLOW_POSTEVENT) && pWho->GetEntry() == NPC_TORTA)
+        if (!me->GetVictim() && !HasFollowState(STATE_FOLLOW_COMPLETE | STATE_FOLLOW_POSTEVENT) && pWho->GetEntry() == NPC_TORTA)
         {
             if (me->IsWithinDistInMap(pWho, INTERACTION_DISTANCE))
             {
@@ -601,7 +613,7 @@ struct npc_toogaAI : public FollowerAI
                     m_uiPostEventTimer = 5000;
 
                     Unit *pTorta = Unit::GetUnit(*me, TortaGUID);
-                    if (!pTorta || !pTorta->isAlive())
+                    if (!pTorta || !pTorta->IsAlive())
                     {
                         //something happened, so just complete
                         SetFollowComplete();
@@ -677,12 +689,12 @@ struct npc_anachronosAI : public ScriptedAI
 {
     npc_anachronosAI(Creature* pCreature) : ScriptedAI(pCreature) { }
 
-    uint32 checkTimer;
+    Timer checkTimer;
 
     void Reset()
     {
         me->SetVisibility(VISIBILITY_ON);
-        checkTimer = 3000;
+        checkTimer = 1000;
     }
 
     void UpdateAI(const uint32 diff)
@@ -690,7 +702,7 @@ struct npc_anachronosAI : public ScriptedAI
         if (!UpdateVictim())
             return;
 
-        if (checkTimer < diff)
+        if (checkTimer.Expired(diff))
         {
             if (HealthBelowPct(20))
             {
@@ -701,10 +713,9 @@ struct npc_anachronosAI : public ScriptedAI
                 return;
             }
 
-            checkTimer = 3000;
+            checkTimer = 1000;
         }
-        else
-            checkTimer -= diff;
+        
 
         DoMeleeAttackIfReady();
     }

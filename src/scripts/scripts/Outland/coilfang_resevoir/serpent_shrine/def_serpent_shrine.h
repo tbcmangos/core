@@ -1,6 +1,6 @@
 /* 
  * Copyright (C) 2006-2008 ScriptDev2 <https://scriptdev2.svn.sourceforge.net/>
- * Copyright (C) 2008-2014 Hellground <http://hellground.net/>
+ * Copyright (C) 2008-2015 Hellground <http://hellground.net/>
  * 
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -57,6 +57,7 @@ enum WaterEventState
 #define DATA_STRANGE_POOL 22
 #define DATA_WATER 23
 #define DATA_SHARKKIS_PET 24
+#define DATA_PREVIOUS_BOSS_DEAD 25
 
 #define WATER_Z -21.57f
 #define VASHJ_WATER_Z 20.27f

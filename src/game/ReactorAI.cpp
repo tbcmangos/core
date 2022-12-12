@@ -1,7 +1,7 @@
 /*
  * Copyright (C) 2005-2008 MaNGOS <http://getmangos.com/>
  * Copyright (C) 2008 TrinityCore <http://www.trinitycore.org/>
- * Copyright (C) 2008-2014 Hellground <http://hellground.net/>
+ * Copyright (C) 2008-2017 Hellground <http://wow-hellground.com/>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -43,15 +43,15 @@ ReactorAI::MoveInLineOfSight(Unit *)
 void
 ReactorAI::UpdateAI(const uint32 /*time_diff*/)
 {
-    // update i_victimGuid if m_creature->getVictim() != 0 and changed
+    // update i_victimGuid if m_creature->GetVictim() != 0 and changed
     if (!UpdateVictim())
         return;
 
     if (m_creature->isAttackReady())
     {
-        if (m_creature->IsWithinMeleeRange(m_creature->getVictim()))
+        if (m_creature->IsWithinMeleeRange(m_creature->GetVictim()))
         {
-            m_creature->AttackerStateUpdate(m_creature->getVictim());
+            m_creature->AttackerStateUpdate(m_creature->GetVictim());
             m_creature->resetAttackTimer();
         }
     }

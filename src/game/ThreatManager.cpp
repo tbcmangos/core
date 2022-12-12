@@ -1,7 +1,7 @@
 /*
  * Copyright (C) 2005-2008 MaNGOS <http://getmangos.com/>
  * Copyright (C) 2008 TrinityCore <http://www.trinitycore.org/>
- * Copyright (C) 2008-2014 Hellground <http://hellground.net/>
+ * Copyright (C) 2008-2017 Hellground <http://wow-hellground.com/>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -113,7 +113,7 @@ void HostileReference::addThreat(float pMod)
     if (isValid() && pMod >= 0)
     {
         Unit* victim_owner = getTarget()->GetCharmerOrOwner();
-        if (victim_owner && victim_owner->isAlive())
+        if (victim_owner && victim_owner->IsAlive())
             getSource()->addThreat(victim_owner, 0.0f);     // create a threat to the owner of a pet, if the pet attacks
     }
 }
@@ -137,8 +137,8 @@ void HostileReference::updateOnlineStatus()
     // target is no player or not gamemaster
     // target is not in flight
     if (isValid()
-        && (getTarget()->GetTypeId() != TYPEID_PLAYER || !((Player*)getTarget())->isGameMaster())
-        && !getTarget()->hasUnitState(UNIT_STAT_TAXI_FLIGHT))
+        && (getTarget()->GetTypeId() != TYPEID_PLAYER || !((Player*)getTarget())->IsGameMaster())
+        && !getTarget()->HasUnitState(UNIT_STAT_TAXI_FLIGHT))
     {
         Creature* creature = (Creature*) getSourceUnit();
         online = getTarget()->isInAccessiblePlacefor (creature);
@@ -308,7 +308,7 @@ bool DropAggro(Creature* pAttacker, Unit * target)
     }
 
     // disorient and confuse effects
-    if (target->hasUnitState(UNIT_STAT_CONFUSED))
+    if (target->HasUnitState(UNIT_STAT_CONFUSED))
         return true;
 
     // is this needed ? Oo if not then next check if also useless ;)
@@ -331,8 +331,12 @@ bool DropAggro(Creature* pAttacker, Unit * target)
 
     // special cases
     if (target->HasAura(24698, 1) || // Gouge
+        target->HasAura(29425, 1) || // Gouge
         target->HasAura(41086, 0) || // Ice Trap
-        target->HasAura(41197,2))    // Shield Bash
+        target->HasAura(41197, 2) || // Shield Bash
+        target->HasAura(38509, 1) || // vashj stun
+        target->HasAura(33130, 1) // olm death coil
+        ) 
         return true;
 
     // Vengeful Spirit can't be attacked
@@ -434,6 +438,8 @@ void ThreatManager::clearReferences()
 
 //============================================================
 
+#define MISDIRECTION_TRIGGER_SPELL 35079
+
 void ThreatManager::addThreat(Unit* pVictim, float pThreat, SpellSchoolMask schoolMask, SpellEntry const *pThreatSpell)
 {
     //function deals with adding threat and adding players and pets into ThreatList
@@ -446,12 +452,12 @@ void ThreatManager::addThreat(Unit* pVictim, float pThreat, SpellSchoolMask scho
         return;
 
     // not to GM
-    if (!pVictim || (pVictim->GetTypeId() == TYPEID_PLAYER && ((Player*)pVictim)->isGameMaster()))
+    if (!pVictim || (pVictim->GetTypeId() == TYPEID_PLAYER && ((Player*)pVictim)->IsGameMaster()))
         return;
 
 
     // not to dead and not for dead
-    if (!pVictim->isAlive() || !getOwner()->isAlive())
+    if (!pVictim->IsAlive() || !getOwner()->IsAlive())
         return;
 
     ASSERT(getOwner()->GetTypeId() == TYPEID_UNIT);
@@ -460,12 +466,14 @@ void ThreatManager::addThreat(Unit* pVictim, float pThreat, SpellSchoolMask scho
 
     // must check > 0.0f, otherwise dead loop
     if (threat > 0.0f && pVictim->GetReducedThreatPercent())
-    {
-        float reducedThreat = threat * pVictim->GetReducedThreatPercent() / 100;
-        threat -= reducedThreat;
         if (Unit *unit = pVictim->GetMisdirectionTarget())
-            _addThreat(unit, reducedThreat);
-    }
+            if (unit->GetAuraByCasterSpell(MISDIRECTION_TRIGGER_SPELL, pVictim->GetGUID()))
+            {
+                float reducedThreat = threat * pVictim->GetReducedThreatPercent() / 100;
+                threat -= reducedThreat;
+
+                _addThreat(unit, reducedThreat);
+            }
 
     _addThreat(pVictim, threat);
 }
@@ -483,7 +491,7 @@ void ThreatManager::_addThreat(Unit *pVictim, float threat)
         HostileReference* hostileRef = new HostileReference(pVictim, this, 0);
         iThreatContainer.addReference(hostileRef);
         hostileRef->addThreat(threat);                 // now we add the real threat
-        if (pVictim->GetTypeId() == TYPEID_PLAYER && ((Player*)pVictim)->isGameMaster())
+        if (pVictim->GetTypeId() == TYPEID_PLAYER && ((Player*)pVictim)->IsGameMaster())
             hostileRef->setOnlineOfflineState(false);  // GM is always offline
     }
 }
@@ -510,7 +518,7 @@ Unit* ThreatManager::getHostilTarget()
 float ThreatManager::getThreat(Unit *pVictim, bool pAlsoSearchOfflineList)
 {
     if (!pVictim)
-        return NULL;
+        return 0;
 
     float threat = 0.0f;
     HostileReference* ref = iThreatContainer.getReferenceByTarget(pVictim);

@@ -1,6 +1,6 @@
 /* 
  * Copyright (C) 2006-2008 ScriptDev2 <https://scriptdev2.svn.sourceforge.net/>
- * Copyright (C) 2008-2014 Hellground <http://hellground.net/>
+ * Copyright (C) 2008-2015 Hellground <http://hellground.net/>
  * 
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -47,11 +47,11 @@ struct boss_jindoAI : public ScriptedAI
 
     ScriptedInstance *pInstance;
 
-    uint32 BrainWashTotem_Timer;
-    uint32 HealingWard_Timer;
-    uint32 Hex_Timer;
-    uint32 Delusions_Timer;
-    uint32 Teleport_Timer;
+    int32 BrainWashTotem_Timer;
+    int32 HealingWard_Timer;
+    int32 Hex_Timer;
+    int32 Delusions_Timer;
+    int32 Teleport_Timer;
 
     Creature *Shade;
     Creature *Skeletons;
@@ -83,39 +83,37 @@ struct boss_jindoAI : public ScriptedAI
         if (!UpdateVictim())
             return;
 
-        //BrainWashTotem_Timer
-        if (BrainWashTotem_Timer < diff)
+        BrainWashTotem_Timer -= diff;
+        if (BrainWashTotem_Timer <= diff)
         {
             DoCast(m_creature, SPELL_BRAINWASHTOTEM);
-            BrainWashTotem_Timer = 18000 + rand()%8000;
+            BrainWashTotem_Timer += 18000 + rand()%8000;
         }
-        else
-            BrainWashTotem_Timer -= diff;
 
-        //HealingWard_Timer
-        if (HealingWard_Timer < diff)
+
+        HealingWard_Timer -= diff;
+        if (HealingWard_Timer <= diff)
         {
             DoCast(m_creature, SPELL_POWERFULLHEALINGWARD);
-            HealingWard_Timer = 14000 + rand()%6000;
+            HealingWard_Timer += 14000 + rand()%6000;
         }
-        else
-            HealingWard_Timer -= diff;
+        
 
-        //Hex_Timer
-        if (Hex_Timer < diff)
+        Hex_Timer -= diff;
+        if (Hex_Timer <= diff)
         {
-            DoCast(m_creature->getVictim(), SPELL_HEX);
+            DoCast(m_creature->GetVictim(), SPELL_HEX);
 
-            if(DoGetThreat(m_creature->getVictim()))
-                DoModifyThreatPercent(m_creature->getVictim(),-80);
+            if(DoGetThreat(m_creature->GetVictim()))
+                DoModifyThreatPercent(m_creature->GetVictim(),-80);
 
-            Hex_Timer = 12000 + rand()%8000;
+            Hex_Timer += 12000 + rand()%8000;
         }
-        else
-            Hex_Timer -= diff;
+        
 
+        Delusions_Timer -= diff;
         //Casting the delusion curse with a shade. So shade will attack the same target with the curse.
-        if(Delusions_Timer < diff)
+        if(Delusions_Timer <= diff)
         {
             if(Unit* target = SelectUnit(SELECT_TARGET_RANDOM,0, GetSpellMaxRange(SPELL_DELUSIONSOFJINDO), true))
             {
@@ -125,19 +123,18 @@ struct boss_jindoAI : public ScriptedAI
                 if(Shade)
                     Shade->AI()->AttackStart(target);
             }
-            Delusions_Timer = 4000 + rand()%8000;
+            Delusions_Timer += 4000 + rand()%8000;
         }
-        else
-            Delusions_Timer -= diff;
-
+        
+        Teleport_Timer -= diff;
         //Teleporting a random gamer and spawning 9 skeletons that will attack this gamer
-        if(Teleport_Timer < diff)
+        if(Teleport_Timer <= diff)
         {
             if(Unit* target = SelectUnit(SELECT_TARGET_RANDOM,0, 200, true))
             {
                 DoTeleportPlayer(target, -11583.7783,-1249.4278,77.5471,4.745);
 
-                if(DoGetThreat(m_creature->getVictim()))
+                if(DoGetThreat(m_creature->GetVictim()))
                     DoModifyThreatPercent(target,-100);
 
                 Skeletons = m_creature->SummonCreature(14826, target->GetPositionX()+2, target->GetPositionY(), target->GetPositionZ(), 0, TEMPSUMMON_TIMED_DESPAWN_OUT_OF_COMBAT, 15000);
@@ -169,10 +166,9 @@ struct boss_jindoAI : public ScriptedAI
                     Skeletons->AI()->AttackStart(target);
             }
 
-            Teleport_Timer = 15000 + rand()%8000;
+            Teleport_Timer += 15000 + rand()%8000;
         }
-        else
-            Teleport_Timer -= diff;
+        
 
         DoMeleeAttackIfReady();
     }
@@ -187,7 +183,7 @@ struct mob_shade_of_jindoAI : public ScriptedAI
         pInstance = (c->GetInstanceData());
     }
 
-    uint32 ShadowShock_Timer;
+    int32 ShadowShock_Timer;
 
     ScriptedInstance *pInstance;
 
@@ -203,15 +199,16 @@ struct mob_shade_of_jindoAI : public ScriptedAI
 
     void UpdateAI (const uint32 diff)
     {
+        if (!UpdateVictim())
+            return;
 
-        //ShadowShock_Timer
-        if(ShadowShock_Timer < diff)
+        ShadowShock_Timer -= diff;
+        if(ShadowShock_Timer <= diff)
         {
-            DoCast(m_creature->getVictim(), SPELL_SHADOWSHOCK);
-            ShadowShock_Timer = 2000;
+            DoCast(m_creature->GetVictim(), SPELL_SHADOWSHOCK);
+            ShadowShock_Timer += 2000;
         }
-        else
-            ShadowShock_Timer -= diff;
+        
 
         DoMeleeAttackIfReady();
     }

@@ -1,7 +1,7 @@
 /*
  * Copyright (C) 2005-2008 MaNGOS <http://getmangos.com/>
  * Copyright (C) 2008 TrinityCore <http://www.trinitycore.org/>
- * Copyright (C) 2008-2014 Hellground <http://hellground.net/>
+ * Copyright (C) 2008-2017 Hellground <http://wow-hellground.com/>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -28,7 +28,6 @@ class BattleGround;
 #define LANG_BG_AV_S_MINE_BOSS_CLAIMS   "Snivvle is here! Snivvle claims the Coldtooth Mine!"
 
 #define BG_AV_CAPTIME                    240000  //4:00
-#define BG_AV_SNOWFALL_FIRSTCAP          300000  //5:00 but i also have seen 4:05
 
 #define BG_AV_SCORE_INITIAL_POINTS       600
 #define SEND_MSG_NEAR_LOSE               120
@@ -944,9 +943,9 @@ const float BG_AV_CreaturePos[AV_CPLACE_MAX][4] = {
     {-910.14f,-229.959f,72.9279f,0.27677f},
     {-851.563f,-88.6527f,68.5983f,3.61896f},
     //boss
-    {-848.902f,-92.931f,68.6325f,3.33350},
+    {-848.902f,-92.931f,68.6325f,3.33350f},
     //herald
-    {-48.459f,-288.802f,55.47f,1.0}
+    {-48.459f,-288.802f,55.47f,1.0f}
 
 };
 
@@ -1575,9 +1574,9 @@ class BattleGroundAV : public BattleGround
 
         uint32 m_Mine_Owner[2];
         uint32 m_Mine_PrevOwner[2]; //only for worldstates needed
-        int32 m_Mine_Timer; //ticks for both teams
-        uint32 m_Mine_Reclaim_Timer[2];
-        uint32 m_CaptainBuffTimer[2];
+        Timer m_Mine_Timer; //ticks for both teams
+        Timer m_Mine_Reclaim_Timer[2];
+        Timer m_CaptainBuffTimer[2];
         bool m_CaptainAlive[2];
 
         uint8 m_MaxLevel; //TODO remove this when battleground-getmaxlevel() returns something usefull

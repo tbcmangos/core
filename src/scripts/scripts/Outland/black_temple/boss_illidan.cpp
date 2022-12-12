@@ -1,6 +1,6 @@
 /* 
  * Copyright (C) 2006-2008 ScriptDev2 <https://scriptdev2.svn.sourceforge.net/>
- * Copyright (C) 2008-2014 Hellground <http://hellground.net/>
+ * Copyright (C) 2008-2015 Hellground <http://hellground.net/>
  * 
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -234,8 +234,8 @@ struct boss_illidan_stormrageAI : public BossAI
     uint8 m_flameCount;
     uint32 m_hoverPoint;
 
-    uint32 m_combatTimer;
-    uint32 m_enrageTimer;
+    Timer m_combatTimer;
+    Timer m_enrageTimer;
 
     bool b_maievPhase;
     bool b_maievDone;
@@ -248,8 +248,8 @@ struct boss_illidan_stormrageAI : public BossAI
         ClearCastQueue();
         summons.DespawnAll();
 
-        m_combatTimer = 1000;
-        m_enrageTimer = 25*60000 +34000; // DBM value
+        m_combatTimer.Reset(1000);
+        m_enrageTimer.Reset(25 * 60000 + 34000); // DBM value
 
         m_hoverPoint = 0;
         m_flameCount = 0;
@@ -261,8 +261,9 @@ struct boss_illidan_stormrageAI : public BossAI
 
         SetWarglaivesEquipped(false);
 
-        me->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
+        me->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_SPAWNING);
         me->SetLevitate(false);
+        me->setHover(false);
         me->HandleEmoteCommand(EMOTE_ONESHOT_LAND);
         me->SetSelection(0);
 
@@ -290,12 +291,15 @@ struct boss_illidan_stormrageAI : public BossAI
             {
                 events.ScheduleEvent(EVENT_ILLIDAN_SOFT_ENRAGE, 40000, m_phase);
                 events.ScheduleEvent(EVENT_ILLIDAN_CAGE_TRAP, urand(25000, 32000), m_phase);
+                me->SetLevitate(false);
+                me->setHover(false);
             }
             case PHASE_THREE:
             {
                 events.ScheduleEvent(EVENT_ILLIDAN_AGONIZING_FLAMES, urand(28000, 35000), m_phase);
                 events.ScheduleEvent(EVENT_ILLIDAN_CHANGE_PHASE, m_phase == PHASE_FIVE ? 60000 : urand(40000, 55000), m_phase);
-
+                me->SetLevitate(false);
+                me->setHover(false);
                 if (Creature *pMaiev = GetClosestCreatureWithEntry(me, 23197, 200.0f))
                     pMaiev->AI()->DoAction(4); // SET MELEE ATTACK TYPE
             }
@@ -306,6 +310,9 @@ struct boss_illidan_stormrageAI : public BossAI
                 events.ScheduleEvent(EVENT_ILLIDAN_DRAW_SOUL, urand(35000, 45000), m_phase);
                 events.ScheduleEvent(EVENT_ILLIDAN_PARASITIC_SHADOWFIEND, 30000, m_phase);
                 events.ScheduleEvent(EVENT_ILLIDAN_RANDOM_YELL, urand(32000, 35000), m_phase);
+                                
+                me->SetLevitate(false);
+                me->setHover(false);
 
                 SetWarglaivesEquipped(true);
 
@@ -315,7 +322,6 @@ struct boss_illidan_stormrageAI : public BossAI
                 {
                     me->SetReactState(REACT_AGGRESSIVE);
                     instance->SetData(EVENT_ILLIDANSTORMRAGE, IN_PROGRESS);
-
                     me->setActive(true);
 
                     Map::PlayerList const &plList = me->GetMap()->GetPlayers();
@@ -323,10 +329,10 @@ struct boss_illidan_stormrageAI : public BossAI
                     {
                         if (Player* pPlayer = i->getSource())
                         {
-                            if (pPlayer->isGameMaster())
+                            if (pPlayer->IsGameMaster())
                                 continue;
 
-                            if (pPlayer->isAlive() && me->IsWithinDistInMap(pPlayer, 150.0f))
+                            if (pPlayer->IsAlive() && me->IsWithinDistInMap(pPlayer, 150.0f))
                                 me->AddThreat(pPlayer, 3000.0f);
                         }
                     }
@@ -348,10 +354,12 @@ struct boss_illidan_stormrageAI : public BossAI
                 me->AttackStop();
                 me->SetReactState(REACT_PASSIVE);
 
-                me->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
+                me->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_SPAWNING);
+                me->RemoveAllAttackers();
 
                 me->HandleEmoteCommand(EMOTE_ONESHOT_LIFTOFF);
                 me->SetLevitate(true);
+                me->setHover(true);
 
                 me->GetMotionMaster()->MovePoint(0, CENTER_X +5.0f, CENTER_Y, CENTER_Z, UNIT_ACTION_CONTROLLED);
 
@@ -376,6 +384,9 @@ struct boss_illidan_stormrageAI : public BossAI
 
                 SetAutocast(SPELL_ILLIDAN_SHADOW_BLAST, 3000, false, CAST_TANK);
 
+                me->SetLevitate(false);
+                me->setHover(false); // set both to true after his casting state is fixed in demon form
+
                 events.ScheduleEvent(EVENT_ILLIDAN_TRANSFORM_NO1, 0, m_phase);
                 events.ScheduleEvent(EVENT_ILLIDAN_FLAME_BURST, 20000, m_phase);
                 events.ScheduleEvent(EVENT_ILLIDAN_SHADOW_DEMON, 30000, m_phase);
@@ -387,6 +398,8 @@ struct boss_illidan_stormrageAI : public BossAI
 
                 me->AttackStop();
                 me->SetReactState(REACT_PASSIVE);
+                me->SetLevitate(false);
+                me->setHover(false);
 
                 events.ScheduleEvent(EVENT_ILLIDAN_INPRISON_RAID, 500, m_phase);
                 events.ScheduleEvent(EVENT_ILLIDAN_SUMMON_MAIEV, 6000, m_phase);
@@ -396,9 +409,11 @@ struct boss_illidan_stormrageAI : public BossAI
             {
                 me->AttackStop();
                 me->RemoveAllAuras();
+                me->SetLevitate(false);
+                me->setHover(false);
 
                 ForceSpellCast(me, SPELL_ILLIDAN_DEATH_OUTRO, INTERRUPT_AND_CAST_INSTANTLY);
-                me->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
+                me->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_SPAWNING);
 
                 if (Creature *pMaiev = GetClosestCreatureWithEntry(me, 23197, 200.0f))
                 {
@@ -410,104 +425,6 @@ struct boss_illidan_stormrageAI : public BossAI
                 break;
             }
         }
-    }
-
-    bool PhaseOneThreeFive()
-    {
-        while (uint32 eventId = events.ExecuteEvent())
-        {
-            switch (eventId)
-            {
-                case EVENT_ILLIDAN_SUMMON_MINIONS:
-                {
-                    if (HealthBelowPct(90.0f))
-                    {
-                        DoScriptText(YELL_ILLIDAN_SUMMON_MINIONS, me);
-
-                        // Call back Akama to deal with minions
-                        if (Creature *pAkama = instance->GetCreature(instance->GetData64(DATA_AKAMA)))
-                        {
-                            pAkama->AttackStop();
-                            pAkama->DeleteThreatList();
-                            pAkama->SetReactState(REACT_PASSIVE);
-
-                            DoModifyThreatPercent(pAkama, -101);
-
-                            if (me->getThreatManager().isThreatListEmpty())
-                            {
-                                me->AI()->EnterEvadeMode();
-                                return false;
-                            }
-
-                            pAkama->AI()->DoAction(8); // EVENT_AKAMA_MINIONS_FIGHT
-                        }
-                    }
-                    else
-                        events.ScheduleEvent(EVENT_ILLIDAN_SUMMON_MINIONS, 1000, PHASE_ONE);
-
-                    break;
-                }
-                case EVENT_ILLIDAN_CHANGE_PHASE:
-                {
-                    ChangePhase(PHASE_FOUR);
-                    return false;
-                }
-                case EVENT_ILLIDAN_RANDOM_YELL:
-                {
-                    DoScriptText(RAND(YELL_ILLIDAN_TAUNT_NO1, YELL_ILLIDAN_TAUNT_NO2, YELL_ILLIDAN_TAUNT_NO3, YELL_ILLIDAN_TAUNT_NO4), me);
-                    events.ScheduleEvent(EVENT_ILLIDAN_RANDOM_YELL, urand(30000, 35000));
-                    break;
-                }
-                case EVENT_ILLIDAN_SHEAR:
-                {
-                    AddSpellToCast(me->getVictim(), SPELL_ILLIDAN_SHEAR);
-                    events.ScheduleEvent(EVENT_ILLIDAN_SHEAR, 10000, m_phase);
-                    break;
-                }
-                case EVENT_ILLIDAN_FLAME_CRASH:
-                {
-                    AddSpellToCast(me->getVictim(), SPELL_ILLIDAN_FLAME_CRASH);
-                    events.ScheduleEvent(EVENT_ILLIDAN_FLAME_CRASH, urand(25000, 30000), m_phase);
-                    break;
-                }
-                case EVENT_ILLIDAN_DRAW_SOUL:
-                {
-                    AddSpellToCast(me, SPELL_ILLIDAN_DRAW_SOUL);
-                    events.ScheduleEvent(EVENT_ILLIDAN_DRAW_SOUL, urand(35000, 45000), m_phase);
-                    break;
-                }
-                case EVENT_ILLIDAN_PARASITIC_SHADOWFIEND:
-                {
-                    if (Unit *pTarget = SelectUnit(SELECT_TARGET_RANDOM, 0, 250.0f, true, me->getVictimGUID()))
-                        AddSpellToCast(pTarget, SPELL_ILLIDAN_PARASITIC_SHADOWFIEND, false, true);
-
-                    events.ScheduleEvent(EVENT_ILLIDAN_PARASITIC_SHADOWFIEND, 30000, m_phase);
-                    break;
-                }
-                case EVENT_ILLIDAN_AGONIZING_FLAMES:
-                {
-                    if (Unit *pTarget = SelectUnit(SELECT_TARGET_RANDOM, 0 , 250.0f, true, 0, 15.0f))
-                        AddSpellToCast(pTarget, SPELL_ILLIDAN_AGONIZING_FLAMES, false, true);
-
-                    events.ScheduleEvent(EVENT_ILLIDAN_AGONIZING_FLAMES, urand(30000, 35000), m_phase);
-                    break;
-                }
-                case EVENT_ILLIDAN_SOFT_ENRAGE:
-                {
-                    ForceSpellCast(me, SPELL_ILLIDAN_ENRAGE);
-                    break;
-                }
-                case EVENT_ILLIDAN_CAGE_TRAP:
-                {
-                    if (Creature *pMaiev = GetClosestCreatureWithEntry(me, 23197, 200.0f))
-                        pMaiev->AI()->DoAction(5); // Force to place trap
-
-                    events.ScheduleEvent(EVENT_ILLIDAN_CAGE_TRAP, urand(20000,30000), m_phase);
-                    break;
-                }
-            }
-        }
-        return true;
     }
 
     void RespawnGlaiveTargets()
@@ -542,6 +459,99 @@ struct boss_illidan_stormrageAI : public BossAI
         }
     }
 
+    bool PhaseOneThreeFive()
+    {
+        while (uint32 eventId = events.ExecuteEvent())
+        {
+            switch (eventId)
+            {
+                case EVENT_ILLIDAN_SUMMON_MINIONS:
+                {
+                    if (HealthBelowPct(90.0f))
+                    {
+                        DoScriptText(YELL_ILLIDAN_SUMMON_MINIONS, me);
+
+                        // Call back Akama to deal with minions
+                        if (Creature *pAkama = instance->GetCreature(instance->GetData64(DATA_AKAMA)))
+                        {
+                            pAkama->AttackStop();
+                            pAkama->DeleteThreatList();
+                            pAkama->SetReactState(REACT_PASSIVE);
+
+                            DoModifyThreatPercent(pAkama, -101);
+
+                            pAkama->GetMotionMaster()->MoveIdle();
+                            pAkama->AI()->DoAction(8); // EVENT_AKAMA_MINIONS_FIGHT
+                        }
+                    }
+                    else
+                        events.ScheduleEvent(EVENT_ILLIDAN_SUMMON_MINIONS, 1000, PHASE_ONE);
+
+                    break;
+                }
+                case EVENT_ILLIDAN_CHANGE_PHASE:
+                {
+                    ChangePhase(PHASE_FOUR);
+                    return false;
+                }
+                case EVENT_ILLIDAN_RANDOM_YELL:
+                {
+                    DoScriptText(RAND(YELL_ILLIDAN_TAUNT_NO1, YELL_ILLIDAN_TAUNT_NO2, YELL_ILLIDAN_TAUNT_NO3, YELL_ILLIDAN_TAUNT_NO4), me);
+                    events.ScheduleEvent(EVENT_ILLIDAN_RANDOM_YELL, urand(30000, 35000));
+                    break;
+                }
+                case EVENT_ILLIDAN_SHEAR:
+                {
+                    AddSpellToCast(me->GetVictim(), SPELL_ILLIDAN_SHEAR);
+                    events.ScheduleEvent(EVENT_ILLIDAN_SHEAR, 10000, m_phase);
+                    break;
+                }
+                case EVENT_ILLIDAN_FLAME_CRASH:
+                {
+                    AddSpellToCast(me->GetVictim(), SPELL_ILLIDAN_FLAME_CRASH);
+                    events.ScheduleEvent(EVENT_ILLIDAN_FLAME_CRASH, urand(25000, 30000), m_phase);
+                    break;
+                }
+                case EVENT_ILLIDAN_DRAW_SOUL:
+                {
+                    AddSpellToCast(me, SPELL_ILLIDAN_DRAW_SOUL);
+                    events.ScheduleEvent(EVENT_ILLIDAN_DRAW_SOUL, urand(35000, 45000), m_phase);
+                    break;
+                }
+                case EVENT_ILLIDAN_PARASITIC_SHADOWFIEND:
+                {
+                    if (Unit *pTarget = SelectUnit(SELECT_TARGET_RANDOM, 0, 250.0f, true, me->getVictimGUID()))
+                        AddSpellToCast(pTarget, SPELL_ILLIDAN_PARASITIC_SHADOWFIEND, false, true);
+
+                    events.ScheduleEvent(EVENT_ILLIDAN_PARASITIC_SHADOWFIEND, 30000, m_phase);
+                    break;
+                }
+                case EVENT_ILLIDAN_AGONIZING_FLAMES:
+                {
+                    if (Unit *pTarget = SelectUnit(SELECT_TARGET_RANDOM, 0, 250.0f, true, 0, 15.0f))
+                        AddSpellToCast(pTarget, SPELL_ILLIDAN_AGONIZING_FLAMES, false, true);
+
+                    events.ScheduleEvent(EVENT_ILLIDAN_AGONIZING_FLAMES, urand(30000, 35000), m_phase);
+                    break;
+                }
+                case EVENT_ILLIDAN_SOFT_ENRAGE:
+                {
+                    ForceSpellCast(me, SPELL_ILLIDAN_ENRAGE);
+                    break;
+                }
+                case EVENT_ILLIDAN_CAGE_TRAP:
+                {
+                    if (Creature *pMaiev = GetClosestCreatureWithEntry(me, 23197, 200.0f))
+                        pMaiev->AI()->DoAction(5); // Force to place trap
+
+                    events.ScheduleEvent(EVENT_ILLIDAN_CAGE_TRAP, urand(20000, 30000), m_phase);
+                    break;
+                }
+            }
+        }
+        return true;
+    }
+
     bool PhaseTwo()
     {
         while (uint32 eventId = events.ExecuteEvent())
@@ -552,6 +562,7 @@ struct boss_illidan_stormrageAI : public BossAI
                 {
                     if (m_flameCount >= 2)
                     {
+                        ClearCastQueue();
                         StopAutocast();
                         me->GetMotionMaster()->MovePoint(0, CENTER_X, CENTER_Y, CENTER_Z);
                         events.ScheduleEvent(EVENT_ILLIDAN_RETURN_GLAIVE, 3000, m_phase);
@@ -564,6 +575,7 @@ struct boss_illidan_stormrageAI : public BossAI
                 case EVENT_ILLIDAN_LAND:
                 {
                     me->SetLevitate(false);
+                    me->setHover(false);
                     me->HandleEmoteCommand(EMOTE_ONESHOT_LAND);
                     me->SetReactState(REACT_AGGRESSIVE);
                     ChangePhase(PHASE_THREE);
@@ -571,7 +583,7 @@ struct boss_illidan_stormrageAI : public BossAI
                 }
                 case EVENT_ILLIDAN_RETURN_GLAIVE:
                 {
-                    me->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
+                    me->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_SPAWNING);
                     summons.Cast(BLADE_OF_AZZINOTH, SPELL_ILLIDAN_GLAIVE_RETURN, me);
                     summons.DespawnEntry(BLADE_OF_AZZINOTH);
                     events.ScheduleEvent(EVENT_ILLIDAN_LAND, 1000, m_phase);
@@ -621,14 +633,14 @@ struct boss_illidan_stormrageAI : public BossAI
                     DoScriptText(YELL_ILLIDAN_DEMON_FORM, me);
 
                     ForceSpellCast(me, SPELL_ILLIDAN_DEMON_TRANSFORM_1, INTERRUPT_AND_CAST_INSTANTLY);
-                    events.ScheduleEvent(EVENT_ILLIDAN_TRANSFORM_NO2, 1300, m_phase);
+                    events.ScheduleEvent(EVENT_ILLIDAN_TRANSFORM_NO2, 1200, m_phase);
                     break;
                 }
                 case EVENT_ILLIDAN_TRANSFORM_NO2:
                 {
                     me->RemoveAurasDueToSpell(SPELL_ILLIDAN_DEMON_TRANSFORM_1);
                     ForceSpellCast(me, SPELL_ILLIDAN_DEMON_TRANSFORM_2, INTERRUPT_AND_CAST_INSTANTLY);
-                    events.ScheduleEvent(EVENT_ILLIDAN_TRANSFORM_NO3, 4000, m_phase);
+                    events.ScheduleEvent(EVENT_ILLIDAN_TRANSFORM_NO3, 3900, m_phase);
                     break;
                 }
                 case EVENT_ILLIDAN_TRANSFORM_NO3:
@@ -639,7 +651,7 @@ struct boss_illidan_stormrageAI : public BossAI
                     me->RemoveAurasDueToSpell(SPELL_ILLIDAN_DEMON_TRANSFORM_2);
                     ForceSpellCast(me, SPELL_ILLIDAN_DEMON_FORM, INTERRUPT_AND_CAST_INSTANTLY, true);
                     ForceSpellCast(me, SPELL_ILLIDAN_DEMON_TRANSFORM_2, INTERRUPT_AND_CAST_INSTANTLY);
-                    events.ScheduleEvent(EVENT_ILLIDAN_TRANSFORM_NO4, 3000, m_phase);
+                    events.ScheduleEvent(EVENT_ILLIDAN_TRANSFORM_NO4, 2900, m_phase);
                     break;
                 }
                 case EVENT_ILLIDAN_TRANSFORM_NO4:
@@ -648,7 +660,7 @@ struct boss_illidan_stormrageAI : public BossAI
 
                     me->RemoveAurasDueToSpell(SPELL_ILLIDAN_DEMON_TRANSFORM_2);
                     ForceSpellCast(me, SPELL_ILLIDAN_DEMON_TRANSFORM_3, INTERRUPT_AND_CAST_INSTANTLY);
-                    events.ScheduleEvent(EVENT_ILLIDAN_TRANSFORM_NO5, 3500, m_phase);
+                    events.ScheduleEvent(EVENT_ILLIDAN_TRANSFORM_NO5, 3400, m_phase);
                     break;
                 }
                 case EVENT_ILLIDAN_TRANSFORM_NO5:
@@ -667,11 +679,11 @@ struct boss_illidan_stormrageAI : public BossAI
                 {
                     ForceSpellCast(me, SPELL_ILLIDAN_SHADOW_DEMON_CAST, INTERRUPT_AND_CAST_INSTANTLY);
 
+                    float px, py, pz;
                     for (uint8 i = 0; i < 4; i++)
                     {
-                        // Yes we can have multiple demons assigned to one person, Tank shouldn't be excluded from search :]
-                        if (Unit *pTarget = SelectUnit(SELECT_TARGET_RANDOM, 0, 150.0f, true))
-                            pTarget->CastSpell(me, SPELL_ILLIDAN_SHADOW_DEMON, true);
+                        m_creature->GetNearPoint(px, py, pz, 10.0f);
+                        m_creature->CastSpell(px, py, pz, SPELL_ILLIDAN_SHADOW_DEMON, true);
                     }
                     break;
                 }
@@ -718,7 +730,7 @@ struct boss_illidan_stormrageAI : public BossAI
                     else
                         ChangePhase(PHASE_THREE);
 
-                    me->GetMotionMaster()->MoveChase(me->getVictim());
+                    me->GetMotionMaster()->MoveChase(me->GetVictim());
                     break;
                 }
             }
@@ -838,27 +850,26 @@ struct boss_illidan_stormrageAI : public BossAI
 
     void MovementInform(uint32 MovementType, uint32 uiData)
     {
-        if (MovementType == POINT_MOTION_TYPE)
-            me->setHover(true);
     }
 
     void EnterEvadeMode()
     {
         me->setActive(false);
-
+        me->SetLevitate(false);
+        me->setHover(false);
         summons.DespawnAll();
         events.Reset();
 
         me->SetReactState(REACT_PASSIVE);
-        me->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
+        me->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_SPAWNING);
         instance->SetData(EVENT_ILLIDANSTORMRAGE, NOT_STARTED);
 
         if (Creature *pAkama = instance->GetCreature(instance->GetData64(DATA_AKAMA)))
         {
             pAkama->AI()->EnterEvadeMode();
-            pAkama->GetMotionMaster()->Clear(false); // need reset waypoint movegen, to test
+            pAkama->GetMotionMaster()->Clear(false, true); // need reset waypoint movegen, to test
             pAkama->AI()->Reset();
-            pAkama->GetMotionMaster()->MoveTargetedHome();
+            pAkama->GetMotionMaster()->MovePath(2109, false); // PATH_AKAMA_DOOR_EVERNT_AFTER
         }
 
         BossAI::EnterEvadeMode();
@@ -890,7 +901,7 @@ struct boss_illidan_stormrageAI : public BossAI
                 me->SetReactState(REACT_AGGRESSIVE);
 
                 me->RemoveAurasDueToSpell(SPELL_ILLIDAN_KNEEL_INTRO);
-                me->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
+                me->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_SPAWNING);
 
                 ChangePhase(PHASE_ONE);
                 break;
@@ -930,31 +941,35 @@ struct boss_illidan_stormrageAI : public BossAI
    
     void UpdateAI(const uint32 diff)
     {
+        events.Update(diff);
+        if (me->IsInCombat())
+        {
+            if (HandlePhase(m_phase))
+                DoMeleeAttackIfReady();
+
+            CastNextSpellIfAnyAndReady(diff);
+        }
+
         if (!UpdateVictim())
             return;
 
         DoSpecialThings(diff, DO_EVERYTHING, 200.0f, 2.5f);
 
-        if (m_combatTimer < diff)
+        if (m_combatTimer.Expired(diff)) // zero aggro every second
         {
             if (Creature *pAkama = instance->GetCreature(instance->GetData64(DATA_AKAMA)))
                 DoModifyThreatPercent(pAkama, -101);
-
             if (Creature *pMaiev = GetClosestCreatureWithEntry(me, 23197, 200.0f))
                 DoModifyThreatPercent(pMaiev, -101);
-
-            m_combatTimer = 2000;
+            m_combatTimer = 1000;
         }
-        else
-            m_combatTimer -= diff;
 
-        if (m_enrageTimer < diff)
+        if (m_enrageTimer.Expired(diff))
         {
             ForceSpellCastWithScriptText(me, SPELL_ILLIDAN_HARD_ENRAGE, YELL_ILLIDAN_HARD_ENRAGE, INTERRUPT_AND_CAST_INSTANTLY);
             m_enrageTimer = 25000;
         }
-        else
-            m_enrageTimer -= diff;
+        
 
         if (m_phase == PHASE_ONE && HealthBelowPct(65.0f))
         {
@@ -977,19 +992,13 @@ struct boss_illidan_stormrageAI : public BossAI
 
             b_maievDone = true;
         }
-
-        events.Update(diff);
-        if (HandlePhase(m_phase))
-            DoMeleeAttackIfReady();
-
-        CastNextSpellIfAnyAndReady(diff);
     }
 };
 
 static float SpiritSpawns[][4] =
 {
-    {23411, 755.5426, 309.9156, 312.2129},
-    {23410, 755.5426, 298.7923, 312.0834}
+    {23411, 755.5426f, 309.9156f, 312.2129f},
+    {23410, 755.5426f, 298.7923f, 312.0834f}
 };
 
 //Akama spells
@@ -1071,24 +1080,30 @@ struct boss_illidan_akamaAI : public BossAI
 
         m_pathId = 0;
 
+        me->SetByteValue(UNIT_FIELD_BYTES_2, 0, SHEATH_STATE_UNARMED);
+
         SetAutocast(SPELL_AKAMA_CHAIN_LIGHTNING, 10000, false, CAST_TANK);
 
         me->SetUInt32Value(UNIT_NPC_FLAGS, 0);
         me->SetFlag(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_GOSSIP);
 
         if (instance->GetData(EVENT_ILLIDARIDOOR) == DONE)
+        {
             me->SetVisibility(VISIBILITY_ON);
+            me->SetHomePosition(746.506f, 232.543f, 352.996f, 1.85f); //normal pos before illidan fight
+        }
         else
         {
             me->SetVisibility(VISIBILITY_OFF);
             me->DestroyForNearbyPlayers();
+            float x, y, z;
+            me->GetRespawnCoord(x, y, z);
+            me->SetHomePosition(x, y, z, 2.53f);
         }
 
         me->SetReactState(REACT_PASSIVE);
 
-        float x,y,z;
-        me->GetRespawnCoord(x,y,z);
-        me->SetHomePosition(x,y,z, 2.53f);
+
     }
 
     void MoveInLineOfSight(Unit *pWho)
@@ -1124,15 +1139,18 @@ struct boss_illidan_akamaAI : public BossAI
             {
                 if (m_pathId == PATH_AKAMA_MINION_EVENT)
                 {
-                   if (data == 0)
-                       DoScriptText(YELL_AKAMA_FIGHT_MINIONS, me);
+                    if (data == 0)
+                        DoScriptText(YELL_AKAMA_FIGHT_MINIONS, me);
 
-                   if (data == 9)
-                   {
-                       m_pathId = 0;
-                       events.ScheduleEvent(EVENT_AKAMA_SUMMON_ELITE, 1000);
-                   }
+                    if (data == 9)
+                    {
+                        m_pathId = 0;
+                        events.ScheduleEvent(EVENT_AKAMA_SUMMON_ELITE, 1000);
+                    }
                 }
+                else
+                    if (data == 17)
+                        me->Respawn();
             }
         }
 
@@ -1241,7 +1259,7 @@ struct boss_illidan_akamaAI : public BossAI
 
     void KilledUnit(Unit *pWho)
     {
-        if (summons.isEmpty())
+        if (summons.empty())
             return;
 
         if (Unit *pUnit = GetClosestCreatureWithEntry(me, 23226, 40.0f))
@@ -1279,7 +1297,7 @@ struct boss_illidan_akamaAI : public BossAI
             case EVENT_AKAMA_START:
             {
                 Creature *pIllidan = instance->GetCreature(instance->GetData64(DATA_ILLIDANSTORMRAGE));
-                if (!pIllidan || !pIllidan->isAlive())
+                if (!pIllidan || !pIllidan->IsAlive())
                     return;
 
                 allowUpdate = true;
@@ -1294,7 +1312,7 @@ struct boss_illidan_akamaAI : public BossAI
                 else
                 {
                     me->SetWalk(false);
-                    me->GetMotionMaster()->MovePoint(0, 728.379f, 314.462f, 352.996f);
+                    me->GetMotionMaster()->MovePoint(0, 744.116f, 304.922f, 352.996f);
                 }
                 break;
             }
@@ -1302,10 +1320,10 @@ struct boss_illidan_akamaAI : public BossAI
             {
                 StopAutocast();
                 me->InterruptNonMeleeSpells(true);
+                me->ClearInCombat();
 
                 m_pathId = PATH_AKAMA_MINION_EVENT;
 
-                me->GetMotionMaster()->Clear(false);
                 me->GetMotionMaster()->MovePath(PATH_AKAMA_MINION_EVENT, false);
                 break;
             }
@@ -1314,8 +1332,9 @@ struct boss_illidan_akamaAI : public BossAI
 
     void UpdateAI(const uint32 diff)
     {
-        if (!allowUpdate && !UpdateVictim())
-            return;
+        if (me->GetMotionMaster()->GetCurrentMovementGeneratorType() != WAYPOINT_MOTION_TYPE)
+            if (!allowUpdate && !UpdateVictim())
+                return;
 
         events.Update(diff);
 
@@ -1340,7 +1359,7 @@ struct boss_illidan_akamaAI : public BossAI
                         DoScriptText(SAY_ILLIDAN_NO1, pIllidan);
                     }
 
-                    events.ScheduleEvent(EVENT_AKAMA_TALK_SEQUENCE_NO2, 11000);
+                    events.ScheduleEvent(EVENT_AKAMA_TALK_SEQUENCE_NO2, 12000);
                     return;
                 }
                 case EVENT_AKAMA_TALK_SEQUENCE_NO2:
@@ -1360,7 +1379,9 @@ struct boss_illidan_akamaAI : public BossAI
                 case EVENT_AKAMA_TALK_SEQUENCE_NO4:
                 {
                     DoScriptText(SAY_AKAMA_NO2, me);
-                    events.ScheduleEvent(EVENT_AKAMA_ILLIDAN_FIGHT, 5000);
+                    events.ScheduleEvent(EVENT_AKAMA_ILLIDAN_FIGHT, 4500);
+                    me->SetByteValue(UNIT_FIELD_BYTES_2, 0, SHEATH_STATE_MELEE);
+                    me->HandleEmoteCommand(EMOTE_ONESHOT_ROAR);
                     return;
                 }
                 case EVENT_AKAMA_ILLIDAN_FIGHT:
@@ -1381,7 +1402,7 @@ struct boss_illidan_akamaAI : public BossAI
                         pElite->AddThreat(me, 10000.0f);
                         pElite->AI()->AttackStart(me);
 
-                        if (!me->getVictim())
+                        if (!me->GetVictim())
                             AttackStartNoMove(pElite);
 
                         StartAutocast();
@@ -1505,8 +1526,8 @@ struct boss_illidan_maievAI : public BossAI
                     m_canMelee = true;
                     StopAutocast();
 
-                    if (me->getVictim())
-                        DoStartMovement(me->getVictim());
+                    if (me->GetVictim())
+                        DoStartMovement(me->GetVictim());
                 }
                 break;
             }
@@ -1524,8 +1545,8 @@ struct boss_illidan_maievAI : public BossAI
                 ForceSpellCast(me, SPELL_MAIEV_TELEPORT_VISUAL, INTERRUPT_AND_CAST_INSTANTLY);
                 ForceSpellCast(me, SPELL_MAIEV_SUMMON_CAGE_TRAP, INTERRUPT_AND_CAST_INSTANTLY, true);
 
-                if (me->getVictim())
-                    DoStartMovement(me->getVictim());
+                if (me->GetVictim())
+                    DoStartMovement(me->GetVictim());
 
                 break;
             }
@@ -1628,7 +1649,7 @@ struct boss_illidan_glaiveAI : public Scripted_NoMovementAI
 
     ScriptedInstance *pInstance;
 
-    uint32 m_summonTimer;
+    Timer m_summonTimer;
 
     uint64 m_tearGUID;
 
@@ -1640,7 +1661,7 @@ struct boss_illidan_glaiveAI : public Scripted_NoMovementAI
 
         m_summonTimer = 2000;
 
-        me->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
+        me->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_SPAWNING);
         me->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
 
         if (!pInstance)
@@ -1661,16 +1682,13 @@ struct boss_illidan_glaiveAI : public Scripted_NoMovementAI
 
     void UpdateAI(const uint32 diff)
     {
-        if (m_summonTimer)
+
+        if (m_summonTimer.Expired(diff))
         {
-            if (m_summonTimer <= diff)
-            {
-                AddSpellToCast(me, SPELL_GLAIVE_SUMMON_TEAR);
-                m_summonTimer = 0;
-            }
-            else
-                m_summonTimer -= diff;
+            AddSpellToCast(me, SPELL_GLAIVE_SUMMON_TEAR);
+            m_summonTimer = 0;
         }
+
 
         CastNextSpellIfAnyAndReady();
     }
@@ -1696,8 +1714,6 @@ struct boss_illidan_flameofazzinothAI : public ScriptedAI
     {
         pInstance = c->GetInstanceData();
 
-        me->SetFloatValue(UNIT_FIELD_BOUNDINGRADIUS, 8.0f);
-        me->SetFloatValue(UNIT_FIELD_COMBATREACH, 8.0f);
         me->SetReactState(REACT_PASSIVE);
     }
 
@@ -1705,7 +1721,7 @@ struct boss_illidan_flameofazzinothAI : public ScriptedAI
 
     EventMap events;
     SummonList summons;
-    uint32 check_timer;
+    Timer check_timer;
 
     uint64 m_owner;
 
@@ -1716,7 +1732,7 @@ struct boss_illidan_flameofazzinothAI : public ScriptedAI
         ClearCastQueue();
 
         m_owner = 0;
-        check_timer = 2000;
+        check_timer.Reset(2000);
 
         m_creature->SetMeleeDamageSchool(SPELL_SCHOOL_FIRE);
         m_creature->ApplySpellImmune(0, IMMUNITY_SCHOOL, SPELL_SCHOOL_MASK_FIRE, true);
@@ -1752,14 +1768,13 @@ struct boss_illidan_flameofazzinothAI : public ScriptedAI
         if (!UpdateVictim())
             return;
 
-        if(check_timer < diff)
+        if (check_timer.Expired(diff))
         {
             me->SetWalk(false);
             me->SetSpeed(MOVE_RUN, 2.5f);
             check_timer = 2000;
         }
-        else
-            check_timer -= diff;
+        
 
         events.Update(diff);
         while(uint32 eventId = events.ExecuteEvent())
@@ -1783,7 +1798,7 @@ struct boss_illidan_flameofazzinothAI : public ScriptedAI
                     if (Creature *pOwner = me->GetMap()->GetCreature(m_owner))
                     {
                         if (!me->IsWithinDistInMap(pOwner, 30.0f) && !me->HasAura(SPELL_FLAME_ENRAGE, 0))
-                            ForceSpellCast(me, SPELL_FLAME_ENRAGE);
+                            me->CastSpell(me, SPELL_FLAME_ENRAGE, true);
                     }
 
                     events.ScheduleEvent(EVENT_FLAME_RANGE_CHECK, 2000);
@@ -1791,8 +1806,8 @@ struct boss_illidan_flameofazzinothAI : public ScriptedAI
                 }
                 case EVENT_FLAME_FLAME_BLAST:
                 {
-                    AddSpellToCast(me->getVictim(), SPELL_FLAME_FLAME_BLAST);
-                    AddSpellToCast(me->getVictim(), SPELL_FLAME_BLAZE);
+                    AddSpellToCast(me->GetVictim(), SPELL_FLAME_FLAME_BLAST);
+                    AddSpellToCast(me->GetVictim(), SPELL_FLAME_BLAZE);
                     events.ScheduleEvent(EVENT_FLAME_FLAME_BLAST, urand(16000, 25000));
                     break;
                 }
@@ -1823,13 +1838,13 @@ struct boss_illidan_shadowdemonAI : public ScriptedAI
     ScriptedInstance *pInstance;
 
     uint64 m_targetGUID;
-    uint32 m_checkTimer;
+    Timer m_checkTimer;
 
     void Reset()
     {
         me->SetReactState(REACT_PASSIVE);
 
-        m_checkTimer = 2000;
+        m_checkTimer.Reset(2000);
         m_targetGUID = 0;
     }
 
@@ -1846,16 +1861,13 @@ struct boss_illidan_shadowdemonAI : public ScriptedAI
     {
         DoZoneInCombat();
 
-        m_targetGUID = pSummoner->GetGUID();
-
-        ForceSpellCast(pSummoner, SPELL_SHADOW_DEMON_FOUND_TARGET);
-        ForceSpellCast(me, SPELL_SHADOW_DEMON_PASSIVE);
-
-        if (!pInstance)
+        Unit* target = SelectUnit(SELECT_TARGET_RANDOM, 0, 150.0f, true);
+        if (!target)
             return;
+        m_targetGUID = target->GetGUID();
 
-        if (Creature *pIllidan = pInstance->GetCreature(pInstance->GetData64(DATA_ILLIDANSTORMRAGE)))
-            pIllidan->AI()->JustSummoned(me);
+        ForceSpellCast(target, SPELL_SHADOW_DEMON_FOUND_TARGET);
+        ForceSpellCast(me, SPELL_SHADOW_DEMON_PASSIVE);
     }
 
     void JustDied(Unit *pKiller)
@@ -1871,10 +1883,10 @@ struct boss_illidan_shadowdemonAI : public ScriptedAI
     {
         if (m_targetGUID)
         {
-            if (m_checkTimer < diff)
+            if (m_checkTimer.Expired(diff))
             {
                 Unit *pUnit = me->GetUnit(m_targetGUID);
-                if (!pUnit || pUnit->isDead() || pUnit->HasAuraType(SPELL_AURA_SPIRIT_OF_REDEMPTION))
+                if (!pUnit || pUnit->IsDead() || pUnit->HasAuraType(SPELL_AURA_SPIRIT_OF_REDEMPTION))
                 {
                     DoZoneInCombat();
 
@@ -1887,8 +1899,7 @@ struct boss_illidan_shadowdemonAI : public ScriptedAI
 
                 m_checkTimer = 2000;
             }
-            else
-                m_checkTimer -= diff;
+           
         }
 
         CastNextSpellIfAnyAndReady();
@@ -1917,13 +1928,13 @@ struct boss_illidan_parasite_shadowfiendAI : public ScriptedAI
 
     void UpdateAI(const uint32 diff)
     {
-        if (!me->getVictim() || me->getVictim()->GetTypeId() == TYPEID_UNIT)
+        if (!me->GetVictim() || me->GetVictim()->GetTypeId() == TYPEID_UNIT)
         {
             DoZoneInCombat();
             if (Unit *pTemp = SelectUnit(SELECT_TARGET_RANDOM, 0, 200.0f, true, 0, 5.0f))
             {
-                if (me->getVictim())
-                    DoModifyThreatPercent(me->getVictim(), -101);
+                if (me->GetVictim())
+                    DoModifyThreatPercent(me->GetVictim(), -101);
 
                 me->AddThreat(pTemp, 10000.0f);
                 ScriptedAI::AttackStart(pTemp);

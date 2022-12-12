@@ -1,6 +1,6 @@
 /*
  * Copyright (C) 2005-2011 MaNGOS <http://getmangos.com/>
- * Copyright (C) 2008-2014 Hellground <http://hellground.net/>
+ * Copyright (C) 2008-2015 Hellground <http://hellground.net/>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -72,6 +72,12 @@ MySQLConnection::~MySQLConnection()
     FreePreparedStatements();
     mysql_close(mMysql);
 }
+
+bool MySQLConnection::Ping()
+{
+    return mysql_ping(mMysql);
+}
+
 
 bool MySQLConnection::Initialize(const char *infoString)
 {

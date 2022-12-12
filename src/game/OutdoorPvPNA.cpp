@@ -1,6 +1,6 @@
 /*
  * Copyright (C) 2008 TrinityCore <http://www.trinitycore.org/>
- * Copyright (C) 2008-2014 Hellground <http://hellground.net/>
+ * Copyright (C) 2008-2017 Hellground <http://wow-hellground.com/>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -46,66 +46,32 @@ void OutdoorPvPNA::HandleKillImpl(Player *plr, Unit * killed)
 
 uint32 OPvPCapturePointNA::GetAliveGuardsCount()
 {
+    
     uint32 cnt = 0;
-    for (std::map<uint32, uint64>::iterator itr = m_Creatures.begin(); itr != m_Creatures.end(); ++itr)
-    {
-        switch (itr->first)
-        {
-        case NA_NPC_GUARD_01:
-        case NA_NPC_GUARD_02:
-        case NA_NPC_GUARD_03:
-        case NA_NPC_GUARD_04:
-        case NA_NPC_GUARD_05:
-        case NA_NPC_GUARD_06:
-        case NA_NPC_GUARD_07:
-        case NA_NPC_GUARD_08:
-        case NA_NPC_GUARD_09:
-        case NA_NPC_GUARD_10:
-        case NA_NPC_GUARD_11:
-        case NA_NPC_GUARD_12:
-        case NA_NPC_GUARD_13:
-        case NA_NPC_GUARD_14:
-        case NA_NPC_GUARD_15:
-            {
-                if (!m_PvP->GetMap())
-                    return false;
+   
+    if (!m_PvP->GetMap())
+        return 0;
                 
-                if (Creature * cr = m_PvP->GetMap()->GetCreature(itr->second))
-                {
-                    if (cr->isAlive())
-                        ++cnt;
-                }
-                else if (CreatureData const * cd = sObjectMgr.GetCreatureData(GUID_LOPART(itr->second)))
-                {
-                    if (!cd->is_dead)
-                        ++cnt;
-                }
-            }
-            break;
-        default:
-            break;
+    std::list<uint64> tmpList = m_PvP->GetMap()->GetCreaturesGUIDList(m_ControllingFaction == HORDE ? HordeCreatureEntries[5] : AllyCreatureEntries[5]);
+    for (std::list<uint64>::iterator itr = tmpList.begin(); itr != tmpList.end(); itr++)
+    {
+        if (Creature * cr = m_PvP->GetMap()->GetCreature(*itr))
+        {
+            if (cr->IsAlive())
+                ++cnt;
         }
     }
+    
     return cnt;
 }
 
 void OPvPCapturePointNA::SpawnNPCsForTeam(uint32 team)
 {
-    const creature_type * creatures = NULL;
-    if (team == ALLIANCE)
-        creatures=AllianceControlNPCs;
-    else if (team == HORDE)
-        creatures=HordeControlNPCs;
-    else
-        return;
-    for (int i = 0; i < NA_CONTROL_NPC_NUM; ++i)
-        AddCreature(i,creatures[i].entry,creatures[i].teamval,creatures[i].map,creatures[i].x,creatures[i].y,creatures[i].z,creatures[i].o,1000000);
-}
-
-void OPvPCapturePointNA::DeSpawnNPCs()
-{
-    for (int i = 0; i < NA_CONTROL_NPC_NUM; ++i)
-        DelCreature(i);
+    for (uint8 i = 0; i < 6; i++)
+    {
+        m_PvP->GetMap()->VisibilityOfCreatureEntry(team == HORDE ? AllyCreatureEntries[i] : HordeCreatureEntries[i], true);
+        m_PvP->GetMap()->VisibilityOfCreatureEntry(team == HORDE ? HordeCreatureEntries[i] : AllyCreatureEntries[i], false);
+    }
 }
 
 void OPvPCapturePointNA::SpawnGOsForTeam(uint32 team)
@@ -153,7 +119,6 @@ void OPvPCapturePointNA::FactionTakeOver(uint32 team)
     if (m_ControllingFaction)
         sObjectMgr.AddGraveYardLink(NA_HALAA_GRAVEYARD,NA_HALAA_GRAVEYARD_ZONE,m_ControllingFaction,false);
     DeSpawnGOs();
-    DeSpawnNPCs();
     SpawnGOsForTeam(team);
     SpawnNPCsForTeam(team);
     m_GuardsAlive = NA_GUARDS_MAX;
@@ -546,7 +511,8 @@ bool OPvPCapturePointNA::Update(uint32 diff)
     else if (m_ControllingFaction == HORDE && m_activePlayers[0].size() < m_activePlayers[1].size())
         capturable = true;
 
-    if (m_GuardCheckTimer < diff)
+    
+    if (m_GuardCheckTimer.Expired(diff))
     {
         m_GuardCheckTimer = NA_GUARD_CHECK_TIME;
         uint32 cnt = GetAliveGuardsCount();
@@ -558,18 +524,18 @@ bool OPvPCapturePointNA::Update(uint32 diff)
             // update the guard count for the players in zone
             m_PvP->SendUpdateWorldState(NA_UI_GUARDS_LEFT,m_GuardsAlive);
         }
-    } else m_GuardCheckTimer -= diff;
+    }
 
     if (m_capturable || capturable)
     {
-        if (m_RespawnTimer < diff)
+        if (m_RespawnTimer.Expired(diff))
         {
             // if the guards have been killed, then the challenger has one hour to take over halaa.
             // in case they fail to do it, the guards are respawned, and they have to start again.
             if (m_ControllingFaction)
                 FactionTakeOver(m_ControllingFaction);
             m_RespawnTimer = NA_RESPAWN_TIME;
-        } else m_RespawnTimer -= diff;
+        } 
 
         return OPvPCapturePoint::Update(diff);
     }

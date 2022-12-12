@@ -1,7 +1,7 @@
 /*
  * Copyright (C) 2005-2008 MaNGOS <http://getmangos.com/>
  * Copyright (C) 2008 TrinityCore <http://www.trinitycore.org/>
- * Copyright (C) 2008-2014 Hellground <http://hellground.net/>
+ * Copyright (C) 2008-2017 Hellground <http://wow-hellground.com/>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -54,7 +54,7 @@ void BattleGroundAV::HandleKillPlayer(Player *player, Player *killer)
         return;
 
     BattleGround::HandleKillPlayer(player, killer);
-    UpdateScore(player->GetTeam(),-1);
+    UpdateScore(player->GetBGTeam(),-1);
 }
 
 void BattleGroundAV::HandleKillUnit(Creature *unit, Player *killer)
@@ -116,13 +116,13 @@ void BattleGroundAV::HandleKillUnit(Creature *unit, Player *killer)
     }
     else if (entry == BG_AV_CreatureInfo[AV_NPC_N_MINE_N_4][0] || entry == BG_AV_CreatureInfo[AV_NPC_N_MINE_A_4][0] || entry == BG_AV_CreatureInfo[AV_NPC_N_MINE_H_4][0])
     {
-        ChangeMineOwner(AV_NORTH_MINE,killer->GetTeam());
-        SendObjectiveComplete(BG_AV_MINE_CREDITMARKER, killer->GetTeam(),BG_AV_CreaturePos[AV_CPLACE_MINE_N_3][1],BG_AV_ObjectPos[AV_CPLACE_MINE_N_3][2]);
+        ChangeMineOwner(AV_NORTH_MINE,killer->GetBGTeam());
+        SendObjectiveComplete(BG_AV_MINE_CREDITMARKER, killer->GetBGTeam(),BG_AV_CreaturePos[AV_CPLACE_MINE_N_3][1],BG_AV_ObjectPos[AV_CPLACE_MINE_N_3][2]);
     }
     else if (entry == BG_AV_CreatureInfo[AV_NPC_S_MINE_N_4][0] || entry == BG_AV_CreatureInfo[AV_NPC_S_MINE_A_4][0] || entry == BG_AV_CreatureInfo[AV_NPC_S_MINE_H_4][0])
     {
-        ChangeMineOwner(AV_SOUTH_MINE,killer->GetTeam());
-        SendObjectiveComplete(BG_AV_MINE_CREDITMARKER, killer->GetTeam(),BG_AV_CreaturePos[AV_CPLACE_MINE_S_3][1],BG_AV_ObjectPos[AV_CPLACE_MINE_S_3][2]);
+        ChangeMineOwner(AV_SOUTH_MINE,killer->GetBGTeam());
+        SendObjectiveComplete(BG_AV_MINE_CREDITMARKER, killer->GetBGTeam(),BG_AV_CreaturePos[AV_CPLACE_MINE_S_3][1],BG_AV_ObjectPos[AV_CPLACE_MINE_S_3][2]);
     }
 }
 
@@ -130,7 +130,7 @@ void BattleGroundAV::HandleQuestComplete(uint32 questid, Player *player)
 {
     if (GetStatus() != STATUS_IN_PROGRESS)
         return;//maybe we should log this, cause this must be a cheater or a big bug
-    uint8 team = GetTeamIndexByTeamId(player->GetTeam());
+    uint8 team = GetTeamIndexByTeamId(player->GetBGTeam());
     //TODO add reputation, events (including quest not available anymore, next quest availabe, go/npc de/spawning)and maybe honor
     sLog.outDebug("BG_AV Quest %i completed",questid);
     switch (questid)
@@ -144,7 +144,7 @@ void BattleGroundAV::HandleQuestComplete(uint32 questid, Player *player)
             {
                 sLog.outDebug("BG_AV Quest %i completed starting with unit upgrading..",questid);
                 for (BG_AV_Nodes i = BG_AV_NODES_FIRSTAID_STATION; i <= BG_AV_NODES_FROSTWOLF_HUT; ++i)
-                    if (m_Nodes[i].Owner == player->GetTeam() && m_Nodes[i].State == POINT_CONTROLED)
+                    if (m_Nodes[i].Owner == player->GetBGTeam() && m_Nodes[i].State == POINT_CONTROLED)
                     {
                         DePopulateNode(i);
                         PopulateNode(i);
@@ -155,21 +155,21 @@ void BattleGroundAV::HandleQuestComplete(uint32 questid, Player *player)
         case AV_QUEST_A_COMMANDER1:
         case AV_QUEST_H_COMMANDER1:
             m_Team_QuestStatus[team][1]++;
-            RewardReputationToTeam(team,1,player->GetTeam());
+            RewardReputationToTeam(team,1,player->GetBGTeam());
             if (m_Team_QuestStatus[team][1] == 30)
                 sLog.outDebug("BG_AV Quest %i completed (need to implement some events here",questid);
             break;
         case AV_QUEST_A_COMMANDER2:
         case AV_QUEST_H_COMMANDER2:
             m_Team_QuestStatus[team][2]++;
-            RewardReputationToTeam(team,1,player->GetTeam());
+            RewardReputationToTeam(team,1,player->GetBGTeam());
             if (m_Team_QuestStatus[team][2] == 60)
                 sLog.outDebug("BG_AV Quest %i completed (need to implement some events here",questid);
             break;
         case AV_QUEST_A_COMMANDER3:
         case AV_QUEST_H_COMMANDER3:
             m_Team_QuestStatus[team][3]++;
-            RewardReputationToTeam(team,1,player->GetTeam());
+            RewardReputationToTeam(team,1,player->GetBGTeam());
             if (m_Team_QuestStatus[team][1] == 120)
                 sLog.outDebug("BG_AV Quest %i completed (need to implement some events here",questid);
             break;
@@ -428,9 +428,8 @@ void BattleGroundAV::Update(uint32 diff)
         {
             if (!m_CaptainAlive[i])
                 continue;
-            if (m_CaptainBuffTimer[i] > diff)
-                m_CaptainBuffTimer[i] -= diff;
-            else
+
+            if (m_CaptainBuffTimer[i].Expired(diff))
             {
                 if (i==0)
                 {
@@ -446,30 +445,30 @@ void BattleGroundAV::Update(uint32 diff)
                     if (creature)
                         YellToAll(creature,LANG_BG_AV_H_CAPTAIN_BUFF,LANG_ORCISH);
                 }
-                m_CaptainBuffTimer[i] = 120000 + urand(0,4)* 60000; //as far as i could see, the buff is randomly so i make 2minutes (thats the duration of the buff itself) + 0-4minutes TODO get the right times
+                m_CaptainBuffTimer[i] = 600000; // 10 minutes + after captain slain
             }
         }
         //add points from mine owning, and look if he neutral team wanrts to reclaim the mine
-        m_Mine_Timer -=diff;
+
+        bool mineExpired = m_Mine_Timer.Expired(diff);
         for (uint8 mine=0; mine <2; mine++)
         {
             if (m_Mine_Owner[mine] == ALLIANCE || m_Mine_Owner[mine] == HORDE)
             {
-                if (m_Mine_Timer <= 0)
+                if (mineExpired)
                     UpdateScore(m_Mine_Owner[mine],1);
 
-                if (m_Mine_Reclaim_Timer[mine] > diff)
-                    m_Mine_Reclaim_Timer[mine] -= diff;
-                else{ //we don't need to set this timer to 0 cause this codepart wont get called when this thing is 0
+                if (m_Mine_Reclaim_Timer[mine].Expired(diff))        //we don't need to set this timer to 0 cause this codepart wont get called when this thing is 0                 
                     ChangeMineOwner(mine,AV_NEUTRAL_TEAM);
-                }
+                
             }
         }
-        if (m_Mine_Timer <= 0)
+        if (mineExpired)
             m_Mine_Timer=AV_MINE_TICK_TIMER; //this is at the end, cause we need to update both mines
-
+                 
         //looks for all timers of the nodes and destroy the building (for graveyards the building wont get destroyed, it goes just to the other team
         for (BG_AV_Nodes i = BG_AV_NODES_FIRSTAID_STATION; i < BG_AV_NODES_MAX; ++i)
+        {
             if (m_Nodes[i].State == POINT_ASSAULTED) //maybe remove this
             {
                 if (m_Nodes[i].Timer > diff)
@@ -477,6 +476,7 @@ void BattleGroundAV::Update(uint32 diff)
                 else
                      EventPlayerDestroyedPoint(i);
             }
+        }
     }
 }
 
@@ -487,7 +487,7 @@ void BattleGroundAV::AddPlayer(Player *plr)
     BattleGroundAVScore* sc = new BattleGroundAVScore;
     m_PlayerScores[plr->GetGUID()] = sc;
     if (m_MaxLevel==0)
-        m_MaxLevel=(plr->getLevel()%10 == 0)? plr->getLevel() : (plr->getLevel()-(plr->getLevel()%10))+10; //TODO: just look at the code \^_^/ --but queue-info should provide this information..
+        m_MaxLevel=(plr->GetLevel()%10 == 0)? plr->GetLevel() : (plr->GetLevel()-(plr->GetLevel()%10))+10; //TODO: just look at the code \^_^/ --but queue-info should provide this information..
 
 }
 
@@ -508,7 +508,7 @@ void BattleGroundAV::EndBattleGround(uint32 winner)
                 }
                 else
                 {
-                    rep[0]   += BG_AV_KILL_SURVIVING_TOWER;
+                    rep[1]   += BG_AV_REP_SURVIVING_TOWER;
                     kills[1] += BG_AV_KILL_SURVIVING_TOWER;
                 }
             }
@@ -757,7 +757,7 @@ void BattleGroundAV::ChangeMineOwner(uint8 mine, uint32 team, bool initial)
 //    }
     if (team == ALLIANCE || team == HORDE)
     {
-        m_Mine_Reclaim_Timer[mine]=AV_MINE_RECLAIM_TIMER;
+        m_Mine_Reclaim_Timer[mine].Reset(AV_MINE_RECLAIM_TIMER);
     char buf[256];
         sprintf(buf, GetHellgroundString(LANG_BG_AV_MINE_TAKEN), GetHellgroundString((mine == AV_NORTH_MINE) ? LANG_BG_AV_MINE_NORTH : LANG_BG_AV_MINE_SOUTH), (team == ALLIANCE) ?  GetHellgroundString(LANG_BG_AV_ALLY) : GetHellgroundString(LANG_BG_AV_HORDE));
         Creature* creature = GetBGCreature(AV_CPLACE_HERALD);
@@ -766,6 +766,7 @@ void BattleGroundAV::ChangeMineOwner(uint8 mine, uint32 team, bool initial)
     }
     else
     {
+        m_Mine_Reclaim_Timer[mine] = 0;
         if (mine==AV_SOUTH_MINE) //i think this gets called all the time
         {
             Creature* creature = GetBGCreature(AV_CPLACE_MINE_S_3);
@@ -923,9 +924,9 @@ void BattleGroundAV::EventPlayerDefendsPoint(Player* player, uint32 object)
     BG_AV_Nodes node = GetNodeThroughObject(object);
 
     uint32 owner = m_Nodes[node].Owner; //maybe should name it prevowner
-    uint32 team = player->GetTeam();
+    uint32 team = player->GetBGTeam();
 
-    if (owner == player->GetTeam() || m_Nodes[node].State != POINT_ASSAULTED)
+    if (owner == player->GetBGTeam() || m_Nodes[node].State != POINT_ASSAULTED)
         return;
     if (m_Nodes[node].TotalOwner == AV_NEUTRAL_TEAM)
     { //until snowfall doesn't belong to anyone it is better handled in assault-code
@@ -995,7 +996,7 @@ void BattleGroundAV::EventPlayerAssaultsPoint(Player* player, uint32 object)
 
     BG_AV_Nodes node = GetNodeThroughObject(object);
     uint32 owner = m_Nodes[node].Owner; //maybe name it prevowner
-    uint32 team  = player->GetTeam();
+    uint32 team  = player->GetBGTeam();
     sLog.outDebug("bg_av: player assaults point object %i node %i",object,node);
     if (owner == team || team == m_Nodes[node].TotalOwner)
         return; //surely a gm used this object
@@ -1075,7 +1076,7 @@ void BattleGroundAV::EventPlayerAssaultsPoint(Player* player, uint32 object)
                     if (!ClosestGrave)
                     {
                         m_Nodes[node].Owner=536-m_Nodes[node].Owner; // Ally <-> Horde swap, prevents from selecting this grave as closest one
-                        ClosestGrave = GetClosestGraveYard(plr->GetPositionX(), plr->GetPositionY(), plr->GetPositionZ(), plr->GetTeam());
+                        ClosestGrave = GetClosestGraveYard(plr->GetPositionX(), plr->GetPositionY(), plr->GetPositionZ(), plr->GetBGTeam());
                         m_Nodes[node].Owner=536-m_Nodes[node].Owner; // return
                     }
 
@@ -1226,7 +1227,7 @@ WorldSafeLocsEntry const* BattleGroundAV::GetClosestGraveYard(float x, float y, 
         }
     }
     // If not, place ghost on starting location
-    if (!good_entry)
+    if (!good_entry || GetStatus() != STATUS_IN_PROGRESS)
         good_entry = sWorldSafeLocsStore.LookupEntry(BG_AV_GraveyardIds[GetTeamIndexByTeamId(team)+7]);
 
     return good_entry;
@@ -1381,7 +1382,7 @@ const char* BattleGroundAV::GetNodeName(BG_AV_Nodes node)
         case BG_AV_NODES_FROSTWOLF_HUT:     return GetHellgroundString(LANG_BG_AV_NODE_GRAVE_FROST_HUT);
         default:
             {
-            sLog.outLog(LOG_DEFAULT, "ERROR: tried to get name for node %u%",node);
+            sLog.outLog(LOG_DEFAULT, "ERROR: tried to get name for node %u",node);
             return "Unknown";
             break;
             }
@@ -1395,7 +1396,7 @@ void BattleGroundAV::AssaultNode(BG_AV_Nodes node, uint16 team)
     ASSERT(m_Nodes[node].State != POINT_DESTROYED);
     ASSERT(m_Nodes[node].State != POINT_ASSAULTED || !m_Nodes[node].TotalOwner); //only assault an assaulted node if no totalowner exists
     //the timer gets another time, if the previous owner was 0==Neutral
-    m_Nodes[node].Timer      = (m_Nodes[node].PrevOwner)? BG_AV_CAPTIME : BG_AV_SNOWFALL_FIRSTCAP;
+    m_Nodes[node].Timer      = BG_AV_CAPTIME;
     m_Nodes[node].PrevOwner  = m_Nodes[node].Owner;
     m_Nodes[node].Owner      = team;
     m_Nodes[node].PrevState  = m_Nodes[node].State;
@@ -1447,7 +1448,7 @@ void BattleGroundAV::ResetBGSubclass()
     m_Team_Scores[i]=BG_AV_SCORE_INITIAL_POINTS;
         m_IsInformedNearVictory[i]=false;
         m_CaptainAlive[i] = true;
-        m_CaptainBuffTimer[i] = 120000 + urand(0,4)* 60; //as far as i could see, the buff is randomly so i make 2minutes (thats the duration of the buff itself) + 0-4minutes TODO get the right times
+        m_CaptainBuffTimer[i].Reset(600000); // every 10 minutes (+ instantly after killing a captain)
         m_Mine_Owner[i] = AV_NEUTRAL_TEAM;
         m_Mine_PrevOwner[i] = m_Mine_Owner[i];
     }
@@ -1461,7 +1462,7 @@ void BattleGroundAV::ResetBGSubclass()
         InitNode(i,HORDE,true);
     InitNode(BG_AV_NODES_SNOWFALL_GRAVE,AV_NEUTRAL_TEAM,false); //give snowfall neutral owner
 
-    m_Mine_Timer=AV_MINE_TICK_TIMER;
+    m_Mine_Timer.Reset(AV_MINE_TICK_TIMER);
     for (uint16 i = 0; i < AV_CPLACE_MAX+AV_STATICCPLACE_MAX; i++)
         if (m_BgCreatures[i])
             DelCreature(i);

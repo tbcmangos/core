@@ -1,6 +1,6 @@
 /*
  * Copyright (C) 2005-2009 MaNGOS <http://getmangos.com/>
- * Copyright (C) 2008-2014 Hellground <http://hellground.net/>
+ * Copyright (C) 2008-2015 Hellground <http://hellground.net/>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -82,6 +82,13 @@ class DBCStorage
                 m_stringPoolList.pop_front();
             }
             nCount = 0;
+        }
+
+        void SetIndex(uint32 id,const char* what, T* ptr)
+        {
+            sLog.outString("injecting DBC data at id = %u : \"%s\"",id,what);
+            sLog.outString("use wisely, this may be dangerous");
+            indexTable[id] = ptr;
         }
 
     private:

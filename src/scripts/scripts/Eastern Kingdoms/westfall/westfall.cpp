@@ -1,6 +1,6 @@
 /* 
  * Copyright (C) 2006-2008 ScriptDev2 <https://scriptdev2.svn.sourceforge.net/>
- * Copyright (C) 2008-2014 Hellground <http://hellground.net/>
+ * Copyright (C) 2008-2015 Hellground <http://hellground.net/>
  * 
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -104,7 +104,7 @@ struct npc_daphne_stilwellAI : public npc_escortAI
             if (!yeller_spawned)
             {
                 Creature *yeller = m_creature->SummonCreature(DEFIAS_RAIDER, THUG_SPAWN_X, THUG_SPAWN_Y, THUG_SPAWN_Z, THUG_SPAWN_O, TEMPSUMMON_TIMED_DESPAWN, 3000);
-                yeller->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
+                yeller->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_SPAWNING);
                 yeller->Yell(SAY_KILL_HER, LANG_UNIVERSAL, 0);
                 yeller_spawned = true;
             }
@@ -162,13 +162,13 @@ struct npc_daphne_stilwellAI : public npc_escortAI
             Player* player = GetPlayerForEscort();
             if (player)
             {
-                if(player->isDead())
+                if(player->IsDead())
                 {
                     player->FailQuest(QUEST_PROTECT_DAPHNE);
                     SetVariables();
                 }
 
-                if(m_creature->isDead() && player)
+                if(m_creature->IsDead() && player)
                     player->FailQuest(QUEST_PROTECT_DAPHNE);
             }
 
@@ -191,7 +191,7 @@ struct npc_daphne_stilwellAI : public npc_escortAI
         for(std::vector<uint64>::iterator itr = enemies.begin(), next; itr!= enemies.end(); ++itr)
         {
             Unit *enemy = Unit::GetUnit(*m_creature, *itr);
-            if(enemy && enemy->isAlive())
+            if(enemy && enemy->IsAlive())
             {
                 alldead = false;
             }

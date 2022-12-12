@@ -1,7 +1,7 @@
 /*
  * Copyright (C) 2005-2008 MaNGOS <http://getmangos.com/>
  * Copyright (C) 2008 TrinityCore <http://www.trinitycore.org/>
- * Copyright (C) 2008-2014 Hellground <http://hellground.net/>
+ * Copyright (C) 2008-2017 Hellground <http://wow-hellground.com/>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -29,11 +29,13 @@ struct PlayerAI : public UnitAI
 {
     PlayerAI(Player *pPlayer) : UnitAI((Unit *)pPlayer), me(pPlayer) {}
 
+    void SetPlayer(Player* player) { me = player; }
+    virtual void Remove();
+
     bool UpdateVictim(float = /*20.0*/100.0f);   // test more range for Felmyst, if no problems, should stay
     virtual void OnCharmed(bool){}
-
-    protected:
-        Player *me;
+    Unit* SelectNewVictim();
+    Player *me;
 };
 
 #define THUNDERCLAP_R1        6343
@@ -50,20 +52,20 @@ void Reset()
         BloodrageSpell = SpellMgr::GetHighestSpellRankForPlayer(BLOODRAGE, me);
         DemoSpell = SpellMgr::GetHighestSpellRankForPlayer(DEMORALIZING_R1, me);
 
-        TC_Timer = 3000+urand(0, 10000);
-        Bloodrage_Timer = 3000+urand(0, 10000);
-        Demo_Timer = 3000+urand(0, 10000);
+        TC_Timer.Reset(3000+urand(0, 10000));
+        Bloodrage_Timer.Reset(3000+urand(0, 10000));
+        Demo_Timer.Reset(3000+urand(0, 10000));
     }
 
     void UpdateAI(const uint32 diff);
 
-    uint32 TC_Timer;
+    Timer TC_Timer;
     SpellEntry const *TCSpell;
 
-    uint32 Bloodrage_Timer;
+    Timer Bloodrage_Timer;
     SpellEntry const *BloodrageSpell;
 
-    uint32 Demo_Timer;
+    Timer Demo_Timer;
     SpellEntry const *DemoSpell;
 };
 
@@ -90,37 +92,37 @@ void Reset()
         if (!(BestialSpell = SpellMgr::GetHighestSpellRankForPlayer(BESTIAL, me)))
             bestial = false;
 
-        Steady_Timer = 1000+urand(0, 4000);
-        Arcane_Timer = 1000+urand(0, 6000);
-        Multi_Timer = 1000+urand(0, 7000);
-        Volley_Timer = 1000+urand(0, 10000);
-        Rapid_Timer = urand(0, 20000);
-        Bestial_Timer = urand(0, 20000);
-        Auto_Timer=500;
+        Steady_Timer.Reset(1000+urand(0, 4000));
+        Arcane_Timer.Reset(1000 + urand(0, 6000));
+        Multi_Timer.Reset(1000 + urand(0, 7000));
+        Volley_Timer.Reset(1000 + urand(0, 10000));
+        Rapid_Timer.Reset(urand(0, 20000));
+        Bestial_Timer.Reset(urand(0, 20000));
+        Auto_Timer.Reset(500);
     }
 
     void UpdateAI(const uint32 diff);
     bool bestial;
 
-    uint32 Steady_Timer;
+    Timer Steady_Timer;
     SpellEntry const *SteadySpell;
 
-    uint32 Arcane_Timer;
+    Timer Arcane_Timer;
     SpellEntry const *ArcaneSpell;
 
-    uint32 Multi_Timer;
+    Timer Multi_Timer;
     SpellEntry const *MultiSpell;
 
-    uint32 Volley_Timer;
+    Timer Volley_Timer;
     SpellEntry const *VolleySpell;
 
-    uint32 Rapid_Timer;
+    Timer Rapid_Timer;
     SpellEntry const *RapidSpell;
 
-    uint32 Bestial_Timer;
+    Timer Bestial_Timer;
     SpellEntry const *BestialSpell;
 
-    uint32 Auto_Timer;
+    Timer Auto_Timer;
     SpellEntry const *AutoSpell;
 };
 
@@ -146,34 +148,34 @@ void Reset()
             shock=false;
         FlashSpell = SpellMgr::GetHighestSpellRankForPlayer(FLASH_LIGHT_R1, me);
 
-        Avenging_Timer = urand (0, 35000);
-        Crusader_Timer = 1000+urand(0, 6000);
-        Consecration_Timer = 1000+urand(0, 8000);
-        Judgement_Timer = 1000+urand(0, 4000);
-        Shock_Timer = 1000+urand(0, 12000);
-        Flash_Timer = 1000+urand(0, 6000);
+        Avenging_Timer.Reset(urand(0, 35000));
+        Crusader_Timer.Reset(1000 + urand(0, 6000));
+        Consecration_Timer.Reset(1000 + urand(0, 8000));
+        Judgement_Timer.Reset(1000 + urand(0, 4000));
+        Shock_Timer.Reset(1000 + urand(0, 12000));
+        Flash_Timer.Reset(1000 + urand(0, 6000));
     }
 
     void UpdateAI(const uint32 diff);
     bool crusader;
     bool shock;
 
-    uint32 Avenging_Timer;
+    Timer Avenging_Timer;
     SpellEntry const *AvengingSpell;
 
-    uint32 Crusader_Timer;
+    Timer Crusader_Timer;
     SpellEntry const *CrusaderSpell;
 
-    uint32 Consecration_Timer;
+    Timer Consecration_Timer;
     SpellEntry const *ConsecrationSpell;
 
-    uint32 Judgement_Timer;
+    Timer Judgement_Timer;
     SpellEntry const *JudgementSpell;
 
-    uint32 Shock_Timer;
+    Timer Shock_Timer;
     SpellEntry const *ShockSpell;
 
-    uint32 Flash_Timer;
+    Timer Flash_Timer;
     SpellEntry const *FlashSpell;
 };
 
@@ -215,25 +217,25 @@ struct WarlockAI: public PlayerAI
         if (!NormalSpell)
             NormalSpell = SpellMgr::GetHighestSpellRankForPlayer(SHADOWBOLT_R1, me);
 
-        AOE_Timer = 5000;
-        Fear_Timer = 3000;
-        DOT_Timer = 1500;
-        NormalSpell_Timer = 3500;
+        AOE_Timer.Reset(5000);
+        Fear_Timer.Reset(3000);
+        DOT_Timer.Reset(1500);
+        NormalSpell_Timer.Reset(3500);
 
     }
 
     void UpdateAI(const uint32 diff);
 
-    uint32 AOE_Timer;
+    Timer AOE_Timer;
     SpellEntry const *AOESpell;
 
-    uint32 DOT_Timer;
+    Timer DOT_Timer;
     SpellEntry const *DOTSpell;
 
-    uint32 Fear_Timer;
+    Timer Fear_Timer;
     SpellEntry const *FearSpell;
 
-    uint32 NormalSpell_Timer;
+    Timer NormalSpell_Timer;
     SpellEntry const *NormalSpell;
 };
 
@@ -273,12 +275,12 @@ struct DruidAI: public PlayerAI
         Dmg3Spell = SpellMgr::GetHighestSpellRankForPlayer(MOONFIRE_R1, me);
         HurricaneSpell = SpellMgr::GetHighestSpellRankForPlayer(TREE, me);
 
-        Demo_Timer = 500;
-        MangleB_Timer = 1000;
-        MangleC_Timer = 1000;
-        Heal_Timer = 3000;
-        Dmg_Timer = 2000;
-        Hurricane_Timer = 15000;
+        Demo_Timer.Reset(500);
+        MangleB_Timer.Reset(1000);
+        MangleC_Timer.Reset(1000);
+        Heal_Timer.Reset(3000);
+        Dmg_Timer.Reset(2000);
+        Hurricane_Timer.Reset(15000);
 
     }
 
@@ -286,26 +288,26 @@ struct DruidAI: public PlayerAI
 
     bool feral;
 
-    uint32 Demo_Timer;
+    Timer Demo_Timer;
     SpellEntry const *DemoSpell;
 
-    uint32 MangleB_Timer;
+    Timer MangleB_Timer;
     SpellEntry const *MangleBSpell;
 
-    uint32 MangleC_Timer;
+    Timer MangleC_Timer;
     SpellEntry const *MangleCSpell;
 
-    uint32 Heal_Timer;
+    Timer Heal_Timer;
     SpellEntry const *Heal1Spell;
     SpellEntry const *Heal2Spell;
     SpellEntry const *Heal3Spell;
 
-    uint32 Dmg_Timer;
+    Timer Dmg_Timer;
     SpellEntry const *Dmg1Spell;
     SpellEntry const *Dmg2Spell;
     SpellEntry const *Dmg3Spell;
 
-    uint32 Hurricane_Timer;
+    Timer Hurricane_Timer;
     SpellEntry const *HurricaneSpell;
 
 };
@@ -325,21 +327,21 @@ void Reset()
         GougeSpell = SpellMgr::GetHighestSpellRankForPlayer(GOUGE_R1, me);
         SinisterSpell = SpellMgr::GetHighestSpellRankForPlayer(SINISTER_R1, me);
 
-        Flurry_Timer = 3000+urand(0, 30000);
-        Gouge_Timer = 3000+urand(0, 10000);
-        Sinister_Timer = 2000+urand(0, 3000);
+        Flurry_Timer.Reset(3000 + urand(0, 30000));
+        Gouge_Timer.Reset(3000 + urand(0, 10000));
+        Sinister_Timer.Reset(2000 + urand(0, 3000));
     }
 
     void UpdateAI(const uint32 diff);
 
     bool blade;
-    uint32 Flurry_Timer;
+    Timer Flurry_Timer;
     SpellEntry const *FlurrySpell;
 
-    uint32 Gouge_Timer;
+    Timer Gouge_Timer;
     SpellEntry const *GougeSpell;
 
-    uint32 Sinister_Timer;
+    Timer Sinister_Timer;
     SpellEntry const *SinisterSpell;
 
 };
@@ -371,27 +373,27 @@ struct ShamanAI: public PlayerAI
         if (!(BLSpell = SpellMgr::GetHighestSpellRankForPlayer(BL, me)))
             BLSpell = SpellMgr::GetHighestSpellRankForPlayer(HERO, me);
 
-        Shield_Timer = 10000;
-        Heal_Timer = 15000;
-        BL_Timer = 500;
-        Lightning_Timer = 17000;
+        Shield_Timer.Reset(10000);
+        Heal_Timer.Reset(15000);
+        BL_Timer.Reset(500);
+        Lightning_Timer.Reset(17000);
     }
 
     bool heal;
 
-    uint32 Totem_Timer;
+    Timer Totem_Timer;
     SpellEntry const *Totem;
 
-    uint32 Shield_Timer;
+    Timer Shield_Timer;
     SpellEntry const *ShieldSpell;
 
-    uint32 Heal_Timer;
+    Timer Heal_Timer;
     SpellEntry const *HealSpell;
 
-    uint32 BL_Timer;
+    Timer BL_Timer;
     SpellEntry const *BLSpell;
 
-    uint32 Lightning_Timer;
+    Timer Lightning_Timer;
     SpellEntry const *LightningSpell;
 
 
@@ -430,33 +432,33 @@ struct PriestAI: public PlayerAI
 
         PWShieldSpell = SpellMgr::GetHighestSpellRankForPlayer(PW_SHIELD_R1, me);
 
-        Vampiric_Timer = 500;
-        DmgSpell_Timer = 1500;
-        Flash_Timer = 0;
-        Nova_Timer = 500;
-        DOTSpell_Timer = 4000;
-        PWShield_Timer = 2000;
+        Vampiric_Timer.Reset(500);
+        DmgSpell_Timer.Reset(1500);
+        Flash_Timer.Reset(0);
+        Nova_Timer.Reset(500);
+        DOTSpell_Timer.Reset(4000);
+        PWShield_Timer.Reset(2000);
     }
 
     bool vampiric;
     bool holynova;
 
-    uint32 Vampiric_Timer;
+    Timer Vampiric_Timer;
     SpellEntry const *VampiricSpell;
 
-    uint32 DmgSpell_Timer;
+    Timer DmgSpell_Timer;
     SpellEntry const *DmgSpell;
 
-    uint32 Flash_Timer;
+    Timer Flash_Timer;
     SpellEntry const *FlashSpell;
 
-    uint32 Nova_Timer;
+    Timer Nova_Timer;
     SpellEntry const *NovaSpell;
 
-    uint32 DOTSpell_Timer;
+    Timer DOTSpell_Timer;
     SpellEntry const *DOTSpell;
 
-    uint32 PWShield_Timer;
+    Timer PWShield_Timer;
     SpellEntry const *PWShieldSpell;
 
     void UpdateAI(const uint32 diff);
@@ -492,9 +494,9 @@ struct MageAI: public PlayerAI
         if (!(AOESpell = SpellMgr::GetHighestSpellRankForPlayer(BLASTWAVE_R1, me)))
             AOESpell = SpellMgr::GetHighestSpellRankForPlayer(ARCANEEXPLO_R1, me);
 
-        ConeSpell_Timer = 5000;
-        MassiveAOE_Timer = 10000;
-        AOESpell_Timer = 2000;
+        ConeSpell_Timer.Reset(5000);
+        MassiveAOE_Timer.Reset(10000);
+        AOESpell_Timer.Reset(2000);
 
         if (FireMage)
             NormalSpell = SpellMgr::GetHighestSpellRankForPlayer(FIREBALL_R1, me);
@@ -503,19 +505,19 @@ struct MageAI: public PlayerAI
 
         SpecialSpell = SpellMgr::GetHighestSpellRankForPlayer(EVOCATION, me);
 
-        NormalSpell_Timer = 3200;
+        NormalSpell_Timer.Reset(3200);
     }
 
-    uint32 MassiveAOE_Timer;
+    Timer MassiveAOE_Timer;
     SpellEntry const *MassiveAOESpell;
 
-    uint32 ConeSpell_Timer;
+    Timer ConeSpell_Timer;
     SpellEntry const *ConeSpell;
 
-    uint32 AOESpell_Timer;
+    Timer AOESpell_Timer;
     SpellEntry const *AOESpell;
 
-    uint32 NormalSpell_Timer;
+    Timer NormalSpell_Timer;
     SpellEntry const *NormalSpell;
 
     bool Special;

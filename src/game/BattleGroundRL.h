@@ -1,7 +1,7 @@
 /*
  * Copyright (C) 2005-2008 MaNGOS <http://getmangos.com/>
  * Copyright (C) 2008 TrinityCore <http://www.trinitycore.org/>
- * Copyright (C) 2008-2014 Hellground <http://hellground.net/>
+ * Copyright (C) 2008-2017 Hellground <http://wow-hellground.com/>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -38,12 +38,6 @@ enum BattleGroundRLObjects
     BG_RL_OBJECT_TYPE_DOOR_2    = 185917,
     BG_RL_OBJECT_TYPE_BUFF_1    = 184663,
     BG_RL_OBJECT_TYPE_BUFF_2    = 184664
-};
-
-enum BattleGroundRLCreatures
-{
-    BG_RL_ARENA_SPECTATOR   = 0,
-    BG_RL_CREATURE_MAX      = 1
 };
 
 class BattleGroundRLScore : public BattleGroundScore

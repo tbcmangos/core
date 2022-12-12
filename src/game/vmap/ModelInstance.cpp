@@ -1,7 +1,7 @@
 /*
  * Copyright (C) 2005-2010 MaNGOS <http://getmangos.com/>
  * Copyright (C) 2008-2010 TrinityCore <http://www.trinitycore.org/>
- * Copyright (C) 2008-2014 Hellground <http://hellground.net/>
+ * Copyright (C) 2008-2017 Hellground <http://wow-hellground.com/>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -34,8 +34,10 @@ namespace VMAP
         iInvScale = 1.f/iScale;
     }
 
-    bool ModelInstance::intersectRay(const G3D::Ray& pRay, float& pMaxDist, bool pStopAtFirstHit) const
+    bool ModelInstance::intersectRay(const G3D::Ray& pRay, float& pMaxDist, bool pStopAtFirstHit, bool alsoM2) const
     {
+        if ((ModelSpawn::flags & MOD_M2) && !alsoM2)
+            return false; // m2 objects no collision
         if (!iModel)
         {
 #ifdef VMAP_DEBUG

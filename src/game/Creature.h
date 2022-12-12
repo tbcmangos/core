@@ -1,7 +1,7 @@
 /*
  * Copyright (C) 2005-2008 MaNGOS <http://getmangos.com/>
  * Copyright (C) 2008 TrinityCore <http://www.trinitycore.org/>
- * Copyright (C) 2008-2014 Hellground <http://hellground.net/>
+ * Copyright (C) 2008-2017 Hellground <http://wow-hellground.com/>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -62,7 +62,8 @@ enum Gossip_Option
     GOSSIP_OPTION_ARMORER           = 15,                   //UNIT_NPC_FLAG_ARMORER           = 16384,
     GOSSIP_OPTION_UNLEARNTALENTS    = 16,                   //UNIT_NPC_FLAG_TRAINER (bonus option for GOSSIP_OPTION_TRAINER)
     GOSSIP_OPTION_UNLEARNPETSKILLS  = 17,                   //UNIT_NPC_FLAG_TRAINER (bonus option for GOSSIP_OPTION_TRAINER)
-    GOSSIP_OPTION_OUTDOORPVP        = 18                    //added by code (option for outdoor pvp creatures)
+    GOSSIP_OPTION_OUTDOORPVP        = 18,                   //added by code (option for outdoor pvp creatures)
+    GOSSIP_OPTION_BUY_FREE_RESPEC   = 100                   //UNIT_NPC_FLAG_TRAINER (custom option)
 };
 
 enum Gossip_Guard
@@ -124,32 +125,6 @@ struct GossipOption
     std::string BoxText;
 };
 
-enum CreatureFlagsExtra
-{
-    CREATURE_FLAG_EXTRA_INSTANCE_BIND       = 0x00000001,       // 1 creature kill bind instance with killer and killer's group
-    CREATURE_FLAG_EXTRA_CIVILIAN            = 0x00000002,       // 2 not aggro (ignore faction/reputation hostility)
-    CREATURE_FLAG_EXTRA_NO_PARRY            = 0x00000004,       // 4 creature can't parry
-    CREATURE_FLAG_EXTRA_NO_PARRY_HASTEN     = 0x00000008,       // 8 creature can't counter-attack at parry
-    CREATURE_FLAG_EXTRA_NO_BLOCK            = 0x00000010,       // 16 creature can't block
-    CREATURE_FLAG_EXTRA_NO_CRUSH            = 0x00000020,       // 32 creature can't do crush attacks
-    CREATURE_FLAG_EXTRA_NO_XP_AT_KILL       = 0x00000040,       // 64 creature kill not provide XP
-    CREATURE_FLAG_EXTRA_TRIGGER             = 0x00000080,       // 128 trigger creature
-    CREATURE_FLAG_EXTRA_WORLDEVENT          = 0x00004000,       // 16384 custom flag for world event creatures (left room for merging)
-    CREATURE_FLAG_EXTRA_CHARM_AI            = 0x00008000,       // 32768 use ai when charmed
-    CREATURE_FLAG_EXTRA_NO_TAUNT            = 0x00010000,       // 65536 cannot be taunted
-    CREATURE_FLAG_EXTRA_NO_CRIT             = 0x00020000,       // 131072 creature can't do critical strikes
-    CREATURE_FLAG_EXTRA_NO_BLOCK_ON_ATTACK  = 0x00040000,       // 262144 creature attack's cannot be blocked
-    CREATURE_FLAG_EXTRA_NO_DAMAGE_TAKEN     = 0x00080000,       // 524288
-    CREATURE_FLAG_EXTRA_ALWAYS_WALK         = 0x00100000,       // 1048576
-    CREATURE_FLAG_EXTRA_NO_TARGET           = 0x00200000,       // 2097152 creature won't set UNIT_FIELD_TARGET by self (return in Attack function !)
-    CREATURE_FLAG_EXTRA_HASTE_IMMUNE        = 0x00400000,       // 4194304
-    CREATURE_FLAG_EXTRA_CANT_MISS           = 0x00800000,       // 8388608 creature melee attacks cant miss
-    CREATURE_FLAG_EXTRA_NOT_REGEN_MANA      = 0x01000000,       // 16777216 creature has mana pool, but do not regenerates it when OOC
-    CREATURE_FLAG_EXTRA_NOT_REGEN_HEALTH    = 0x02000000,       // 33554432 rare case that creature should not regen health when OOC
-    CREATURE_FLAG_EXTRA_1PCT_TAUNT_RESIST   = 0x04000000,       // 67108864 creature have only 1% chance to resist taunt like spell
-    CREATURE_FLAG_EXTRA_NO_HEALING_TAKEN    = 0x08000000,       // 134217728
-};
-
 // GCC have alternative #pragma pack(N) syntax and old gcc version not support pack(push,N), also any gcc version not support it at some platform
 #if defined(__GNUC__)
 #pragma pack(1)
@@ -187,7 +162,6 @@ struct CreatureInfo
     float   mindmg;
     float   maxdmg;
     uint32  dmgschool;
-    uint32  attackpower;
     uint32  baseattacktime;
     uint32  rangeattacktime;
     uint32  unit_flags;                                     // enum UnitFlags mask values
@@ -199,7 +173,6 @@ struct CreatureInfo
     uint32  race;
     float   minrangedmg;
     float   maxrangedmg;
-    uint32  rangedattackpower;
     uint32  type;                                           // enum CreatureType values
     uint32  type_flags;                                     // enum CreatureTypeFlags mask values
     uint32  lootid;
@@ -248,18 +221,6 @@ struct CreatureInfo
     }
 };
 
-struct CreatureLocale
-{
-    std::vector<std::string> Name;
-    std::vector<std::string> SubName;
-};
-
-struct NpcOptionLocale
-{
-    std::vector<std::string> OptionText;
-    std::vector<std::string> BoxText;
-};
-
 struct EquipmentInfo
 {
     uint32  entry;
@@ -289,6 +250,8 @@ struct CreatureData
     uint8 movementType;
     uint8 spawnMask;
     bool dbData;
+
+    ObjectGuid GetObjectGuid(uint32 lowguid) const { return ObjectGuid(HIGHGUID_UNIT, id, lowguid); }
 };
 
 struct CreatureDataAddonAura
@@ -432,8 +395,6 @@ struct TrainerSpellData
 
 typedef std::list<GossipOption> GossipOptionList;
 
-typedef std::map<uint32,time_t> CreatureSpellCooldowns;
-
 extern std::map<uint32, uint32> CreatureAIReInitialize;
 
 // max different by z coordinate for creature aggro reaction
@@ -472,7 +433,7 @@ class HELLGROUND_IMPORT_EXPORT Creature : public Unit
         bool isTrigger() const { return GetCreatureInfo()->flags_extra & CREATURE_FLAG_EXTRA_TRIGGER; }
 
         bool CanWalk() const { return GetCreatureInfo()->InhabitType & INHABIT_GROUND; }
-        bool CanSwim() const { return GetCreatureInfo()->InhabitType & INHABIT_WATER; }
+        virtual bool CanSwim() const { return GetCreatureInfo()->InhabitType & INHABIT_WATER; }
         bool CanFly()  const;
 
         void SetWalk(bool enable);
@@ -490,6 +451,9 @@ class HELLGROUND_IMPORT_EXPORT Creature : public Unit
                                                             // redefine Unit::IsImmunedToSpell
         bool IsImmunedToSpellEffect(uint32 effect, uint32 mechanic) const;
                                                             // redefine Unit::IsImmunedToSpellEffect
+        void ProhibitSpellSchool(SpellSchoolMask idSchoolMask, uint32 unTimeMs);
+        bool isSchoolProhibited(SpellSchoolMask idSchoolMask) const;
+
         bool isElite() const
         {
             if (isPet())
@@ -517,17 +481,11 @@ class HELLGROUND_IMPORT_EXPORT Creature : public Unit
 
         uint32 GetShieldBlockValue() const                  //dunno mob block value
         {
-            return (getLevel()/2 + uint32(GetStat(STAT_STRENGTH)/20));
+            return (GetLevel()/2 + uint32(GetStat(STAT_STRENGTH)/20));
         }
 
         SpellSchoolMask GetMeleeDamageSchoolMask() const { return m_meleeDamageSchoolMask; }
         void SetMeleeDamageSchool(SpellSchools school) { m_meleeDamageSchoolMask = SpellSchoolMask(1 << school); }
-
-        void _AddCreatureSpellCooldown(uint32 spell_id, time_t end_time);
-        void _AddCreatureCategoryCooldown(uint32 category, time_t end_time);
-        void AddCreatureSpellCooldown(uint32 spellid);
-        bool HasSpellCooldown(uint32 spell_id) const;
-        bool HasCategoryCooldown(uint32 spell_id) const;
 
         bool HasSpell(uint32 spellID) const;
 
@@ -581,14 +539,11 @@ class HELLGROUND_IMPORT_EXPORT Creature : public Unit
         void Whisper(int32 textId, uint64 receiver, bool IsBossWhisper = false) { MonsterWhisper(textId,receiver,IsBossWhisper); }
         void YellToZone(int32 textId, uint32 language, uint64 TargetGuid) { MonsterYellToZone(textId,language,TargetGuid); }
 
-        // overwrite WorldObject function for proper name localization
-        const char* GetNameForLocaleIdx(int32 locale_idx) const;
-
         void setDeathState(DeathState s);                   // overwrite virtual Unit::setDeathState
 
         bool LoadFromDB(uint32 guid, Map *map);
-        void SaveToDB();
-                                                            // overwrited in Pet
+        virtual void SaveToDB();                            // overwrited in TemporarySummon (to do nothing)
+                                                            // overwrited in Pet and TemporarySummon
         virtual void SaveToDB(uint32 mapid, uint8 spawnMask);
         virtual void DeleteFromDB();                        // overwrited in Pet
 
@@ -608,8 +563,6 @@ class HELLGROUND_IMPORT_EXPORT Creature : public Unit
         SpellEntry const *reachWithSpellCure(Unit *pVictim);
 
         uint32 m_spells[CREATURE_MAX_SPELLS];
-        CreatureSpellCooldowns m_CreatureSpellCooldowns;
-        CreatureSpellCooldowns m_CreatureCategoryCooldowns;
 
         bool canSeeOrDetect(Unit const* u, WorldObject const*, bool detect, bool inVisibleList = false, bool is3dDistance = true) const;
         bool IsWithinSightDist(Unit const* u) const;
@@ -672,6 +625,7 @@ class HELLGROUND_IMPORT_EXPORT Creature : public Unit
                 return m_charmInfo->GetCharmSpell(pos)->spellId;
         }
 
+        void SetLastHitPos(WorldLocation wl);
         void SetHomePosition(float x, float y, float z, float ori)
         {
             homeLocation.coord_x = x;
@@ -679,6 +633,7 @@ class HELLGROUND_IMPORT_EXPORT Creature : public Unit
             homeLocation.coord_z = z;
             homeLocation.orientation = ori;
             homeLocation.mapid = GetMapId();
+            lastHitPos = homeLocation;
         }
 
         void GetHomePosition(float &x, float &y, float &z, float &ori)
@@ -704,11 +659,11 @@ class HELLGROUND_IMPORT_EXPORT Creature : public Unit
 
         Unit *SelectVictim();
 
-        void SetIngoreVictimSelection(bool ignoreSelection)
+        void SetIgnoreVictimSelection(bool ignoreSelection)
         {
             if (ignoreSelection)
                 SetSelection(0);
-            else if (getVictim())
+            else if (GetVictim())
                 SetSelection(getVictimGUID());
             m_ignoreSelection = ignoreSelection;
         }
@@ -728,12 +683,13 @@ class HELLGROUND_IMPORT_EXPORT Creature : public Unit
         bool GetIsDeadByDefault() { return m_isDeadByDefault; }
 
         void SetAggroRange(float t) { m_aggroRange = t; }
+        float GetAggroRange() { return m_aggroRange; }
 
         bool CanReactToPlayerOnTaxi();
 
         bool IsTemporarySummon() { return m_tempSummon; }
 
-        void UpdateDeathTimer(uint32 timer) { if(m_deathTimer < timer) m_deathTimer = timer; }
+        void UpdateDeathTimer(uint32 timer) { if((m_deathTimer - time(NULL)) < timer) m_deathTimer = time(NULL)+timer; }
 
         virtual float GetXPMod() const override { return m_xpMod; }
 
@@ -754,7 +710,7 @@ class HELLGROUND_IMPORT_EXPORT Creature : public Unit
         std::set<uint64> m_playersAllowedToLoot;
 
         /// Timers
-        uint32 m_deathTimer;                                // (msecs)timer for death or corpse disappearance
+        time_t m_deathTimer;                                // (secs) timer for death or corpse disappearance
         time_t m_respawnTime;                               // (secs) time of next respawn
         uint32 m_respawnDelay;                              // (secs) delay between corpse disappearance and respawning
         uint32 m_corpseDelay;                               // (secs) delay between death and corpse disappearance
@@ -771,7 +727,7 @@ class HELLGROUND_IMPORT_EXPORT Creature : public Unit
 
         MovementGeneratorType m_defaultMovementType;
         Cell m_currentCell;                                 // store current cell where creature listed
-        uint32 m_DBTableGuid;                               ///< For new or temporary creatures is 0 for saved it is lowguid
+        uint32 m_DBTableGuid;                               /// For new or temporary creatures is 0 for saved it is lowguid
         uint32 m_equipmentId;
 
         bool m_AlreadyCallAssistance;
@@ -784,6 +740,7 @@ class HELLGROUND_IMPORT_EXPORT Creature : public Unit
         uint32 m_originalEntry;
 
         WorldLocation homeLocation;
+        WorldLocation lastHitPos;
 
         bool DisableReputationGain;
 
@@ -792,6 +749,7 @@ class HELLGROUND_IMPORT_EXPORT Creature : public Unit
         bool m_tempSummon;
 
     private:
+        Countdown m_schoolCooldowns[MAX_SPELL_SCHOOL];
         //WaypointMovementGenerator vars
         uint32 m_waypointID;
         uint32 m_path_id;

@@ -1,6 +1,6 @@
 /* 
  * Copyright (C) 2006-2008 ScriptDev2 <https://scriptdev2.svn.sourceforge.net/>
- * Copyright (C) 2008-2014 Hellground <http://hellground.net/>
+ * Copyright (C) 2008-2015 Hellground <http://hellground.net/>
  * 
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -34,46 +34,45 @@ EndScriptData */
 
 struct mob_treantAI  : public ScriptedAI
 {
-    mob_treantAI (Creature *c) : ScriptedAI(c)
-    {
-        WarpGuid = 0;
-    }
+    mob_treantAI (Creature *c) : ScriptedAI(c), WarpGuid(0) {}
 
     uint64 WarpGuid;
-    uint32 check_Timer;
+    Timer lifeExpired;
 
     void Reset()
     {
-        check_Timer = 0;
+        lifeExpired.Reset(20000);
     }
 
     void EnterCombat(Unit *who) {}
 
     void MoveInLineOfSight(Unit*) {}
 
+    void MovementInform(uint32 type, uint32 id)
+    {
+        if (type == POINT_MOTION_TYPE && id == 1)
+            me->GetMotionMaster()->MoveIdle();
+    }
+
     void UpdateAI(const uint32 diff)
     {
-        if (!UpdateVictim() )
+        if (WarpGuid && lifeExpired.Expired(diff))
         {
-            if(WarpGuid && check_Timer < diff)
+            lifeExpired = 0;
+
+            if (Unit *Warp = me->GetUnit(WarpGuid))
             {
-                if(Unit *Warp = (Unit*)Unit::GetUnit(*m_creature, WarpGuid))
-                {
-                    if(m_creature->IsWithinMeleeRange(Warp,2.5f))
-                    {
-                        int32 CurrentHP_Treant = (int32)m_creature->GetHealth();
-                        Warp->CastCustomSpell(Warp,SPELL_HEAL_FATHER,&CurrentHP_Treant, 0, 0, true,0 ,0, m_creature->GetGUID());
-                        m_creature->DealDamage(m_creature, m_creature->GetHealth(), DIRECT_DAMAGE, SPELL_SCHOOL_MASK_NORMAL, NULL, false);
-                        return;
-                    }
-                    m_creature->GetMotionMaster()->MoveFollow(Warp,0,0);
-                }
-                check_Timer = 1000;
-            }else check_Timer -= diff;
-            return;
+                int32 CurrentHP_Treant = (int32)m_creature->GetHealth();
+                Warp->CastCustomSpell(Warp, SPELL_HEAL_FATHER, &CurrentHP_Treant, 0, 0, true, 0, 0, m_creature->GetGUID());
+                m_creature->DealDamage(m_creature, m_creature->GetHealth(), DIRECT_DAMAGE, SPELL_SCHOOL_MASK_NORMAL, NULL, false);
+                return;
+            }
         }
 
-        if (m_creature->getVictimGUID() !=  WarpGuid)
+        if (!UpdateVictim())
+            return;
+
+        if (m_creature->getVictimGUID() != WarpGuid)
             DoMeleeAttackIfReady();
     }
 };
@@ -97,41 +96,41 @@ struct mob_treantAI  : public ScriptedAI
 
 #define TREANT_SPAWN_DIST   50                              //50 yards from Warp Splinter's spawn point
 
-float treant_pos[6][3] =
+static float treant_pos[6][3] =
 {
-    {24.301233, 427.221100, -27.060635},
-    {16.795492, 359.678802, -27.355425},
-    {53.493484, 345.381470, -26.196192},
-    {61.867096, 439.362732, -25.921030},
-    {109.861877, 423.201630, -27.356019},
-    {106.780159, 355.582581, -27.593357}
+    {24.301233f, 427.221100f, -27.060635f},
+    {16.795492f, 359.678802f, -27.355425f},
+    {53.493484f, 345.381470f, -26.196192f},
+    {61.867096f, 439.362732f, -25.921030f},
+    {109.861877f, 423.201630f, -27.356019f},
+    {106.780159f, 355.582581f, -27.593357f}
 };
 
 struct boss_warp_splinterAI : public ScriptedAI
 {
-    boss_warp_splinterAI(Creature *c) : ScriptedAI(c)
+    boss_warp_splinterAI(Creature *c) : ScriptedAI(c), summons(me)
     {
-        HeroicMode = c->GetMap()->IsHeroic();
         Treant_Spawn_Pos_X = c->GetPositionX();
         Treant_Spawn_Pos_Y = c->GetPositionY();
         m_creature->GetPosition(wLoc);
     }
 
-    uint32 War_Stomp_Timer;
-    uint32 Summon_Treants_Timer;
-    uint32 Arcane_Volley_Timer;
-    uint32 Check_Timer;
+    SummonList summons;
+    Timer War_Stomp_Timer;
+    Timer Summon_Treants_Timer;
+    Timer Arcane_Volley_Timer;
+    Timer Check_Timer;
     WorldLocation wLoc;
-    bool HeroicMode;
 
     float Treant_Spawn_Pos_X;
     float Treant_Spawn_Pos_Y;
 
     void Reset()
     {
-        War_Stomp_Timer = 25000 + rand()%15000;
-        Summon_Treants_Timer = 45000;
-        Arcane_Volley_Timer = 8000 + rand()%12000;
+        summons.DespawnAll();
+        War_Stomp_Timer.Reset(25000 + rand() % 15000);
+        Summon_Treants_Timer.Reset(45000);
+        Arcane_Volley_Timer.Reset(8000 + rand() % 12000);
 
         m_creature->SetSpeed( MOVE_RUN, 0.7f, true);
     }
@@ -146,9 +145,15 @@ struct boss_warp_splinterAI : public ScriptedAI
         DoScriptText(RAND(SAY_SLAY_1, SAY_SLAY_2), m_creature);
     }
 
+    void JustSummoned(Creature* treant)
+    {
+        summons.Summon(treant);
+    }
+
     void JustDied(Unit* Killer)
     {
         DoScriptText(SAY_DEATH, m_creature);
+        summons.DespawnAll();
     }
 
     void SummonTreants()
@@ -161,8 +166,12 @@ struct boss_warp_splinterAI : public ScriptedAI
             float Y = Treant_Spawn_Pos_Y + TREANT_SPAWN_DIST * sin(angle);
             float O = - m_creature->GetAngle(X,Y);
 
-            if(Creature *pTreant = m_creature->SummonCreature(CREATURE_TREANT,treant_pos[i][0],treant_pos[i][1],treant_pos[i][2],O,TEMPSUMMON_TIMED_OR_CORPSE_DESPAWN,25000))
+            if(Creature *pTreant = m_creature->SummonCreature(CREATURE_TREANT,treant_pos[i][0],treant_pos[i][1],treant_pos[i][2],O,TEMPSUMMON_CORPSE_DESPAWN,25000))
+            {
+                pTreant->setFaction(me->getFaction());
+                pTreant->GetMotionMaster()->MoveFollow(m_creature, 5.0f, frand(0, 2 * M_PI));
                 ((mob_treantAI*)pTreant->AI())->WarpGuid = m_creature->GetGUID();
+            }
         }
 
         DoScriptText(RAND(SAY_SUMMON_1, SAY_SUMMON_2), m_creature);
@@ -174,38 +183,36 @@ struct boss_warp_splinterAI : public ScriptedAI
             return;
 
         //Check for War Stomp
-        if(War_Stomp_Timer < diff)
+        if(War_Stomp_Timer.Expired(diff))
         {
-            DoCast(m_creature->getVictim(),WAR_STOMP);
+            DoCast(m_creature->GetVictim(),WAR_STOMP);
             War_Stomp_Timer = 25000 + rand()%15000;
-        }else War_Stomp_Timer -= diff;
+        }
 
         //Check_Timer
-        if(Check_Timer < diff)
+        if(Check_Timer.Expired(diff))
         {
             if(!m_creature->IsWithinDistInMap(&wLoc, 30.0f))
                 EnterEvadeMode();
             else
                 DoZoneInCombat();
 
-            Check_Timer = 3000;
+            Check_Timer = 1000;
         }
-        else
-            Check_Timer -= diff;
 
         //Check for Arcane Volley
-        if(Arcane_Volley_Timer < diff)
+        if(Arcane_Volley_Timer.Expired(diff))
         {
-            DoCast(m_creature->getVictim(),ARCANE_VOLLEY);
+            DoCast(m_creature->GetVictim(),ARCANE_VOLLEY);
             Arcane_Volley_Timer = 20000 + rand()%15000;
-        }else Arcane_Volley_Timer -= diff;
+        }
 
         //Check for Summon Treants
-        if(Summon_Treants_Timer < diff)
+        if(Summon_Treants_Timer.Expired(diff))
         {
             SummonTreants();
             Summon_Treants_Timer = 45000;
-        }else Summon_Treants_Timer -= diff;
+        }
 
         DoMeleeAttackIfReady();
     }

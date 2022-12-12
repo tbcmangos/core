@@ -1,6 +1,6 @@
 /* 
  * Copyright (C) 2006-2008 ScriptDev2 <https://scriptdev2.svn.sourceforge.net/>
- * Copyright (C) 2008-2014 Hellground <http://hellground.net/>
+ * Copyright (C) 2008-2015 Hellground <http://hellground.net/>
  * 
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -170,11 +170,11 @@ struct boss_chromaggusAI : public ScriptedAI
     uint32 Breath2_Spell;
     uint32 CurrentVurln_Spell;
 
-    uint32 Shimmer_Timer;
-    uint32 Breath1_Timer;
-    uint32 Breath2_Timer;
-    uint32 Affliction_Timer;
-    uint32 Frenzy_Timer;
+    int32 Shimmer_Timer;
+    int32 Breath1_Timer;
+    int32 Breath2_Timer;
+    int32 Affliction_Timer;
+    int32 Frenzy_Timer;
     bool Enraged;
 
     void Reset()
@@ -210,8 +210,8 @@ struct boss_chromaggusAI : public ScriptedAI
         if (!UpdateVictim() )
             return;
 
-        //Shimmer_Timer Timer
-        if (Shimmer_Timer < diff)
+        Shimmer_Timer -= diff;
+        if (Shimmer_Timer <= diff)
         {
             //Remove old vurlnability spell
             if (CurrentVurln_Spell)
@@ -226,37 +226,34 @@ struct boss_chromaggusAI : public ScriptedAI
             CurrentVurln_Spell = spell;
 
             DoScriptText(EMOTE_SHIMMER, m_creature);
-            Shimmer_Timer = 45000;
+            Shimmer_Timer += 45000;
         }
-        else
-            Shimmer_Timer -= diff;
+        
 
-        //Breath1_Timer
-        if (Breath1_Timer < diff)
+        Breath1_Timer -= diff;
+        if (Breath1_Timer <= diff)
         {
-            if (Unit* target = m_creature->getVictim())
+            if (Unit* target = m_creature->GetVictim())
             {
                 DoCast(target,Breath1_Spell);
-                Breath1_Timer = 60000;
+                Breath1_Timer += 60000;
             }
         }
-        else
-            Breath1_Timer -= diff;
+        
 
-        //Breath2_Timer
-        if (Breath2_Timer < diff)
+        Breath2_Timer -= diff;
+        if (Breath2_Timer <= diff)
         {
-            if (Unit* target = m_creature->getVictim())
+            if (Unit* target = m_creature->GetVictim())
             {
-                DoCast(m_creature->getVictim(),Breath2_Spell);
-                Breath2_Timer = 60000;
+                DoCast(m_creature->GetVictim(),Breath2_Spell);
+                Breath2_Timer += 60000;
             }
         }
-        else
-            Breath2_Timer -= diff;
+        
 
-        //Affliction_Timer
-        if (Affliction_Timer < diff)
+        Affliction_Timer -= diff;
+        if (Affliction_Timer <= diff)
         {
             uint32 SpellAfflict = 0;
 
@@ -296,20 +293,19 @@ struct boss_chromaggusAI : public ScriptedAI
                 }
             }
 
-            Affliction_Timer = 10000;
+            Affliction_Timer += 10000;
         }
-        else
-            Affliction_Timer -= diff;
+        
 
-        //Frenzy_Timer
-        if (Frenzy_Timer < diff)
+        Frenzy_Timer -= diff;
+        if (Frenzy_Timer <= diff)
         {
             DoCast(m_creature,SPELL_FRENZY);
             DoScriptText(EMOTE_FRENZY, m_creature);
-            Frenzy_Timer = 10000 + (rand() % 5000);
+            Frenzy_Timer += 10000 + (rand() % 5000);
         }
-        else
-            Frenzy_Timer -= diff;
+        
+           
 
         //Enrage if not already enraged and below 20%
         if (!Enraged && (m_creature->GetHealth()*100 / m_creature->GetMaxHealth()) < 20)

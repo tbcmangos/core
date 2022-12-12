@@ -1,7 +1,7 @@
 /*
  * Copyright (C) 2005-2009 MaNGOS <http://getmangos.com/>
  * Copyright (C) 2008-2009 TrinityCore <http://www.trinitycore.org/>
- * Copyright (C) 2008-2014 Hellground <http://hellground.net/>
+ * Copyright (C) 2008-2017 Hellground <http://wow-hellground.com/>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -24,11 +24,11 @@
 
 PassiveAI::PassiveAI(Creature *c) : CreatureAI(c) { me->SetReactState(REACT_PASSIVE); }
 PossessedAI::PossessedAI(Creature *c) : CreatureAI(c) { me->SetReactState(REACT_PASSIVE); }
-NullCreatureAI::NullCreatureAI(Creature *c) : CreatureAI(c) { me->SetReactState(REACT_PASSIVE); }
+NullCreatureAI::NullCreatureAI(Creature *c) : CreatureAI(c) { me->SetReactState(REACT_PASSIVE);}
 
 void PassiveAI::UpdateAI(const uint32)
 {
-    if (me->isInCombat() && me->getAttackers().empty())
+    if (me->IsInCombat() && me->GetAttackers().empty())
         EnterEvadeMode();
 }
 
@@ -39,9 +39,9 @@ void PossessedAI::AttackStart(Unit *target)
 
 void PossessedAI::UpdateAI(const uint32 diff)
 {
-    if (me->getVictim())
+    if (me->GetVictim())
     {
-        if (!me->canAttack(me->getVictim()))
+        if (!me->canAttack(me->GetVictim()))
             me->AttackStop();
         else
             DoMeleeAttackIfReady();
@@ -63,13 +63,13 @@ void PossessedAI::KilledUnit(Unit* victim)
 
 void CritterAI::DamageTaken(Unit *done_by, uint32 &)
 {
-    if (!me->hasUnitState(UNIT_STAT_FLEEING))
+    if (!me->HasUnitState(UNIT_STAT_FLEEING))
         me->SetFeared(true, done_by, 10000);
 }
 
 void CritterAI::EnterEvadeMode()
 {
-    if (me->hasUnitState(UNIT_STAT_FLEEING))
+    if (me->HasUnitState(UNIT_STAT_FLEEING))
         me->SetFeared(false, NULL);
 
     CreatureAI::EnterEvadeMode();

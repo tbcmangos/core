@@ -1,6 +1,6 @@
 /* 
  * Copyright (C) 2006-2008 ScriptDev2 <https://scriptdev2.svn.sourceforge.net/>
- * Copyright (C) 2008-2014 Hellground <http://hellground.net/>
+ * Copyright (C) 2008-2015 Hellground <http://hellground.net/>
  * 
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -62,7 +62,7 @@ class NearbyAQSentinel
         NearbyAQSentinel(Unit const* obj) : i_obj(obj) {}
         bool operator()(Unit* u)
         {
-            if (u->GetEntry() == 15264 && i_obj->IsWithinDistInMap(u, 70) && !u->isDead())
+            if (u->GetEntry() == 15264 && i_obj->IsWithinDistInMap(u, 70) && !u->IsDead())
                 return true;
             else
                 return false;
@@ -157,7 +157,7 @@ struct aqsentinelAI : public ScriptedAI
             Creature *c = nearby[i];
             if (c)
             {
-                if (!c->isInCombat())
+                if (!c->IsInCombat())
                 {
                     c->SetNoCallAssistance(true);
                     if(c->AI())
@@ -222,13 +222,13 @@ struct aqsentinelAI : public ScriptedAI
 
     void Reset()
     {
-        if (!m_creature->isDead())
+        if (!m_creature->IsDead())
         {
             for (int i=0; i<3; i++)
             {
                 if (!nearby[i])
                     continue;
-                if (nearby[i]->isDead())
+                if (nearby[i]->IsDead())
                     nearby[i]->Respawn();
             }
         }
@@ -271,7 +271,7 @@ struct aqsentinelAI : public ScriptedAI
             Creature *sent = nearby[ni];
             if (!sent)
                 continue;
-            if (sent->isDead())
+            if (sent->IsDead())
                 continue;
             int h = sent->GetHealth() + (sent->GetMaxHealth() / 2);
             if (h > sent->GetMaxHealth())
@@ -279,6 +279,9 @@ struct aqsentinelAI : public ScriptedAI
             sent->SetHealth(h);
             ((aqsentinelAI *)sent->AI())->GainSentinelAbility(ability);
         }
+        // summon obsidian shard
+        m_creature->SummonGameObject(181068, m_creature->GetPositionX(), m_creature->GetPositionY(),
+            m_creature->GetPositionZ(), 0, 0, 0, 0, 0, 0);
     }
 
     Unit *GetHatedManaUser()
@@ -287,7 +290,7 @@ struct aqsentinelAI : public ScriptedAI
         for (i = m_creature->getThreatManager().getThreatList().begin();i != m_creature->getThreatManager().getThreatList().end(); ++i)
         {
             Unit* pUnit = Unit::GetUnit((*m_creature), (*i)->getUnitGuid());
-            if (pUnit->getPowerType()==POWER_MANA)
+            if (pUnit->GetPowerType()==POWER_MANA)
                 return pUnit;
         }
         return NULL;
@@ -316,7 +319,7 @@ Unit* SentinelAbilityAura::GetTriggerTarget() const
         case SPELL_THUNDER_BUFF:
         case SPELL_MSTRIKE_BUFF:
         case SPELL_STORM_BUFF:
-            return aOwner->m_creature->getVictim();
+            return aOwner->m_creature->GetVictim();
 
         case SPELL_MANAB_BUFF:
             return aOwner->GetHatedManaUser();

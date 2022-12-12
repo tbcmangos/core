@@ -1,6 +1,6 @@
 /* 
  * Copyright (C) 2006-2008 ScriptDev2 <https://scriptdev2.svn.sourceforge.net/>
- * Copyright (C) 2008-2014 Hellground <http://hellground.net/>
+ * Copyright (C) 2008-2015 Hellground <http://hellground.net/>
  * 
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -43,7 +43,6 @@
 #define DATA_KAEL                   16
 #define DATA_KAEL_PHASE             17
 #define DATA_KAEL_TRASH_EVENT       18
-#define DATA_KAEL_TRASH_COUNTER     19
 #define DATA_KAEL_DOOR              20
 #define DATA_KALEC                  21
 #define DATA_VEXALLUS               22

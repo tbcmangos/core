@@ -1,6 +1,6 @@
 /* 
  * Copyright (C) 2006-2008 ScriptDev2 <https://scriptdev2.svn.sourceforge.net/>
- * Copyright (C) 2008-2014 Hellground <http://hellground.net/>
+ * Copyright (C) 2008-2015 Hellground <http://hellground.net/>
  * 
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -81,15 +81,15 @@ struct mob_inner_demonAI : public ScriptedAI
         victimGUID = 0;
     }
 
-    uint32 ShadowBolt_Timer;
+    Timer ShadowBolt_Timer;
 
-    uint32 Link_Timer;
+    Timer Link_Timer;
     uint64 victimGUID;
 
     void Reset()
     {
-        ShadowBolt_Timer = 10000;
-        Link_Timer = 1000;
+        ShadowBolt_Timer.Reset(3000);
+        Link_Timer.Reset(1000);
     }
     void JustDied(Unit *victim)
     {
@@ -100,7 +100,7 @@ struct mob_inner_demonAI : public ScriptedAI
 
     void DamageTaken(Unit *done_by, uint32 &damage)
     {
-        if(done_by->GetCharmerOrOwnerOrOwnGUID() != victimGUID && done_by->GetCharmerOrOwnerOrOwnGUID() != m_creature->GetGUID())
+        if(done_by->GetCharmerOrOwnerOrOwnGUID() != victimGUID /*&& done_by->GetCharmerOrOwnerOrOwnGUID() != m_creature->GetGUID()*/)
         {
             damage = 0;
             DoModifyThreatPercent(done_by, -100);
@@ -122,32 +122,32 @@ struct mob_inner_demonAI : public ScriptedAI
         {
             if(m_creature->getVictimGUID() != victimGUID)
             {
-                if(owner->isAlive())
+                if(owner->IsAlive())
                     AttackStart(owner);
                 else
                     m_creature->Kill(m_creature,false);
             }
         }
 
-        if(Link_Timer < diff)
+        if(Link_Timer.Expired(diff))
         {
-            DoCast(m_creature->getVictim(), SPELL_SOUL_LINK, true);
+            DoCast(m_creature->GetVictim(), SPELL_SOUL_LINK, true);
             Link_Timer = 1000;
+            m_creature->GetMotionMaster()->MoveChase(m_creature->GetVictim());
+                
         }
-        else
-            Link_Timer -= diff;
+        
 
 
         if(!m_creature->HasAura(AURA_DEMONIC_ALIGNMENT, 0))
             DoCast(m_creature, AURA_DEMONIC_ALIGNMENT,true);
 
-        if(ShadowBolt_Timer < diff)
+        if (ShadowBolt_Timer.Expired(diff))
         {
-            DoCast(m_creature->getVictim(), SPELL_SHADOWBOLT, false);
-            ShadowBolt_Timer = 10000;
+            DoCast(m_creature->GetVictim(), SPELL_SHADOWBOLT, false);
+            ShadowBolt_Timer = 5000;
         }
-        else
-            ShadowBolt_Timer -= diff;
+        
 
        DoMeleeAttackIfReady();
     }
@@ -160,23 +160,24 @@ struct boss_leotheras_the_blindAI : public ScriptedAI
         m_creature->GetPosition(x,y,z);
         m_creature->GetPosition(wLoc);
         pInstance = (c->GetInstanceData());
+        minstance = m_creature->GetMap();
         Demon = 0;
         Berserk_Timer = 600000;
-
-        for(uint8 i = 0; i < 3; i++)//clear guids
-            SpellBinderGUID[i] = 0;
+        ChannelersAlive = true;
     }
 
     ScriptedInstance *pInstance;
 
-    uint32 Whirlwind_Timer;
-    uint32 ChaosBlast_Timer;
-    uint32 PulseCombat_Timer;
-    uint32 SwitchToDemon_Timer;
-    uint32 SwitchToHuman_Timer;
-    uint32 Berserk_Timer;
-    uint32 InnerDemons_Timer;
-    uint32 BanishTimer;
+    Map *minstance;
+
+    Timer Whirlwind_Timer;
+    Timer ChaosBlast_Timer;
+    Timer PulseCombat_Timer;
+    Timer SwitchToDemon_Timer;
+    Timer SwitchToHuman_Timer;
+    Timer Berserk_Timer;
+    Timer InnerDemons_Timer;
+    Timer BanishTimer;
 
     WorldLocation wLoc;
 
@@ -184,6 +185,7 @@ struct boss_leotheras_the_blindAI : public ScriptedAI
     bool NeedThreatReset;
     bool DemonForm;
     bool IsFinalForm;
+    bool ChannelersAlive;
     float x,y,z;
 
     uint64 InnderDemon[5];
@@ -194,15 +196,16 @@ struct boss_leotheras_the_blindAI : public ScriptedAI
 
     void Reset()
     {
-        CheckChannelers();
-        BanishTimer = 1000;
-        PulseCombat_Timer = 5000;
-        Whirlwind_Timer = 15000;
-        ChaosBlast_Timer = 1000;
-        SwitchToDemon_Timer = 45000;
-        SwitchToHuman_Timer = 60000;
-        Berserk_Timer = 600000;
-        InnerDemons_Timer = 30000;
+        ChannelersAlive = true;
+        EnterEvadeMode();
+        BanishTimer.Reset(1000);
+        PulseCombat_Timer.Reset(5000);
+        Whirlwind_Timer.Reset(15000);
+        ChaosBlast_Timer.Reset(1000);
+        SwitchToDemon_Timer.Reset(45000);
+        SwitchToHuman_Timer.Reset(60000);
+        Berserk_Timer.Reset(600000);
+        InnerDemons_Timer.Reset(30000);
         m_creature->SetCanDualWield(true);
         DealDamage = true;
         DemonForm = false;
@@ -217,44 +220,21 @@ struct boss_leotheras_the_blindAI : public ScriptedAI
         m_creature->SetCorpseDelay(1000*60*60);
 
         if(pInstance && pInstance->GetData(DATA_LEOTHERASTHEBLINDEVENT) != DONE)
+        {
             pInstance->SetData(DATA_LEOTHERASTHEBLINDEVENT, NOT_STARTED);
+            pInstance->SetData64(DATA_LEOTHERAS_EVENT_STARTER, 0);
+        }
 
         m_creature->SetReactState(REACT_AGGRESSIVE);
         m_creature->SetMeleeDamageSchool(SPELL_SCHOOL_NORMAL);
     }
 
-    void CheckChannelers()
-    {
-        for(uint8 i = 0; i < 3; i++)
-        {
-            Creature *add = Unit::GetCreature(*m_creature,SpellBinderGUID[i]);
-            if (add && add->isAlive())
-            {
-                add->setDeathState(DEAD);
-                add->RemoveCorpse();
-            }
-            else
-            {
-                if(add && add->isDead())
-                    add->RemoveCorpse();
-            }
-            float nx = x;
-            float ny = y;
-            float o = 2.4f;
-            if (i == 0) {nx += 10; ny -= 5; o=2.5f;}
-            if (i == 1) {nx -= 8; ny -= 7; o=0.9f;}
-            if (i == 2) {nx -= 3; ny += 9; o=5.0f;}
-            Creature* binder = m_creature->SummonCreature(MOB_SPELLBINDER,nx,ny,z,o,TEMPSUMMON_DEAD_DESPAWN,0);
-            if (binder)
-                SpellBinderGUID[i] = binder->GetGUID();
-        }
-    }
     void MoveInLineOfSight(Unit *who)
     {
         if(m_creature->HasAura(AURA_BANISH, 0))
             return;
 
-        if( !m_creature->getVictim() && who->isTargetableForAttack() && ( m_creature->IsHostileTo( who )) && who->isInAccessiblePlacefor(m_creature) )
+        if( !m_creature->GetVictim() && who->isTargetableForAttack() && ( m_creature->IsHostileTo( who )) && who->isInAccessiblePlacefor(m_creature) )
         {
             if (m_creature->GetDistanceZ(who) > CREATURE_Z_ATTACK_RANGE)
                 return;
@@ -281,16 +261,7 @@ struct boss_leotheras_the_blindAI : public ScriptedAI
 
     void CheckBanish()
     {
-        uint8 AliveChannelers = 0;
-        for(uint8 i = 0; i < 3; i++)
-        {
-            Unit *add = Unit::GetUnit(*m_creature,SpellBinderGUID[i]);
-            if (add && add->isAlive())
-                AliveChannelers++;
-        }
-
-        // channelers == 0 remove banish aura
-        if(AliveChannelers == 0 && m_creature->HasAura(AURA_BANISH, 0))
+        if (!ChannelersAlive && m_creature->HasAura(AURA_BANISH, 0))
         {
             // removing banish aura
             m_creature->RemoveAurasDueToSpell(AURA_BANISH);
@@ -312,9 +283,9 @@ struct boss_leotheras_the_blindAI : public ScriptedAI
                 StartEvent();
             }
         }
-        else if(AliveChannelers != 0 && !m_creature->HasAura(AURA_BANISH, 0))
+        else if(ChannelersAlive && !m_creature->HasAura(AURA_BANISH, 0))
         {
-            // channelers != 0 apply banish aura
+            // Channelers are alive and banish is not present, reapply
             // removing Leotheras banish immune to apply AURA_BANISH
             m_creature->ApplySpellImmune(AURA_BANISH, IMMUNITY_MECHANIC, MECHANIC_BANISH, false);
             DoCast(m_creature, AURA_BANISH);
@@ -325,6 +296,9 @@ struct boss_leotheras_the_blindAI : public ScriptedAI
             // and removing weapons
             m_creature->SetUInt32Value(UNIT_VIRTUAL_ITEM_SLOT_DISPLAY  , 0);
             m_creature->SetUInt32Value(UNIT_VIRTUAL_ITEM_SLOT_DISPLAY+1, 0);
+
+            if (m_creature->IsInCombat())
+                EnterEvadeMode();
         }
     }
 
@@ -337,7 +311,7 @@ struct boss_leotheras_the_blindAI : public ScriptedAI
             {
                 //delete creature
                 Unit* pUnit = Unit::GetUnit((*m_creature), InnderDemon[i]);
-                if(pUnit && pUnit->isAlive())
+                if(pUnit && pUnit->IsAlive())
                     pUnit->Kill(pUnit, false);
 
                 InnderDemon[i] = 0;
@@ -354,10 +328,10 @@ struct boss_leotheras_the_blindAI : public ScriptedAI
             if(InnderDemon[i] > 0 )
             {
                 Unit* pUnit = Unit::GetUnit((*m_creature), InnderDemon[i]);
-                if (pUnit && pUnit->isAlive())
+                if (pUnit && pUnit->IsAlive())
                 {
                     Unit* pUnit_target = Unit::GetUnit((*pUnit), ((mob_inner_demonAI *)((Creature *)pUnit)->AI())->victimGUID);
-                    if( pUnit_target && pUnit_target->isAlive())
+                    if( pUnit_target && pUnit_target->IsAlive())
                         m_creature->CastSpell(pUnit_target, SPELL_CONSUMING_MADNESS, true);
                 }
             }
@@ -375,7 +349,7 @@ struct boss_leotheras_the_blindAI : public ScriptedAI
             DoScriptText(RAND(SAY_NIGHTELF_SLAY1, SAY_NIGHTELF_SLAY2, SAY_NIGHTELF_SLAY3), m_creature);
     }
 
-    void JustDied(Unit *victim)
+    void JustDied(Unit *Killer)
     {
         DoScriptText(SAY_DEATH, m_creature);
 
@@ -394,7 +368,6 @@ struct boss_leotheras_the_blindAI : public ScriptedAI
     {
         if(m_creature->HasAura(AURA_BANISH, 0))
             return;
-
         m_creature->LoadEquipment(m_creature->GetEquipmentId());
     }
 
@@ -404,39 +377,37 @@ struct boss_leotheras_the_blindAI : public ScriptedAI
         if (!UpdateVictim() || m_creature->HasAura(AURA_BANISH, 0))
         {
 
-            if(BanishTimer < diff)
+            if (BanishTimer.Expired(diff))
             {
+                if (minstance->GetCreatureById(MOB_SPELLBINDER, GET_ALIVE_CREATURE_GUID))
+                    ChannelersAlive = true;
+                else
+                    ChannelersAlive = false;
                 CheckBanish();         //no need to check every update tick
                 BanishTimer = 1000;
             }
-            else
-                BanishTimer -= diff;
             return;
         }
 
-        if(PulseCombat_Timer < diff)
+        if (PulseCombat_Timer.Expired(diff))
         {
             DoZoneInCombat();
             PulseCombat_Timer = 2000;
             me->SetSpeed(MOVE_RUN, DemonForm ? 3.0 : 2.0);
         }
-        else
-            PulseCombat_Timer -= diff;
+        
 
         if(m_creature->HasAura(SPELL_WHIRLWIND, 0))
         {
-            if(Whirlwind_Timer < diff)
+            if (Whirlwind_Timer.Expired(diff))
             {
-                if(Unit *newTarget = SelectUnit(SELECT_TARGET_RANDOM, 0))
-                {
-                    DoResetThreat();
-                    m_creature->GetMotionMaster()->Clear();
-                    m_creature->GetMotionMaster()->MovePoint(0,newTarget->GetPositionX(),newTarget->GetPositionY(),newTarget->GetPositionZ());
-                }
+                
+                DoResetThreat();
+                Unit* target = SelectUnit(SELECT_TARGET_RANDOM, 0, 0, true);
+                if (target)
+                    m_creature->AddThreat(target, 1000000.0f);
                 Whirlwind_Timer = 2000;
             }
-            else
-                Whirlwind_Timer -= diff;
         }
 
         // reseting after changing forms and after ending whirlwind
@@ -461,37 +432,34 @@ struct boss_leotheras_the_blindAI : public ScriptedAI
         }
 
         //Enrage_Timer ( 10 min )
-        if(Berserk_Timer < diff)
+        if (Berserk_Timer.Expired(diff))
         {
             if(!m_creature->HasAura(SPELL_BERSERK, 0))
                 DoCast(m_creature, SPELL_BERSERK);
             m_creature->SetSpeed(MOVE_RUN, 3.0);
             Berserk_Timer = 5000;
         }
-        else
-            Berserk_Timer -= diff;
+        
 
         if(!DemonForm)
         {
             //Whirldind Timer
             if(!m_creature->HasAura(SPELL_WHIRLWIND, 0))
             {
-                if(Whirlwind_Timer < diff)
+                if (Whirlwind_Timer.Expired(diff))
                 {
                     DoCast(m_creature, SPELL_WHIRLWIND);
                     // while whirlwinding this variable is used to countdown target's change
-                    Whirlwind_Timer = 2000;
+                    Whirlwind_Timer = 1;
                     NeedThreatReset = true;
-                    m_creature->SetReactState(REACT_PASSIVE);
+                    //m_creature->SetReactState(REACT_PASSIVE);
                 }
-                else
-                    Whirlwind_Timer -= diff;
             }
 
             //Switch_Timer
             if(!IsFinalForm)
             {
-                if(SwitchToDemon_Timer < diff)
+                if (SwitchToDemon_Timer.Expired(diff))
                 {
                     //switch to demon form
                     m_creature->RemoveAurasDueToSpell(SPELL_WHIRLWIND,0);
@@ -505,36 +473,33 @@ struct boss_leotheras_the_blindAI : public ScriptedAI
                     m_creature->SetReactState(REACT_AGGRESSIVE);
                     m_creature->SetMeleeDamageSchool(SPELL_SCHOOL_FIRE);
                 }
-                else
-                    SwitchToDemon_Timer -= diff;
             }
             DoMeleeAttackIfReady();
         }
         else
         {
             //ChaosBlast_Timer
-            if (!m_creature->getVictim())
+            if (!m_creature->GetVictim())
                 return;
 
-            if(m_creature->IsWithinDistInMap(m_creature->getVictim(), 30))
+            if(m_creature->IsWithinDistInMap(m_creature->GetVictim(), 30))
                 m_creature->StopMoving();
 
-            if(ChaosBlast_Timer < diff)
+            if (ChaosBlast_Timer.Expired(diff))
             {
                 // will cast only when in range of spell
-                if(m_creature->IsWithinDistInMap(m_creature->getVictim(), 30))
+                if(m_creature->IsWithinDistInMap(m_creature->GetVictim(), 30))
                 {
-                    //m_creature->CastSpell(m_creature->getVictim(), SPELL_CHAOS_BLAST, true);
+                    //m_creature->CastSpell(m_creature->GetVictim(), SPELL_CHAOS_BLAST, true);
                     int damage = 100;
-                    m_creature->CastCustomSpell(m_creature->getVictim(), SPELL_CHAOS_BLAST, &damage, NULL, NULL, false, NULL, NULL, m_creature->GetGUID());
+                    m_creature->CastCustomSpell(m_creature->GetVictim(), SPELL_CHAOS_BLAST, &damage, NULL, NULL, false, NULL, NULL, m_creature->GetGUID());
                 }
                 ChaosBlast_Timer = 3000;
             }
-            else
-                ChaosBlast_Timer -= diff;
+           
 
             //Summon Inner Demon
-            if(InnerDemons_Timer < diff)
+            if (InnerDemons_Timer.Expired(diff))
             {
                 std::list<HostileReference *>& ThreatList = m_creature->getThreatManager().getThreatList();
                 std::vector<Unit *> TargetList;
@@ -549,7 +514,7 @@ struct boss_leotheras_the_blindAI : public ScriptedAI
                 SpellEntry *spell = (SpellEntry *)GetSpellStore()->LookupEntry(SPELL_INSIDIOUS_WHISPER);
                 for(std::vector<Unit *>::iterator itr = TargetList.begin(); itr != TargetList.end(); ++itr)
                 {
-                    if( (*itr) && (*itr)->isAlive() )
+                    if( (*itr) && (*itr)->IsAlive() )
                     {
                         Creature * demon = (Creature *)m_creature->SummonCreature(INNER_DEMON_ID, (*itr)->GetPositionX()+10, (*itr)->GetPositionY()+10, (*itr)->GetPositionZ(), 0, TEMPSUMMON_TIMED_DESPAWN_OUT_OF_COMBAT, 5000);
                         if(demon)
@@ -575,13 +540,12 @@ struct boss_leotheras_the_blindAI : public ScriptedAI
                 }
                 DoScriptText(SAY_INNER_DEMONS, m_creature);
 
-                InnerDemons_Timer = 999999;
+                InnerDemons_Timer = 0;
             }
-            else
-                InnerDemons_Timer -= diff;
+
 
             //Switch_Timer
-            if(SwitchToHuman_Timer < diff)
+            if (SwitchToHuman_Timer.Expired(diff))
             {
                 //switch to nightelf form
                 m_creature->SetUInt32Value(UNIT_FIELD_DISPLAYID, MODEL_NIGHTELF);
@@ -596,8 +560,6 @@ struct boss_leotheras_the_blindAI : public ScriptedAI
                 SwitchToHuman_Timer = 60000;
                 m_creature->SetMeleeDamageSchool(SPELL_SCHOOL_NORMAL);
             }
-            else
-                SwitchToHuman_Timer -= diff;
         }
 
         if (!IsFinalForm && (m_creature->GetHealth()*100 / m_creature->GetMaxHealth()) < 15)
@@ -609,8 +571,8 @@ struct boss_leotheras_the_blindAI : public ScriptedAI
              {
                  Demon = Copy->GetGUID();
                  Copy->SetMeleeDamageSchool(SPELL_SCHOOL_FIRE);
-                if (m_creature->getVictim())
-                    Copy->AI()->AttackStart(m_creature->getVictim());
+                if (m_creature->GetVictim())
+                    Copy->AI()->AttackStart(m_creature->GetVictim());
             }
             //set nightelf final form
             IsFinalForm = true;
@@ -629,14 +591,14 @@ struct boss_leotheras_the_blind_demonformAI : public ScriptedAI
 {
     boss_leotheras_the_blind_demonformAI(Creature *c) : ScriptedAI(c) {}
 
-    uint32 ChaosBlast_Timer;
+    Timer ChaosBlast_Timer;
     bool DealDamage;
-    uint32 checkTimer;
+    Timer checkTimer;
 
     void Reset()
     {
-        ChaosBlast_Timer = 1000;
-        checkTimer = 2000;
+        ChaosBlast_Timer.Reset(1000);
+        checkTimer.Reset(2000);
         DealDamage = true;
         m_creature->SetMeleeDamageSchool(SPELL_SCHOOL_FIRE);
     }
@@ -667,32 +629,31 @@ struct boss_leotheras_the_blind_demonformAI : public ScriptedAI
 
     void UpdateAI(const uint32 diff)
     {
+       
         //Return since we have no target
         if (!UpdateVictim() )
             return;
-        if (checkTimer <= diff)
+        if (checkTimer.Expired(diff))
         {
             checkTimer = 2000;
             me->SetSpeed(MOVE_RUN, 3.0);
         }
-        else
-            checkTimer -= diff;
 
         //ChaosBlast_Timer
-        if(m_creature->IsWithinDistInMap(m_creature->getVictim(), 25))
+        if(m_creature->IsWithinDistInMap(m_creature->GetVictim(), 25))
             m_creature->StopMoving();
 
-        if(ChaosBlast_Timer < diff)
+        if (ChaosBlast_Timer.Expired(diff))
          {
             // will cast only when in range od spell
-            if(m_creature->IsWithinDistInMap(m_creature->getVictim(), 25))
+            if(m_creature->IsWithinDistInMap(m_creature->GetVictim(), 25))
             {
-                //m_creature->CastSpell(m_creature->getVictim(),SPELL_CHAOS_BLAST,true);
+                //m_creature->CastSpell(m_creature->GetVictim(),SPELL_CHAOS_BLAST,true);
                 int damage = 100;
-                m_creature->CastCustomSpell(m_creature->getVictim(), SPELL_CHAOS_BLAST, &damage, NULL, NULL, false, NULL, NULL, m_creature->GetGUID());
+                m_creature->CastCustomSpell(m_creature->GetVictim(), SPELL_CHAOS_BLAST, &damage, NULL, NULL, false, NULL, NULL, m_creature->GetGUID());
                 ChaosBlast_Timer = 3000;
             }
-         }else ChaosBlast_Timer -= diff;
+         }
 
         //Do NOT deal any melee damage to the target.
     }
@@ -703,31 +664,34 @@ struct mob_greyheart_spellbinderAI : public ScriptedAI
     {
         pInstance = ((ScriptedInstance *)c->GetInstanceData());
         leotherasGUID = 0;
+        me->GetHomePosition(homepos.x, homepos.y, homepos.z, homepos.o);
+        
     }
 
     ScriptedInstance *pInstance;
 
     uint64 leotherasGUID;
 
-    uint32 Mindblast_Timer;
-    uint32 Earthshock_Timer;
+    Position homepos;
+    Position pos;
+    Timer Mindblast_Timer;
+    Timer Earthshock_Timer;
 
     void Reset()
     {
-        Mindblast_Timer  = 3000 + rand()%5000;
-        Earthshock_Timer = 5000 + rand()%5000;
-
+        Mindblast_Timer.Reset(3000 + rand() % 5000);
+        Earthshock_Timer.Reset(5000 + rand() % 5000);
         if(pInstance)
         {
             if (pInstance->GetData(DATA_LEOTHERASTHEBLINDEVENT) != NOT_STARTED)
             {
-                m_creature->Kill(m_creature,false);
+                m_creature->Respawn();
                 return;
             }
             pInstance->SetData64(DATA_LEOTHERAS_EVENT_STARTER, 0);
             Creature *leotheras = (Creature *)Unit::GetUnit(*m_creature, leotherasGUID);
-            if(leotheras && leotheras->isAlive())
-                ((boss_leotheras_the_blindAI*)leotheras->AI())->CheckChannelers();
+            if(leotheras && leotheras->IsAlive())
+                ((boss_leotheras_the_blindAI*)leotheras->AI())->CheckBanish();
         }
     }
 
@@ -745,12 +709,15 @@ struct mob_greyheart_spellbinderAI : public ScriptedAI
 
     void CastChanneling()
     {
-        if(!m_creature->isInCombat() && !m_creature->m_currentSpells[CURRENT_CHANNELED_SPELL])
+        me->GetPosition(pos);
+        if (pos != homepos)
+            EnterEvadeMode();
+        if(!m_creature->IsInCombat() && !m_creature->m_currentSpells[CURRENT_CHANNELED_SPELL])
         {
             if(leotherasGUID)
             {
                 Creature *leotheras = (Creature *)Unit::GetUnit(*m_creature, leotherasGUID);
-                if(leotheras && leotheras->isAlive())
+                if(leotheras && leotheras->IsAlive())
                     DoCast(leotheras, BANISH_BEAM);
             }
         }
@@ -763,7 +730,7 @@ struct mob_greyheart_spellbinderAI : public ScriptedAI
             if(!leotherasGUID)
                 leotherasGUID = pInstance->GetData64(DATA_LEOTHERAS);
 
-            if(!m_creature->isInCombat() && pInstance->GetData64(DATA_LEOTHERAS_EVENT_STARTER))
+            if(!m_creature->IsInCombat() && pInstance->GetData64(DATA_LEOTHERAS_EVENT_STARTER))
             {
                 Unit *victim = Unit::GetUnit(*m_creature, pInstance->GetData64(DATA_LEOTHERAS_EVENT_STARTER));
                 if(victim)
@@ -773,25 +740,26 @@ struct mob_greyheart_spellbinderAI : public ScriptedAI
 
         if(!UpdateVictim())
         {
-            CastChanneling();
+            if (!me->IsInCombat())
+                CastChanneling();
             return;
         }
 
-        if(pInstance && !pInstance->GetData64(DATA_LEOTHERAS_EVENT_STARTER))
+        if(pInstance && pInstance->GetData64(DATA_LEOTHERAS_EVENT_STARTER) == 0)
         {
             Reset();
             return;
         }
 
-        if(Mindblast_Timer < diff)
+        if (Mindblast_Timer.Expired(diff))
         {
             if(Unit* target = SelectUnit(SELECT_TARGET_RANDOM,0, GetSpellMaxRange(SPELL_MINDBLAST), true))
                 DoCast(target, SPELL_MINDBLAST);
 
             Mindblast_Timer = 10000 + rand()%5000;
-        }else Mindblast_Timer -= diff;
+        }
 
-        if(Earthshock_Timer < diff)
+        if (Earthshock_Timer.Expired(diff))
         {
             Map *map = m_creature->GetMap();
             Map::PlayerList const &PlayerList = map->GetPlayers();
@@ -812,7 +780,7 @@ struct mob_greyheart_spellbinderAI : public ScriptedAI
                 }
             }
             Earthshock_Timer = 8000 + rand()%7000;
-        }else Earthshock_Timer -= diff;
+        }
         DoMeleeAttackIfReady();
     }
 

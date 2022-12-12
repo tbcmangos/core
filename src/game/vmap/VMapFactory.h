@@ -1,6 +1,6 @@
 /*
  * Copyright (C) 2005-2010 MaNGOS <http://getmangos.com/>
- * Copyright (C) 2008-2014 Hellground <http://hellground.net/>
+ * Copyright (C) 2008-2017 Hellground <http://wow-hellground.com/>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -35,9 +35,6 @@ namespace VMAP
         public:
             static IVMapManager* createOrGetVMapManager();
             static void clear();
-
-            static void preventSpellsFromBeingTestedForLoS(const char* pSpellIdString);
-            static bool checkSpellForLoS(unsigned int pSpellId);
     };
 
 }

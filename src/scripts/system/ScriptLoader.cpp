@@ -1,6 +1,6 @@
 /*
  * Copyright (C) 2006-2009 ScriptDev2 <https://scriptdev2.svn.sourceforge.net/>
- * Copyright (C) 2008-2014 Hellground <http://hellground.net/>
+ * Copyright (C) 2008-2015 Hellground <http://hellground.net/>
  * 
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -28,6 +28,7 @@ extern void AddSC_areatrigger_scripts();
 extern void AddSC_boss_emeriss();
 extern void AddSC_boss_taerar();
 extern void AddSC_boss_ysondre();
+extern void AddSC_hogger_the();
 
 // -- Creature --
 extern void AddSC_generic_creature();
@@ -175,6 +176,7 @@ extern void AddSC_instance_blackwing_lair();
 
 //Blade's Edge Mountains
 extern void AddSC_blades_edge_mountains();
+extern void AddSC_shartuul();
 
 //Blasted lands
 extern void AddSC_boss_kruul();
@@ -280,6 +282,8 @@ extern void AddSC_feralas();
 extern void AddSC_ghostlands();
 
 //Gnomeregan
+extern void AddSC_gnomeregan();
+
 //Gruul's Lair
 extern void AddSC_boss_gruul();
 extern void AddSC_boss_high_king_maulgar();
@@ -312,6 +316,7 @@ extern void AddSC_boss_vazruden_the_herald();
 //Hellfire Peninsula
 extern void AddSC_boss_doomlordkazzak();
 extern void AddSC_hellfire_peninsula();
+extern void AddSC_stair_of_destiny();
 
 //Hillsbrad Foothills
 //Hinterlands
@@ -352,6 +357,7 @@ extern void AddSC_magisters_terrace_trash();
 extern void AddSC_instance_magisters_terrace();
 
 //Maraudon
+extern void AddSC_maraudon();
 extern void AddSC_boss_celebras_the_cursed();
 extern void AddSC_boss_landslide();
 extern void AddSC_boss_noxxion();
@@ -417,6 +423,7 @@ extern void AddSC_boss_amnennar_the_coldbringer();
 extern void AddSC_razorfen_kraul();
 
 //Redridge Mountains
+extern void AddSC_redridge();
 //Ruins of Ahn'Qiraj
 extern void AddSC_boss_ayamiss();
 extern void AddSC_larva();
@@ -506,6 +513,8 @@ extern void AddSC_instance_stratholme();
 extern void AddSC_stratholme();
 
 //Sunken Temple
+extern void AddSC_sunken_temple();
+
 //Sunwell Plateau
 extern void AddSC_instance_sunwell_plateau();
 extern void AddSC_boss_kalecgos();
@@ -650,6 +659,7 @@ void AddScripts()
     AddSC_boss_emeriss();
     AddSC_boss_taerar();
     AddSC_boss_ysondre();
+	AddSC_hogger_the();
 
     // -- Creature --
     AddSC_generic_creature();
@@ -794,6 +804,7 @@ void AddScripts()
 
     //Blade's Edge Mountains
     AddSC_blades_edge_mountains();
+    AddSC_shartuul();
 
     //Blasted lands
     AddSC_boss_kruul();
@@ -899,6 +910,8 @@ void AddScripts()
     AddSC_ghostlands();
 
     //Gnomeregan
+    AddSC_gnomeregan();
+
     //Gruul's Lair
     AddSC_boss_gruul();
     AddSC_boss_high_king_maulgar();
@@ -931,6 +944,7 @@ void AddScripts()
     //Hellfire Peninsula
     AddSC_boss_doomlordkazzak();
     AddSC_hellfire_peninsula();
+    AddSC_stair_of_destiny();
 
     //Hillsbrad Foothills
     //Hinterlands
@@ -971,6 +985,7 @@ void AddScripts()
     AddSC_instance_magisters_terrace();
 
     //Maraudon
+    AddSC_maraudon();
     AddSC_boss_celebras_the_cursed();
     AddSC_boss_landslide();
     AddSC_boss_noxxion();
@@ -1036,6 +1051,7 @@ void AddScripts()
     AddSC_razorfen_kraul();
 
     //Redridge Mountains
+    AddSC_redridge();
     //Ruins of Ahn'Qiraj
     AddSC_boss_ayamiss();
     AddSC_larva();
@@ -1126,6 +1142,7 @@ void AddScripts()
     AddSC_stratholme();
 
     //Sunken Temple
+    AddSC_sunken_temple();
     //Sunwell Plateau
     AddSC_instance_sunwell_plateau();
     AddSC_boss_kalecgos();

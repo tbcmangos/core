@@ -1,6 +1,6 @@
 /* 
  * Copyright (C) 2006-2009 ScriptDev2 <https://scriptdev2.svn.sourceforge.net/>
- * Copyright (C) 2008-2014 Hellground <http://hellground.net/>
+ * Copyright (C) 2008-2015 Hellground <http://hellground.net/>
  * 
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -57,42 +57,42 @@ enum MotherSpells
     SPELL_SABER_LASH_AURA   = 40816
 };
 
-float positions[34][2] =
+static float positions[34][2] =
 {
-    {927.979, 181.61},
-    {942.904, 181.996},
-    {956.791, 180.219},
-    {972.212, 186.743},
-    {961.126, 195.864},
-    {947.358, 192.311},
-    {932.846, 191.636},
-    {931.008, 202.818},
-    {940.404, 206.899},
-    {951.583, 205.207},
-    {961.637, 207.041},
-    {966.439, 219.553},
-    {955.098, 218.286},
-    {945.183, 220.835},
-    {927.697, 220.758},
-    {926.898, 231.017},
-    {939.866, 233.547},
-    {961.485, 234.489},
-    {976.464, 240.407},
-    {967.097, 248.814},
-    {952.011, 251.172},
-    {943.619, 250.804},
-    {933.353, 250.352},
-    {920.665, 247.924},
-    {919.703, 262.54},
-    {937.174, 262.04},
-    {946.208, 258.092},
-    {955.213, 262.29},
-    {971.454, 261.922},
-    {970.511, 271.813},
-    {958.936, 272.276},
-    {947.011, 271.858},
-    {938.205, 271.412},
-    {929.774, 262.897}
+    {927.979f, 181.61f},
+    {942.904f, 181.996f},
+    {956.791f, 180.219f},
+    {972.212f, 186.743f},
+    {961.126f, 195.864f},
+    {947.358f, 192.311f},
+    {932.846f, 191.636f},
+    {931.008f, 202.818f},
+    {940.404f, 206.899f},
+    {951.583f, 205.207f},
+    {961.637f, 207.041f},
+    {966.439f, 219.553f},
+    {955.098f, 218.286f},
+    {945.183f, 220.835f},
+    {927.697f, 220.758f},
+    {926.898f, 231.017f},
+    {939.866f, 233.547f},
+    {961.485f, 234.489f},
+    {976.464f, 240.407f},
+    {967.097f, 248.814f},
+    {952.011f, 251.172f},
+    {943.619f, 250.804f},
+    {933.353f, 250.352f},
+    {920.665f, 247.924f},
+    {919.703f, 262.54f},
+    {937.174f, 262.04f},
+    {946.208f, 258.092f},
+    {955.213f, 262.29f},
+    {971.454f, 261.922f},
+    {970.511f, 271.813f},
+    {958.936f, 272.276f},
+    {947.011f, 271.858f},
+    {938.205f, 271.412f},
+    {929.774f, 262.897f}
 };
 
 enum beamSpells
@@ -116,13 +116,13 @@ struct boss_shahrazAI : public ScriptedAI
     uint8 m_position;
     WorldLocation wLoc;
 
-    uint32 m_shriekTimer;
-    uint32 m_yellTimer;
-    uint32 m_attractionTimer;
-    uint32 m_enrageTimer;
-    uint32 m_enragePeriodic;
-
-    uint32 m_checkTimer;
+    Timer m_shriekTimer;
+    Timer m_yellTimer;
+    Timer m_attractionTimer;
+    Timer m_enrageTimer;
+    Timer m_enragePeriodic;
+     
+    Timer m_checkTimer;
     uint32 prevBeam;
 
     bool m_enraged;
@@ -153,17 +153,17 @@ struct boss_shahrazAI : public ScriptedAI
 
         pInstance->SetData(EVENT_MOTHERSHAHRAZ, NOT_STARTED);
 
-        m_attractionTimer = urand(20000, 30000);
-        m_shriekTimer = 20000;
-        m_yellTimer = urand(70000, 111000);
-        m_enrageTimer = 600000;
-        m_enragePeriodic = 2000;
+        m_attractionTimer.Reset(urand(20000, 30000));
+        m_shriekTimer.Reset(20000);
+        m_yellTimer.Reset(urand(70000, 111000));
+        m_enrageTimer.Reset(600000);
+        m_enragePeriodic.Reset(2000);
         m_enraged = false;
         b_canEnrage = false;
         castBeam = false;
         prevBeam = 0;
 
-        m_checkTimer = 1000;
+        m_checkTimer.Reset(1000);
 
         m_position = 0;
     }
@@ -207,7 +207,7 @@ struct boss_shahrazAI : public ScriptedAI
         DoScriptText(RAND(SAY_SLAY1, SAY_SLAY2), me);
     }
 
-    void JustDied(Unit *victim)
+    void JustDied(Unit *Killer)
     {
         pInstance->SetData(EVENT_MOTHERSHAHRAZ, DONE);
 
@@ -219,7 +219,7 @@ struct boss_shahrazAI : public ScriptedAI
         if (!UpdateVictim())
             return;
 
-        if (m_checkTimer < diff)
+        if (m_checkTimer.Expired(diff))
         {
             if(me->GetDistance(wLoc.coord_x, wLoc.coord_y, wLoc.coord_z) > 110)
             {
@@ -231,8 +231,7 @@ struct boss_shahrazAI : public ScriptedAI
 
             m_checkTimer = 2000;
         }
-        else
-            m_checkTimer -= diff;
+        
 
         if (!m_enraged && ((me->GetHealth()*100 / me->GetMaxHealth()) < 10))
         {
@@ -245,60 +244,52 @@ struct boss_shahrazAI : public ScriptedAI
 
         if (b_canEnrage)
         {
-            if (m_enragePeriodic < diff)
+            if (m_enragePeriodic.Expired(diff))
             {
                 DoScriptText(SAY_ENRAGE, m_creature);
                 ForceSpellCast(me, SPELL_ENRAGE);
                 m_enragePeriodic = urand(20000, 30000);
             }
-            else
-                m_enragePeriodic -= diff;
         }
 
         // Select 3 random targets (can select same target more than once), teleport to a random location then make them cast explosions until they get away from each other.
-        if (m_attractionTimer < diff)
+        if (m_attractionTimer.Expired(diff))
         {
             m_position = urand(0, 33);
             ForceSpellCastWithScriptText(me, SPELL_FATAL_ATTRACTION, RAND(SAY_SPELL2, SAY_SPELL3));
 
             m_attractionTimer = urand(23000, 30000);
         }
-        else
-            m_attractionTimer -= diff;
+        
 
-        if (m_shriekTimer < diff)
+        if (m_shriekTimer.Expired(diff))
         {
             if(!urand(0, 2))
                 DoScriptText(SAY_SPELL1, m_creature);
-            AddSpellToCast(me->getVictim(), SPELL_SILENCING_SHRIEK);
+            AddSpellToCast(me->GetVictim(), SPELL_SILENCING_SHRIEK);
             m_shriekTimer = 20000;
         }
-        else
-            m_shriekTimer -= diff;
 
         //Enrage
-        if (m_enrageTimer)
+        if (m_enrageTimer.GetInterval())
         {
             if (!me->HasAura(SPELL_BERSERK, 0))
             {
-                if (m_enrageTimer <= diff)
+                if (m_enrageTimer.Expired(diff))
                 {
                     m_enrageTimer = 0;
                     ForceSpellCastWithScriptText(me, SPELL_BERSERK, SAY_ENRAGE, INTERRUPT_AND_CAST);
                 }
-                else
-                    m_enrageTimer -= diff;
             }
         }
 
         //Random taunts
-        if (m_yellTimer < diff)
+        if (m_yellTimer.Expired(diff))
         {
             DoScriptText(RAND(SAY_TAUNT1, SAY_TAUNT2, SAY_TAUNT3), me);
             m_yellTimer = urand(15000, 35000);
         }
-        else
-            m_yellTimer -= diff;
+
 
         if (castBeam)
         {

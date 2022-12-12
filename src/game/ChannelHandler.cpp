@@ -1,7 +1,7 @@
 /*
  * Copyright (C) 2005-2008 MaNGOS <http://getmangos.com/>
  * Copyright (C) 2008 TrinityCore <http://www.trinitycore.org/>
- * Copyright (C) 2008-2014 Hellground <http://hellground.net/>
+ * Copyright (C) 2008-2017 Hellground <http://wow-hellground.com/>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -31,7 +31,7 @@ void WorldSession::HandleChannelJoin(WorldPacket& recvPacket)
     uint8 unknown1, unknown2;
     std::string channelname, pass;
 
-    recvPacket >> channel_id >> unknown1 >> unknown2;
+    recvPacket >> channel_id >> unknown1 >> unknown2; // WARNING! do not use in any way, this can be modified by clients and cause problems
     recvPacket >> channelname;
 
     if (channelname.empty())
@@ -41,11 +41,11 @@ void WorldSession::HandleChannelJoin(WorldPacket& recvPacket)
     CHECK_PACKET_SIZE(recvPacket, 4+1+1+(channelname.size()+1)+1);
 
     recvPacket >> pass;
-    if(channel_id == 2 && sWorld.getConfig(CONFIG_GLOBAL_TRADE_CHANNEL)) //magic number - trade channel id from DBC
+    if(channel_id == CHANNEL_ID_TRADE && sWorld.getConfig(CONFIG_GLOBAL_TRADE_CHANNEL))
         channelname = "Trade";
     
     if (ChannelMgr* cMgr = channelMgr(_player->GetTeam()))
-        if (Channel *chn = cMgr->GetJoinChannel(channelname, channel_id))
+        if (Channel *chn = cMgr->GetJoinChannel(channelname))
             chn->Join(_player->GetGUID(), pass.c_str());
 }
 
@@ -232,6 +232,10 @@ void WorldSession::HandleChannelInvite(WorldPacket& recvPacket)
     sLog.outDebug("Opcode %u", recvPacket.GetOpcode());
     //recvPacket.hexlike();
     CHECK_PACKET_SIZE(recvPacket, 1+1);
+    if (GetPlayer()->GetLevel() < sWorld.getConfig(CONFIG_CHAT_MINIMUM_LVL))
+        return;
+    if (sWorld.getConfig(CONFIG_NO_CHANNEL_INVITES))
+        return;
 
     std::string channelname, otp;
     recvPacket >> channelname;
@@ -379,7 +383,7 @@ void WorldSession::HandleChannelInfoQuery(WorldPacket &recvPacket)
         {
             WorldPacket data(SMSG_CHANNEL_MEMBER_COUNT, chn->GetName().size()+1+1+4);
             data << chn->GetName();
-            data << uint8(chn->GetFlags());
+            data << uint8(0);
             data << uint32(chn->GetNumPlayers());
             SendPacket(&data);
         }

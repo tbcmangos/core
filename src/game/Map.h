@@ -1,7 +1,7 @@
 /*
  * Copyright (C) 2005-2009 MaNGOS <http://getmangos.com/>
  * Copyright (C) 2008-2009 TrinityCore <http://www.trinitycore.org/>
- * Copyright (C) 2008-2014 Hellground <http://hellground.net/>
+ * Copyright (C) 2008-2017 Hellground <http://wow-hellground.com/>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -34,8 +34,6 @@
 #include "GameSystem/GridRefManager.h"
 #include "MapRefManager.h"
 #include "mersennetwister/MersenneTwister.h"
-
-#include <tbb/concurrent_hash_map.h>
 
 #include <bitset>
 #include <list>
@@ -104,10 +102,10 @@ enum LevelRequirementVsMode
 
 typedef UNORDERED_MAP<Creature*, CreatureMover>                 CreatureMoveList;
 typedef std::map<uint32/*leaderDBGUID*/, CreatureGroup*>        CreatureGroupHolderType;
-typedef tbb::concurrent_hash_map<uint64, GameObject*>           GObjectMapType;
-typedef tbb::concurrent_hash_map<uint64, DynamicObject*>        DObjectMapType;
-typedef tbb::concurrent_hash_map<uint64, Creature*>             CreaturesMapType;
-typedef tbb::concurrent_hash_map<uint32, std::list<uint64> >    CreatureIdToGuidListMapType;
+typedef std::unordered_map<uint64, GameObject*>           GObjectMapType;
+typedef std::unordered_map<uint64, DynamicObject*>        DObjectMapType;
+typedef std::unordered_map<uint64, Creature*>             CreaturesMapType;
+typedef std::unordered_map<uint32, std::list<uint64> >    CreatureIdToGuidListMapType;
 
 enum GetCreatureGuidType
 {
@@ -128,8 +126,6 @@ class HELLGROUND_IMPORT_EXPORT Map : public GridRefManager<NGridType>
             public:
                 explicit UpdateHelper(Map* m) : m_map(m) {}
                 ~UpdateHelper() {}
-
-                bool ProcessUpdate() const;
 
                 void Update(DelayedMapList& delayedUpdate);
 
@@ -181,8 +177,6 @@ class HELLGROUND_IMPORT_EXPORT Map : public GridRefManager<NGridType>
 
         bool IsRemovalGrid(float x, float y) const;
         bool IsLoaded(float x, float y) const;
-
-        void LoadGrid(float x, float y);
         bool UnloadGrid(const uint32 &x, const uint32 &y, bool pForce);
 
         virtual void UnloadAll();
@@ -191,8 +185,6 @@ class HELLGROUND_IMPORT_EXPORT Map : public GridRefManager<NGridType>
 
         time_t GetGridExpiry(void) const { return i_gridExpiry; }
         uint32 GetId(void) const { return i_id; }
-
-        void LoadMapAndVMap(int gx, int gy);
 
         static void InitStateMachine();
         static void DeleteStateMachine();
@@ -213,6 +205,7 @@ class HELLGROUND_IMPORT_EXPORT Map : public GridRefManager<NGridType>
 
         const char* GetMapName() const;
 
+        MapEntry const* GetMapEntry() const { return i_mapEntry; }
         bool Instanceable() const { return i_mapEntry && i_mapEntry->Instanceable(); }
         // NOTE: this duplicate of Instanceable(), but Instanceable() can be changed when BG also will be instanceable
         bool IsDungeon() const { return i_mapEntry && i_mapEntry->IsDungeon(); }
@@ -259,6 +252,7 @@ class HELLGROUND_IMPORT_EXPORT Map : public GridRefManager<NGridType>
         Unit* GetUnit(uint64 guid);
 
         Object* GetObjectByTypeMask(Player const &p, uint64 guid, uint32 typemask);
+        void VisibilityOfCreatureEntry(uint32 entry, bool hide);
 
         std::list<uint64> GetCreaturesGUIDList(uint32 id, GetCreatureGuidType type = GET_FIRST_CREATURE_GUID, uint32 max = 0);
         uint64 GetCreatureGUID(uint32 id, GetCreatureGuidType type = GET_FIRST_CREATURE_GUID);
@@ -278,6 +272,16 @@ class HELLGROUND_IMPORT_EXPORT Map : public GridRefManager<NGridType>
         void SetBroken( bool _value = true ) { m_broken = _value; };
         void ForcedUnload();
 
+        // Dynamic VMaps
+        bool GetHeightInRange(float x, float y, float& z, float maxSearchDist = 4.0f) const;
+        bool GetHitPosition(float srcX, float srcY, float srcZ, float& destX, float& destY, float& destZ, float modifyDist) const;
+
+        // Random on map generation
+        bool GetReachableRandomPosition(Unit* unit, float& x, float& y, float& z, float radius, bool randomRange = true) const;
+        bool GetReachableRandomPointOnGround(float& x, float& y, float& z, float radius, bool randomRange = true) const;
+        bool GetRandomPointInTheAir(float& x, float& y, float& z, float radius, bool randomRange = true) const;
+        bool GetRandomPointUnderWater(float& x, float& y, float& z, float radius, GridMapLiquidData& liquid_status, bool randomRange = true) const;
+
         //get corresponding TerrainData object for this particular map
         const TerrainInfo * GetTerrain() const { return m_TerrainData; }
 
@@ -294,6 +298,8 @@ class HELLGROUND_IMPORT_EXPORT Map : public GridRefManager<NGridType>
         void ScriptsStart(std::map<uint32, std::multimap<uint32, ScriptInfo> > const& scripts, uint32 id, Object* source, Object* target);
         void ScriptCommandStart(ScriptInfo const& script, uint32 delay, Object* source, Object* target);
 
+
+        std::string getDebugData();
     private:
         void SetTimer(uint32 t) { i_gridExpiry = t < MIN_GRID_DELAY ? MIN_GRID_DELAY : t; }
         //uint64 CalculateGridMask(const uint32 &y) const;
@@ -310,8 +316,7 @@ class HELLGROUND_IMPORT_EXPORT Map : public GridRefManager<NGridType>
 
         bool loaded(const GridPair &) const;
         void EnsureGridCreated(const GridPair &);
-        bool EnsureGridLoaded(Cell const&);
-        void EnsureGridLoadedAtEnter(Cell const&, Player* player = NULL);
+        void EnsureGridLoaded(Cell const&);
 
         void buildNGridLinkage(NGridType* pNGridType) { pNGridType->link(this); }
 
@@ -340,7 +345,7 @@ class HELLGROUND_IMPORT_EXPORT Map : public GridRefManager<NGridType>
         uint8 i_spawnMode;
         uint32 i_id;
         uint32 i_InstanceId;
-        uint32 m_unloadTimer;
+        Timer m_unloadTimer;
 
         float m_ActiveObjectUpdateDistance;
 
@@ -356,7 +361,6 @@ class HELLGROUND_IMPORT_EXPORT Map : public GridRefManager<NGridType>
 
         //Shared geodata object with map coord info...
         TerrainInfo* const m_TerrainData;
-        bool m_bLoadedGrids[MAX_NUMBER_OF_GRIDS][MAX_NUMBER_OF_GRIDS];
 
         std::bitset<TOTAL_NUMBER_OF_CELLS_PER_MAP*TOTAL_NUMBER_OF_CELLS_PER_MAP> marked_cells;
 
@@ -364,6 +368,7 @@ class HELLGROUND_IMPORT_EXPORT Map : public GridRefManager<NGridType>
         WorldUpdateCounter m_updateTracker;
 
         bool i_scriptLock;
+        uint32 m_wanted_delay;
 
         std::set<WorldObject *> i_objectsToRemove;
         std::map<WorldObject*, bool> i_objectsToSwitch;

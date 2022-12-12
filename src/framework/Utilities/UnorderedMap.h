@@ -1,7 +1,7 @@
 /*
  * Copyright (C) 2005-2008 MaNGOS <http://getmangos.com/>
  * Copyright (C) 2008 TrinityCore <http://www.trinitycore.org/>
- * Copyright (C) 2008-2014 Hellground <http://hellground.net/>
+ * Copyright (C) 2008-2015 Hellground <http://hellground.net/>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -30,7 +30,7 @@
 #include <tr1/unordered_map>
 #elif COMPILER == COMPILER_GNU && __GNUC__ >= 3
 #include <ext/hash_map>
-#elif COMPILER == COMPILER_MICROSOFT && _MSC_VER >= 1500 && _HAS_TR1    // VC9.0 and later
+#elif COMPILER == COMPILER_MICROSOFT && _MSC_VER >= 1500    // VC9.0 and later
 #include <unordered_map>
 #else
 #include <hash_map>
@@ -41,6 +41,8 @@
 using std::hash_map;
 #elif COMPILER == COMPILER_MICROSOFT && _MSC_VER >= 1500 && _HAS_TR1
 #define UNORDERED_MAP std::tr1::unordered_map
+#elif COMPILER == COMPILER_MICROSOFT && _MSC_VER >= 1500
+#define UNORDERED_MAP std::unordered_map
 #elif COMPILER == COMPILER_MICROSOFT && _MSC_VER >= 1300
 #define UNORDERED_MAP stdext::hash_map
 using stdext::hash_map;

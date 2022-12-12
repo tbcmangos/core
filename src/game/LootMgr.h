@@ -1,7 +1,7 @@
 /*
  * Copyright (C) 2005-2008 MaNGOS <http://getmangos.com/>
  * Copyright (C) 2008 TrinityCore <http://www.trinitycore.org/>
- * Copyright (C) 2008-2014 Hellground <http://hellground.net/>
+ * Copyright (C) 2008-2017 Hellground <http://wow-hellground.com/>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -225,7 +225,6 @@ struct Loot
 
     QuestItemMap const& GetPlayerQuestItems() const { return PlayerQuestItems; }
     QuestItemMap const& GetPlayerFFAItems() const { return PlayerFFAItems; }
-    QuestItemMap const& GetPlayerNonQuestNonFFAConditionalItems() const { return PlayerNonQuestNonFFAConditionalItems; }
 
     std::vector<LootItem> items;
     std::vector<LootItem> quest_items;
@@ -262,10 +261,6 @@ struct Loot
             delete itr->second;
         PlayerFFAItems.clear();
 
-        for (QuestItemMap::iterator itr = PlayerNonQuestNonFFAConditionalItems.begin(); itr != PlayerNonQuestNonFFAConditionalItems.end(); ++itr)
-            delete itr->second;
-        PlayerNonQuestNonFFAConditionalItems.clear();
-
         PlayersLooting.clear();
         items.clear();
         quest_items.clear();
@@ -282,8 +277,10 @@ struct Loot
     void NotifyItemRemoved(uint8 lootIndex);
     void NotifyQuestItemRemoved(uint8 questIndex);
     void NotifyMoneyRemoved();
+    void ReleaseAll();
     void AddLooter(uint64 GUID) { PlayersLooting.insert(GUID); }
     void RemoveLooter(uint64 GUID) { PlayersLooting.erase(GUID); }
+    bool HasLooters() { return !PlayersLooting.empty(); }
 
     void generateMoneyLoot(uint32 minAmount, uint32 maxAmount);
     void FillLoot(uint32 loot_id, LootStore const& store, Player* loot_owner, bool personal);
@@ -304,7 +301,7 @@ struct Loot
     void FillLootFromDB(Creature *pCreature, Player* pLootOwner);
     bool LootLoadedFromDB() { return m_lootLoadedFromDB; }
 
-    LootItem* LootItemInSlot(uint32 lootslot, Player* player, QuestItem** qitem = NULL, QuestItem** ffaitem = NULL, QuestItem** conditem = NULL);
+    LootItem* LootItemInSlot(uint32 lootslot, Player* player, QuestItem** qitem = NULL, QuestItem** ffaitem = NULL);
 
     LootItem* LootItemInSlot(uint32 lootslot);
 
@@ -318,12 +315,11 @@ struct Loot
         void FillNotNormalLootFor(Player* player);
         QuestItemList* FillFFALoot(Player* player);
         QuestItemList* FillQuestLoot(Player* player);
-        QuestItemList* FillNonQuestNonFFAConditionalLoot(Player* player);
+        void FillNonQuestNonFFAConditionalLoot(Player* player); // count conditionals in fact
 
         std::set<uint64> PlayersLooting;
         QuestItemMap PlayerQuestItems;
         QuestItemMap PlayerFFAItems;
-        QuestItemMap PlayerNonQuestNonFFAConditionalItems;
 
         uint64 m_creatureGUID;
         bool m_lootLoadedFromDB;

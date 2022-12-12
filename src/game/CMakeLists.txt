@@ -5,13 +5,15 @@ include_directories(
   ${CMAKE_SOURCE_DIR}/dep/g3dlite/include
   ${CMAKE_SOURCE_DIR}/dep/recastnavigation/Detour
   ${CMAKE_SOURCE_DIR}/dep/recastnavigation/
-  ${CMAKE_SOURCE_DIR}/dep/lualib
   ${CMAKE_CURRENT_SOURCE_DIR}/vmap
   ${CMAKE_CURRENT_SOURCE_DIR}/movemap
   ${CMAKE_SOURCE_DIR}/dep/include
+  ${CMAKE_SOURCE_DIR}/src/game/PlayerBots
   ${CMAKE_SOURCE_DIR}/src/shared
   ${CMAKE_SOURCE_DIR}/src/shared/Database
   ${CMAKE_SOURCE_DIR}/src/framework
+  ${CMAKE_SOURCE_DIR}/src/scripts
+  ${CMAKE_SOURCE_DIR}/src/scripts/include
   ${CMAKE_BINARY_DIR}
   ${CMAKE_BINARY_DIR}/src/shared
   ${MYSQL_INCLUDE_DIR}
@@ -54,10 +56,8 @@ source_group("Tool"
   REGULAR_EXPRESSION Language
 )
 
-source_group("Lua Engine"
-  REGULAR_EXPRESSION Methods|Lua|Hook
-    FILES
-    luaengine/Includes.h
+source_group("PlayerBots"
+  REGULAR_EXPRESSION Bot
 )
 
 source_group("References"
@@ -72,7 +72,6 @@ target_link_libraries(game
   shared
   g3dlib
   detour
-  lualib
 )
 
 if(UNIX)

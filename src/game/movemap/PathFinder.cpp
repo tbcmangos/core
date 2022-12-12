@@ -1,6 +1,6 @@
 /*
  * Copyright (C) 2005-2012 MaNGOS <http://getmangos.com/>
- * Copyright (C) 2008-2014 Hellground <http://hellground.net/>
+ * Copyright (C) 2008-2017 Hellground <http://wow-hellground.com/>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -70,7 +70,7 @@ bool PathFinder::calculate(float destX, float destY, float destZ, bool forceDest
 
     // make sure navMesh works - we can run on map w/o mmap
     // check if the start and end point have a .mmtile loaded (can we pass via not loaded tile on the way?)
-    if (!m_navMesh || !m_navMeshQuery || m_sourceUnit->hasUnitState(UNIT_STAT_IGNORE_PATHFINDING) ||
+    if (!m_navMesh || !m_navMeshQuery || m_sourceUnit->HasUnitState(UNIT_STAT_IGNORE_PATHFINDING) ||
         !HaveTile(start) || !HaveTile(dest))
     {
         BuildShortcut();
@@ -807,4 +807,24 @@ bool PathFinder::inRange(const Vector3 &p1, const Vector3 &p2, float r, float h)
 float PathFinder::dist3DSqr(const Vector3 &p1, const Vector3 &p2) const
 {
     return (p1-p2).squaredLength();
+}
+
+void PathFinder::stepBack(float distance)
+{
+    // not good path
+    if (m_pathPoints.size() < 2 || !(m_type & PATHFIND_NORMAL))
+        return;
+
+    // we are already far enough
+    if (dist3DSqr(getActualEndPosition(), getEndPosition()) > distance*distance)
+        return;
+
+    Vector3 lastVector = ((m_pathPoints.back()) - (m_pathPoints[m_pathPoints.size() - 2]));
+    // point before last would be closer than distance to desired end, hope it would be enough
+    if (lastVector.squaredLength() < distance*distance)
+        m_pathPoints.pop_back();
+    else // whole idea is here, we make a step back on last straight
+        m_pathPoints.back() -= lastVector*distance / (lastVector.length());
+
+    setActualEndPosition(m_pathPoints.back());
 }

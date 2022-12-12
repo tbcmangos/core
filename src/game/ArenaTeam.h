@@ -1,7 +1,7 @@
 /*
  * Copyright (C) 2005-2008 MaNGOS <http://getmangos.com/>
  * Copyright (C) 2008 TrinityCore <http://www.trinitycore.org/>
- * Copyright (C) 2008-2014 Hellground <http://hellground.net/>
+ * Copyright (C) 2008-2017 Hellground <http://wow-hellground.com/>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -250,9 +250,9 @@ class ArenaTeam
         uint32 GetPoints(uint32 MemberRating);
         float GetChanceAgainst(uint32 own_rating, uint32 enemy_rating);
         int32 WonAgainst(uint32 againstRating);
-        void MemberWon(Player * plr, uint32 againstRating, uint32 againstHiddenRating);
+        void MemberWon(Player * plr, uint32 againstRating, uint32 againstHiddenRating, uint32* persRating = NULL, int32* persDiff = NULL);
         int32 LostAgainst(uint32 againstRating);
-        void MemberLost(Player * plr, uint32 againstRating, uint32 againstHiddenRating);
+        void MemberLost(Player * plr, uint32 againstRating, uint32 againstHiddenRating, uint32* persRating = NULL, int32* persDiff = NULL);
 
         void UpdateArenaPointsHelper(std::map<uint32, uint32> & PlayerPoints);
 

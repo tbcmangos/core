@@ -1,7 +1,7 @@
 /*
  * Copyright (C) 2005-2008 MaNGOS <http://getmangos.com/>
  * Copyright (C) 2008 TrinityCore <http://www.trinitycore.org/>
- * Copyright (C) 2008-2014 Hellground <http://hellground.net/>
+ * Copyright (C) 2008-2017 Hellground <http://wow-hellground.com/>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -570,16 +570,15 @@ struct ItemPrototype
         return false;
     }
 
+    void GetAllowedEquipSlots(uint8 slots[4], uint8 classId, bool canDualWield) const;
+
     uint32 GetMaxStackSize() const { return Stackable; }
 
     bool IsPotion() const { return Class==ITEM_CLASS_CONSUMABLE && SubClass==ITEM_SUBCLASS_POTION; }
     bool IsConjuredConsumable() const { return Class == ITEM_CLASS_CONSUMABLE && (Flags & ITEM_FLAGS_CONJURED); }
-};
 
-struct ItemLocale
-{
-    std::vector<std::string> Name;
-    std::vector<std::string> Description;
+    uint32 GetProficiencySkill() const;
+    uint32 GetProficiencySpell() const;
 };
 
 // GCC have alternative #pragma pack() syntax and old gcc version not support pack(pop), also any gcc version not support it at some platform

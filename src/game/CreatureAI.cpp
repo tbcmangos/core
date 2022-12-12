@@ -1,7 +1,7 @@
 /*
  * Copyright (C) 2005-2008 MaNGOS <http://getmangos.com/>
  * Copyright (C) 2008 TrinityCore <http://www.trinitycore.org/>
- * Copyright (C) 2008-2014 Hellground <http://hellground.net/>
+ * Copyright (C) 2008-2017 Hellground <http://wow-hellground.com/>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -23,6 +23,7 @@
 #include "Creature.h"
 #include "World.h"
 #include "SpellMgr.h"
+#include "Chat.h"
 
 void CreatureAI::OnCharmed(bool apply)
 {
@@ -33,14 +34,11 @@ void CreatureAI::OnCharmed(bool apply)
     }
 }
 
-AISpellEntryType * UnitAI::AISpellEntry;
-HELLGROUND_EXPORT AISpellEntryType * GetAISpellEntry(uint32 i) { return &CreatureAI::AISpellEntry[i]; }
-
 void CreatureAI::DoZoneInCombat(float max_dist)
 {
      Unit *creature = me;
 
-    if (!me->CanHaveThreatList() || me->IsInEvadeMode() || !me->isAlive())
+    if (!me->CanHaveThreatList() || me->IsInEvadeMode() || !me->IsAlive())
         return;
 
     Map *pMap = me->GetMap();
@@ -58,10 +56,10 @@ void CreatureAI::DoZoneInCombat(float max_dist)
     {
         if (Player* pPlayer = i->getSource())
         {
-            if (pPlayer->isGameMaster() || pPlayer->IsFriendlyTo(me))
+            if (pPlayer->IsGameMaster() || pPlayer->IsFriendlyTo(me))
                 continue;
 
-            if (pPlayer->isAlive() && me->IsWithinDistInMap(pPlayer, max_dist))
+            if (pPlayer->IsAlive() && me->IsWithinDistInMap(pPlayer, max_dist))
             {
                 me->SetInCombatWith(pPlayer);
                 pPlayer->SetInCombatWith(me);
@@ -85,7 +83,7 @@ void CreatureAI::MoveInLineOfSight_Safe(Unit *who)
 
 void CreatureAI::MoveInLineOfSight(Unit *who)
 {
-    if (me->getVictim())
+    if (me->GetVictim())
         return;
 
     if (me->canStartAttack(who))
@@ -97,10 +95,10 @@ void CreatureAI::MoveInLineOfSight(Unit *who)
 
 void CreatureAI::SelectNearestTarget(Unit *who)
 {
-    if (me->getVictim() && me->GetDistanceOrder(who, me->getVictim()) && me->canAttack(who))
+    if (me->GetVictim() && me->GetDistanceOrder(who, me->GetVictim()) && me->canAttack(who))
     {
-        float threat = me->getThreatManager().getThreat(me->getVictim());
-        me->getThreatManager().modifyThreatPercent(me->getVictim(), -100);
+        float threat = me->getThreatManager().getThreat(me->GetVictim());
+        me->getThreatManager().modifyThreatPercent(me->GetVictim(), -100);
         me->AddThreat(who, threat);
     }
 }
@@ -118,4 +116,48 @@ void CreatureAI::EnterEvadeMode()
         formation->EvadeFormation(me);
 
     Reset();
+
+}
+
+void CreatureAI::JustReachedHome()
+{
+    me->GetMotionMaster()->Initialize();
+}
+
+void CreatureAI::GetDebugInfo(ChatHandler& reader)
+{
+    reader.SendSysMessage("This AI does not support debugging.");
+}
+
+void CreatureAI::SendDebug(const char* fmt, ...)
+{
+    if (!m_debugInfoReceiver)
+        return;
+    Player *target = sObjectAccessor.GetPlayer(m_debugInfoReceiver);
+    if (!target)
+    {
+        m_debugInfoReceiver = 0;
+        return;
+    }
+
+    va_list ap;
+    char message[1024];
+    va_start(ap, fmt);
+    vsnprintf(message, 1024, fmt, ap);
+    va_end(ap);
+
+    WorldPacket data;
+    uint32 messageLength = (message ? strlen(message) : 0) + 1;
+
+    data.Initialize(SMSG_MESSAGECHAT, 100);                // guess size
+    data << uint8(CHAT_MSG_SYSTEM);
+    data << uint32(LANG_UNIVERSAL);
+    data << uint64(0);
+    data << uint32(0);
+    data << uint64(0);
+    data << uint32(messageLength);
+    data << message;
+    data << uint8(0);
+
+    target->SendPacketToSelf(&data);
 }

@@ -1,6 +1,6 @@
 /* 
  * Copyright (C) 2006-2008 ScriptDev2 <https://scriptdev2.svn.sourceforge.net/>
- * Copyright (C) 2008-2014 Hellground <http://hellground.net/>
+ * Copyright (C) 2008-2015 Hellground <http://hellground.net/>
  * 
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -52,22 +52,20 @@ struct boss_captain_skarlocAI : public ScriptedAI
     boss_captain_skarlocAI(Creature *creature) : ScriptedAI(creature)
     {
         pInstance = (creature->GetInstanceData());
-        HeroicMode = me->GetMap()->IsHeroic();
     }
 
     ScriptedInstance *pInstance;
 
-    bool HeroicMode;
     bool Intro;
 
     uint8 Next;
-    uint32 IntroTimer;
-    uint32 Holy_Light_Timer;
-    uint32 Cleanse_Timer;
-    uint32 HammerOfJustice_Timer;
-    uint32 HolyShield_Timer;
-    uint32 DevotionAura_Timer;
-    uint32 Consecration_Timer;
+    Timer IntroTimer;
+    Timer Holy_Light_Timer;
+    Timer Cleanse_Timer;
+    Timer HammerOfJustice_Timer;
+    Timer HolyShield_Timer;
+    Timer DevotionAura_Timer;
+    Timer Consecration_Timer;
     uint64 Add1GUID;
     uint64 Add2GUID;
     uint64 ThrallinGUID;
@@ -78,15 +76,15 @@ struct boss_captain_skarlocAI : public ScriptedAI
         Next = 0;
         Add1GUID = 0;
         Add2GUID = 0;
-        IntroTimer = 20000;
-        Holy_Light_Timer = 30000;
-        Cleanse_Timer = 10000;
-        HammerOfJustice_Timer = 60000;
-        HolyShield_Timer = 240000;
-        DevotionAura_Timer = 3000;
-        Consecration_Timer = 8000;
+        IntroTimer.Reset(20000);
+        Holy_Light_Timer.Reset(30000);
+        Cleanse_Timer.Reset(10000);
+        HammerOfJustice_Timer.Reset(60000);
+        HolyShield_Timer.Reset(240000);
+        DevotionAura_Timer.Reset(3000);
+        Consecration_Timer.Reset(8000);
         me->SetReactState(REACT_PASSIVE);
-        me->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
+        me->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_SPAWNING);
         me->Mount(SKARLOC_MOUNT_MODEL);
         SummonGuards();
         me->GetMotionMaster()->MovePoint(0, 2047.90f, 254.85f, 62.822f);
@@ -96,7 +94,7 @@ struct boss_captain_skarlocAI : public ScriptedAI
         if (!tmpMap)
             return;
 
-        if (Creature* Thrall = tmpMap->GetCreature(tmpMap->GetCreatureGUID(NPC_THRALL)))
+        if (Creature* Thrall = tmpMap->GetCreature(pInstance->GetData64(DATA_THRALL)))
             ThrallinGUID = Thrall->GetGUID();
     }
 
@@ -106,7 +104,7 @@ struct boss_captain_skarlocAI : public ScriptedAI
         {
             Add1GUID = tAdd1->GetGUID();
             tAdd1->SetReactState(REACT_PASSIVE);
-            tAdd1->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
+            tAdd1->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_SPAWNING);
             tAdd1->GetMotionMaster()->MovePoint(0, 2044.12f, 253.47f, 62.748f);
         }
 
@@ -114,7 +112,7 @@ struct boss_captain_skarlocAI : public ScriptedAI
         {
             Add2GUID = tAdd2->GetGUID();
             tAdd2->SetReactState(REACT_PASSIVE);
-            tAdd2->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
+            tAdd2->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_SPAWNING);
             tAdd2->GetMotionMaster()->MovePoint(0, 2049.22f, 258.16f, 62.754f);
         }
     }
@@ -159,7 +157,7 @@ struct boss_captain_skarlocAI : public ScriptedAI
     void IntroEnd()
     {
         me->SetReactState(REACT_AGGRESSIVE);
-        me->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
+        me->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_SPAWNING);
         me->SetWalk(false);
 
         if (Creature* Thrall = me->GetMap()->GetCreature(ThrallinGUID))
@@ -169,7 +167,7 @@ struct boss_captain_skarlocAI : public ScriptedAI
             if (Creature* tAdd1 = me->GetCreature(Add1GUID))
             {
                 tAdd1->SetReactState(REACT_AGGRESSIVE);
-                tAdd1->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
+                tAdd1->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_SPAWNING);
                 tAdd1->SetWalk(false);
                 tAdd1->AI()->AttackStart(Thrall);
             }
@@ -177,7 +175,7 @@ struct boss_captain_skarlocAI : public ScriptedAI
             if (Creature* tAdd2 = me->GetCreature(Add2GUID))
             {
                 tAdd2->SetReactState(REACT_AGGRESSIVE);
-                tAdd2->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
+                tAdd2->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_SPAWNING);
                 tAdd2->SetWalk(false);
                 tAdd2->AI()->AttackStart(Thrall);
             }
@@ -186,7 +184,7 @@ struct boss_captain_skarlocAI : public ScriptedAI
 
     void EnterCombat(Unit *who)
     {
-
+        pInstance->SetData(DATA_SKARLOC_DEATH, IN_PROGRESS);
         DoScriptText(SAY_TAUNT1, me);
         DoScriptText(SAY_TAUNT2, me);
     }
@@ -208,8 +206,9 @@ struct boss_captain_skarlocAI : public ScriptedAI
         if (!tmpMap)
             return;
 
-        if (Creature* mount = tmpMap->GetCreature(tmpMap->GetCreatureGUID(SKARLOC_MOUNT)))
+        if (Creature* mount = tmpMap->GetCreatureById(SKARLOC_MOUNT))
             mount->ForcedDespawn();
+        pInstance->SetData(DATA_SKARLOC_DEATH, NOT_STARTED);
     }
 
     void JustDied(Unit *victim)
@@ -229,72 +228,65 @@ struct boss_captain_skarlocAI : public ScriptedAI
     {
         if (Intro)
         {
-            if (IntroTimer < diff)
+            if (IntroTimer.Expired(diff))
             {
                 IntroEnd();
                 Intro = false;
             }
-            else
-                IntroTimer -= diff;
         }
 
         //Return since we have no target
         if (!UpdateVictim() )
             return;
 
-        //Holy_Light
-        if (Holy_Light_Timer < diff)
+
+        if (Holy_Light_Timer.Expired(diff))
         {
             DoCast(me, SPELL_HOLY_LIGHT);
             Holy_Light_Timer = 30000;
         }
-        else
-            Holy_Light_Timer -= diff;
+        
 
-        //Cleanse
-        if(Cleanse_Timer  < diff)
+        if (Cleanse_Timer.Expired(diff))
         {
             DoCast(me, SPELL_CLEANSE);
             Cleanse_Timer = 10000;
         }
-        else
-            Cleanse_Timer -= diff;
+        
 
-        //Hammer of Justice
-        if (HammerOfJustice_Timer < diff)
+
+        if (HammerOfJustice_Timer.Expired(diff))
         {
-            DoCast(me->getVictim(), SPELL_HAMMER_OF_JUSTICE);
+            DoCast(me->GetVictim(), SPELL_HAMMER_OF_JUSTICE);
             HammerOfJustice_Timer = 60000;
         }
-        else
-            HammerOfJustice_Timer -= diff;
+        
 
-        //Holy Shield
-        if(HolyShield_Timer < diff)
+
+        if (HolyShield_Timer.Expired(diff))
         {
             DoCast(me, SPELL_HOLY_SHIELD);
             HolyShield_Timer = 240000;
         }
-        else
-            HolyShield_Timer -= diff;
+        
 
-        //Devotion_Aura
-        if (DevotionAura_Timer < diff)
+
+        if (DevotionAura_Timer.Expired(diff))
         {
             DoCast(me, SPELL_DEVOTION_AURA);
             DevotionAura_Timer = 60000;
         }
-        else
-            DevotionAura_Timer -= diff;
+        
 
-        if(HeroicMode)
-        if(Consecration_Timer < diff)
+        if (HeroicMode)
         {
-            DoCast(me, SPELL_CONSECRATION);
-            Consecration_Timer = 8000;
+            if (Consecration_Timer.Expired(diff))
+            {
+                DoCast(me, SPELL_CONSECRATION);
+                Consecration_Timer = 20000;
+            }
         }
-        else
-            Consecration_Timer -= diff;
+        
 
         DoMeleeAttackIfReady();
     }

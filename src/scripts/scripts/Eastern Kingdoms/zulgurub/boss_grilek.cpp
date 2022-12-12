@@ -1,6 +1,6 @@
 /* 
  * Copyright (C) 2006-2008 ScriptDev2 <https://scriptdev2.svn.sourceforge.net/>
- * Copyright (C) 2008-2014 Hellground <http://hellground.net/>
+ * Copyright (C) 2008-2015 Hellground <http://hellground.net/>
  * 
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -37,8 +37,8 @@ struct boss_grilekAI : public ScriptedAI
         pInstance = (ScriptedInstance*)c->GetInstanceData();
     }
 
-    uint32 Avartar_Timer;
-    uint32 GroundTremor_Timer;
+    int32 Avartar_Timer;
+    int32 GroundTremor_Timer;
     ScriptedInstance * pInstance;
 
     void Reset()
@@ -64,8 +64,8 @@ struct boss_grilekAI : public ScriptedAI
         if (!UpdateVictim())
             return;
 
-        //Avartar_Timer
-        if (Avartar_Timer < diff)
+        Avartar_Timer -= diff;
+        if (Avartar_Timer <= diff)
         {
 
             DoCast(m_creature, SPELL_AVARTAR);
@@ -73,24 +73,22 @@ struct boss_grilekAI : public ScriptedAI
 
             target = SelectUnit(SELECT_TARGET_RANDOM,1, 200, true, m_creature->getVictimGUID());
 
-            if(DoGetThreat(m_creature->getVictim()))
-                DoModifyThreatPercent(m_creature->getVictim(),-50);
+            if(DoGetThreat(m_creature->GetVictim()))
+                DoModifyThreatPercent(m_creature->GetVictim(),-50);
             if (target)
                 AttackStart(target);
 
-            Avartar_Timer = 25000 + rand()%10000;
+            Avartar_Timer += 25000 + rand()%10000;
         }
-        else
-            Avartar_Timer -= diff;
+        
 
-        //GroundTremor_Timer
-        if (GroundTremor_Timer < diff)
+        GroundTremor_Timer -= diff;
+        if (GroundTremor_Timer <= diff)
         {
-            DoCast(m_creature->getVictim(), SPELL_GROUNDTREMOR);
-            GroundTremor_Timer = 12000 + rand()%4000;
+            DoCast(m_creature->GetVictim(), SPELL_GROUNDTREMOR);
+            GroundTremor_Timer += 12000 + rand()%4000;
         }
-        else
-            GroundTremor_Timer -= diff;
+        
 
         DoMeleeAttackIfReady();
     }

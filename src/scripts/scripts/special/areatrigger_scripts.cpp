@@ -1,6 +1,6 @@
 /* 
  * Copyright (C) 2006-2008 ScriptDev2 <https://scriptdev2.svn.sourceforge.net/>
- * Copyright (C) 2008-2014 Hellground <http://hellground.net/>
+ * Copyright (C) 2008-2015 Hellground <http://hellground.net/>
  * 
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -43,7 +43,7 @@ EndContentData */
 
 bool AreaTrigger_at_legion_teleporter(Player *player, AreaTriggerEntry const* at)
 {
-    if (player->isAlive() && !player->isInCombat())
+    if (player->IsAlive() && !player->IsInCombat())
     {
         if (player->GetTeam()== ALLIANCE && player->GetQuestRewardStatus(10589))
         {
@@ -74,7 +74,7 @@ enum eScentLarkorwi
 
 bool AreaTrigger_at_scent_larkorwi(Player* player, AreaTriggerEntry const* trigger)
 {
-    if (!player->isDead() && player->GetQuestStatus(QUEST_SCENT_OF_LARKORWI) == QUEST_STATUS_INCOMPLETE)
+    if (!player->IsDead() && player->GetQuestStatus(QUEST_SCENT_OF_LARKORWI) == QUEST_STATUS_INCOMPLETE)
     {
         Unit* LarkorwiMate = FindCreature(NPC_LARKORWI_MATE, 15.0, player);
             if(!LarkorwiMate)
@@ -94,11 +94,12 @@ enum eNatBargain
     AURA_PAGLE_FISH_PASTE       = 42644,
     NPC_LURKING_SHARK           = 23928
 };
-float SharkPos[3] =
+
+static float SharkPos[3] =
 {
-    -4246.243,
-    -3922.356,
-    -7.488
+    -4246.243f,
+    -3922.356f,
+    -7.488f
 };
 
 bool AreaTrigger_at_nats_landing(Player* player, AreaTriggerEntry const* trigger)

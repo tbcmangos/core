@@ -1,7 +1,7 @@
 /*
  * Copyright (C) 2005-2008 MaNGOS <http://getmangos.com/>
  * Copyright (C) 2008 TrinityCore <http://www.trinitycore.org/>
- * Copyright (C) 2008-2014 Hellground <http://hellground.net/>
+ * Copyright (C) 2008-2017 Hellground <http://wow-hellground.com/>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -57,7 +57,7 @@ void WorldSession::HandleUseItemOpcode(WorldPacket& recvPacket)
         return;
     }
 
-    sLog.outDetail("WORLD: CMSG_USE_ITEM packet, bagIndex: %u, slot: %u, spell_count: %u , cast_count: %u, Item: %u, data length = %i", bagIndex, slot, spell_count, cast_count, pItem->GetEntry(), recvPacket.size());
+    sLog.outDetail("WORLD: CMSG_USE_ITEM packet, bagIndex: %u, slot: %u, spell_count: %u , cast_count: %u, Item: %u, data length = %lu", bagIndex, slot, spell_count, cast_count, pItem->GetEntry(), recvPacket.size());
 
     ItemPrototype const *proto = pItem->GetProto();
     if (!proto)
@@ -89,7 +89,7 @@ void WorldSession::HandleUseItemOpcode(WorldPacket& recvPacket)
         return;
     }
 
-    if (pUser->isInCombat())
+    if (pUser->IsInCombat())
     {
         for (int i = 0; i < MAX_ITEM_PROTO_SPELLS; ++i)
         {
@@ -139,7 +139,11 @@ void WorldSession::HandleUseItemOpcode(WorldPacket& recvPacket)
 
             if (spellInfo->EffectImplicitTargetA[0] == TARGET_UNIT_TARGET_ENEMY || spellInfo->EffectImplicitTargetA[1] == TARGET_UNIT_TARGET_ENEMY || spellInfo->EffectImplicitTargetA[2] == TARGET_UNIT_TARGET_ENEMY)
                 if (Unit *tUnit = Unit::GetUnit(*GetPlayer(), GetPlayer()->GetSelection()))
-                    targets.setUnitTarget(tUnit);
+                {
+                    if (!pUser->IsFriendlyTo(tUnit))// enemy targeting only
+                        targets.setUnitTarget(tUnit);
+                    else return;
+                }
 
             if (spellInfo->EffectImplicitTargetA[0] == TARGET_UNIT_CASTER || spellInfo->EffectImplicitTargetA[1] == TARGET_UNIT_CASTER || spellInfo->EffectImplicitTargetA[2] == TARGET_UNIT_CASTER)
                 targets.setUnitTarget(pUser);
@@ -150,61 +154,7 @@ void WorldSession::HandleUseItemOpcode(WorldPacket& recvPacket)
     if (!sScriptMgr.OnItemUse(pUser, pItem, targets))
     {
         // no script or script not process request by self
-
-        // special learning case
-        if (pItem->GetProto()->Spells[0].SpellId==SPELL_ID_GENERIC_LEARN)
-        {
-            uint32 learning_spell_id = pItem->GetProto()->Spells[1].SpellId;
-
-            SpellEntry const *spellInfo = sSpellStore.LookupEntry(SPELL_ID_GENERIC_LEARN);
-            if (!spellInfo)
-            {
-                sLog.outLog(LOG_DEFAULT, "ERROR: Item (Entry: %u) in have wrong spell id %u, ignoring ",proto->ItemId, SPELL_ID_GENERIC_LEARN);
-                pUser->SendEquipError(EQUIP_ERR_NONE,pItem,NULL);
-                return;
-            }
-
-            Spell *spell = new Spell(pUser, spellInfo, false);
-            spell->m_CastItem = pItem;
-            spell->m_cast_count = cast_count;               //set count of casts
-            spell->m_currentBasePoints[0] = learning_spell_id;
-            spell->prepare(&targets);
-            return;
-        }
-
-        // use triggered flag only for items with many spell casts and for not first cast
-        int count = 0;
-
-        for (int i = 0; i < MAX_ITEM_PROTO_SPELLS; ++i)
-        {
-            _Spell const& spellData = pItem->GetProto()->Spells[i];
-
-            // no spell
-            if (!spellData.SpellId)
-                continue;
-
-            // wrong triggering type
-            if (spellData.SpellTrigger != ITEM_SPELLTRIGGER_ON_USE && spellData.SpellTrigger != ITEM_SPELLTRIGGER_ON_NO_DELAY_USE)
-                continue;
-
-            SpellEntry const *spellInfo = sSpellStore.LookupEntry(spellData.SpellId);
-            if (!spellInfo)
-            {
-                sLog.outLog(LOG_DEFAULT, "ERROR: Item (Entry: %u) in have wrong spell id %u, ignoring ",proto->ItemId, spellData.SpellId);
-                continue;
-            }
-
-            Spell *spell = new Spell(pUser, spellInfo, (count > 0));
-            spell->m_CastItem = pItem;
-            spell->m_cast_count = cast_count;               //set count of casts
-
-            bool fillMap = spellInfo->NeedFillTargetMapForTargets(0);
-            if (fillMap)
-                spell->FillTargetMap();
-
-            spell->prepare(fillMap ? &spell->m_targets : &targets);
-            ++count;
-        }
+        pUser->CastItemUseSpell(pItem, targets, cast_count);
     }
 }
 
@@ -218,7 +168,7 @@ void WorldSession::HandleOpenItemOpcode(WorldPacket& recvPacket)
 {
     CHECK_PACKET_SIZE(recvPacket,1+1);
 
-    sLog.outDetail("WORLD: CMSG_OPEN_ITEM packet, data length = %i",recvPacket.size());
+    sLog.outDetail("WORLD: CMSG_OPEN_ITEM packet, data length = %lu",recvPacket.size());
 
     Player* pUser = _player;
     uint8 bagIndex, slot;
@@ -297,12 +247,28 @@ void WorldSession::HandleGameObjectUseOpcode(WorldPacket & recv_data)
     recv_data >> guid;
 
     sLog.outDebug("WORLD: Recvd CMSG_GAMEOBJ_USE Message [guid=%u]", GUID_LOPART(guid));
-    GameObject *obj = GetPlayer()->GetMap()->GetGameObject(guid);
+    Player* plr = GetPlayer();
+    GameObject *obj = plr->GetMap()->GetGameObject(guid);
 
     if (!obj)
         return;
 
-    obj->Use(_player);
+    float dist = obj->GetDistance(plr);
+    if (dist > sWorld.getConfig(CONFIG_GOBJECT_USE_EXPLOIT_RANGE) &&
+        obj->GetEntry() != 187056 ) // shatt to isle portal
+    {
+        sLog.outLog(LOG_EXPLOITS_CHEATS, "CMSG_GAMEOBJ_USE: Player %s (GUID: %u X: %f Y: %f Z: %f Map: %u)"
+            " is attempting to use gobject (Entry %u lowGUID %u X: %f Y: %f Z: %f) from too far away (%f yds)",
+            plr->GetName(), plr->GetGUIDLow(), plr->GetPositionX(), plr->GetPositionY(), plr->GetPositionZ(),plr->GetMapId(),
+            obj->GetEntry(), obj->GetGUIDLow(), obj->GetPositionX(), obj->GetPositionY(), obj->GetPositionZ(), dist);
+    }
+    if (obj->GetGoType() != GAMEOBJECT_TYPE_GOOBER && obj->GetGoType() != GAMEOBJECT_TYPE_DOOR && obj->GetLockId())
+    {
+        sLog.outLog(LOG_EXPLOITS_CHEATS, "CMSG_GAMEOBJ_USE: Player %s (GUID: %u) is using locked gobject (Entry %u lowGUID %u Type %u)",
+            plr->GetName(), plr->GetGUIDLow(), obj->GetEntry(), obj->GetGUIDLow(), obj->GetGoType());
+    }
+
+    obj->Use(plr);
 }
 
 void WorldSession::HandleCastSpellOpcode(WorldPacket& recvPacket)
@@ -314,7 +280,7 @@ void WorldSession::HandleCastSpellOpcode(WorldPacket& recvPacket)
     recvPacket >> spellId;
     recvPacket >> cast_count;
 
-    sLog.outDebug("WORLD: got cast spell packet, spellId - %u, cast_count: %u data length = %i",
+    sLog.outDebug("WORLD: got cast spell packet, spellId - %u, cast_count: %u data length = %lu",
         spellId, cast_count, recvPacket.size());
 
     // can't use our own spells when we're in possession of another unit,
@@ -344,7 +310,7 @@ void WorldSession::HandleCastSpellOpcode(WorldPacket& recvPacket)
     if (Unit* target = targets.getUnitTarget())
     {
         // if rank not found then function return NULL but in explicit cast case original spell can be cast and later failed with appropriate error message
-        if (SpellEntry const *actualSpellEntry = sSpellMgr.SelectAuraRankForPlayerLevel(spellInfo, target->getLevel()))
+        if (SpellEntry const *actualSpellEntry = sSpellMgr.SelectAuraRankForPlayerLevel(spellInfo, target->GetLevel()))
             spellInfo = actualSpellEntry;
     }
 
@@ -411,8 +377,11 @@ void WorldSession::HandleCancelAuraOpcode(WorldPacket& recvPacket)
     // channeled spell case (it currently cast then)
     if (SpellMgr::IsChanneledSpell(spellInfo))
     {
-        if (_player->m_currentSpells[CURRENT_CHANNELED_SPELL] &&
-            _player->m_currentSpells[CURRENT_CHANNELED_SPELL]->GetSpellEntry()->Id==spellId)
+        if (!_player->m_currentSpells[CURRENT_CHANNELED_SPELL])
+            return;
+        const SpellEntry* current = _player->m_currentSpells[CURRENT_CHANNELED_SPELL]->GetSpellEntry();
+        if (current->Id==spellId || current->EffectTriggerSpell[0]==spellId ||
+            current->EffectTriggerSpell[1] == spellId || current->EffectTriggerSpell[2] == spellId)
             _player->InterruptSpell(CURRENT_CHANNELED_SPELL);
         return;
     }
@@ -450,7 +419,7 @@ void WorldSession::HandlePetCancelAuraOpcode(WorldPacket& recvPacket)
         return;
     }
 
-    if (!pet->isAlive())
+    if (!pet->IsAlive())
     {
         pet->SendPetActionFeedback(FEEDBACK_PET_DEAD);
         return;
@@ -458,7 +427,7 @@ void WorldSession::HandlePetCancelAuraOpcode(WorldPacket& recvPacket)
 
     pet->RemoveAurasDueToSpell(spellId);
 
-    pet->AddCreatureSpellCooldown(spellId);
+    _player->GetCooldownMgr().AddSpellCooldown(spellId, 0);
 }
 
 void WorldSession::HandleCancelGrowthAuraOpcode(WorldPacket& /*recvPacket*/)
@@ -542,9 +511,9 @@ void WorldSession::HandleGetMirrorimageData(WorldPacket& recv_data)
     data << guid;
     data << (uint32)pCreature->GetDisplayId();
 
-    data << (uint8)pCreature->getRace();
+    data << (uint8)pCreature->GetRace();
     data << (uint8)pCreature->getGender();
-    // data << (uint8)pCreature->getClass();
+    // data << (uint8)pCreature->GetClass();
 
     if (pCaster && pCaster->GetTypeId() == TYPEID_PLAYER)
     {

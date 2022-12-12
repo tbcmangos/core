@@ -1,6 +1,6 @@
 /*
  * Copyright (C) 2005-2008 MaNGOS <http://getmangos.com/>
- * Copyright (C) 2008-2014 Hellground <http://hellground.net/>
+ * Copyright (C) 2008-2017 Hellground <http://wow-hellground.com/>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -27,6 +27,15 @@
 // Server side limitation. Base at used code requirements.
 // also see MAX_LEVEL and GT_MAX_LEVEL define
 #define STRONG_MAX_LEVEL 255
+
+enum SpellEffectIndex
+{
+    EFFECT_INDEX_0 = 0,
+    EFFECT_INDEX_1 = 1,
+    EFFECT_INDEX_2 = 2
+};
+
+#define MAX_EFFECT_INDEX 3
 
 enum AreaTeams
 {

@@ -1,6 +1,6 @@
 /*
  * Copyright (C) 2005-2011 MaNGOS <http://getmangos.com/>
- * Copyright (C) 2008-2014 Hellground <http://hellground.net/>
+ * Copyright (C) 2008-2015 Hellground <http://hellground.net/>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -112,7 +112,7 @@ bool Database::Initialize(const char * infoString, int nConns /*= 1*/)
             m_logsDir.append("/");
     }
 
-    m_pingIntervallms = (uint32)sConfig.GetIntDefault("MaxPingTime", 30) * (MINUTE * 1000);
+    m_pingIntervalms = (uint32)sConfig.GetIntDefault("MaxPingTime", 60) * IN_MILISECONDS;
     m_minLogTimems = (uint32)sConfig.GetIntDefault("DBDiffLog.LogTime", 10);
 
     //create DB connections
@@ -246,18 +246,16 @@ bool Database::CheckMinLogTime(uint32 time)
 
 void Database::Ping()
 {
-    const char * sql = "SELECT 1";
-
     {
         SqlConnection::Lock guard(m_pAsyncConn);
-        if (guard->Query(sql) == QueryResultAutoPtr(nullptr))
+        if (guard->Ping())
             abort();
     }
 
     for (int i = 0; i < m_nQueryConnPoolSize; ++i)
     {
         SqlConnection::Lock guard(m_pQueryConnections[i]);
-        if (guard->Query(sql) == QueryResultAutoPtr(nullptr))
+        if (guard->Ping())
             abort();
     }
 }
@@ -339,7 +337,7 @@ QueryNamedResult* Database::PQueryNamed(const char *format,...)
     if(res==-1)
     {
         sLog.outLog(LOG_DEFAULT, "ERROR: SQL Query truncated (and not execute) for format: %s",format);
-        return false;
+        return NULL;
     }
 
     return QueryNamed(szQuery);
@@ -514,11 +512,11 @@ bool Database::CheckRequiredField( char const* table_name, char const* required_
         if(!reqName.empty())
         {
             sLog.outLog(LOG_DB_ERR, "The table `%s` in your [%s] database indicates that this database is out of date!",table_name,db_name);
-            sLog.outLog(LOG_DB_ERR, "");
+            sLog.outLog(LOG_DB_ERR);
             sLog.outLog(LOG_DB_ERR, "  [A] You have: --> `%s.sql`",cur_sql_update_name.c_str());
-            sLog.outLog(LOG_DB_ERR, "");
+            sLog.outLog(LOG_DB_ERR);
             sLog.outLog(LOG_DB_ERR, "  [B] You need: --> `%s.sql`",req_sql_update_name);
-            sLog.outLog(LOG_DB_ERR, "");
+            sLog.outLog(LOG_DB_ERR);
             sLog.outLog(LOG_DB_ERR, "You must apply all updates after [A] to [B] to use mangos with this database.");
             sLog.outLog(LOG_DB_ERR, "These updates are included in the sql/updates folder.");
             sLog.outLog(LOG_DB_ERR, "Please read the included [README] in sql/updates for instructions on updating.");
@@ -527,10 +525,10 @@ bool Database::CheckRequiredField( char const* table_name, char const* required_
         {
             sLog.outLog(LOG_DB_ERR, "The table `%s` in your [%s] database is missing its version info.",table_name,db_name);
             sLog.outLog(LOG_DB_ERR, "MaNGOS cannot find the version info needed to check that the db is up to date.");
-            sLog.outLog(LOG_DB_ERR, "");
+            sLog.outLog(LOG_DB_ERR);
             sLog.outLog(LOG_DB_ERR, "This revision of MaNGOS requires a database updated to:");
             sLog.outLog(LOG_DB_ERR, "`%s.sql`",req_sql_update_name);
-            sLog.outLog(LOG_DB_ERR, "");
+            sLog.outLog(LOG_DB_ERR);
 
             if(!strcmp(db_name, "WORLD"))
                 sLog.outLog(LOG_DB_ERR, "Post this error to your database provider forum or find a solution there.");
@@ -542,10 +540,10 @@ bool Database::CheckRequiredField( char const* table_name, char const* required_
     {
         sLog.outLog(LOG_DB_ERR, "The table `%s` in your [%s] database is missing or corrupt.",table_name,db_name);
         sLog.outLog(LOG_DB_ERR, "MaNGOS cannot find the version info needed to check that the db is up to date.");
-        sLog.outLog(LOG_DB_ERR, "");
+        sLog.outLog(LOG_DB_ERR);
         sLog.outLog(LOG_DB_ERR, "This revision of mangos requires a database updated to:");
         sLog.outLog(LOG_DB_ERR, "`%s.sql`",req_sql_update_name);
-        sLog.outLog(LOG_DB_ERR, "");
+        sLog.outLog(LOG_DB_ERR);
 
         if(!strcmp(db_name, "WORLD"))
             sLog.outLog(LOG_DB_ERR, "Post this error to your database provider forum or find a solution there.");

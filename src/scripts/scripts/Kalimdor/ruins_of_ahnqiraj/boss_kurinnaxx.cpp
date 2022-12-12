@@ -1,6 +1,6 @@
 /* 
  * Copyright (C) 2006-2008 ScriptDev2 <https://scriptdev2.svn.sourceforge.net/>
- * Copyright (C) 2008-2014 Hellground <http://hellground.net/>
+ * Copyright (C) 2008-2015 Hellground <http://hellground.net/>
  * 
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -45,10 +45,10 @@ struct boss_kurinnaxxAI : public ScriptedAI
     GameObject* Trap;
     Unit *pTarget;
     Unit *sand_trap_target;
-    uint32 MORTALWOUND_Timer;
-    uint32 SANDTRAP_Timer;
-    uint32 CLEAVE_Timer;
-    uint32 SUMMON_Chance;
+    int32 MORTALWOUND_Timer;
+    int32 SANDTRAP_Timer;
+    int32 CLEAVE_Timer;
+    int32 SUMMON_Chance;
     uint32 i;
     bool trap;
 
@@ -91,19 +91,19 @@ struct boss_kurinnaxxAI : public ScriptedAI
         if (i==0 && m_creature->GetHealth()*100 / m_creature->GetMaxHealth() <= 30 && !m_creature->IsNonMeleeSpellCast(false))
         {
             i=1;
-            DoCast(m_creature->getVictim(),SPELL_ENRAGE);
+            DoCast(m_creature->GetVictim(),SPELL_ENRAGE);
         }
 
-        //MORTALWOUND_Timer
-        if (MORTALWOUND_Timer < diff)
+        MORTALWOUND_Timer -= diff;
+        if (MORTALWOUND_Timer <= diff)
         {
-            DoCast(m_creature->getVictim(),SPELL_MORTALWOUND);
-            MORTALWOUND_Timer = 9000;
+            DoCast(m_creature->GetVictim(),SPELL_MORTALWOUND);
+            MORTALWOUND_Timer += 9000;
         }
-        else MORTALWOUND_Timer -= diff;
+        
 
-        //SANDTRAP_Timer
-        if (SANDTRAP_Timer < diff)
+        SANDTRAP_Timer -= diff;
+        if (SANDTRAP_Timer <= diff)
         {
             if (trap)
                 {
@@ -115,21 +115,21 @@ struct boss_kurinnaxxAI : public ScriptedAI
 
             if (!trap)
                 trap = true; //at least one trap exist
-            SANDTRAP_Timer = 7000;
+            SANDTRAP_Timer += 7000;
         }
-        else SANDTRAP_Timer -= diff;
+        
 
-        //CLEAVE_Timer
-        if(CLEAVE_Timer < diff)
+        CLEAVE_Timer -= diff;
+        if(CLEAVE_Timer <= diff)
             {
-                DoCast(m_creature->getVictim(), SPELL_CLEAVE);
-                CLEAVE_Timer = 6000 + rand()%6000;
+                DoCast(m_creature->GetVictim(), SPELL_CLEAVE);
+                CLEAVE_Timer += 6000 + rand()%6000;
             }
-        else CLEAVE_Timer -= diff;
+        
 
         /*
         if ((SUMMON_Chance = urand(0, 100))%100 == 0) //1% chance to summon enemy every update
-            DoCast(m_creature->getVictim(), SPELL_SUMMON);
+            DoCast(m_creature->GetVictim(), SPELL_SUMMON);
             A bit buggy.
         */
         DoMeleeAttackIfReady();

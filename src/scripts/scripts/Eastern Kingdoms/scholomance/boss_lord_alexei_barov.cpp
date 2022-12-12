@@ -1,6 +1,6 @@
 /* 
  * Copyright (C) 2006-2008 ScriptDev2 <https://scriptdev2.svn.sourceforge.net/>
- * Copyright (C) 2008-2014 Hellground <http://hellground.net/>
+ * Copyright (C) 2008-2015 Hellground <http://hellground.net/>
  * 
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -34,8 +34,8 @@ struct boss_lordalexeibarovAI : public ScriptedAI
 {
     boss_lordalexeibarovAI(Creature *c) : ScriptedAI(c) {}
 
-    uint32 Immolate_Timer;
-    uint32 VeilofShadow_Timer;
+    int32 Immolate_Timer;
+    int32 VeilofShadow_Timer;
 
     void Reset()
     {
@@ -66,22 +66,22 @@ struct boss_lordalexeibarovAI : public ScriptedAI
         if (!UpdateVictim())
             return;
 
-        //Immolate_Timer
-        if (Immolate_Timer < diff)
+        Immolate_Timer -= diff;
+        if (Immolate_Timer <= diff)
         {
             Unit* target = NULL;
             target = SelectUnit(SELECT_TARGET_RANDOM,0);
             if (target) DoCast(target,SPELL_IMMOLATE);
 
-            Immolate_Timer = 12000;
-        }else Immolate_Timer -= diff;
+            Immolate_Timer += 12000;
+        }
 
-        //VeilofShadow_Timer
-        if (VeilofShadow_Timer < diff)
+        VeilofShadow_Timer -= diff;
+        if (VeilofShadow_Timer <= diff)
         {
-            DoCast(m_creature->getVictim(),SPELL_VEILOFSHADOW);
-            VeilofShadow_Timer = 20000;
-        }else VeilofShadow_Timer -= diff;
+            DoCast(m_creature->GetVictim(),SPELL_VEILOFSHADOW);
+            VeilofShadow_Timer += 20000;
+        }
 
         DoMeleeAttackIfReady();
     }

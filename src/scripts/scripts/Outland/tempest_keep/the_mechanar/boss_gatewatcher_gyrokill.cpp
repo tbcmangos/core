@@ -1,6 +1,6 @@
 /* 
  * Copyright (C) 2006-2008 ScriptDev2 <https://scriptdev2.svn.sourceforge.net/>
- * Copyright (C) 2008-2014 Hellground <http://hellground.net/>
+ * Copyright (C) 2008-2015 Hellground <http://hellground.net/>
  * 
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -45,22 +45,18 @@ struct boss_gatewatcher_gyro_killAI : public ScriptedAI
     boss_gatewatcher_gyro_killAI(Creature *c) : ScriptedAI(c)
     {
         pInstance = (c->GetInstanceData());
-        HeroicMode = me->GetMap()->IsHeroic();
     }
 
     ScriptedInstance *pInstance;
-
-    bool HeroicMode;
-
-    uint32 Shadow_Power_Timer;
-    uint32 Saw_Blade_Timer;
-    uint32 Stream_of_Machine_Fluid_Timer;
+    Timer Shadow_Power_Timer;
+    Timer Saw_Blade_Timer;
+    Timer Stream_of_Machine_Fluid_Timer;
 
     void Reset()
     {
-        Shadow_Power_Timer = 25000;
-        Saw_Blade_Timer = 45000;
-        Stream_of_Machine_Fluid_Timer = 55000;
+        Shadow_Power_Timer.Reset(25000);
+        Saw_Blade_Timer.Reset(45000);
+        Stream_of_Machine_Fluid_Timer.Reset(55000);
 
         if(pInstance)
             pInstance->SetData(DATA_GYROKILL_EVENT, NOT_STARTED);
@@ -97,27 +93,27 @@ struct boss_gatewatcher_gyro_killAI : public ScriptedAI
             return;
 
         //Shadow Power
-        if(Shadow_Power_Timer < diff)
+        if(Shadow_Power_Timer.Expired(diff))
         {
             DoCast(me,HeroicMode ? H_SPELL_SHADOW_POWER : SPELL_SHADOW_POWER);
             Shadow_Power_Timer = 20000 + rand()%8000;
-        }else Shadow_Power_Timer -= diff;
+        }
 
         //Saw Blade
-        if(Saw_Blade_Timer < diff)
+        if(Saw_Blade_Timer.Expired(diff))
         {
-            DoCast(me->getVictim(),HeroicMode ? H_SPELL_SAW_BLADE : SPELL_SAW_BLADE);
+            DoCast(me->GetVictim(),HeroicMode ? H_SPELL_SAW_BLADE : SPELL_SAW_BLADE);
             DoScriptText(RAND(SAY_SAW_ATTACK1, SAY_SAW_ATTACK2), me);
 
             Saw_Blade_Timer = 30000;
-        }else Saw_Blade_Timer -= diff;
+        }
 
         //Stream of Machine Fluid
-        if(Stream_of_Machine_Fluid_Timer < diff)
+        if(Stream_of_Machine_Fluid_Timer.Expired(diff))
         {
-            DoCast(me->getVictim(),SPELL_STREAM_OF_MACHINE_FLUID);
+            DoCast(me->GetVictim(),SPELL_STREAM_OF_MACHINE_FLUID);
             Stream_of_Machine_Fluid_Timer = 35000 + rand()%15000;
-        }else Stream_of_Machine_Fluid_Timer -= diff;
+        }
 
         DoMeleeAttackIfReady();
     }

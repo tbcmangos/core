@@ -1,6 +1,6 @@
 /* 
  * Copyright (C) 2006-2008 ScriptDev2 <https://scriptdev2.svn.sourceforge.net/>
- * Copyright (C) 2008-2014 Hellground <http://hellground.net/>
+ * Copyright (C) 2008-2015 Hellground <http://hellground.net/>
  * 
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -83,29 +83,29 @@ struct mobs_nether_drakeAI : public ScriptedAI
     mobs_nether_drakeAI(Creature* creature) : ScriptedAI(creature) {}
 
     bool IsNihil;
-    uint32 NihilSpeech_Timer;
+    Timer NihilSpeech_Timer;
     uint32 NihilSpeech_Phase;
 
-    uint32 ArcaneBlast_Timer;
-    uint32 ManaBurn_Timer;
-    uint32 IntangiblePresence_Timer;
+    Timer ArcaneBlast_Timer;
+    Timer ManaBurn_Timer;
+    Timer IntangiblePresence_Timer;
 
     void Reset()
     {
-        NihilSpeech_Timer = 2000;
+        NihilSpeech_Timer.Reset(2000);
         IsNihil = false;
 
         if (me->GetEntry() == ENTRY_NIHIL)
         {
-            me->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
+            me->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_SPAWNING);
             IsNihil = true;
         }
 
         NihilSpeech_Phase = 1;
 
-        ArcaneBlast_Timer = 7500;
-        ManaBurn_Timer = 10000;
-        IntangiblePresence_Timer = 15000;
+        ArcaneBlast_Timer.Reset(7500);
+        ManaBurn_Timer.Reset(10000);
+        IntangiblePresence_Timer.Reset(15000);
     }
 
     void SpellHit(Unit* caster, const SpellEntry* spell)
@@ -160,7 +160,7 @@ struct mobs_nether_drakeAI : public ScriptedAI
         {
             if (NihilSpeech_Phase)
             {
-                if (NihilSpeech_Timer <= diff)
+                if (NihilSpeech_Timer.Expired(diff))
                 {
                     switch (NihilSpeech_Phase)
                     {
@@ -190,8 +190,6 @@ struct mobs_nether_drakeAI : public ScriptedAI
                     }
                     NihilSpeech_Timer = 5000;
                 }
-                else
-                    NihilSpeech_Timer -=diff;
             }
             return;                                         //anything below here is not interesting for Nihil, so skip it
         }
@@ -199,31 +197,28 @@ struct mobs_nether_drakeAI : public ScriptedAI
         if (!UpdateVictim())
             return;
 
-        if (IntangiblePresence_Timer <= diff)
+        if (IntangiblePresence_Timer.Expired(diff))
         {
-            DoCast(me->getVictim(),SPELL_INTANGIBLE_PRESENCE);
+            DoCast(me->GetVictim(),SPELL_INTANGIBLE_PRESENCE);
             IntangiblePresence_Timer = 15000+rand()%15000;
         }
-        else
-            IntangiblePresence_Timer -= diff;
 
-        if (ManaBurn_Timer <= diff)
+
+        if (ManaBurn_Timer.Expired(diff))
         {
-            Unit* target = me->getVictim();
-            if (target && target->getPowerType() == POWER_MANA)
+            Unit* target = me->GetVictim();
+            if (target && target->GetPowerType() == POWER_MANA)
                 DoCast(target,SPELL_MANA_BURN);
             ManaBurn_Timer = 8000+rand()%8000;
         }
-        else
-            ManaBurn_Timer -= diff;
 
-        if (ArcaneBlast_Timer <= diff)
+
+        if (ArcaneBlast_Timer.Expired(diff))
         {
-            DoCast(me->getVictim(),SPELL_ARCANE_BLAST);
+            DoCast(me->GetVictim(),SPELL_ARCANE_BLAST);
             ArcaneBlast_Timer = 2500+rand()%5000;
         }
-        else
-            ArcaneBlast_Timer -= diff;
+        
 
         DoMeleeAttackIfReady();
     }
@@ -417,10 +412,10 @@ struct npc_ogre_bruteAI : public ScriptedAI
         me->HandleEmoteCommand(7);
         me->SetReactState(REACT_AGGRESSIVE);
 
-        if (!me->getVictim())
+        if (!me->GetVictim())
             me->GetMotionMaster()->MoveTargetedHome();
         else
-            me->GetMotionMaster()->MoveChase(me->getVictim());
+            me->GetMotionMaster()->MoveChase(me->GetVictim());
     }
 
     void UpdateAI(const uint32 diff)
@@ -450,11 +445,11 @@ struct npc_vim_bunnyAI : public ScriptedAI
 {
     npc_vim_bunnyAI(Creature* creature) : ScriptedAI(creature){}
 
-    uint32 CheckTimer;
+    Timer CheckTimer;
 
     void Reset()
     {
-        CheckTimer = 1000;
+        CheckTimer.Reset(1000);
     }
 
     bool GetPlayer()
@@ -469,7 +464,7 @@ struct npc_vim_bunnyAI : public ScriptedAI
 
     void UpdateAI(const uint32 diff)
     {
-        if (CheckTimer < diff)
+        if (CheckTimer.Expired(diff))
         {
             if (me->GetDistance2d(3279.80f, 4639.76f) < 5.0)
             {
@@ -501,8 +496,6 @@ struct npc_vim_bunnyAI : public ScriptedAI
                 CheckTimer = 2000;
             }
         }
-        else
-            CheckTimer -= diff;
     }
 };
 
@@ -736,7 +729,7 @@ bool GOUse_go_thunderspike(Player* player, GameObject* go)
         // to prevent spawn spam :)
         if (Creature* pGor = GetClosestCreatureWithEntry(player, GOR_GRIMGUT_ENTRY, 50.0f))
         {
-            if (!pGor->getVictim() && pGor->isAlive())
+            if (!pGor->GetVictim() && pGor->IsAlive())
                 pGor->AI()->AttackStart(player);
 
             return false;
@@ -777,10 +770,10 @@ enum SimonGame
     GO_RED_CLUSTER_DISPLAY_LARGE    = 7366,
     GO_YELLOW_CLUSTER_DISPLAY_LARGE = 7367,
 
-    SPELL_PRE_GAME_BLUE             = 40176,
-    SPELL_PRE_GAME_GREEN            = 40177,
-    SPELL_PRE_GAME_RED              = 40178,
-    SPELL_PRE_GAME_YELLOW           = 40179,
+    SPELL_PRE_GAME_BLUE             = 40281,
+    SPELL_PRE_GAME_GREEN            = 40287,
+    SPELL_PRE_GAME_RED              = 40288,
+    SPELL_PRE_GAME_YELLOW           = 40289,
     SPELL_VISUAL_BLUE               = 40244,
     SPELL_VISUAL_GREEN              = 40245,
     SPELL_VISUAL_RED                = 40246,
@@ -968,7 +961,7 @@ struct npc_simon_bunnyAI : public ScriptedAI
         fails = 0;
         gameTicks = 0;
         zCoordCorrection = large ? 8.0f : 2.75f;
-        searchDistance = large ? 13.0f : 5.0f;
+        searchDistance = large ? 20.0f : 10.0f;
         colorSequence.clear();
         playableSequence.clear();
         playerSequence.clear();
@@ -1007,6 +1000,28 @@ struct npc_simon_bunnyAI : public ScriptedAI
             }
         }
 
+        if (!large) // summon auras
+        {
+            for (uint32 clusterId = SIMON_BLUE; clusterId < SIMON_MAX_COLORS; clusterId++)
+            {
+                if (GameObject* cluster = GetClosestGameObjectWithEntry(me, clusterIds[clusterId], 2.0f*searchDistance))
+                {
+                    uint32 preGameSpellId;
+                    if (cluster->GetEntry() == clusterIds[SIMON_RED])
+                        preGameSpellId = SPELL_PRE_GAME_RED;
+                    else if (cluster->GetEntry() == clusterIds[SIMON_BLUE])
+                        preGameSpellId = SPELL_PRE_GAME_BLUE;
+                    else if (cluster->GetEntry() == clusterIds[SIMON_GREEN])
+                        preGameSpellId = SPELL_PRE_GAME_GREEN;
+                    else if (cluster->GetEntry() == clusterIds[SIMON_YELLOW])
+                        preGameSpellId = SPELL_PRE_GAME_YELLOW;
+                    else
+                        break;
+
+                    me->CastSpell(cluster->GetPositionX(),cluster->GetPositionY(),cluster->GetPositionZ(), preGameSpellId, true);
+                }
+            }
+        }
         _events.Reset();
         _events.ScheduleEvent(EVENT_SIMON_ROUND_FINISHED, 1000);
         _events.ScheduleEvent(EVENT_SIMON_PERIODIC_PLAYER_CHECK, 2000);
@@ -1072,8 +1087,10 @@ struct npc_simon_bunnyAI : public ScriptedAI
     void PrepareClusters(bool clustersOnly = false)
     {
         for (uint32 clusterId = SIMON_BLUE; clusterId < SIMON_MAX_COLORS; clusterId++)
+        {
             if (GameObject* cluster = GetClosestGameObjectWithEntry(me, clusterIds[clusterId], searchDistance))
                 cluster->RemoveFlag(GAMEOBJECT_FLAGS, GO_FLAG_NOTSELECTABLE);
+        }
 
         if (clustersOnly)
             return;
@@ -1128,28 +1145,6 @@ struct npc_simon_bunnyAI : public ScriptedAI
             if (GameObject* cluster = GetClosestGameObjectWithEntry(me,clusterIds[clusterId], 2.0f*searchDistance))
             {
                 cluster->SetFlag(GAMEOBJECT_FLAGS, GO_FLAG_NOTSELECTABLE);
-
-                // break since we don't need glowing auras for large clusters
-                if (large)
-                    break;
-
-                float x, y, z, o = 0.0f;
-                cluster->GetPosition(x, y, z);
-                me->NearTeleportTo(x, y, z, o);
-
-                uint32 preGameSpellId;
-                if (cluster->GetEntry() == clusterIds[SIMON_RED])
-                    preGameSpellId = SPELL_PRE_GAME_RED;
-                else if (cluster->GetEntry() == clusterIds[SIMON_BLUE])
-                    preGameSpellId = SPELL_PRE_GAME_BLUE;
-                else if (cluster->GetEntry() == clusterIds[SIMON_GREEN])
-                    preGameSpellId = SPELL_PRE_GAME_GREEN;
-                else if (cluster->GetEntry() == clusterIds[SIMON_YELLOW])
-                    preGameSpellId = SPELL_PRE_GAME_YELLOW;
-                else
-                    break;
-
-                me->CastSpell(cluster, preGameSpellId, true);
             }
         }
 
@@ -1236,7 +1231,7 @@ struct npc_simon_bunnyAI : public ScriptedAI
     {
         if (Player* player = me->GetPlayer(playerGUID))
         {
-            if (player->isDead())
+            if (player->IsDead())
                 return false;
 
             if (player->GetDistance2d(me) >= 2.0f*searchDistance)
@@ -1270,7 +1265,6 @@ bool OnGossipHello_go_simon_cluster(Player* player, GameObject* go)
 enum ApexisRelic
 {
     QUEST_APEXIS                 = 11058,
-    QUEST_EMANATION              = 11080,
     QUEST_GUARDIAN               = 11059,
     GOSSIP_TEXT_ID               = 10948,
 
@@ -1286,7 +1280,7 @@ bool OnGossipHello_go_apexis_relic(Player* player, GameObject* go)
 {
     bool large = (go->GetEntry() == GO_APEXIS_MONUMENT);
 
-    if (player->HasItemCount(ITEM_APEXIS_SHARD, large ? 35 : 1) && large ? player->GetQuestStatus(QUEST_GUARDIAN) == QUEST_STATUS_INCOMPLETE : (player->GetQuestStatus(QUEST_APEXIS) == QUEST_STATUS_INCOMPLETE || player->GetQuestStatus(QUEST_EMANATION) == QUEST_STATUS_INCOMPLETE))
+    if (player->HasItemCount(ITEM_APEXIS_SHARD, large ? 35 : 1) && player->GetQuestStatus(large ? QUEST_GUARDIAN : QUEST_APEXIS) != QUEST_STATUS_NONE)
         player->ADD_GOSSIP_ITEM(0, large ? GOSSIP_ITEM_2 : GOSSIP_ITEM_1, GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF+1);
     player->SEND_GOSSIP_MENU(GOSSIP_TEXT_ID, go->GetGUID());
 
@@ -1356,7 +1350,7 @@ struct npc_orb_attracterAI : public Scripted_NoMovementAI
 {
     npc_orb_attracterAI(Creature* creature) : Scripted_NoMovementAI(creature) {}
 
-    TimeTrackerSmall attractTimer;
+    Timer attractTimer;
 
     void Reset()
     {
@@ -1367,14 +1361,12 @@ struct npc_orb_attracterAI : public Scripted_NoMovementAI
 
     void UpdateAI(const uint32 diff)
     {
-        attractTimer.Update(diff);
-
-        if (attractTimer.Passed())
+        if (attractTimer.Expired(diff))
         {
             std::list<Creature*> orbs = FindAllCreaturesWithEntry(NPC_LIGHT_ORB, 35.0f);
             std::for_each(orbs.begin(), orbs.end(), AttractOrbs(me));
 
-            attractTimer.Reset(1000);
+            attractTimer = 1000;
         }
     }
 };
@@ -1406,7 +1398,7 @@ struct npc_razaan_eventAI : public ScriptedAI
 
     bool Check;
 
-    uint32 CheckTimer;
+    Timer CheckTimer;
     uint32 Count;
 
     void Reset()
@@ -1438,7 +1430,7 @@ struct npc_razaan_eventAI : public ScriptedAI
     {
         if (Check)
         {
-            if (CheckTimer <= diff)
+            if (CheckTimer.Expired(diff))
             {
                 if (Creature* razaan = GetClosestCreatureWithEntry(me, NPC_RAZAAN, 75.0f, true))
                 {
@@ -1448,12 +1440,11 @@ struct npc_razaan_eventAI : public ScriptedAI
                 else
                 {
                     if (Creature* razaan = GetClosestCreatureWithEntry(me, NPC_RAZAAN, 75.0f, false))
-                        me->SummonGameObject(GO_SOULS, razaan->GetPositionX(), razaan->GetPositionY(), razaan->GetPositionZ()+3.0f, razaan->GetOrientation(), 0, 0, 0, 0, 50);
+                        me->SummonGameObject(GO_SOULS, razaan->GetPositionX(), razaan->GetPositionY(), razaan->GetPositionZ() + 3.0f, razaan->GetOrientation(), 0, 0, 0, 0, 50);
 
                     Reset();
                 }
             }
-            else CheckTimer -= diff;
         }
     }
 };
@@ -1481,14 +1472,14 @@ struct npc_razaani_raiderAI : public ScriptedAI
     npc_razaani_raiderAI(Creature* creature) : ScriptedAI(creature) {}
 
     uint64 PlayerGUID;
-    uint32 FlareTimer;
-    uint32 WarpTimer;
+    Timer FlareTimer;
+    Timer WarpTimer;
 
     void Reset()
     {
         PlayerGUID = 0;
-        FlareTimer = urand(4000, 8000);
-        WarpTimer = urand(8000, 13000);
+        FlareTimer.Reset(urand(4000, 8000));
+        WarpTimer.Reset(urand(8000, 13000));
     }
 
     void AttackStart(Unit* who)
@@ -1537,19 +1528,18 @@ struct npc_razaani_raiderAI : public ScriptedAI
         if (!UpdateVictim())
             return;
 
-        if (FlareTimer <= diff)
+        if (FlareTimer.Expired(diff))
         {
-            DoCast (me->getVictim(), SPELL_FLARE);
+            DoCast (me->GetVictim(), SPELL_FLARE);
             FlareTimer = urand(9000, 14000);
         }
-        else FlareTimer -= diff;
 
-        if (WarpTimer <= diff)
+
+        if (WarpTimer.Expired(diff))
         {
-            DoCast (me->getVictim(), SPELL_WARP);
+            DoCast(me->GetVictim(), SPELL_WARP);
             WarpTimer = urand(14000, 18000);
         }
-        else WarpTimer -= diff;
 
         DoMeleeAttackIfReady();
     }
@@ -1589,11 +1579,11 @@ enum
     NPC_CH_TARGET            = 21394
 };
 
-float Port[3] =
+static float Port[3] =
 {
-    1920.163,
-    5581.826,
-    269.222
+    1920.163f,
+    5581.826f,
+    269.222f
 };
 
 struct npc_rally_zapnabberAI : public ScriptedAI
@@ -1603,8 +1593,8 @@ struct npc_rally_zapnabberAI : public ScriptedAI
     bool Flight;
 
     uint64 playerGUID;
-    uint32 FlightTimer;
-    uint32 EffectTimer;
+    Timer FlightTimer;
+    Timer EffectTimer;
     uint8 flights;
     uint8 Count;
 
@@ -1705,7 +1695,7 @@ struct npc_rally_zapnabberAI : public ScriptedAI
     {
         if (Flight)
         {
-            if (EffectTimer <= diff)
+            if (EffectTimer.Expired(diff))
             {
                 Map* tmpMap = me->GetMap();
 
@@ -1733,13 +1723,10 @@ struct npc_rally_zapnabberAI : public ScriptedAI
                 EffectTimer = 3000;
  
             }
-            else EffectTimer -= diff;
 
-            if (FlightTimer <= diff)
-            {
+
+            if (FlightTimer.Expired(diff))
                 Flights();
-            }
-            else FlightTimer -= diff;
         }
 
         DoMeleeAttackIfReady();
@@ -1924,8 +1911,6 @@ enum
 
     NPC_IMP              = 22474,
     NPC_HOUND            = 22500,
-    NPC_SOUTH_GATE       = 22472,
-    NPC_NORTH_GATE       = 22471,
     CREDIT_SOUTH         = 22504,
     CREDIT_NORTH         = 22503,
 
@@ -1941,7 +1926,7 @@ struct npc_cannon_targetAI : public ScriptedAI
 
     uint64 PlayerGUID;
     uint64 CannonGUID;
-    uint32 PartyTimer;
+    Timer PartyTimer;
     uint8 Count;
 
     void Reset() 
@@ -1976,13 +1961,10 @@ struct npc_cannon_targetAI : public ScriptedAI
             {
                 if (Player* player = me->GetPlayer(PlayerGUID))
                 {
-                    if (Creature* bunny = GetClosestCreatureWithEntry(me, NPC_SOUTH_GATE, 20.0f))
-                        player->KilledMonster(CREDIT_SOUTH, me->GetGUID());
+                    if (me->GetPositionX()< 2000)
+                        player->RewardPlayerAndGroupAtEvent(CREDIT_SOUTH, me);
                     else
-                    {   
-                        if (Creature* bunny = GetClosestCreatureWithEntry(me, NPC_NORTH_GATE, 20.0f))
-                            player->KilledMonster(CREDIT_NORTH, me->GetGUID());
-                    }
+                        player->RewardPlayerAndGroupAtEvent(CREDIT_NORTH, me);
                 }
 
                 me->SummonGameObject(GO_BIG_FIRE, me->GetPositionX(), me->GetPositionY(), me->GetPositionZ(), 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 60);
@@ -2011,11 +1993,11 @@ struct npc_cannon_targetAI : public ScriptedAI
     {
         if (PartyTime)
         {
-            if (PartyTimer <= diff)
+            if (PartyTimer.Expired(diff))
             {
                 if (Creature* cannon = me->GetCreature(CannonGUID))
                 {
-                    if (cannon->isDead())
+                    if (cannon->IsDead())
                         Reset();
                 }
 
@@ -2026,7 +2008,6 @@ struct npc_cannon_targetAI : public ScriptedAI
 
                 PartyTimer = 3000;
             }
-            else PartyTimer -= diff;
         }
     }
 };
@@ -2068,8 +2049,7 @@ struct npc_gargromAI : public ScriptedAI
         if (type == POINT_MOTION_TYPE)
         {
             me->setDeathState(JUST_DIED);
-            me->SummonGameObject(GO_TEMP, sum[1].x, sum[1].y, sum[1].z, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 25);
-            me->SummonGameObject(GO_TEMP, sum[1].x-(rand()%4), sum[1].y-(rand()%4), sum[1].z, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 25);
+            me->SummonGameObject(GO_TEMP, sum[1].x, sum[1].y, sum[1].z, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 300);
         }
     }
 };
@@ -2122,8 +2102,8 @@ struct npc_soulgrinderAI : public ScriptedAI
     bool DoSpawns;
 
     SummonList summons;
-    uint32 SpawnTimer;
-    uint32 BeamTimer;
+    Timer SpawnTimer;
+    Timer BeamTimer;
     uint8 Count;
     uint64 PlayerGUID;
     uint64 SkullocGUID;
@@ -2137,8 +2117,8 @@ struct npc_soulgrinderAI : public ScriptedAI
         }
 
         DoSpawns = true;
-        SpawnTimer = 5000;
-        BeamTimer = 35000;
+        SpawnTimer.Reset(5000);
+        BeamTimer.Reset(35000);
         Count = 0;
         PlayerGUID = 0;
         SkullocGUID = 0;
@@ -2261,16 +2241,15 @@ struct npc_soulgrinderAI : public ScriptedAI
     {
         if (DoSpawns)
         {            
-            if (SpawnTimer <= diff)
+            if (SpawnTimer.Expired(diff))
             {
                 DoSpawn();
 
                 SpawnTimer = 20000;
             }
-            else SpawnTimer -= diff;
         }
 
-        if (BeamTimer <= diff)
+        if (BeamTimer.Expired(diff))
         {
             Beam();
 
@@ -2278,7 +2257,6 @@ struct npc_soulgrinderAI : public ScriptedAI
                 BeamTimer = 5000;
             else BeamTimer = 80000;
         }
-        else BeamTimer -= diff;
     }
 };
 
@@ -2328,27 +2306,27 @@ static Assault AssaultPos[]=
     { 4014.87f, 5891.27f, 267.870f, 0.608f },
     { 4018.21f, 5888.22f, 267.870f, 1.271f },
     { 4013.54f, 5895.92f, 267.870f, 6.138f },
-    { 2529.85f, 7323.99f, 375.353, 5.834f },
-    { 3063.00f, 6708.12f, 585.281, 5.834f },
+    { 2529.85f, 7323.99f, 375.353f, 5.834f },
+    { 3063.00f, 6708.12f, 585.281f, 5.834f },
 };
 
 static Assault AssaultPosone[]=
 {
-    { 3975.04f, 5860.19f, 266.310, 0.674f },
-    { 3974.83f, 5871.05f, 265.135, 0.674f },
-    { 3966.80f, 5874.23f, 265.294, 0.674f },
-    { 3969.07f, 5884.81f, 266.298, 0.674f },
-    { 3981.83f, 5856.02f, 266.298, 0.674f },
-    { 3981.12f, 5845.82f, 266.712, 0.674f },
-    { 3989.52f, 5845.91f, 266.793, 0.674f },
-    { 3968.80f, 5856.74f, 266.725, 0.674f }
+    { 3975.04f, 5860.19f, 266.310f, 0.674f },
+    { 3974.83f, 5871.05f, 265.135f, 0.674f },
+    { 3966.80f, 5874.23f, 265.294f, 0.674f },
+    { 3969.07f, 5884.81f, 266.298f, 0.674f },
+    { 3981.83f, 5856.02f, 266.298f, 0.674f },
+    { 3981.12f, 5845.82f, 266.712f, 0.674f },
+    { 3989.52f, 5845.91f, 266.793f, 0.674f },
+    { 3968.80f, 5856.74f, 266.725f, 0.674f }
 };
 
 static Assault AssaultPostwo[]=
 {
-    { 4005.12f, 5894.48f, 267.348, 4.926f },
-    { 4014.66f, 5880.12f, 267.871, 2.499f },
-    { 4011.16f, 5888.21f, 267.826, 3.779f }
+    { 4005.12f, 5894.48f, 267.348f, 4.926f },
+    { 4014.66f, 5880.12f, 267.871f, 2.499f },
+    { 4011.16f, 5888.21f, 267.826f, 3.779f }
 };
 
 struct npc_bashir_landingAI : public ScriptedAI
@@ -2362,10 +2340,10 @@ struct npc_bashir_landingAI : public ScriptedAI
     SummonList summons;
     std::list<uint64> attackers;
 
-    uint32 CheckTimer;
-    uint32 SpawnTimer;
-    uint32 StartSpawnTimer;
-    uint32 EndTimer;
+    Timer CheckTimer;
+    Timer SpawnTimer;
+    Timer StartSpawnTimer;
+    Timer EndTimer;
     uint8 Wave;
     uint64 AetherGUID;
     uint64 CollectorGUID;
@@ -2375,10 +2353,10 @@ struct npc_bashir_landingAI : public ScriptedAI
         CanStart = true;
         Assault = false;
         Next = true;
-        CheckTimer = 3000;
-        SpawnTimer = 60000;
-        StartSpawnTimer = 240000;
-        EndTimer = 1500000;
+        CheckTimer.Reset(3000);
+        SpawnTimer.Reset(60000);
+        StartSpawnTimer.Reset(240000);
+        EndTimer.Reset(1500000);
         attackers.clear();
         Wave = 0;
         AetherGUID = 0;
@@ -2517,7 +2495,7 @@ struct npc_bashir_landingAI : public ScriptedAI
                     me->SummonCreature(NPC_SUBPRIMAL, AssaultPosone[i].x, AssaultPosone[i].y, AssaultPosone[i].z,  AssaultPosone[i].o, TEMPSUMMON_TIMED_DESPAWN_OUT_OF_COMBAT, 1500000);
 
                 for (int i = 0; i < 7; i++)
-                    me->SummonCreature(NPC_SSLAVE, AssaultPosone[i].x+(rand()%6), AssaultPosone[i].y+(rand()%6), AssaultPosone[i].z,  AssaultPos[i].o, TEMPSUMMON_TIMED_DESPAWN_OUT_OF_COMBAT, 1500000);
+                    me->SummonCreature(NPC_SSLAVE, AssaultPosone[i].x+(rand()%6), AssaultPosone[i].y+(rand()%6), AssaultPosone[i].z,  AssaultPosone[i].o, TEMPSUMMON_TIMED_DESPAWN_OUT_OF_COMBAT, 1500000);
 
                 Next = true;
                 break;
@@ -2627,7 +2605,7 @@ struct npc_bashir_landingAI : public ScriptedAI
     {
         if (!Assault)
         {
-            if (CheckTimer <= diff)
+            if (CheckTimer.Expired(diff))
             {
                 Map* tmpMap = me->GetMap();
 
@@ -2641,7 +2619,7 @@ struct npc_bashir_landingAI : public ScriptedAI
                     {
                         if (Creature* attacker = tmpMap->GetCreature((*itr)))
                         {
-                            if (attacker->isAlive())
+                            if (attacker->IsAlive())
                             {
                                 alive = true;
                                 break;
@@ -2660,39 +2638,36 @@ struct npc_bashir_landingAI : public ScriptedAI
 
                  if (Creature* Aether = me->GetCreature(AetherGUID))
                  {
-                     if (Aether->isAlive())
+                     if (Aether->IsAlive())
                          return;
                      else EventFail();
                  }
             }
-            else CheckTimer -= diff;
+
 
             if (Next)
             {
-                if (SpawnTimer <= diff) 
+                if (SpawnTimer.Expired(diff))
                 {
                     NextWave();
                     SpawnTimer = 180000;
                 }
-                else SpawnTimer -= diff;
             }
         }
 
         if (CanStart)
         {
-            if (StartSpawnTimer <= diff) 
+            if (StartSpawnTimer.Expired(diff))
             {
                 NextWave();
                 CanStart = false;
             }
-            else StartSpawnTimer -= diff;
         }
 
-        if (EndTimer <= diff) 
+        if (EndTimer.Expired(diff))
         {
             EventFail();
         }
-        else EndTimer -= diff;
     }
 };
 
@@ -2724,6 +2699,7 @@ struct npc_banishing_crystalAI : public ScriptedAI
         PlayerGUID = 0;
         DoCast(me, SPELL_BANISHMENT);
         GetPlayer();
+        me->SetReactState(REACT_PASSIVE);
     }
 
     void GetPlayer()
@@ -2754,6 +2730,31 @@ struct npc_banishing_crystalAI : public ScriptedAI
 CreatureAI* GetAI_npc_banishing_crystal(Creature* creature)
 {
     return new npc_banishing_crystalAI (creature);
+}
+
+#define QUEST_TO_RULE_THE_SKIES 11078
+#define ITEM_DEATHWING_BROOD_CLOAK 31942
+#define GOSSIP_KELLER_CLOAK "I'd like to exchange my Deathwing Brood Cloak."
+#define SPELL_CLOAK_EXCHANGE 41412
+
+bool GossipHello_npc_sky_commander_keller(Player* plr, Creature* cre)
+{
+    if (cre->isQuestGiver())
+        plr->PrepareQuestMenu(cre->GetGUID());
+
+    if (plr->GetQuestRewardStatus(QUEST_TO_RULE_THE_SKIES) && plr->HasItemCount(ITEM_DEATHWING_BROOD_CLOAK, 1))
+        plr->ADD_GOSSIP_ITEM(0, GOSSIP_KELLER_CLOAK, GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF);
+    plr->SEND_GOSSIP_MENU(cre->GetNpcTextId(), cre->GetGUID());
+    return true;
+}
+
+bool GossipSelect_npc_sky_commander_keller(Player* plr, Creature* cre, uint32 sender, uint32 action)
+{
+    if (sender == GOSSIP_SENDER_MAIN && action == GOSSIP_ACTION_INFO_DEF)
+        plr->CastSpell(plr, SPELL_CLOAK_EXCHANGE, false);
+
+    plr->CLOSE_GOSSIP_MENU();
+    return true;
 }
 
 /*######
@@ -2905,5 +2906,11 @@ void AddSC_blades_edge_mountains()
     newscript = new Script;
     newscript->Name="npc_banishing_crystal";
     newscript->GetAI = &GetAI_npc_banishing_crystal;
+    newscript->RegisterSelf();
+    
+    newscript = new Script;
+    newscript->Name = "npc_sky_commander_keller";
+    newscript->pGossipHello = &GossipHello_npc_sky_commander_keller;
+    newscript->pGossipSelect = &GossipSelect_npc_sky_commander_keller;
     newscript->RegisterSelf();
 }

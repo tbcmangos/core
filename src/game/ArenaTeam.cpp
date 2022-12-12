@@ -1,6 +1,6 @@
 /*
  * Copyright (C) 2005-2008 MaNGOS <http://getmangos.com/>
- * Copyright (C) 2008-2014 Hellground <http://hellground.net/>
+ * Copyright (C) 2008-2017 Hellground <http://wow-hellground.com/>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -76,7 +76,7 @@ bool ArenaTeam::Create(uint64 captainGuid, uint32 type, std::string ArenaTeamNam
     RealmDataDatabase.CommitTransaction();
 
     AddMember(CaptainGuid);
-    sLog.outLog(LOG_ARENA, "New ArenaTeam created [Name: %s] [Id: %u] [Type: %u] [Captain GUID: %u]", ArenaTeamName.c_str(), GetId(), GetType(), GetCaptain());
+    sLog.outLog(LOG_ARENA, "New ArenaTeam created [Name: %s] [Id: %u] [Type: %u] [Captain GUID: %lu]", ArenaTeamName.c_str(), GetId(), GetType(), GetCaptain());
     return true;
 }
 
@@ -98,7 +98,7 @@ bool ArenaTeam::AddMember(const uint64& PlayerGuid)
             return false;
         }
 
-        plClass = (uint8)pl->getClass();
+        plClass = (uint8)pl->GetClass();
         plName = pl->GetName();
     }
     else
@@ -207,7 +207,11 @@ bool ArenaTeam::LoadArenaTeamFromDB(uint32 ArenaTeamId)
     {
         // arena team is empty, delete from db
         RealmDataDatabase.BeginTransaction();
-        RealmDataDatabase.PExecute("DELETE FROM arena_team WHERE arenateamid = '%u'", ArenaTeamId);
+        if (sWorld.getConfig(CONFIG_ARENA_KEEP_TEAMS))
+            RealmDataDatabase.PExecute("UPDATE arena_team SET captainguid = 0 where arenateamid = '%u'", ArenaTeamId);
+        else
+            RealmDataDatabase.PExecute("DELETE FROM arena_team WHERE arenateamid = '%u'", ArenaTeamId);
+        
         RealmDataDatabase.PExecute("DELETE FROM arena_team_member WHERE arenateamid = '%u'", ArenaTeamId);
         RealmDataDatabase.PExecute("DELETE FROM arena_team_stats WHERE arenateamid = '%u'", ArenaTeamId);
         RealmDataDatabase.CommitTransaction();
@@ -298,7 +302,7 @@ void ArenaTeam::SetCaptain(const uint64& guid)
     if (newcaptain)
     {
         newcaptain->SetUInt32Value(PLAYER_FIELD_ARENA_TEAM_INFO_1_1 + 1 + (GetSlot() * 6), 0);
-        sLog.outLog(LOG_ARENA, "Player: %s [GUID: %u] promoted player: %s [GUID: %u] to leader of arena team [Id: %u] [Type: %u].", oldcaptain->GetName(), oldcaptain->GetGUIDLow(), newcaptain->GetName(), newcaptain->GetGUID(), GetId(), GetType());
+        sLog.outLog(LOG_ARENA, "Player: %s [GUID: %u] promoted player: %s [GUID: %lu] to leader of arena team [Id: %u] [Type: %u].", oldcaptain->GetName(), oldcaptain->GetGUIDLow(), newcaptain->GetName(), newcaptain->GetGUID(), GetId(), GetType());
     }
 }
 
@@ -346,7 +350,10 @@ void ArenaTeam::Disband(WorldSession *session)
         sLog.outLog(LOG_ARENA, "Player: %s [GUID: %u] disbanded arena team type: %u [Id: %u].", player->GetName(), player->GetGUIDLow(), GetType(), GetId());
 
     RealmDataDatabase.BeginTransaction();
-    RealmDataDatabase.PExecute("DELETE FROM arena_team WHERE arenateamid = '%u'", Id);
+    if (sWorld.getConfig(CONFIG_ARENA_KEEP_TEAMS))
+        RealmDataDatabase.PExecute("UPDATE arena_team SET captainguid = 0 where arenateamid = '%u'", Id);
+    else
+        RealmDataDatabase.PExecute("DELETE FROM arena_team WHERE arenateamid = '%u'", Id);
     RealmDataDatabase.PExecute("DELETE FROM arena_team_member WHERE arenateamid = '%u'", Id); //< this should be alredy done by calling DelMember(memberGuids[j]); for each member
     RealmDataDatabase.PExecute("DELETE FROM arena_team_stats WHERE arenateamid = '%u'", Id);
     RealmDataDatabase.CommitTransaction();
@@ -370,7 +377,7 @@ void ArenaTeam::Roster(WorldSession *session)
         data << uint8((pl ? 1 : 0));                        // online flag
         data << itr->name;                                  // member name
         data << uint32((itr->guid == GetCaptain() ? 0 : 1));// captain flag 0 captain 1 member
-        data << uint8((pl ? pl->getLevel() : 0));           // unknown, level?
+        data << uint8((pl ? pl->GetLevel() : 0));           // unknown, level?
         data << uint8(itr->Class);                          // class
         data << uint32(itr->games_week);                    // played this week
         data << uint32(itr->wins_week);                     // wins this week
@@ -598,7 +605,7 @@ int32 ArenaTeam::LostAgainst(uint32 againstRating)
     return mod;
 }
 
-void ArenaTeam::MemberLost(Player * plr, uint32 againstRating, uint32 againstHiddenRating)
+void ArenaTeam::MemberLost(Player * plr, uint32 againstRating, uint32 againstHiddenRating, uint32* persRating, int32* persDiff)
 {
     // called for each participant of a match after losing
     for (MemberList::iterator itr = members.begin(); itr !=  members.end(); ++itr)
@@ -614,6 +621,12 @@ void ArenaTeam::MemberLost(Player * plr, uint32 againstRating, uint32 againstHid
             {
                 if (againstRating + 150 < againstHiddenRating)
                     mod /= 2;
+            }
+
+            if (persDiff && persRating)
+            {
+                *persDiff = mod;
+                *persRating = itr->personal_rating;
             }
 
             itr->ModifyPersonalRating(plr, mod, GetSlot());
@@ -635,7 +648,7 @@ void ArenaTeam::MemberLost(Player * plr, uint32 againstRating, uint32 againstHid
     }
 }
 
-void ArenaTeam::MemberWon(Player * plr, uint32 againstRating, uint32 againstHiddenRating)
+void ArenaTeam::MemberWon(Player * plr, uint32 againstRating, uint32 againstHiddenRating, uint32* persRating, int32* persDiff)
 {
     // called for each participant after winning a match
     for (MemberList::iterator itr = members.begin(); itr !=  members.end(); ++itr)
@@ -645,6 +658,11 @@ void ArenaTeam::MemberWon(Player * plr, uint32 againstRating, uint32 againstHidd
             // update personal rating
             float chance = GetChanceAgainst(itr->personal_rating, againstRating);
             int32 mod = (int32)floor((float)sWorld.getConfig(CONFIG_ARENA_ELO_COEFFICIENT) * (1.0f - chance));
+            if (persDiff && persRating)
+            {
+                *persDiff = mod;
+                *persRating = itr->personal_rating;
+            }
             itr->ModifyPersonalRating(plr, mod, GetSlot());
 
             // update matchmaker rating

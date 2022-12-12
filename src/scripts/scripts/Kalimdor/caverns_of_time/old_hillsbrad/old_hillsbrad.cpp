@@ -1,6 +1,6 @@
  /* 
  * Copyright (C) 2006-2008 ScriptDev2 <https://scriptdev2.svn.sourceforge.net/>
- * Copyright (C) 2008-2014 Hellground <http://hellground.net/>
+ * Copyright (C) 2008-2015 Hellground <http://hellground.net/>
  * 
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -271,10 +271,10 @@ struct npc_thrall_old_hillsbradAI : public npc_escortAI
     uint64 EpochGUID;
     uint8 Part;
     uint32 Steps;
-    uint32 StepsTimer;
-    uint32 StrikeTimer;
-    uint32 ShieldBlockTimer;
-    uint32 EmoteTimer;
+    Timer StepsTimer;
+    Timer StrikeTimer;
+    Timer ShieldBlockTimer;
+    Timer EmoteTimer;
 
     bool LowHp;
     bool HadMount;
@@ -292,11 +292,11 @@ struct npc_thrall_old_hillsbradAI : public npc_escortAI
         TarethaGUID = pInstance->GetData64(DATA_TARETHA);
 
         Steps = 0;
-        StepsTimer = 0;
-        EmoteTimer = 0;
+        StepsTimer = 1000;
+        EmoteTimer = 1000;
         Part = 0;
-        StrikeTimer = urand(3000, 7000);
-        ShieldBlockTimer = urand(6000, 11000);
+        StrikeTimer.Reset(urand(3000, 7000));
+        ShieldBlockTimer.Reset(urand(6000, 11000));
 
         if (HadMount)
             DoMount();
@@ -403,7 +403,8 @@ struct npc_thrall_old_hillsbradAI : public npc_escortAI
                         me->SetUInt32Value(UNIT_NPC_EMOTESTATE, EMOTE_ONESHOT_POINT);
                         EmoteTimer = 2000;
                         me->SetFacingTo(2.18f);
-                        me->SummonCreature(NPC_SKARLOC, 2000.201f, 277.9190f, 66.4911f, 6.11f, TEMPSUMMON_TIMED_DESPAWN_OUT_OF_COMBAT, 60000);
+                        if (pInstance->GetData(DATA_SKARLOC_DEATH) != DONE)
+                            me->SummonCreature(NPC_SKARLOC, 2000.201f, 277.9190f, 66.4911f, 6.11f, TEMPSUMMON_DEAD_DESPAWN, 60000);
                         DoScriptText(SAY_TH_SKARLOC_MEET, me);
                         break;
                     case 33:
@@ -505,7 +506,8 @@ struct npc_thrall_old_hillsbradAI : public npc_escortAI
                 switch (i)
                 {
                     case 0:
-                       if (Creature* Epoch = me->SummonCreature(NPC_EPOCH,2639.13,698.55,65.43,4.59,TEMPSUMMON_DEAD_DESPAWN,120000))
+                        if (pInstance->GetData(DATA_EPOCH_DEATH) != DONE)
+                        if (Creature* Epoch = me->SummonCreature(NPC_EPOCH,2639.13,698.55,65.43,4.59,TEMPSUMMON_DEAD_DESPAWN,120000))
                            DoScriptText(SAY_EPOCH_ENTER1, Epoch);
                         me->SetFacingTo(2.63f);
                         DoScriptText(SAY_TH_EPOCH_WONDER, me);
@@ -605,7 +607,7 @@ struct npc_thrall_old_hillsbradAI : public npc_escortAI
             case NPC_ARMORER:
                 ArmorerGUID = summoned->GetGUID();
                 summoned->SetReactState(REACT_PASSIVE);
-                summoned->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
+                summoned->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_SPAWNING);
                 break;
             case NPC_WARDEN:
                 DoScriptText(RAND(SAY_AMBUSH_P1, SAY_AMBUSH2_P1), summoned);
@@ -875,42 +877,43 @@ struct npc_thrall_old_hillsbradAI : public npc_escortAI
     {
         npc_escortAI::UpdateAI(diff);
 
-        if (StepsTimer <= diff)
+        
+        if (StepsTimer.Expired(diff))
         {
             if (Event)
-                StepsTimer = NextStep(++Steps);
+                StepsTimer.Reset(NextStep(++Steps));
         }
-        else StepsTimer -= diff;
+        
 
-        if (HadMount && !me->isInCombat())
+        if (HadMount && !me->IsInCombat())
             DoMount();
 
-        if (EmoteTimer)
+
+        if (EmoteTimer.Expired(diff))
         {
-            if (EmoteTimer <= diff)
-            {
-                me->SetUInt32Value(UNIT_NPC_EMOTESTATE, EMOTE_ONESHOT_NONE);
-                EmoteTimer = 0;
-            }
-            else EmoteTimer -= diff;
+            me->SetUInt32Value(UNIT_NPC_EMOTESTATE, EMOTE_ONESHOT_NONE);
+            EmoteTimer = 0;
         }
+
 
         if (!UpdateVictim())
             return;
 
-        if (StrikeTimer < diff)
+
+        if (StrikeTimer.Expired(diff))
         {
-            DoCast(me->getVictim(), SPELL_STRIKE);
+            DoCast(me->GetVictim(), SPELL_STRIKE);
             StrikeTimer = urand(4000, 7000);
         }
-        else StrikeTimer -= diff;
+        
 
-        if (ShieldBlockTimer < diff)
+        
+        if (ShieldBlockTimer.Expired(diff))
         {
             DoCast(me, SPELL_SHIELD_BLOCK);
             ShieldBlockTimer = urand(8000, 15000);
         }
-        else ShieldBlockTimer -= diff;
+        
 
         if (!LowHp && ((me->GetHealth()*100 / me->GetMaxHealth()) < 20))
         {
@@ -974,6 +977,8 @@ bool GossipSelect_npc_thrall_old_hillsbrad(Player *player, Creature *creature, u
             player->CLOSE_GOSSIP_MENU();
             if (pInstance)
             {
+                if (pInstance->GetData(DATA_DRAKE_DEATH) != DONE || pInstance->GetData(TYPE_THRALL_PART1) != NOT_STARTED)
+                    return true;
                 pInstance->SetData(TYPE_THRALL_EVENT, IN_PROGRESS);
                 pInstance->SetData(TYPE_THRALL_PART1, IN_PROGRESS);
             }
@@ -984,11 +989,17 @@ bool GossipSelect_npc_thrall_old_hillsbrad(Player *player, Creature *creature, u
             break;
 
         case GOSSIP_ACTION_INFO_DEF+2:
+            if (pInstance && (pInstance->GetData(TYPE_THRALL_PART1) != DONE ||
+                pInstance->GetData(TYPE_THRALL_PART2) != NOT_STARTED))
+                return true;
             player->ADD_GOSSIP_ITEM(0, GOSSIP_ITEM_SKARLOC2, GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF+20);
             player->SEND_GOSSIP_MENU(GOSSIP_ID_SKARLOC2, creature->GetGUID());
             break;
 
         case GOSSIP_ACTION_INFO_DEF+20:
+            if (pInstance && (pInstance->GetData(TYPE_THRALL_PART1) != DONE ||
+                pInstance->GetData(TYPE_THRALL_PART2) != NOT_STARTED))
+                return true;
             player->ADD_GOSSIP_ITEM(0, GOSSIP_ITEM_SKARLOC3, GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF+22);
             player->SEND_GOSSIP_MENU(GOSSIP_ID_SKARLOC3, creature->GetGUID());
             break;
@@ -997,6 +1008,8 @@ bool GossipSelect_npc_thrall_old_hillsbrad(Player *player, Creature *creature, u
             player->CLOSE_GOSSIP_MENU();
             if (pInstance)
             {
+                if (pInstance->GetData(TYPE_THRALL_PART1) != DONE || pInstance->GetData(TYPE_THRALL_PART2) != NOT_STARTED)
+                    return true;
                 pInstance->SetData(TYPE_THRALL_EVENT, IN_PROGRESS);
                 pInstance->SetData(TYPE_THRALL_PART2,IN_PROGRESS);
             }
@@ -1010,6 +1023,8 @@ bool GossipSelect_npc_thrall_old_hillsbrad(Player *player, Creature *creature, u
             player->CLOSE_GOSSIP_MENU();
             if (pInstance)
             {
+                if (pInstance->GetData(TYPE_THRALL_PART2) != DONE || pInstance->GetData(TYPE_THRALL_PART3) != NOT_STARTED)
+                    return true;
                 pInstance->SetData(TYPE_THRALL_EVENT, IN_PROGRESS);
                 pInstance->SetData(TYPE_THRALL_PART3,IN_PROGRESS);
             }
@@ -1139,7 +1154,7 @@ struct erozion_imageAI : public ScriptedAI
     bool Intro;
 
     uint8 Next;
-    uint32 StepsTimer;
+    Timer StepsTimer;
     uint32 Steps;
 
     void Reset()
@@ -1147,7 +1162,7 @@ struct erozion_imageAI : public ScriptedAI
         me->CastSpell(me, SPELL_TELEPORT, false);
         Intro = true;
         Steps = 0;
-        StepsTimer = 0;
+        StepsTimer = 1;
     }
 
     int32 NextStep(uint32 Steps)
@@ -1157,7 +1172,7 @@ struct erozion_imageAI : public ScriptedAI
        if (!tmpMap)
            return true;
 
-       if (Creature* Thrall = tmpMap->GetCreature(tmpMap->GetCreatureGUID(NPC_THRALL)))
+       if (Creature* Thrall = tmpMap->GetCreature(pInstance->GetData64(DATA_THRALL)))
        {
            switch (Steps)
            {
@@ -1168,23 +1183,23 @@ struct erozion_imageAI : public ScriptedAI
                    DoScriptText(SAY_IMAGE_1, me);
                    return 15000;
                case 3:
+                   Thrall->Respawn();
+                   Thrall->Unmount();
+
                    if (pInstance)
                    {
                        if (pInstance->GetData(TYPE_THRALL_PART1) == NOT_STARTED)
-                           me->SummonCreature(NPC_THRALL, 2231.51f, 119.84f, 82.297f, 4.15f,TEMPSUMMON_DEAD_DESPAWN,15000);
+                           m_creature->GetMap()->CreatureRelocation(Thrall, 2231.51f, 119.84f, 82.297f, 4.15f);
 
                        if (pInstance->GetData(TYPE_THRALL_PART1) == DONE && pInstance->GetData(TYPE_THRALL_PART2) == NOT_STARTED)
-                       {
-                           me->SummonCreature(NPC_THRALL, 2063.40f, 229.512f, 64.488f, 2.18f,TEMPSUMMON_DEAD_DESPAWN,15000);
-                           me->SummonCreature(NPC_SKARLOC_MOUNT,2047.90f, 254.85f, 62.822f, 5.94f, TEMPSUMMON_DEAD_DESPAWN, 15000);
-                       }
+                           m_creature->GetMap()->CreatureRelocation(Thrall, 2063.40f, 229.512f, 64.488f, 2.18f);
 
                        if (pInstance->GetData(TYPE_THRALL_PART2) == DONE && pInstance->GetData(TYPE_THRALL_PART3) == NOT_STARTED)
-                           me->SummonCreature(NPC_THRALL, 2486.91f, 626.357f, 58.076f, 4.66f,TEMPSUMMON_DEAD_DESPAWN,15000);
+                           m_creature->GetMap()->CreatureRelocation(Thrall, 2486.91f, 626.357f, 58.076f, 4.66f);
 
                        if (pInstance->GetData(TYPE_THRALL_PART3) == DONE && pInstance->GetData(TYPE_THRALL_PART4) == NOT_STARTED)
                        {
-                           me->SummonCreature(NPC_THRALL, 2660.48f, 659.409f, 61.937f, 5.83f,TEMPSUMMON_DEAD_DESPAWN,15000);
+                           m_creature->GetMap()->CreatureRelocation(Thrall, 2660.48f, 659.409f, 61.937f, 5.83f);
                            if (uint64 TarethaGUID = pInstance->GetData64(DATA_TARETHA))
                            {
                                if (Unit *Taretha = me->GetUnit(TarethaGUID))
@@ -1208,12 +1223,11 @@ struct erozion_imageAI : public ScriptedAI
 
     void UpdateAI(const uint32 diff)
     {
-        if (StepsTimer <= diff)
+        if (StepsTimer.Expired(diff))
         {
             if (Intro)
                 StepsTimer = NextStep(++Steps);
         }
-        else StepsTimer -= diff;
     }
 };
 

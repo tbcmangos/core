@@ -1,7 +1,7 @@
 /*
  * Copyright (C) 2005-2008 MaNGOS <http://getmangos.com/>
  * Copyright (C) 2008 TrinityCore <http://www.trinitycore.org/>
- * Copyright (C) 2008-2014 Hellground <http://hellground.net/>
+ * Copyright (C) 2008-2017 Hellground <http://wow-hellground.com/>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -141,13 +141,13 @@ void WorldSession::SendLFM(uint32 type, uint32 entry)
     data << uint32(0);                                      // count, placeholder
     data << uint32(0);                                      // count again, strange, placeholder
 
-    LfgContainerType::const_accessor a;
 
     bool clearNeeded = false;
 
     // get player container for LFM id
     LfgContainerType & lfgContainer = sWorld.GetLfgContainer(GetPlayer()->GetTeam());
-    if (lfgContainer.find(a, LFG_COMBINE(entry, type)))
+    LfgContainerType::const_iterator a = lfgContainer.find(LFG_COMBINE(entry, type));
+    if (a != lfgContainer.cend())
     {
         for (std::list<uint64>::const_iterator itr = a->second.begin(); itr != a->second.end(); ++itr)
         {
@@ -174,7 +174,7 @@ void WorldSession::SendLFM(uint32 type, uint32 entry)
 
             uint8 lfgType = plr->IsLFM(type, entry);
             data << plr->GetPackGUID();                         // packed guid
-            data << plr->getLevel();                            // level
+            data << plr->GetLevel();                            // level
             data << plr->GetCachedZone();                       // current zone
             data << lfgType;                                    // 0x00 - LFG, 0x01 - LFM
 
@@ -208,7 +208,7 @@ void WorldSession::SendLFM(uint32 type, uint32 entry)
                     if (member && member->GetGUID() != plr->GetGUID())
                     {
                         data << member->GetPackGUID();          // packed guid
-                        data << member->getLevel();             // player level
+                        data << member->GetLevel();             // player level
                     }
                 }
             }
@@ -219,8 +219,6 @@ void WorldSession::SendLFM(uint32 type, uint32 entry)
         }
     }
 
-    a.release();
-
     // fill count placeholders
     data.put<uint32>(4+4,   number);
     data.put<uint32>(4+4+4, number);
@@ -230,10 +228,10 @@ void WorldSession::SendLFM(uint32 type, uint32 entry)
 
     if (clearNeeded)
     {
-        LfgContainerType::accessor accessor;
+        LfgContainerType::iterator accessor = lfgContainer.find(LFG_COMBINE(entry, type));
 
         // get player container for LFM id
-        if (lfgContainer.find(accessor, LFG_COMBINE(entry, type)))
+        if (accessor != lfgContainer.end())
         {
             for (std::list<uint64>::iterator itr = accessor->second.begin(); itr != accessor->second.end();)
             {
@@ -272,7 +270,7 @@ void WorldSession::SendLFG(uint32 type, uint32 entry)
     data << uint32(0);                                      // count again, strange, placeholder
 
     data << plr->GetPackGUID();                         // packed guid
-    data << plr->getLevel();                            // level
+    data << plr->GetLevel();                            // level
     data << plr->GetZoneId();                           // current zone
     data << 0;                                    // 0x00 - LFG, 0x01 - LFM
 

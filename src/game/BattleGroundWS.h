@@ -1,7 +1,7 @@
 /*
  * Copyright (C) 2005-2008 MaNGOS <http://getmangos.com/>
  * Copyright (C) 2008 TrinityCore <http://www.trinitycore.org/>
- * Copyright (C) 2008-2014 Hellground <http://hellground.net/>
+ * Copyright (C) 2008-2017 Hellground <http://wow-hellground.com/>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -131,12 +131,6 @@ enum BG_WS_CreatureTypes
     BG_CREATURES_MAX_WS       = 2
 };
 
-enum BG_WS_CarrierDebuffs
-{
-    WS_SPELL_FOCUSED_ASSAULT   = 46392,
-    WS_SPELL_BRUTAL_ASSAULT    = 46393
-};
-
 class BattleGroundWGScore : public BattleGroundScore
 {
     public:
@@ -206,8 +200,8 @@ class BattleGroundWS : public BattleGround
         uint64 m_DroppedFlagGUID[2];
         uint8 m_FlagState[2];                               // for checking flag state
         uint32 m_TeamScores[2];
-        int32 m_FlagsTimer[2];
-        int32 m_FlagsDropTimer[2];
+        Timer m_FlagsTimer[2];
+        Timer m_FlagsDropTimer[2];
 
         int32 m_FlagSpellForceTimer;
         int32 m_FlagSpellBrutalTimer;

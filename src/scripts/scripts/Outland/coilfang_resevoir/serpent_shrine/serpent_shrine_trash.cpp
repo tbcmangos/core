@@ -1,5 +1,5 @@
 /* 
- * Copyright (C) 2008-2014 Hellground <http://hellground.net/>
+ * Copyright (C) 2008-2015 Hellground <http://hellground.net/>
  * 
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -30,26 +30,26 @@ struct mob_vashjir_honor_guardAI : public ScriptedAI
 {
     mob_vashjir_honor_guardAI(Creature *c) : ScriptedAI(c) {}
 
-    uint32 Shout_Timer;
-    uint32 Knockback_Timer;
-    uint32 Execute_Timer;
-    uint32 Cleave_Timer;
+    Timer Shout_Timer;
+    Timer Knockback_Timer;
+    Timer Execute_Timer;
+    Timer Cleave_Timer;
     bool Frenzy_Cast;
 
-    uint32 Talk_Timer;
-    uint32 Check_Timer;
+    Timer Talk_Timer;
+    Timer Check_Timer;
     bool Talking;
     uint64 Talk_Creature;
 
     void Reset()
     {
-        Shout_Timer = urand(25000, 40000);
-        Knockback_Timer = urand(10000, 30000);
+        Shout_Timer.Reset(urand(25000, 40000));
+        Knockback_Timer.Reset(urand(10000, 30000));
         Execute_Timer = 0;
-        Cleave_Timer = urand(3000, 6000);
+        Cleave_Timer.Reset(urand(3000, 6000));
         Frenzy_Cast = false;
-        Talk_Timer = 10000;
-        Check_Timer = 1000;
+        Talk_Timer.Reset(10000);
+        Check_Timer.Reset(1000);
     }
 
     void UpdateAI(const uint32 diff)
@@ -60,40 +60,36 @@ struct mob_vashjir_honor_guardAI : public ScriptedAI
             return;
         }
 
-        if(Shout_Timer < diff)
+        if (Shout_Timer.Expired(diff))
         {
             AddSpellToCast(SPELL_FRIGHTENING_SHOUT, CAST_TANK);
             Shout_Timer = urand(30000, 40000);
         }
-        else
-            Shout_Timer -= diff;
+        
 
-        if(Knockback_Timer < diff)
+        if (Knockback_Timer.Expired(diff))
         {
             AddSpellToCast(SPELL_KNOCKBACK, CAST_TANK);
             Knockback_Timer = urand(10000, 15000);
         }
-        else
-            Knockback_Timer -= diff;
 
-        if(Execute_Timer < diff)
+
+        if (Execute_Timer.Expired(diff))
         {
-            if(me->getVictim()->GetHealth() * 5 <= me->getVictim()->GetMaxHealth()) // below 20%
+            if(me->GetVictim()->GetHealth() * 5 <= me->GetVictim()->GetMaxHealth()) // below 20%
             {
                 AddSpellToCast(SPELL_EXECUTE, CAST_TANK);
                 Execute_Timer = 30000;
             }
         }
-        else
-            Execute_Timer -= diff;
 
-        if(Cleave_Timer < diff)
+
+        if (Cleave_Timer.Expired(diff))
         {
             AddSpellToCast(SPELL_MORTAL_CLEAVE, CAST_TANK);
             Cleave_Timer = urand(3000, 6000);
         }
-        else
-            Cleave_Timer -= diff;
+        
 
         if(!Frenzy_Cast && HealthBelowPct(50))
         {
@@ -110,9 +106,9 @@ struct mob_vashjir_honor_guardAI : public ScriptedAI
         // need some tweaking
         if(!Talking)
         {
-            if(Talk_Timer < diff)
+            if (Talk_Timer.Expired(diff))
             {
-                if(Check_Timer < diff)
+                if (Check_Timer.Expired(diff))
                 {
                     std::list<Creature*> friends = FindAllFriendlyInGrid(3);
                     if(!friends.empty())
@@ -134,17 +130,11 @@ struct mob_vashjir_honor_guardAI : public ScriptedAI
                         //me->Say("Check0", 0, 0);
                     }
                 }
-                else
-                    Check_Timer -= diff;
             }
-            else
-                Talk_Timer -= diff;
         }
         else // Talking
         {
-            if(Check_Timer)
-            {
-                if(Check_Timer <= diff)
+            if (Check_Timer.Expired(diff))
                 {
                     //me->Say("Check2", 0, 0);
                     if(Creature *c = me->GetCreature(Talk_Creature))
@@ -155,12 +145,10 @@ struct mob_vashjir_honor_guardAI : public ScriptedAI
                         me->SetUInt32Value(UNIT_NPC_EMOTESTATE, EMOTE_ONESHOT_TALK);
                     }
                     Check_Timer = 0;
-                }
-                else
-                    Check_Timer -= diff;
+                
             }
 
-            if(Talk_Timer < diff)
+            if (Talk_Timer.Expired(diff))
             {
                 //me->Say("Check3", 0, 0);
                 Talking = false;
@@ -168,14 +156,12 @@ struct mob_vashjir_honor_guardAI : public ScriptedAI
                 me->GetMotionMaster()->MovementExpired();
                 me->SetUInt32Value(UNIT_NPC_EMOTESTATE, EMOTE_ONESHOT_NONE);
 
-                if(Creature *c = me->GetCreature(Talk_Creature))
+                if (Creature *c = me->GetCreature(Talk_Creature))
                 {
                     c->GetMotionMaster()->MovementExpired();
                     c->SetUInt32Value(UNIT_NPC_EMOTESTATE, EMOTE_ONESHOT_NONE);
                 }
             }
-            else
-                Talk_Timer -= diff;
         }
     }
 };
@@ -212,21 +198,21 @@ struct mob_underbog_colossusAI : public ScriptedAI
     uint8 type;
     uint32 Vulnerability;
 
-    uint32 Infection_Timer;
-    uint32 Parasite_Timer;
-    uint32 Quake_Timer;
-    uint32 Geyser_Timer;
-    uint32 Blow_Timer;
-    uint32 Enrage_Timer;
+    Timer Infection_Timer;
+    Timer Parasite_Timer;
+    Timer Quake_Timer;
+    Timer Geyser_Timer;
+    Timer Blow_Timer;
+    Timer Enrage_Timer;
 
     void Reset()
     {
-        Infection_Timer = urand(0, 10000);
-        Parasite_Timer = 10000;
-        Quake_Timer = urand(10000, 40000);
-        Geyser_Timer = 15000;
-        Blow_Timer = 1000;
-        Enrage_Timer = 15000;
+        Infection_Timer.Reset(urand(1, 10000));
+        Parasite_Timer.Reset(10000);
+        Quake_Timer.Reset(urand(10000, 40000));
+        Geyser_Timer.Reset(15000);
+        Blow_Timer.Reset(1000);
+        Enrage_Timer.Reset(15000);
         me->CastSpell(me, Vulnerability, false);
     }
 
@@ -276,57 +262,49 @@ struct mob_underbog_colossusAI : public ScriptedAI
         switch(type)
         {
         case 0:
-            if (Infection_Timer < diff)
+            if (Infection_Timer.Expired(diff))
             {
                 AddSpellToCast(SPELL_INITIAL_INFECTION, CAST_RANDOM);
                 Infection_Timer = urand(25000, 35000);
             }
-            else
-                Infection_Timer -= diff;
+            
 
-            if (Quake_Timer < diff)
+            if (Quake_Timer.Expired(diff))
             {
                 AddSpellToCast(SPELL_SPORE_QUAKE, CAST_SELF);
                 Quake_Timer = urand(30000, 60000);
             }
-            else
-                Quake_Timer -= diff;
             break;
         case 1:
-            if (Geyser_Timer < diff)
+            if (Geyser_Timer.Expired(diff))
             {
                 AddSpellToCast(SPELL_ACID_GEYSER, CAST_RANDOM_WITHOUT_TANK);
                 Geyser_Timer = urand(30000, 60000);
             }
-            else
-               Geyser_Timer -= diff;
+            
 
-            if (Parasite_Timer < diff)
+            if (Parasite_Timer.Expired(diff))
             {
                 AddSpellToCast(SPELL_SUMMON_SERPENTSHRINE_PARASITE, CAST_RANDOM);
                 Parasite_Timer = urand(10000, 20000);
             }
-            else
-                Parasite_Timer -= diff;
+            
             break;
         case 2:
-            if (Enrage_Timer < diff)
+            if (Enrage_Timer.Expired(diff))
             {
                 AddSpellToCast(SPELL_ENRAGE, CAST_SELF);
                 Enrage_Timer = urand(30000, 50000);
             }
-            else
-                Enrage_Timer -= diff;
+            
 
-            if (me->HasAura(SPELL_FRENZY, 0))
+            if (me->HasAura(SPELL_ENRAGE, 0))
             {
-                if (Blow_Timer < diff)
+                if (Blow_Timer.Expired(diff))
                 {
                     AddSpellToCast(SPELL_ATHROPIC_BLOW, CAST_TANK);
                     Blow_Timer = 1500;
                 }
-                else
-                    Blow_Timer -= diff;
             }
             break;
         }
@@ -349,20 +327,20 @@ struct mob_serpentshrine_parasiteAI : public ScriptedAI
     mob_serpentshrine_parasiteAI(Creature *c) : ScriptedAI(c) {}
 
     uint64 TargetGUID;
-    uint32 Check_Timer;
+    Timer Check_Timer;
 
     void Reset()
     {
         TargetGUID = 0;
-        Check_Timer = 100;
+        Check_Timer.Reset(1000);
     }
 
     void UpdateAI(const uint32 diff)
     {
-        if (Check_Timer < diff)
+        if (Check_Timer.Expired(diff))
         {
             Unit *target = me->GetUnit(TargetGUID);
-            if(!target || !target->isAlive())
+            if(!target || !target->IsAlive())
                 TargetGUID = 0;
             else if(me->IsWithinDist(target, 5))
             {
@@ -373,23 +351,24 @@ struct mob_serpentshrine_parasiteAI : public ScriptedAI
 
             Check_Timer = 1000;
         }
-        else
-            Check_Timer -= diff;
+        
 
         if(!TargetGUID)
         {
             std::list<Player*> players = FindAllPlayersInRange(50);
-            if(players.empty())
+            if (players.empty())
             {
                 me->Kill(me);
-                std::list<Player*>::iterator i = players.begin();
-                advance(i, urand(0, players.size()-1));
-                Player *target = *i;
-                if(target->isAlive())
-                {
-                    TargetGUID = target->GetGUID();
-                    me->GetMotionMaster()->MoveChase(target);
-                }
+                return;
+            }
+
+            std::list<Player*>::iterator i = players.begin();
+            advance(i, urand(0, players.size()-1));
+            Player *target = *i;
+            if(target->IsAlive())
+            {
+                TargetGUID = target->GetGUID();
+                me->GetMotionMaster()->MoveChase(target);
             }
         }
     }
@@ -400,7 +379,60 @@ CreatureAI* GetAI_mob_serpentshrine_parasite(Creature *_Creature)
     return new mob_serpentshrine_parasiteAI(_Creature);
 }
 
+struct mob_ssc_elementalAI : public ScriptedAI
+{
+    mob_ssc_elementalAI(Creature *c) : ScriptedAI(c) {}
 
+    uint64 OwnerGUID;
+    Timer VolleyTimer;
+    Timer NovaTimer;
+
+    void Reset()
+    {
+        OwnerGUID = 0;
+        VolleyTimer.Reset(2400);
+    }
+
+    void IsSummonedBy(Unit* summoner)
+    {
+        OwnerGUID = summoner->GetGUID();
+    }
+
+    void UpdateAI(const uint32 diff)
+    {
+        if (!UpdateVictim())
+            return;
+
+        if (VolleyTimer.Expired(diff))
+        {
+            DoCast(me->GetVictim(), 38623);
+            VolleyTimer = urand(17000, 24000);
+        }
+
+        if (NovaTimer.Expired(diff))
+        {
+            DoCast(me->GetVictim(), 39035);
+            VolleyTimer = urand(20000, 30000);
+        }
+
+        if (OwnerGUID)
+        {
+            Unit* owner = me->GetMap()->GetCreature(OwnerGUID);
+            if (!owner || owner->IsDead())
+            {
+                me->ForcedDespawn();
+                return;
+            }
+        }
+
+        DoMeleeAttackIfReady();
+    }
+};
+
+CreatureAI* GetAI_mob_ssc_elemental(Creature *_Creature)
+{
+    return new mob_ssc_elementalAI(_Creature);
+}
 
 void AddSC_serpent_shrine_trash()
 {
@@ -419,5 +451,10 @@ void AddSC_serpent_shrine_trash()
     newscript = new Script;
     newscript->Name = "mob_serpentshrine_parasite";
     newscript->GetAI = &GetAI_mob_serpentshrine_parasite;
+    newscript->RegisterSelf();
+
+    newscript = new Script;
+    newscript->Name = "mob_ssc_elemental";
+    newscript->GetAI = &GetAI_mob_ssc_elemental;
     newscript->RegisterSelf();
 }

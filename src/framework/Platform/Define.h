@@ -1,7 +1,7 @@
 /*
  * Copyright (C) 2005-2012 MaNGOS <http://getmangos.com/>
  * Copyright (C) 2008 TrinityCore <http://www.trinitycore.org/>
- * Copyright (C) 2008-2014 Hellground <http://hellground.net/>
+ * Copyright (C) 2008-2015 Hellground <http://hellground.net/>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -40,15 +40,6 @@
 #    define HELLGROUND_ENDIAN HELLGROUND_LITTLEENDIAN
 #  endif //ACE_BYTE_ORDER
 #endif //HELLGROUND_ENDIAN
-
-typedef ACE_SHLIB_HANDLE HELLGROUND_LIBRARY_HANDLE;
-
-#define HELLGROUND_SCRIPT_NAME "hellgroundscript"
-#define HELLGROUND_SCRIPT_SUFFIX ACE_DLL_SUFFIX
-#define HELLGROUND_SCRIPT_PREFIX ACE_DLL_PREFIX
-#define HELLGROUND_LOAD_LIBRARY(libname)    ACE_OS::dlopen(libname)
-#define HELLGROUND_CLOSE_LIBRARY(hlib)      ACE_OS::dlclose(hlib)
-#define HELLGROUND_GET_PROC_ADDR(hlib,name) ACE_OS::dlsym(hlib,name)
 
 #if PLATFORM == PLATFORM_WINDOWS
 #  ifndef THIS_IS_SCRIPT_DLL

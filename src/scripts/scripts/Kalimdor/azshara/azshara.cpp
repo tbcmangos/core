@@ -1,6 +1,6 @@
 /* 
  * Copyright (C) 2006-2008 ScriptDev2 <https://scriptdev2.svn.sourceforge.net/>
- * Copyright (C) 2008-2014 Hellground <http://hellground.net/>
+ * Copyright (C) 2008-2015 Hellground <http://hellground.net/>
  * 
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -33,8 +33,6 @@ mob_spirit_of_azuregos
 EndContentData */
 
 #include "precompiled.h"
-#include "World.h"
-#include "WorldPacket.h"
 
 /*######
 ## mobs_spitelashes
@@ -173,82 +171,79 @@ bool GossipSelect_npc_loramus_thalipedes(Player *player, Creature *_Creature, ui
 #define SAY_RIZZLE_FINAL -1000247
 
 #define GOSSIP_GET_MOONSTONE "Hand over the Southfury moonstone and I'll let you go."
-
-//next message must be send to player when Rizzle jump into river, not implemented
-#define MSG_ESCAPE_NOTICE "     Rizzle Sprysprocket takes the Southfury moonstone and escapes into the river. Follow her!"
+#define MSG_ESCAPE_NOTICE "takes the Southfury moonstone and escapes into the river. Follow her!"
 
 float WPs[58][4] =
 {
 //pos_x   pos_y     pos_z    orien
-{3691.97, -3962.41, 35.9118, 3.67},
-{3675.02, -3960.49, 35.9118, 3.67},
-{3653.19, -3958.33, 33.9118, 3.59},
-{3621.12, -3958.51, 29.9118, 3.48},
-{3604.86, -3963,    29.9118, 3.48},
-{3569.94, -3970.25, 29.9118, 3.44},
-{3541.03, -3975.64, 29.9118, 3.41},
-{3510.84, -3978.71, 29.9118, 3.41},
-{3472.7,  -3997.07, 29.9118, 3.35},
-{3439.15, -4014.55, 29.9118, 3.29},
-{3412.8,  -4025.87, 29.9118, 3.25},
-{3384.95, -4038.04, 29.9118, 3.24},
-{3346.77, -4052.93, 29.9118, 3.22},
-{3299.56, -4071.59, 29.9118, 3.20},
-{3261.22, -4080.38, 30.9118, 3.19},
-{3220.68, -4083.09, 31.9118, 3.18},
-{3187.11, -4070.45, 33.9118, 3.16},
-{3162.78, -4062.75, 33.9118, 3.15},
-{3136.09, -4050.32, 33.9118, 3.07},
-{3119.47, -4044.51, 36.0363, 3.07},
-{3098.95, -4019.8,  33.9118, 3.07},
-{3073.07, -4011.42, 33.9118, 3.07},
-{3051.71, -3993.37, 33.9118, 3.02},
-{3027.52, -3978.6,  33.9118, 3.00},
-{3003.78, -3960.14, 33.9118, 2.98},
-{2977.99, -3941.98, 31.9118, 2.96},
-{2964.57, -3932.07, 30.9118, 2.96},
-{2947.9,  -3921.31, 29.9118, 2.96},
-{2924.91, -3910.8,  29.9118, 2.94},
-{2903.04, -3896.42, 29.9118, 2.93},
-{2884.75, -3874.03, 29.9118, 2.90},
-{2868.19, -3851.48, 29.9118, 2.82},
-{2854.62, -3819.72, 29.9118, 2.80},
-{2825.53, -3790.4,  29.9118, 2.744},
-{2804.31, -3773.05, 29.9118, 2.71},
-{2769.78, -3763.57, 29.9118, 2.70},
-{2727.23, -3745.92, 30.9118, 2.69},
-{2680.12, -3737.49, 30.9118, 2.67},
-{2647.62, -3739.94, 30.9118, 2.66},
-{2616.6,  -3745.75, 30.9118, 2.64},
-{2589.38, -3731.97, 30.9118, 2.61},
-{2562.94, -3722.35, 31.9118, 2.56},
-{2521.05, -3716.6,  31.9118, 2.55},
-{2485.26, -3706.67, 31.9118, 2.51},
-{2458.93, -3696.67, 31.9118, 2.51},
-{2432,    -3692.03, 31.9118, 2.46},
-{2399.59, -3681.97, 31.9118, 2.45},
-{2357.75, -3666.6,  31.9118, 2.44},
-{2311.99, -3656.88, 31.9118, 2.94},
-{2263.41, -3649.55, 31.9118, 3.02},
-{2209.05, -3641.76, 31.9118, 2.99},
-{2164.83, -3637.64, 31.9118, 3.15},
-{2122.42, -3639,    31.9118, 3.21},
-{2075.73, -3643.59, 31.9118, 3.22},
-{2033.59, -3649.52, 31.9118, 3.42},
-{1985.22, -3662.99, 31.9118, 3.42},
-{1927.09, -3679.56, 33.9118, 3.42},
-{1873.57, -3695.32, 33.9118, 3.44}
+{3691.97f, -3962.41f, 35.9118f, 3.67f},
+{3675.02f, -3960.49f, 35.9118f, 3.67f},
+{3653.19f, -3958.33f, 33.9118f, 3.59f},
+{3621.12f, -3958.51f, 29.9118f, 3.48f},
+{3604.86f, -3963.0f,  29.9118f, 3.48f},
+{3569.94f, -3970.25f, 29.9118f, 3.44f},
+{3541.03f, -3975.64f, 29.9118f, 3.41f},
+{3510.84f, -3978.71f, 29.9118f, 3.41f},
+{3472.7f,  -3997.07f, 29.9118f, 3.35f},
+{3439.15f, -4014.55f, 29.9118f, 3.29f},
+{3412.8f,  -4025.87f, 29.9118f, 3.25f},
+{3384.95f, -4038.04f, 29.9118f, 3.24f},
+{3346.77f, -4052.93f, 29.9118f, 3.22f},
+{3299.56f, -4071.59f, 29.9118f, 3.20f},
+{3261.22f, -4080.38f, 30.9118f, 3.19f},
+{3220.68f, -4083.09f, 31.9118f, 3.18f},
+{3187.11f, -4070.45f, 33.9118f, 3.16f},
+{3162.78f, -4062.75f, 33.9118f, 3.15f},
+{3136.09f, -4050.32f, 33.9118f, 3.07f},
+{3119.47f, -4044.51f, 36.0363f, 3.07f},
+{3098.95f, -4019.8f,  33.9118f, 3.07f},
+{3073.07f, -4011.42f, 33.9118f, 3.07f},
+{3051.71f, -3993.37f, 33.9118f, 3.02f},
+{3027.52f, -3978.6f,  33.9118f, 3.00f},
+{3003.78f, -3960.14f, 33.9118f, 2.98f},
+{2977.99f, -3941.98f, 31.9118f, 2.96f},
+{2964.57f, -3932.07f, 30.9118f, 2.96f},
+{2947.9f,  -3921.31f, 29.9118f, 2.96f},
+{2924.91f, -3910.8f,  29.9118f, 2.94f},
+{2903.04f, -3896.42f, 29.9118f, 2.93f},
+{2884.75f, -3874.03f, 29.9118f, 2.90f},
+{2868.19f, -3851.48f, 29.9118f, 2.82f},
+{2854.62f, -3819.72f, 29.9118f, 2.80f},
+{2825.53f, -3790.4f,  29.9118f, 2.744f},
+{2804.31f, -3773.05f, 29.9118f, 2.71f},
+{2769.78f, -3763.57f, 29.9118f, 2.70f},
+{2727.23f, -3745.92f, 30.9118f, 2.69f},
+{2680.12f, -3737.49f, 30.9118f, 2.67f},
+{2647.62f, -3739.94f, 30.9118f, 2.66f},
+{2616.6f,  -3745.75f, 30.9118f, 2.64f},
+{2589.38f, -3731.97f, 30.9118f, 2.61f},
+{2562.94f, -3722.35f, 31.9118f, 2.56f},
+{2521.05f, -3716.6f,  31.9118f, 2.55f},
+{2485.26f, -3706.67f, 31.9118f, 2.51f},
+{2458.93f, -3696.67f, 31.9118f, 2.51f},
+{2432.0f,  -3692.03f, 31.9118f, 2.46f},
+{2399.59f, -3681.97f, 31.9118f, 2.45f},
+{2357.75f, -3666.6f,  31.9118f, 2.44f},
+{2311.99f, -3656.88f, 31.9118f, 2.94f},
+{2263.41f, -3649.55f, 31.9118f, 3.02f},
+{2209.05f, -3641.76f, 31.9118f, 2.99f},
+{2164.83f, -3637.64f, 31.9118f, 3.15f},
+{2122.42f, -3639.0f,  31.9118f, 3.21f},
+{2075.73f, -3643.59f, 31.9118f, 3.22f},
+{2033.59f, -3649.52f, 31.9118f, 3.42f},
+{1985.22f, -3662.99f, 31.9118f, 3.42f},
+{1927.09f, -3679.56f, 33.9118f, 3.42f},
+{1873.57f, -3695.32f, 33.9118f, 3.44f}
 };
 
 struct mob_rizzle_sprysprocketAI : public ScriptedAI
 {
     mob_rizzle_sprysprocketAI(Creature *c) : ScriptedAI(c) {}
 
-    uint32 spellEscape_Timer;
-    uint32 Teleport_Timer;
-    uint32 Check_Timer;
-    uint32 Grenade_Timer;
-    uint32 Must_Die_Timer;
+    int32 Teleport_Timer;
+    Timer Check_Timer;
+    Timer Grenade_Timer;
+    int32 Must_Die_Timer;
     uint32 CurrWP;
 
     uint64 PlayerGUID;
@@ -260,10 +255,9 @@ struct mob_rizzle_sprysprocketAI : public ScriptedAI
 
     void Reset()
     {
-        spellEscape_Timer = 1300;
         Teleport_Timer = 3500;
-        Check_Timer = 10000;
-        Grenade_Timer = 30000;
+        Check_Timer.Reset(1000);
+        Grenade_Timer.Reset(30000);
         Must_Die_Timer = 3000;
         CurrWP = 0;
 
@@ -287,38 +281,35 @@ struct mob_rizzle_sprysprocketAI : public ScriptedAI
 
     void UpdateAI(const uint32 diff)
     {
-        if(Must_Die)
-            if(Must_Die_Timer < diff)
+        if (Must_Die)
+        {
+            Must_Die_Timer -= diff;
+            if (Must_Die_Timer <= diff)
             {
                 Despawn();
                 return;
-            } else Must_Die_Timer -= diff;
-
+            }
+        }
         if(!Escape)
         {
             if(!PlayerGUID)
                 return;
 
-            if(spellEscape_Timer < diff)
+            Teleport_Timer -= diff;
+            if(Teleport_Timer <= diff)
             {
-                DoCast(m_creature, SPELL_RIZZLE_ESCAPE, false);
-                spellEscape_Timer = 10000;
-            } else spellEscape_Timer -= diff;
-
-            if(Teleport_Timer < diff)
-            {
-                DoTeleportTo(3706.39, -3969.15, 35.9118, 0);
+                DoCast(m_creature, SPELL_RIZZLE_ESCAPE, true);
 
                 //begin swimming and summon depth charges
-                Player* player = Unit::GetPlayer(PlayerGUID);
-                SendText(MSG_ESCAPE_NOTICE, player);
+                me->TextEmote(MSG_ESCAPE_NOTICE, PlayerGUID);
                 DoCast(m_creature, SPELL_PERIODIC_DEPTH_CHARGE);
                 m_creature->SetLevitate(true);
                 m_creature->SetSpeed(MOVE_RUN, 0.85f, true);
+                m_creature->SetSpeed(MOVE_FLIGHT, 0.85f, true);
                 m_creature->GetMotionMaster()->MovementExpired();
                 m_creature->GetMotionMaster()->MovePoint(CurrWP, WPs[CurrWP][0], WPs[CurrWP][1], WPs[CurrWP][2]);
                 Escape = true;
-            } else Teleport_Timer -= diff;
+            } 
 
             return;
         }
@@ -329,7 +320,8 @@ struct mob_rizzle_sprysprocketAI : public ScriptedAI
             ContinueWP = false;
         }
 
-        if(Grenade_Timer < diff)
+
+        if(Grenade_Timer.Expired(diff))
         {
             Player *player = (Player *)Unit::GetUnit((*m_creature), PlayerGUID);
             if(player && Reached == false)
@@ -337,10 +329,11 @@ struct mob_rizzle_sprysprocketAI : public ScriptedAI
                DoScriptText(SAY_RIZZLE_GRENADE, m_creature, player);
                DoCast(player, SPELL_RIZZLE_FROST_GRENADE, true);
             }
-            Grenade_Timer = 30000;
-        } else Grenade_Timer -= diff;
 
-        if(Check_Timer < diff)
+            Grenade_Timer = 30000;
+        } 
+
+        if(Check_Timer.Expired(diff))
         {
             Unit *player = m_creature->GetUnit(PlayerGUID);
             if(!player)
@@ -349,26 +342,20 @@ struct mob_rizzle_sprysprocketAI : public ScriptedAI
                 return;
             }
 
-            if(m_creature->IsWithinDistInMap(player, 10) && m_creature->GetPositionX() > player->GetPositionX() && !Reached)
+            if (((me->GetDistance(player) < 5) || (me->GetDistance(player) < 15 && me->GetPositionX() - 3 < player->GetPositionX())) && !Reached)
             {
                 DoScriptText(SAY_RIZZLE_FINAL, m_creature);
-                m_creature->SetUInt32Value(UNIT_NPC_FLAGS, 1);
+                m_creature->SetUInt32Value(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_GOSSIP);
                 m_creature->setFaction(35);
                 m_creature->RemoveAurasDueToSpell(SPELL_PERIODIC_DEPTH_CHARGE);
+                me->CombatStop();
+                player->CombatStop();
                 Reached = true;
             }
 
-            Check_Timer = 1000;
-        } else Check_Timer -= diff;
+            Check_Timer = 500;
+        } 
 
-    }
-
-    void SendText(const char *text, Player* player)
-    {
-        WorldPacket data(SMSG_SERVER_MESSAGE, 0);              // guess size
-        data << text;
-        if(player)
-            player->GetSession()->SendPacket(&data);
     }
 
     void AttackStart(Unit *who)
@@ -437,7 +424,7 @@ struct mob_depth_chargeAI : public ScriptedAI
     mob_depth_chargeAI(Creature *c) : ScriptedAI(c) {}
 
     bool we_must_die;
-    uint32 must_die_timer;
+    int32 must_die_timer;
 
     void Reset()
     {
@@ -449,13 +436,16 @@ struct mob_depth_chargeAI : public ScriptedAI
 
     void UpdateAI(const uint32 diff)
     {
-        if(we_must_die)
-            if(must_die_timer < diff)
+        if (we_must_die)
+        {
+            must_die_timer -= diff;
+            if (must_die_timer <= diff)
             {
                 m_creature->DealDamage(m_creature, m_creature->GetHealth(), DIRECT_DAMAGE, SPELL_SCHOOL_MASK_NORMAL, NULL, false);
                 m_creature->RemoveCorpse();
-            } else must_die_timer -= diff;
-        return;
+            }
+            return;
+        }
     }
 
     void MoveInLineOfSight(Unit *who)

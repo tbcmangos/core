@@ -1,6 +1,6 @@
 /* 
  * Copyright (C) 2006-2008 ScriptDev2 <https://scriptdev2.svn.sourceforge.net/>
- * Copyright (C) 2008-2014 Hellground <http://hellground.net/>
+ * Copyright (C) 2008-2015 Hellground <http://hellground.net/>
  * 
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -35,10 +35,10 @@ struct boss_drakkisathAI : public ScriptedAI
 {
     boss_drakkisathAI(Creature *c) : ScriptedAI(c) {}
 
-    uint32 FireNova_Timer;
-    uint32 Cleave_Timer;
-    uint32 Confliguration_Timer;
-    uint32 Thunderclap_Timer;
+    int32 FireNova_Timer;
+    int32 Cleave_Timer;
+    int32 Confliguration_Timer;
+    int32 Thunderclap_Timer;
 
     void Reset()
     {
@@ -58,41 +58,37 @@ struct boss_drakkisathAI : public ScriptedAI
         if (!UpdateVictim() )
             return;
 
-        //FireNova_Timer
-        if (FireNova_Timer < diff)
+        FireNova_Timer -= diff;
+        if (FireNova_Timer <= diff)
         {
-            DoCast(m_creature->getVictim(),SPELL_FIRENOVA);
-            FireNova_Timer = 10000;
+            DoCast(m_creature->GetVictim(),SPELL_FIRENOVA);
+            FireNova_Timer += 10000;
         }
-        else
-            FireNova_Timer -= diff;
+        
 
-        //Cleave_Timer
-        if (Cleave_Timer < diff)
+        Cleave_Timer -= diff;
+        if (Cleave_Timer <= diff)
         {
-            DoCast(m_creature->getVictim(),SPELL_CLEAVE);
-            Cleave_Timer = 8000;
+            DoCast(m_creature->GetVictim(),SPELL_CLEAVE);
+            Cleave_Timer += 8000;
         }
-        else
-            Cleave_Timer -= diff;
+        
 
-        //Confliguration_Timer
-        if (Confliguration_Timer < diff)
+        Confliguration_Timer -= diff;
+        if (Confliguration_Timer <= diff)
         {
-            DoCast(m_creature->getVictim(),SPELL_CONFLIGURATION);
-            Confliguration_Timer = 18000;
+            DoCast(m_creature->GetVictim(),SPELL_CONFLIGURATION);
+            Confliguration_Timer += 18000;
         }
-        else
-            Confliguration_Timer -= diff;
+        
 
-        //Thunderclap_Timer
-        if (Thunderclap_Timer < diff)
+        Thunderclap_Timer -= diff;
+        if (Thunderclap_Timer <= diff)
         {
-            DoCast(m_creature->getVictim(),SPELL_THUNDERCLAP);
-            Thunderclap_Timer = 20000;
+            DoCast(m_creature->GetVictim(),SPELL_THUNDERCLAP);
+            Thunderclap_Timer += 20000;
         }
-        else
-            Thunderclap_Timer -= diff;
+        
 
         DoMeleeAttackIfReady();
     }

@@ -1,7 +1,7 @@
 /*
  * Copyright (C) 2005-2009 MaNGOS <http://getmangos.com/>
  * Copyright (C) 2008-2012 TrinityCore <http://www.trinitycore.org/>
- * Copyright (C) 2008-2014 Hellground <http://hellground.net/>
+ * Copyright (C) 2008-2017 Hellground <http://wow-hellground.com/>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -47,7 +47,7 @@ class TargetedMovementGeneratorMedium
         TargetedMovementGeneratorMedium(Unit &target, float offset, float angle) :
             TargetedMovementGeneratorBase(target), _offset(offset), _angle(angle),
             _targetReached(false), _recheckDistance(0),
-            _path(NULL)
+            _path(NULL), m_fTargetLastX(0), m_fTargetLastY(0), m_fTargetLastZ(0)
         {
         }
         ~TargetedMovementGeneratorMedium() { delete _path; }
@@ -73,6 +73,9 @@ class TargetedMovementGeneratorMedium
         bool _targetReached : 1;
 
         PathFinder* _path;
+        float m_fTargetLastX;
+        float m_fTargetLastY;
+        float m_fTargetLastZ;
 };
 
 template<class T>
@@ -94,7 +97,7 @@ class ChaseMovementGenerator : public TargetedMovementGeneratorMedium<T, ChaseMo
         void Reset(T &);
 
         bool EnableWalking(T &) const;
-        bool _lostTarget(T &u) const { return u.getVictim() != this->GetTarget(); }
+        bool _lostTarget(T &u) const { return u.GetVictim() != this->GetTarget(); }
         void _reachTarget(T &);
 };
 

@@ -1,6 +1,6 @@
 /* 
  * Copyright (C) 2006-2008 ScriptDev2 <https://scriptdev2.svn.sourceforge.net/>
- * Copyright (C) 2008-2014 Hellground <http://hellground.net/>
+ * Copyright (C) 2008-2015 Hellground <http://hellground.net/>
  * 
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -59,10 +59,10 @@ enum LoathebEvents
     EVENT_SUMMON_SPORE          = 6
 };
 
-float SporesLocations[3][3] = {
-        {2957.040, -3997.590, 274.280},
-        {2909.130, -4042.970, 274.280},
-        {2861.102, -3997.901, 274.280}};
+static float SporesLocations[3][3] = {
+        {2957.040f, -3997.590f, 274.280f},
+        {2909.130f, -4042.970f, 274.280f},
+        {2861.102f, -3997.901f, 274.280f}};
 
 struct boss_loathebAI : public BossAI
 {

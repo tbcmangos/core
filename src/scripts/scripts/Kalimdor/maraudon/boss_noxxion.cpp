@@ -1,6 +1,6 @@
 /* 
  * Copyright (C) 2006-2008 ScriptDev2 <https://scriptdev2.svn.sourceforge.net/>
- * Copyright (C) 2008-2014 Hellground <http://hellground.net/>
+ * Copyright (C) 2008-2015 Hellground <http://hellground.net/>
  * 
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -33,10 +33,10 @@ struct boss_noxxionAI : public ScriptedAI
 {
     boss_noxxionAI(Creature *c) : ScriptedAI(c) {}
 
-    uint32 ToxicVolley_Timer;
-    uint32 Uppercut_Timer;
-    uint32 Adds_Timer;
-    uint32 Invisible_Timer;
+    int32 ToxicVolley_Timer;
+    int32 Uppercut_Timer;
+    int32 Adds_Timer;
+    int32 Invisible_Timer;
     bool Invisible;
     int Rand;
     int RandX;
@@ -79,60 +79,64 @@ struct boss_noxxionAI : public ScriptedAI
 
     void UpdateAI(const uint32 diff)
     {
-        if (Invisible && Invisible_Timer < diff)
-        {
-            //Become visible again
-            m_creature->setFaction(14);
-            m_creature->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
-            //Noxxion model
-            m_creature->SetUInt32Value(UNIT_FIELD_DISPLAYID,11172);
-            Invisible = false;
-            //m_creature->m_canMove = true;
-        } else if (Invisible)
+        if (Invisible)
         {
             Invisible_Timer -= diff;
-            //Do nothing while invisible
-            return;
+            if (Invisible_Timer <= diff)
+            {
+                //Become visible again
+                m_creature->setFaction(14);
+                m_creature->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
+                //Noxxion model
+                m_creature->SetUInt32Value(UNIT_FIELD_DISPLAYID, 11172);
+                Invisible = false;
+                //m_creature->m_canMove = true;
+            }
+            return; // do nothing when invisible
         }
 
         //Return since we have no target
         if (!UpdateVictim() )
             return;
 
-        //ToxicVolley_Timer
-        if (ToxicVolley_Timer < diff)
+        ToxicVolley_Timer -= diff;
+        if (ToxicVolley_Timer <= diff)
         {
-            DoCast(m_creature->getVictim(),SPELL_TOXICVOLLEY);
-            ToxicVolley_Timer = 9000;
-        }else ToxicVolley_Timer -= diff;
+            DoCast(m_creature->GetVictim(),SPELL_TOXICVOLLEY);
+            ToxicVolley_Timer += 9000;
+        }
 
-        //Uppercut_Timer
-        if (Uppercut_Timer < diff)
+        Uppercut_Timer -= diff;
+        if (Uppercut_Timer <= diff)
         {
-            DoCast(m_creature->getVictim(),SPELL_UPPERCUT);
-            Uppercut_Timer = 12000;
-        }else Uppercut_Timer -= diff;
+            DoCast(m_creature->GetVictim(),SPELL_UPPERCUT);
+            Uppercut_Timer += 12000;
+        }
 
         //Adds_Timer
-        if (!Invisible && Adds_Timer < diff)
+        if (!Invisible)
         {
-            //Inturrupt any spell casting
-            //m_creature->m_canMove = true;
-            m_creature->InterruptNonMeleeSpells(false);
-            m_creature->setFaction(35);
-            m_creature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
-            // Invisible Model
-            m_creature->SetUInt32Value(UNIT_FIELD_DISPLAYID,11686);
-            SummonAdds(m_creature->getVictim());
-            SummonAdds(m_creature->getVictim());
-            SummonAdds(m_creature->getVictim());
-            SummonAdds(m_creature->getVictim());
-            SummonAdds(m_creature->getVictim());
-            Invisible = true;
-            Invisible_Timer = 15000;
+            Adds_Timer -= diff;
+            if (Adds_Timer <= diff)
+            {
+                //Inturrupt any spell casting
+                //m_creature->m_canMove = true;
+                m_creature->InterruptNonMeleeSpells(false);
+                m_creature->setFaction(35);
+                m_creature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
+                // Invisible Model
+                m_creature->SetUInt32Value(UNIT_FIELD_DISPLAYID, 11686);
+                SummonAdds(m_creature->GetVictim());
+                SummonAdds(m_creature->GetVictim());
+                SummonAdds(m_creature->GetVictim());
+                SummonAdds(m_creature->GetVictim());
+                SummonAdds(m_creature->GetVictim());
+                Invisible = true;
+                Invisible_Timer = 15000;
 
-            Adds_Timer = 40000;
-        }else Adds_Timer -= diff;
+                Adds_Timer += 40000;
+            }
+        }
 
         DoMeleeAttackIfReady();
     }
@@ -142,6 +146,16 @@ CreatureAI* GetAI_boss_noxxion(Creature *_Creature)
     return new boss_noxxionAI (_Creature);
 }
 
+bool GOUse_vylestem_vine(Player*, GameObject* object)
+{
+    object->SummonCreature(13696, object->GetPositionX(), object->GetPositionY(), object->GetPositionZ(), 0, TEMPSUMMON_TIMED_OR_DEAD_DESPAWN, 30000);
+    object->SummonCreature(13696, object->GetPositionX(), object->GetPositionY(), object->GetPositionZ(), 0, TEMPSUMMON_TIMED_OR_DEAD_DESPAWN, 30000);
+    if (urand(0,1))
+    object->SummonCreature(13696, object->GetPositionX(), object->GetPositionY(), object->GetPositionZ(), 0, TEMPSUMMON_TIMED_OR_DEAD_DESPAWN, 30000);
+    return true;
+}
+
+
 void AddSC_boss_noxxion()
 {
     Script *newscript;
@@ -149,5 +163,11 @@ void AddSC_boss_noxxion()
     newscript->Name="boss_noxxion";
     newscript->GetAI = &GetAI_boss_noxxion;
     newscript->RegisterSelf();
+
+    newscript = new Script;
+    newscript->Name = "gobject_vylestem_vine";
+    newscript->pGOUse = &GOUse_vylestem_vine;
+    newscript->RegisterSelf();
+
 }
 

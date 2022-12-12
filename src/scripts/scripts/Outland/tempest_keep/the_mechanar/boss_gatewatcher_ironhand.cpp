@@ -1,6 +1,6 @@
 /* 
  * Copyright (C) 2006-2008 ScriptDev2 <https://scriptdev2.svn.sourceforge.net/>
- * Copyright (C) 2008-2014 Hellground <http://hellground.net/>
+ * Copyright (C) 2008-2015 Hellground <http://hellground.net/>
  * 
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -49,22 +49,20 @@ struct boss_gatewatcher_iron_handAI : public ScriptedAI
     boss_gatewatcher_iron_handAI(Creature *c) : ScriptedAI(c)
     {
         pInstance = (c->GetInstanceData());
-        HeroicMode = me->GetMap()->IsHeroic();
     }
 
     ScriptedInstance *pInstance;
 
-    bool HeroicMode;
 
-    uint32 Shadow_Power_Timer;
-    uint32 Jackhammer_Timer;
-    uint32 Stream_of_Machine_Fluid_Timer;
+    Timer Shadow_Power_Timer;
+    Timer Jackhammer_Timer;
+    Timer Stream_of_Machine_Fluid_Timer;
 
     void Reset()
     {
-        Shadow_Power_Timer = 25000;
-        Jackhammer_Timer = 45000;
-        Stream_of_Machine_Fluid_Timer = 55000;
+        Shadow_Power_Timer.Reset(25000);
+        Jackhammer_Timer.Reset(45000);
+        Stream_of_Machine_Fluid_Timer.Reset(55000);
 
         if(pInstance)
             pInstance->SetData(DATA_IRONHAND_EVENT, NOT_STARTED);
@@ -104,18 +102,18 @@ struct boss_gatewatcher_iron_handAI : public ScriptedAI
             return;
 
         //Shadow Power
-        if(Shadow_Power_Timer < diff)
+        if(Shadow_Power_Timer.Expired(diff))
         {
             DoCast(me,HeroicMode ? H_SPELL_SHADOW_POWER : SPELL_SHADOW_POWER);
             Shadow_Power_Timer = 20000 + rand()%8000;
-        }else Shadow_Power_Timer -= diff;
+        }
 
         //Jack Hammer
-        if(Jackhammer_Timer < diff)
+        if(Jackhammer_Timer.Expired(diff))
         {
             //TODO: expect cast this about 5 times in a row (?), announce it by emote only once
             DoScriptText(EMOTE_HAMMER, me);
-            DoCast(me->getVictim(),HeroicMode ? H_SPELL_JACKHAMMER : SPELL_JACKHAMMER);
+            DoCast(me->GetVictim(),HeroicMode ? H_SPELL_JACKHAMMER : SPELL_JACKHAMMER);
 
             //chance to yell, but not same time as emote (after spell in fact cast)
             if (rand()%2)
@@ -124,14 +122,14 @@ struct boss_gatewatcher_iron_handAI : public ScriptedAI
             DoScriptText(RAND(SAY_HAMMER_1, SAY_HAMMER_2), me);
 
             Jackhammer_Timer = 30000;
-        }else Jackhammer_Timer -= diff;
+        }
 
         //Stream of Machine Fluid
-        if(Stream_of_Machine_Fluid_Timer < diff)
+        if(Stream_of_Machine_Fluid_Timer.Expired(diff))
         {
-            DoCast(me->getVictim(),SPELL_STREAM_OF_MACHINE_FLUID);
+            DoCast(me->GetVictim(),SPELL_STREAM_OF_MACHINE_FLUID);
             Stream_of_Machine_Fluid_Timer = 35000 + rand()%15000;
-        }else Stream_of_Machine_Fluid_Timer -= diff;
+        }
 
         DoMeleeAttackIfReady();
     }

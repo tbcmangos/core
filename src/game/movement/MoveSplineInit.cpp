@@ -1,6 +1,6 @@
 /*
  * Copyright (C) 2005-2011 MaNGOS <http://getmangos.com/>
- * Copyright (C) 2008-2014 Hellground <http://hellground.net/>
+ * Copyright (C) 2008-2017 Hellground <http://wow-hellground.com/>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -79,6 +79,9 @@ namespace Movement
 
         if (args.velocity == 0.f)
             args.velocity = unit.GetSpeed(SelectSpeedType(moveFlags));
+
+        if (args.velocity <= 0.f)
+            sLog.outLog(LOG_DEFAULT, "unit %s %u trying to launch spline with %f speed", unit.GetName(),unit.GetGUIDLow(),args.velocity);
 
         if (!args.Validate())
             return 0;

@@ -1,7 +1,7 @@
 /*
  * Copyright (C) 2005-2008 MaNGOS <http://getmangos.com/>
  * Copyright (C) 2008 TrinityCore <http://www.trinitycore.org/>
- * Copyright (C) 2008-2014 Hellground <http://hellground.net/>
+ * Copyright (C) 2008-2015 Hellground <http://hellground.net/>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -55,6 +55,11 @@ double rand_norm(void)
     return mtRand->randExc();
 }
 
+float rand_norm_f(void)
+{
+    return (float)mtRand->randExc();
+}
+
 double rand_chance(void)
 {
     return mtRand->randExc(100.0);
@@ -74,10 +79,15 @@ uint32 WorldTimer::tick()
     m_iPrevTime = m_iTime;
 
     // Get the new one and don't forget to persist current system time in m_SystemTickTime
-    m_iTime = WorldTimer::getMSTime_internal(true);
+    m_iTime = WorldTimer::getMSTime_internal();
 
     // return tick diff
     return getMSTimeDiff(m_iPrevTime, m_iTime);
+}
+
+void WorldTimer::tickTimeRenew()
+{
+    m_iTime = WorldTimer::getMSTime_internal();
 }
 
 uint32 WorldTimer::getMSTime()
@@ -85,7 +95,7 @@ uint32 WorldTimer::getMSTime()
     return getMSTime_internal();
 }
 
-uint32 WorldTimer::getMSTime_internal(bool savetime /*= false*/)
+uint32 WorldTimer::getMSTime_internal()
 {
     // Get current time
     const ACE_Time_Value currTime = ACE_OS::gettimeofday();
@@ -151,6 +161,13 @@ void stripLineInvisibleChars(std::string &str)
         str.erase(wpos,str.size());
 }
 
+std::string msToTimeString(uint32 ms)
+{
+    std::ostringstream ss;
+    ss << secsToTimeString(ms / 1000) << " " << uint32(ms % 1000) << " ms";
+    return ss.str();
+}
+
 std::string secsToTimeString(uint32 timeInSecs, bool shortText, bool hoursOnly)
 {
     uint32 secs    = timeInSecs % MINUTE;
@@ -159,16 +176,36 @@ std::string secsToTimeString(uint32 timeInSecs, bool shortText, bool hoursOnly)
     uint32 days    = timeInSecs / DAY;
 
     std::ostringstream ss;
-    if(days)
-        ss << days << (shortText ? "d" : " Day(s) ");
-    if(hours || hoursOnly)
-        ss << hours << (shortText ? "h" : " Hour(s) ");
+    if (days)
+    {
+        if (days == 1)
+            ss << days << (shortText ? "d" : " day ");
+        else
+            ss << days << (shortText ? "d" : " days ");
+    }
+    if (hours || hoursOnly)
+    {
+        if (hours == 1)
+            ss << hours << (shortText ? "h" : " hour ");
+        else
+            ss << hours << (shortText ? "h" : " hours ");
+    }
     if(!hoursOnly)
     {
-        if(minutes)
-            ss << minutes << (shortText ? "m" : " Minute(s) ");
-        if(secs || (!days && !hours && !minutes) )
-            ss << secs << (shortText ? "s" : " Second(s).");
+        if (minutes)
+        { 
+            if (minutes == 1)
+                ss << minutes << (shortText ? "m" : " minute ");
+            else
+                ss << minutes << (shortText ? "m" : " minutes ");
+        }
+        if (secs || (!days && !hours && !minutes))
+        {
+            if (secs == 1)
+                ss << secs << (shortText ? "s" : " second");
+            else 
+                ss << secs << (shortText ? "s" : " seconds");
+        }
     }
 
     return ss.str();

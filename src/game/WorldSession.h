@@ -1,7 +1,7 @@
 /*
  * Copyright (C) 2005-2011 MaNGOS <http://getmangos.com/>
  * Copyright (C) 2008 TrinityCore <http://www.trinitycore.org/>
- * Copyright (C) 2008-2014 Hellground <http://hellground.net/>
+ * Copyright (C) 2008-2017 Hellground <http://wow-hellground.com/>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -37,6 +37,7 @@ struct ItemPrototype;
 struct AuctionEntry;
 struct AuctionHouseEntry;
 struct DeclinedName;
+struct PlayerBotEntry;
 
 class ObjectGuid;
 class Creature;
@@ -64,13 +65,15 @@ enum OpcodeDisabled
 
 enum AccountFlags
 {
-    ACC_SPECIAL_LOG         = 0x0001,   // all incoming/outgoing trade/mails/auctions etc. are logged to file
+    ACC_SPECIAL_LOG         = 0x0001,   // left for future use
     ACC_WHISPER_LOG         = 0x0002,   // all incoming and outgoing whispers are logged o file
     ACC_DISABLED_GANN       = 0x0004,   // account flagged with this won't display messages related to guild announces system
     ACC_BLIZZLIKE_RATES     = 0x0008,   // enables fully blizzlike rates for account. ex: XP, QXP etc
     ACC_HIDE_BONES          = 0x0010,   // client won't show bones created from corpses
     ACC_DISABLED_BGANN      = 0x0020,   // BG start announce will be disabled for this account
     ACC_DISABLED_BROADCAST  = 0x0040,   // Broadcast accounces will be disabled for this account
+    ACC_RESTRICT_BG_MARKS   = 0x0080,   // account won't receive bg marks by mail if already have 100
+    ACC_LOCKED_CHAR_DELETING= 0x0100,   // characters cannot be deleted
 };
 
 enum PartyOperation
@@ -202,6 +205,11 @@ class HELLGROUND_IMPORT_EXPORT WorldSession
 
         void InitWarden(BigNumber *K, uint8& OperatingSystem);
 
+        // Bot system
+        std::stringstream m_chatBotHistory;
+        PlayerBotEntry* GetBot() { return m_bot.get(); }
+        void SetBot(std::shared_ptr<PlayerBotEntry> const& b) { m_bot = b; }
+
         /// Session in auth.queue currently
         void SetInQueue(bool state) { m_inQueue = state; }
 
@@ -224,6 +232,7 @@ class HELLGROUND_IMPORT_EXPORT WorldSession
         void KickPlayer();
 
         void QueuePacket(WorldPacket* new_packet);
+        bool CanProcessPackets() const;
         void ProcessPacket(WorldPacket* packet);
         bool Update(uint32 diff, PacketFilter& updater);
 
@@ -244,8 +253,6 @@ class HELLGROUND_IMPORT_EXPORT WorldSession
         void SendBindPoint(Creature* npc);
         void SendGMTicketGetTicket(uint32 status, char const* text);
 
-        void SendAttackStop(Unit const* enemy);
-
         void SendBattlegGroundList(ObjectGuid guid, BattleGroundTypeId bgTypeId);
 
         void SendTradeStatus(uint32 status);
@@ -262,7 +269,7 @@ class HELLGROUND_IMPORT_EXPORT WorldSession
 
         // External Mail
         void SendExternalMails();
-        TimeTrackerSmall _mailSendTimer;
+        Timer _mailSendTimer;
 
         //auction
         void SendAuctionHello(Unit *unit);
@@ -438,7 +445,7 @@ class HELLGROUND_IMPORT_EXPORT WorldSession
         void HandleMoveWorldportAckOpcode();                // for server-side calls
 
         void HandleMovementOpcodes(WorldPacket& recvPacket);
-        void HandleMoverRelocation(MovementInfo&);
+        bool HandleMoverRelocation(MovementInfo&);
 
         void HandleSetActiveMoverOpcode(WorldPacket &recv_data);
         void HandleMoveNotActiveMoverOpcode(WorldPacket &recv_data);
@@ -786,6 +793,7 @@ class HELLGROUND_IMPORT_EXPORT WorldSession
         LocaleConstant m_sessionDbcLocale;
         int m_sessionDbLocaleIndex;
         uint32 m_latency;
+        std::shared_ptr<PlayerBotEntry> m_bot;
 
         TimeTrackerSmall _kickTimer;
 
@@ -793,7 +801,7 @@ class HELLGROUND_IMPORT_EXPORT WorldSession
 
         uint16 m_opcodesDisabled;
 
-        typedef UNORDERED_MAP<uint16,ShortIntervalTimer> OpcodesCooldown;
+        typedef UNORDERED_MAP<uint16,Timer> OpcodesCooldown;
         OpcodesCooldown _opcodesCooldown;
 
         ACE_Based::LockedQueue<WorldPacket*, ACE_Thread_Mutex> _recvQueue;

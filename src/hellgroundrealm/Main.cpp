@@ -1,6 +1,6 @@
 /*
  * Copyright (C) 2005-2011 MaNGOS <http://getmangos.com/>
- * Copyright (C) 2008-2014 Hellground <http://hellground.net/>
+ * Copyright (C) 2008-2015 Hellground <http://hellground.net/>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -66,9 +66,9 @@ bool StartDB();
 void UnhookSignals();
 void HookSignals();
 
-bool stopEvent = false;                                     ///< Setting it to true stops the server
+bool stopEvent = false;                                     /// Setting it to true stops the server
 
-DatabaseType AccountsDatabase;                                 ///< Accessor to the realm server database
+DatabaseType AccountsDatabase;                                 /// Accessor to the realm server database
 
 /// Print out the usage string for this program on the console.
 void usage(const char *prog)
@@ -185,9 +185,9 @@ extern int main(int argc, char **argv)
 
     sLog.Initialize();
 
-    sLog.outString( "%s (realm-daemon)", _FULLVERSION );
-    sLog.outString( "<Ctrl-C> to stop.\n" );
-    sLog.outString("Using configuration file %s.", cfg_file);
+    sLog.outLog(LOG_DEFAULT, "%s (realm-daemon)", _FULLVERSION );
+    sLog.outLog(LOG_DEFAULT, "<Ctrl-C> to stop.\n" );
+    sLog.outLog(LOG_DEFAULT, "Using configuration file %s.", cfg_file);
 
     ///- Check the version of the configuration file
     uint32 confVersion = sConfig.GetIntDefault("ConfVersion", 0);
@@ -262,7 +262,7 @@ extern int main(int argc, char **argv)
 
     // cleanup query
     // set expired bans to inactive
-    AccountsDatabase.Execute("DELETE FROM ip_banned WHERE expiration_date <= UNIX_TIMESTAMP() AND expiration_date <> punishment_date");
+    AccountsDatabase.Execute("UPDATE ip_banned SET active=0 WHERE expiration_date <= UNIX_TIMESTAMP() AND expiration_date <> punishment_date");
 
     ///- Launch the listening network socket
     ACE_Acceptor<AuthSocket, ACE_SOCK_Acceptor> acceptor;
@@ -327,7 +327,7 @@ extern int main(int argc, char **argv)
     AccountsDatabase.EnableLogging();
 
     // maximum counter for next ping
-    uint32 numLoops = (sConfig.GetIntDefault("MaxPingTime", 30) * (MINUTE * 1000000 / 100000));
+    uint32 numLoops = sConfig.GetIntDefault("MaxPingTime", 30) * 10;
     uint32 loopCounter = 0;
 
 #ifndef WIN32

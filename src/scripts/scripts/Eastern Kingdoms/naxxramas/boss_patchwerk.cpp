@@ -1,6 +1,6 @@
 /* 
  * Copyright (C) 2006-2008 ScriptDev2 <https://scriptdev2.svn.sourceforge.net/>
- * Copyright (C) 2008-2014 Hellground <http://hellground.net/>
+ * Copyright (C) 2008-2015 Hellground <http://hellground.net/>
  * 
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -108,7 +108,7 @@ struct boss_patchwerkAI : public BossAI
                     Unit * target = SelectUnit(SELECT_TARGET_HIGHEST_HP, 0, m_creature->GetCombatReach(), true);
 
                     if (!target)
-                        target = me->getVictim();
+                        target = me->GetVictim();
 
                     if (target)
                         AddSpellToCast(target, SPELL_HATEFULSTRIKE);

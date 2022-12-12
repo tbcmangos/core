@@ -1,7 +1,7 @@
 /*
  * Copyright (C) 2005-2009 MaNGOS <http://getmangos.com/>
  * Copyright (C) 2008-2009 TrinityCore <http://www.trinitycore.org/>
- * Copyright (C) 2008-2014 Hellground <http://hellground.net/>
+ * Copyright (C) 2008-2017 Hellground <http://wow-hellground.com/>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -43,7 +43,7 @@ void UnitAI::AttackStartCaster(Unit *victim, float dist)
 
 void UnitAI::DoMeleeAttackIfReady()
 {
-    if (me->hasUnitState(UNIT_STAT_CANNOT_AUTOATTACK))
+    if (me->HasUnitState(UNIT_STAT_CANNOT_AUTOATTACK))
         return;
 
     // set selection back to attacked victim if not selected (after spell casting)
@@ -57,18 +57,18 @@ void UnitAI::DoMeleeAttackIfReady()
     if (me->isAttackReady())
     {
         //If we are within range melee the target
-        if (me->IsWithinMeleeRange(me->getVictim()))
+        if (me->IsWithinMeleeRange(me->GetVictim()))
         {
-            me->AttackerStateUpdate(me->getVictim());
+            me->AttackerStateUpdate(me->GetVictim());
             me->resetAttackTimer();
         }
     }
     if (me->haveOffhandWeapon() && me->isAttackReady(OFF_ATTACK))
     {
         //If we are within range melee the target
-        if (me->IsWithinMeleeRange(me->getVictim()))
+        if (me->IsWithinMeleeRange(me->GetVictim()))
         {
-            me->AttackerStateUpdate(me->getVictim(), OFF_ATTACK);
+            me->AttackerStateUpdate(me->GetVictim(), OFF_ATTACK);
             me->resetAttackTimer(OFF_ATTACK);
         }
     }
@@ -76,15 +76,15 @@ void UnitAI::DoMeleeAttackIfReady()
 
 bool UnitAI::DoSpellAttackIfReady(uint32 spell)
 {
-    if (me->hasUnitState(UNIT_STAT_CASTING))
+    if (me->HasUnitState(UNIT_STAT_CASTING))
         return true;
 
     if (me->isAttackReady())
     {
         const SpellEntry * spellInfo = GetSpellStore()->LookupEntry(spell);
-        if (me->IsWithinCombatRange(me->getVictim(), SpellMgr::GetSpellMaxRange(spellInfo)))
+        if (me->IsWithinCombatRange(me->GetVictim(), SpellMgr::GetSpellMaxRange(spellInfo)))
         {
-            me->CastSpell(me->getVictim(), spell, false);
+            me->CastSpell(me->GetVictim(), spell, false);
             me->resetAttackTimer();
         }
         else
@@ -215,6 +215,8 @@ void UnitAI::SelectUnitList(std::list<Unit*> &targetList, uint32 num, SelectAggr
     for (std::list<HostileReference*>::const_iterator itr = threatlist.begin(); itr != threatlist.end(); ++itr)
         targetList.push_back((*itr)->getTarget());
 
+    targetList.remove_if(Hellground::ObjectIsTotemCheck(true));
+
     if (playerOnly)
         targetList.remove_if(Hellground::ObjectTypeIdCheck(TYPEID_PLAYER, false));
 
@@ -341,113 +343,20 @@ float UnitAI::DoGetSpellMaxRange(uint32 spellId, bool positive)
     return SpellMgr::GetSpellMaxRange(spellId);
 }
 
-void UnitAI::DoCast(uint32 spellId)
-{
-    Unit *target = NULL;
-    //sLog.outLog(LOG_DEFAULT, "ERROR: aggre %u %u", spellId, (uint32)AISpellEntry[spellId].target);
-    switch (AISpellEntry[spellId].target)
-    {
-        default:
-        case AITARGET_SELF:     target = me; break;
-        case AITARGET_VICTIM:   target = me->getVictim(); break;
-        case AITARGET_ENEMY:
-        {
-            const SpellEntry * spellInfo = GetSpellStore()->LookupEntry(spellId);
-            bool playerOnly = spellInfo->AttributesEx3 & SPELL_ATTR_EX3_PLAYERS_ONLY;
-            float range = SpellMgr::GetSpellMaxRange(spellInfo);
-            target = SelectUnit(SELECT_TARGET_RANDOM, 0, SpellMgr::GetSpellMaxRange(spellInfo), playerOnly);
-            break;
-        }
-        case AITARGET_ALLY:     target = me; break;
-        case AITARGET_BUFF:     target = me; break;
-        case AITARGET_DEBUFF:
-        {
-            const SpellEntry * spellInfo = GetSpellStore()->LookupEntry(spellId);
-            bool playerOnly = spellInfo->AttributesEx3 & SPELL_ATTR_EX3_PLAYERS_ONLY;
-            float range = SpellMgr::GetSpellMaxRange(spellInfo);
-            if (!(spellInfo->Attributes & SPELL_ATTR_BREAKABLE_BY_DAMAGE)
-                && !(spellInfo->AuraInterruptFlags & AURA_INTERRUPT_FLAG_NOT_VICTIM)
-                && SelectTargetHelper(me, me->getVictim(), playerOnly, range, -(int32)spellId))
-                target = me->getVictim();
-            else
-                target = SelectUnit(SELECT_TARGET_RANDOM, 0, range, playerOnly);
-            break;
-        }
-    }
-
-    if (target)
-        me->CastSpell(target, spellId, false);
-}
-
-#define UPDATE_TARGET(a) {if(AIInfo->target<a) AIInfo->target=a;}
-
-void UnitAI::FillAISpellEntry()
-{
-    AISpellEntry = new AISpellEntryType[GetSpellStore()->GetNumRows()];
-
-    AISpellEntryType *AIInfo = AISpellEntry;
-    const SpellEntry * spellInfo;
-
-    for (uint32 i = 0; i < GetSpellStore()->GetNumRows(); ++i, ++AIInfo)
-    {
-        spellInfo = GetSpellStore()->LookupEntry(i);
-        if (!spellInfo)
-            continue;
-
-        if (spellInfo->Attributes & SPELL_ATTR_CASTABLE_WHILE_DEAD)
-            AIInfo->condition = AICOND_DIE;
-        else if (SpellMgr::IsPassiveSpell(i) || SpellMgr::GetSpellDuration(spellInfo) == -1)
-            AIInfo->condition = AICOND_AGGRO;
-        else
-            AIInfo->condition = AICOND_COMBAT;
-
-        if (AIInfo->cooldown < spellInfo->RecoveryTime)
-            AIInfo->cooldown = spellInfo->RecoveryTime;
-
-        if (!SpellMgr::GetSpellMaxRange(spellInfo))
-            UPDATE_TARGET(AITARGET_SELF)
-        else
-        {
-            for (uint32 j = 0; j < 3; ++j)
-            {
-                uint32 targetType = spellInfo->EffectImplicitTargetA[j];
-
-                if (targetType == TARGET_UNIT_TARGET_ENEMY
-                    || targetType == TARGET_DST_TARGET_ENEMY)
-                    UPDATE_TARGET(AITARGET_VICTIM)
-                else if (targetType == TARGET_UNIT_AREA_ENEMY_DST)
-                    UPDATE_TARGET(AITARGET_ENEMY)
-
-                if (spellInfo->Effect[j] == SPELL_EFFECT_APPLY_AURA)
-                {
-                    if (targetType == TARGET_UNIT_TARGET_ENEMY)
-                        UPDATE_TARGET(AITARGET_DEBUFF)
-                    else if (SpellMgr::IsPositiveSpell(i))
-                        UPDATE_TARGET(AITARGET_BUFF)
-                }
-            }
-        }
-        AIInfo->realCooldown = spellInfo->RecoveryTime + spellInfo->StartRecoveryTime;
-        SpellRangeEntry const* srange = sSpellRangeStore.LookupEntry(spellInfo->rangeIndex);
-        if (srange)
-            AIInfo->maxRange = srange->maxRange * 3 / 4;
-    }
-}
-
 bool UnitAI::CanCast(Unit* Target, SpellEntry const *Spell, bool Triggered)
 {
     //No target so we can't cast
-    if (!Target || !Spell || me->hasUnitState(UNIT_STAT_CASTING))
+    if (!Target || !Spell || me->HasUnitState(UNIT_STAT_CASTING))
         return false;
 
     //Silenced so we can't cast
     if (!Triggered && me->HasFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_SILENCED))
         return false;
 
-    if (!Triggered && me->GetTypeId() == TYPEID_PLAYER && ((Player*)me)->GetCooldownMgr().HasGlobalCooldown(Spell))
-        return false;
-
-    if (!Triggered && me->GetTypeId() == TYPEID_PLAYER && ((Player*)me)->HasSpellCooldown(Spell->Id))
+    Player* owner = me->GetCharmerOrOwnerPlayerOrPlayerItself();
+    if (owner && !Triggered &&
+        (owner->GetCooldownMgr().HasSpellCooldown(Spell->Id) ||
+        owner->GetCooldownMgr().HasGlobalCooldown(Spell->StartRecoveryCategory)))
         return false;
 
     //Check for power
@@ -482,7 +391,7 @@ bool UnitAI::HasEventAISummonedUnits()
         ++itr;
         if (Unit * tmpU = me->GetUnit(*tmpItr))
         {
-            if (tmpU->IsInWorld() && tmpU->isAlive())
+            if (tmpU->IsInWorld() && tmpU->IsAlive())
                 alive = true;
             else
                 eventAISummonedList.erase(tmpItr);

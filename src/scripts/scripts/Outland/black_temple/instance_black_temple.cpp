@@ -1,6 +1,6 @@
 /* 
  * Copyright (C) 2006-2008 ScriptDev2 <https://scriptdev2.svn.sourceforge.net/>
- * Copyright (C) 2008-2014 Hellground <http://hellground.net/>
+ * Copyright (C) 2008-2015 Hellground <http://hellground.net/>
  * 
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -44,7 +44,7 @@ EndScriptData */
 
 struct instance_black_temple : public ScriptedInstance
 {
-    instance_black_temple(Map *map) : ScriptedInstance(map) {Initialize();};
+    instance_black_temple(Map *map) : ScriptedInstance(map), m_gbk(map) {Initialize();};
 
     uint64 m_najentusGUID;
     uint64 m_akamaillidanGUID;    // This is the Akama that starts the Illidan encounter.
@@ -77,7 +77,7 @@ struct instance_black_temple : public ScriptedInstance
     uint32 EnslavedSoulsCount;
 
     uint32 Encounters[ENCOUNTERS];
-
+    GBK_handler m_gbk;
     std::map<uint64, uint32> sodList;
     std::vector<uint64> weaponmasterList;
     std::list<uint64> SoulFragmentsList;
@@ -278,7 +278,7 @@ struct instance_black_temple : public ScriptedInstance
         if (!tmp)
             return;
 
-        if (pCreature->isAlive() && GetData(GetEncounterForEntry(tmp->id)) == DONE)
+        if (pCreature->IsAlive() && GetData(GetEncounterForEntry(tmp->id)) == DONE)
         {
             if (ashtongueBroken)
                 pCreature->setFaction(1820);
@@ -390,9 +390,26 @@ struct instance_black_temple : public ScriptedInstance
             case DATA_WEAPONMASTER_SOLDIER+5:
             case DATA_WEAPONMASTER_SOLDIER+6:
             case DATA_WEAPONMASTER_SOLDIER+7:
-                return weaponmasterList[identifier-30];
+                return weaponmasterList[identifier-DATA_WEAPONMASTER_SOLDIER];
         }
         return 0;
+    }
+
+    GBK_Encounters EncounterForGBK(uint32 enc)
+    {
+        switch (enc)
+        {
+        case EVENT_HIGHWARLORDNAJENTUS: return GBK_HIGH_WARLORD_NAJENTUS;
+        case EVENT_SUPREMUS:            return GBK_SUPREMUS;
+        case EVENT_SHADEOFAKAMA:        return GBK_SHADE_OF_AKAMA;
+        case EVENT_TERONGOREFIEND:      return GBK_TERON_GOREFIEND;
+        case EVENT_GURTOGGBLOODBOIL:    return GBK_GURTOG_BLOODBOIL;
+        case EVENT_RELIQUARYOFSOULS:    return GBK_REQUILARY_OF_SOULS;
+        case EVENT_MOTHERSHAHRAZ:       return GBK_MOTHER_SHARAZ;
+        case EVENT_ILLIDARICOUNCIL:     return GBK_ILLIDARI_COUNCIL;
+        case EVENT_ILLIDANSTORMRAGE:    return GBK_ILLIDAN_STORMRAGE;
+        }
+        return GBK_NONE;
     }
 
     void SetData(uint32 type, uint32 data)
@@ -533,6 +550,17 @@ struct instance_black_temple : public ScriptedInstance
             break;
         }
 
+        GBK_Encounters gbkEnc = EncounterForGBK(type);
+        if (gbkEnc != GBK_NONE)
+        {
+            if (data == DONE)
+                m_gbk.StopCombat(gbkEnc, true);
+            else if (data == NOT_STARTED)
+                m_gbk.StopCombat(gbkEnc, false);
+            else if (data == IN_PROGRESS)
+                m_gbk.StartCombat(gbkEnc);
+        }
+
         if (data == DONE)
             SaveToDB();
     }
@@ -644,6 +672,21 @@ struct instance_black_temple : public ScriptedInstance
         }
 
         OUT_LOAD_INST_DATA_COMPLETE;
+    }
+
+    void OnPlayerDealDamage(Player* plr, uint32 amount)
+    {
+        m_gbk.DamageDone(plr->GetGUIDLow(), amount);
+    }
+
+    void OnPlayerHealDamage(Player* plr, uint32 amount)
+    {
+        m_gbk.HealingDone(plr->GetGUIDLow(), amount);
+    }
+
+    void OnPlayerDeath(Player* plr)
+    {
+        m_gbk.PlayerDied(plr->GetGUIDLow());
     }
 };
 

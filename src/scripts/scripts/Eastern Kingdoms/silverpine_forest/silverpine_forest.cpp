@@ -1,6 +1,6 @@
  /* 
  * Copyright (C) 2006-2008 ScriptDev2 <https://scriptdev2.svn.sourceforge.net/>
- * Copyright (C) 2008-2014 Hellground <http://hellground.net/>
+ * Copyright (C) 2008-2015 Hellground <http://hellground.net/>
  * 
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -224,9 +224,9 @@ static float SpawnPoints[3][4] =
 {
     //pos_x   pos_y     pos_z    orien
     //door
-    {-396.17, 1505.86, 19.77, 0},
-    {-396.91, 1505.77, 19.77, 0},
-    {-397.94, 1504.74, 19.77, 0},
+    {-396.17f, 1505.86f, 19.77f, 0},
+    {-396.91f, 1505.77f, 19.77f, 0},
+    {-397.94f, 1504.74f, 19.77f, 0},
 };
 
 #define WAIT_SECS 6000
@@ -242,7 +242,7 @@ struct pyrewood_ambushAI : public ScriptedAI
 
     uint32 Phase;
     int KillCount;
-    uint32 WaitTimer;
+    int32 WaitTimer;
     uint64 PlayerGUID;
     SummonList Summons;
 
@@ -331,11 +331,11 @@ struct pyrewood_ambushAI : public ScriptedAI
                 if(WaitTimer == WAIT_SECS)
                     m_creature->Say(NPCSAY_INIT, LANG_UNIVERSAL, 0); //no blizzlike
 
-                if(WaitTimer <= diff)
-                {
-                    WaitTimer -= diff;
-                    return;
-                }
+              //  if(WaitTimer <= diff)
+              //  {
+              //      WaitTimer -= diff;   what was that supposed to do? O_o
+              //      return;
+              //  }
                 break;
             case 1:
                 SummonCreatureWithRandomTarget(2060, 1);

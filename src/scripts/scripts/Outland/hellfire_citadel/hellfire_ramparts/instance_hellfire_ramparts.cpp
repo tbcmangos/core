@@ -1,7 +1,7 @@
 /*
  * Copyright (C) 2008-2013 TrinityCore <http://www.trinitycore.org/>
  * Copyright (C) 2006-2013 ScriptDev2 <http://www.scriptdev2.com/>
- * Copyright (C) 2008-2014 Hellground <http://hellground.net/>
+ * Copyright (C) 2008-2015 Hellground <http://hellground.net/>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -35,7 +35,7 @@ EndScriptData */
 #define ENTRY_REINFORCED_FEL_IRON_CHEST_H    185169
 #define ENTRY_REINFORCED_FEL_IRON_CHEST      185168
 
-const float VazrudenMiddle[3] = {-1406.5, 1746.5, 81.2};
+static const float VazrudenMiddle[3] = {-1406.5f, 1746.5f, 81.2f};
 
 struct instance_ramparts : public ScriptedInstance
 {
@@ -111,11 +111,12 @@ struct instance_ramparts : public ScriptedInstance
                     {
                         if (Creature* sentry = instance->GetCreature(*it))
                         {
-                            if (sentry->isDead())
+                            if (sentry->IsDead())
                                 sentry->Respawn();
                         }
                     }
                     Encounter[2] = NOT_STARTED;
+                    break;
                 }
 
                 if (data == DONE)

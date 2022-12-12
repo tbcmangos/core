@@ -2,7 +2,7 @@
 # Hellground Core world configuration file #
 ############################################
 [CoreConf]
-ConfVersion=2014022101
+ConfVersion=2015020801
 
 ###################################################################################################################
 # DATABASES AND DIRECTORIES
@@ -38,11 +38,11 @@ ConfVersion=2014022101
 #   CharacterDatabaseConnections
 #       Amount of connections to database which will be used for SELECT queries. Maximum 16 connections per database.
 #       Please, note, for data consistency only one connection for each database is used for transactions and async SELECTs.
-#       So formula to find out how many connections will be established: X = �_connections + 1
+#       So formula to find out how many connections will be established: X = m_connections + 1
 #       Default: 1 connection for SELECT statements
 #
 #    MaxPingTime
-#        Settings for maximum database-ping interval (minutes between pings)
+#        Settings for maximum database-ping interval (seconds between pings)
 #
 #    WorldServerPort
 #        Default 8085
@@ -178,6 +178,11 @@ BindIP = "0.0.0.0"
 #        Default: "trade.log"
 #                 "" - Empty name for disable
 #
+#    ServerRecordsFile
+#        Log file for new server records
+#        Default: "serverrecords.log"
+#                 "" - Empty name for disable
+#
 #    RaceChangeLogFile
 #        Log file for changing race
 #        Default: "race_change.log"
@@ -251,9 +256,14 @@ SessionDiffLogFile = "sessiondiff.log"
 CrashLogFile = "crash.log"
 DBDiffFile = "querydiff.log"
 ExpLogFile = "exp.log"
+ServerRecordsFile = "serverrecords.log"
 TradeLogFile = "trade.log"
 RaceChangeLogFile = "race_change.log"
+ExploitsCheatsLogFile = "exploit_cheats.log"
+RaidBindsLogFile = "raid_binds.log"
 WhispLogDir = "whisps/"
+ChatLogsDir = "chatlogs/"
+ChatLogsEnabled = 0
 
 GmLogTimestamp = 0
 LogTimestamp = 0
@@ -322,10 +332,6 @@ EAIErrorLevel = 0
 #        Grid clean up delay (in milliseconds)
 #        Default: 300000 (5 min)
 #
-#    MapUpdateInterval
-#        Map update interval (in milliseconds)
-#        Default: 100
-#
 #    ChangeWeatherInterval
 #        Weather update interval (in milliseconds)
 #        Default: 600000 (10 min)
@@ -350,11 +356,12 @@ EAIErrorLevel = 0
 #        Max number of creatures updated by single visitor.
 #        Default: 20
 #
-#    MapUpdate.CumulativeLogMethod
-#        Activate a more detailed Log Feature for Map Update
-#        Requires define MAP_UPDATE_DIFF_INFO
-#        Default: 0 Log will be Printed as Sum on each RecordUpdateTimeDiffInterval
-#                 1 Log will be Printed on each Map Update Cycle
+#    MapUpdate.Continents
+#    MapUpdate.Instances
+#    MapUpdate.Battlegrounds
+#    MapUpdate.Arenas
+#        Min delay between map update, 0=asap
+#
 #
 #    SessionUpdate.Threads
 #        Number of threads to update sessions (0 - disable).
@@ -398,9 +405,14 @@ EAIErrorLevel = 0
 #        >0 = Interval
 #        0 = Disable
 #
-#    MinRecordUpdateTimeDiff
+#    DiffRecord.Update
 #        only record update time diff which is greater than this value (in milliseconds)
 #        Default: 300
+#
+#   Accounts.Fastboot
+#        If you use only one realm then you don't need to set offline for every account separately.
+#        Default: 0 (false)
+#        Set to 1 (true) to set offline for all accounts at all.
 #
 ###################################################################################################################
 
@@ -415,7 +427,6 @@ GridUnload = 1
 
 SocketSelectTime = 10000
 GridCleanUpDelay = 300000
-MapUpdateInterval = 100
 ChangeWeatherInterval = 600000
 PlayerSaveInterval = 900000
 DisconnectToleranceInterval = 0
@@ -423,7 +434,10 @@ UpdateUptimeInterval = 10
 
 MapUpdate.Threads = 1
 MapUpdate.UpdateVisitorsMax = 20
-MapUpdate.CumulativeLogMethod = 0
+MapUpdate.Continents = 50
+MapUpdate.Instances = 50
+MapUpdate.Battlegrounds = 0
+MapUpdate.Arenas = 0
 
 SessionUpdate.Threads = 1
 SessionUpdate.MaxTime = 1000
@@ -432,7 +446,10 @@ SessionUpdate.VerboseLog = 0
 SessionUpdate.IdleKickTimer = 900000
 SessionUpdate.MinLogDiff = 25
 RecordUpdateTimeDiffInterval = 60000
-MinRecordUpdateTimeDiff = 300
+DiffRecord.Update = 300
+DiffRecord.Cell = 300
+DiffRecord.Active = 300
+Accounts.Fastboot = 0
 
 ###################################################################################################################
 # SERVER SETTINGS
@@ -675,6 +692,10 @@ RealmBans = 0
 #        Disallow players to create groups while in FFA area
 #        Default: 0
 #
+#    HappyTesting
+#        No consumables/reagents used, no inventory damage, gold set to 5000g after each relog
+#        Default: 0 (false)
+#
 #    HonorPointsAfterDuel
 #        The amount of honor points the duel winner will get after a duel.
 #        Default: 0 - disable
@@ -796,6 +817,15 @@ KeepDeletedCharsTime = 31
 #        set interval between sending next advertising on chat(in minutes)
 #        0 = disable autoannounce (default)
 #
+#    FreeRespec.Cost
+#        Free talent respec service cost.
+#        Default: 10000000
+#                 0 disable
+#
+#    FreeRespec.Duration
+#        Free talent respec service duration.
+#        Default: 15778463 (6 months)
+#
 #    GroupLeaderReconnectPeriod
 #        The time the leader of a group has to reconnect before the lead goes to another player (also applies for a server crash)
 #        Default: 180 (seconds)
@@ -908,6 +938,8 @@ KeepDeletedCharsTime = 31
 ActivateWeather = 1
 Auction.EnableSort = 1
 AutoBroadcast.Timer = 0
+FreeRespec.Cost = 10000000
+FreeRespec.Duration = 15778463
 GroupLeaderReconnectPeriod = 180
 Instance.ResetTimeHour = 4
 Instance.UnloadDelay = 1800000
@@ -1122,6 +1154,9 @@ ChatFlood.MuteTime = 10
 #        Permission mask needed to access additional player data
 #        Default: 14336 (hgms/admins)
 #
+#    EnableCrashtest
+#        If enabled allows devs to perform crahtests
+#
 #    CommandLogPermission
 #        Permission mask for logging commands
 #        Default: 16130 (devs/gms/admins)
@@ -1156,6 +1191,7 @@ GM.StartLevel     = 70
 GM.AllowInvite    = 0
 GM.AllowFriend    = 0
 GM.TrustedLevel   = 14336
+EnableCrashtest   = 0
 
 CommandLogPermission = 16130
 InstantLogout = 16130
@@ -1198,6 +1234,8 @@ HideGameMasterAccounts = 1
 #    Rate.XP.Kill
 #    Rate.XP.Quest
 #    Rate.XP.Explore
+#    Rate.XP.Horde
+#    Rate.XP.Ally
 #        XP rates
 #        Default: 1
 #
@@ -1322,6 +1360,8 @@ Rate.XP.Kill    = 1
 Rate.XP.Quest   = 1
 Rate.XP.Explore = 1
 Rate.XP.PastLevel70 = 1
+Rate.XP.Horde = 1
+Rate.XP.Ally = 1
 
 Rate.Rest.InGame = 1
 Rate.Rest.Offline.InTavernOrCity = 1
@@ -1552,6 +1592,12 @@ WorldBossLevelDiff = 3
 # LogExtendedInfo: Extended Info Log file of arena fights and arena team creations
 #             Default: 0 (disabled)
 #
+# ReadyStartTimer: timer to set when everyone on arena are ready to fight
+#             Default: 5000
+#
+# ExportResults: export arena match result to database tables (for online arena logs)
+#             Default: 0 (disabled)
+#
 # StepByStep: while selecting teams for matches, max rating difference will be decreased by Value every Time miliseconds
 #             Default: 0, 60000, 100
 #
@@ -1573,8 +1619,9 @@ WorldBossLevelDiff = 3
 # DailyAPReward: AP reward for daily arena
 #             Default: 0
 #
-# ReadyStartTimer: timer to set when everyone on arena are ready to fight
-#             Default: 5000
+# KeepTeams: Do not delete teams from database, just empty them
+#             Default: 0 (delete)
+#                      1 (enable)
 #
 ###################################################################################################################
 
@@ -1585,6 +1632,8 @@ Arena.AutoDistributeInterval = 7
 Arena.EnableFakeWho = 0
 Arena.EnableFakeWho.ForGuild = 0
 Arena.LogExtendedInfo = 0
+Arena.ReadyStartTimer = 5000
+Arena.ExportResults = 0
 
 Arena.EnableMMR = 0
 Arena.EnableMMRPenalty = 0
@@ -1600,8 +1649,8 @@ Arena.StatusInfo = 1
 Arena.ELOCoefficient = 32
 Arena.DailyRequirement = 0
 Arena.DailyAPReward = 0
-Arena.ReadyStartTimer = 5000
 
+Arena.KeepTeams = 0
 ###################################################################################################################
 # BATTLEGROUND SETTINGS
 #
@@ -1614,9 +1663,20 @@ Arena.ReadyStartTimer = 5000
 #              Default: 1 - enable
 #                       0 - disable
 #
+# DeserterOnInactive: Cast Deserter also when player ends battleground with Inactive debuff
+#              Default: 0 - disable
+#                       1 - enable
+#
+# DeserterRealtime: Deserter debuff timer will continue countdown when player offline
+#              Default: 1 - enable
+#                       0 - disable
+#
 # InvitationType: Set Battleground invitation type
 #              Default: 0 (normal - invite as much players to bg as possible, don't bother with ballance)
 #                       1 (Experimental - don't allow to invite much more players of one faction)
+#
+# KickAfterInactiveTime: Kick player from bg if he has Inactive buff for this time (in seconds)
+#              Default: 0 - disabled
 #
 # PremadeGroupWaitForMatch: The time in which premade group of 1 faction waits in BG Queue for premade group of other faction
 #              Default: 1800000 (30 minutes)
@@ -1646,7 +1706,10 @@ Arena.ReadyStartTimer = 5000
 
 BattleGround.AnnounceStart = 0
 Battleground.CastDeserter = 1
+BattleGround.DeserterOnInactive = 0
+BattleGround.DeserterRealtime = 1
 Battleground.InvitationType = 1
+BattleGround.KickAfterInactiveTime = 0
 BattleGround.PremadeGroupWaitForMatch = 300000
 BattleGround.PrematureFinishTimer = 300000
 Battleground.PrematureReward = 1
@@ -1667,10 +1730,9 @@ BattleGround.WSGEndAfter.AlwaysDraw = 0
 #        Default: 0 (false)
 #                 1 (true)
 #
-#    vmap.ignoreSpellIds
-#        These spells are ignored for LoS calculation
-#        List of ids with delimiter ','
-#        Default: "7720" - ritual of summoning effect
+#    vmap.ignoremodels
+#        pairs "map modelid" excluded from LoS calculation
+#        delimiter ',' between pairs
 #
 #    vmap.enableIndoorCheck
 #        Enables checking indoor/outdoor state
@@ -1694,6 +1756,14 @@ BattleGround.WSGEndAfter.AlwaysDraw = 0
 #    vmap.clusterProcesses
 #        Number of calculation processes created in cluster
 #
+#    vmap.ground.enable
+#        Number of points on way where ground los should be checked
+#        Default: 0 (disable)
+#
+#    vmap.ground.tolerance
+#        Value in yards describing how deep under ground is line of sight allowed
+#        Default: 5 (yards)
+#
 #    mmap.enabled
 #        Enable/Disable pathfinding using mmaps
 #        Default: 0 (disable)
@@ -1702,12 +1772,13 @@ BattleGround.WSGEndAfter.AlwaysDraw = 0
 ###################################################################################################################
 
 vmap.enableLOS = 0
-vmap.ignoreSpellIds = "7720"
 vmap.enableIndoorCheck = 1
 vmap.petLOS = 0
 vmap.totem = 0
 vmap.enableCluster = 0
 vmap.clusterProcesses = 4
+vmap.ground.enable = 0
+vmap.ground.tolerance = 5
 mmap.enabled = 0
 
 ###################################################################################################################
@@ -1740,23 +1811,29 @@ Visibility.Distance.ActiveObjectUpdate.Instances = 132
 #
 #    Movement.RecalculateRange
 #        Minimal range after which creature will recalculate movement for chase/follow movegen, higher = less stress on CPU
-#        Default: 1 (yards)
+#        Default: 0.5 (yards)
 #          Range: 0-5 (yards)
 #
 #    Movement.RecheckTimer
 #        How often perform check, if target moved and wee need to updte our destination
 #        Default: 100 (ms)
 #
-#    Movement..WaypointPathfinding.*
+#    Movement.WaypointPathfinding.*
 #        Decides if WaypointMovegen have to generate movepath between nodes ot go in straight line
 #        Default: 1 (on)
 #
+#    Movement.LongCharge
+#        Experimental and possibly crashing setting! If enabled charge spell range checks are performed blizzlike
+#        (in straight line instead of along path)
+#        Default: 0 (off)
+#
 ###################################################################################################################
 
-Movement.RecalculateRange = 1
+Movement.RecalculateRange = 0.5
 Movement.RecheckTimer = 100
 Movement.WaypointPathfinding.Continents = 1
 Movement.WaypointPathfinding.Instances = 1
+Movement.LongCharge = 0
 
 ###################################################################################################################
 # COREBALANCER
@@ -1859,6 +1936,18 @@ VMSS.MapFreezeDetectTime = 1000
 #        Float value describing tolerance of speedhack check (eg 1.05 : 5% over limit is acceptable)
 #        Default: 1.00 (no tolerance!)
 #
+#    AntiCheat.GobjectUseExploitRange
+#        Float value of max distance from which gameobject use will be logged (possible packet edits)
+#        Default: 15.00 (in yards)
+#
+#    AntiCheat.ShortmoveIgnore
+#        How many short moves (small time, big speed because of rounding) will be ignored
+#        Default: 5
+#
+#    AntiCheat.RareCaseTimer
+#        Time in sec, one report in such period with short distance will be ignored
+#        Default: 600
+#
 ###################################################################################################################
 
 Warden.Enabled = 1
@@ -1872,6 +1961,9 @@ Warden.RandomCheckMax = 5
 AntiCheat.Enable = 1
 AntiCheat.CumulativeDelay = 5000
 AntiCheat.SpeedhackTolerance = 1.00
+AntiCheat.GobjectUseExploitRange = 15.00
+AntiCheat.ShortmoveIgnore = 5
+AntiCheat.RareCaseTimer = 600
 
 ###################################################################################################################
 #    Refer-A-Friend system by Mas0n
@@ -1891,7 +1983,7 @@ Rate.RAF.LevelPerLevel  = 0.5
 
 ###################################################################################################################
 #   Ganking penalty system
-#    
+#
 #   PVP.EnableGankingPenalty     = 1         ( on / off )
 #   PVP.GankingPenaltyExpireTime = 600       ( time in secs that need to pass after kill, to penalty wear off )
 #   PVP.GankingPenaltyKillsAlert = 10        ( consecutive kills count after which GM will receive notice )
@@ -1936,3 +2028,86 @@ Network.OutKBuff = -1
 Network.OutUBuff = 65536
 Network.TcpNodelay = 1
 Network.KickOnBadPacket = 0
+
+###################################################################################################################
+# PLAYER BOTS
+#
+#    RandomBot.Enable
+#        Enables automatic spawning of random bots. These bots have no AI. You have to code one and assign it.
+#        Default: 0 - off
+#                 1 - on
+#
+#    RandomBot.MinBots
+#        Minimum amount of random bots the server will try to spawn.
+#        Default: 0
+#
+#    RandomBot.MaxBots
+#        Maximum amount of random bots the server will try to spawn.
+#        Default: 0
+#
+#    RandomBot.Refresh
+#        How often the the server will check if there are enough bots spawned.
+#        Default: 60000 (1 minute)
+#
+#    PlayerBot.AllowSaving
+#        Enables saving of character progress when a real character is loaded.
+#        Default: 0 - off
+#                 1 - on
+#
+#    PlayerBot.Debug
+#        Enables additional debugging information about bots that is printed in the console.
+#        Default: 0 - off
+#                 1 - on
+#
+#    PlayerBot.UpdateMs
+#        How often the AI of bots will be updated. A bigger delay will make them less responsive.
+#        Default: 1000 (1 second)
+#
+#    PlayerBot.ShowInWhoList
+#        Enables displaying characters controlled by bots in /who results.
+#        Default: 0 - off
+#                 1 - on
+#
+#    PartyBot.MaxBots
+#        Maximum number of party bots that normal players are allowed to summon.
+#        Default: 0 (no limit)
+#
+#    PartyBot.SkipChecks
+#        Disables the additional restrictions that apply when a normal player tries to summon a party bot.
+#        Default: 0 (restricted)
+#                 1 (no restrictions)
+#
+#    PartyBot.AutoEquip
+#        What gear will new partybots spawn with.
+#        Default: 1 (random items)
+#                 0 (normal starting items)
+#                 2 (premade gear template)
+#
+#    PartyBot.RandomGearLevelDifference
+#        Item level difference for random items that will bots equip. Has only effect if PartyBot.AutoEquip is set to 1.
+#        A lower number equals to gear being more close to the bot level.
+#        Default: 10 (bots will equip gear down to a minimum of 10 item level difference)
+#
+#    BattleBot.AutoEquip
+#        What gear will new battlebots spawn with.
+#        Default: 1 (random items)
+#                 0 (normal starting items)
+#                 2 (premade gear template)
+#
+###################################################################################################################
+RandomBot.Enable = 0
+RandomBot.MinBots = 0
+RandomBot.MaxBots = 0
+RandomBot.Refresh = 60000
+
+PlayerBot.AllowSaving = 0
+PlayerBot.Debug = 0
+PlayerBot.UpdateMs = 1000
+PlayerBot.ShowInWhoList = 0
+
+PartyBot.MaxBots = 0
+PartyBot.SkipChecks = 0
+PartyBot.AutoEquip = 1
+PartyBot.RandomGearLevelDifference = 10
+
+BattleBot.AutoEquip = 1

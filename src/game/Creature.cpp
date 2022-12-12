@@ -1,7 +1,7 @@
 /*
  * Copyright (C) 2005-2008 MaNGOS <http://getmangos.com/>
  * Copyright (C) 2008 TrinityCore <http://www.trinitycore.org/>
- * Copyright (C) 2008-2014 Hellground <http://hellground.net/>
+ * Copyright (C) 2008-2017 Hellground <http://wow-hellground.com/>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -164,9 +164,6 @@ m_tempSummon(false)
     for (int i =0; i < CREATURE_MAX_SPELLS; ++i)
         m_spells[i] = 0;
 
-    m_CreatureSpellCooldowns.clear();
-    m_CreatureCategoryCooldowns.clear();
-
     DisableReputationGain = false;
 }
 
@@ -193,6 +190,7 @@ void Creature::AddToWorld()
         Unit::AddToWorld();
         SearchFormation();
         AIM_Initialize();
+        UpdateVisibilityAndView();
 
         if (m_zoneScript)
             m_zoneScript->OnCreatureCreate(this, true);
@@ -218,7 +216,7 @@ void Creature::RemoveFromWorld()
 void Creature::DisappearAndDie()
 {
     DestroyForNearbyPlayers();
-    if (isAlive())
+    if (IsAlive())
         setDeathState(JUST_DIED);
     RemoveCorpse();
 }
@@ -240,7 +238,7 @@ void Creature::SearchFormation()
 
 void Creature::RemoveCorpse()
 {
-    if (getDeathState()!=CORPSE && !m_isDeadByDefault || getDeathState()!=ALIVE && m_isDeadByDefault)
+    if (GetDeathState()!=CORPSE && !m_isDeadByDefault || GetDeathState()!=ALIVE && m_isDeadByDefault)
         return;
 
     setDeathState(DEAD);
@@ -248,12 +246,21 @@ void Creature::RemoveCorpse()
 
     m_deathTimer = 0;
     loot.clear();
-    m_respawnTime = time(NULL) + m_respawnDelay;
+    // hack for quick respawns 
+    if (sWorld.GetActiveSessionCount() > 2000 && GetLevel() <= 50 && GetInstanceId() == 0 &&
+        m_respawnDelay <= 600)
+    {
+        uint32 delay = std::min(m_respawnDelay, (30 + GetLevel() * 9));
+        m_respawnTime = time(NULL) + delay;
+    }
+    else
+        m_respawnTime = time(NULL) + m_respawnDelay;
 
     float x,y,z,o;
     GetRespawnCoord(x, y, z, &o);
     SetHomePosition(x,y,z,o);
-    Relocate(x,y,z,o);
+    GetMap()->CreatureRelocation(this, x, y, z, o);
+    //Relocate(x,y,z,o);
 }
 
 /**
@@ -510,14 +517,10 @@ void Creature::Update(uint32 update_diff, uint32 diff)
             if (m_isDeadByDefault)
                 break;
 
-            if (m_deathTimer <= update_diff)
+            if (m_deathTimer <= time(NULL))
             {
                 RemoveCorpse();
                 DEBUG_LOG("Removing corpse... %u ", GetUInt32Value(OBJECT_FIELD_ENTRY));
-            }
-            else
-            {
-                m_deathTimer -= update_diff;
             }
 
             if (loot.looterTimer && loot.looterTimer < time(NULL))
@@ -547,14 +550,10 @@ void Creature::Update(uint32 update_diff, uint32 diff)
         {
             if (m_isDeadByDefault)
             {
-                if (m_deathTimer <= update_diff)
+                if (m_deathTimer <= time(NULL))
                 {
                     RemoveCorpse();
                     DEBUG_LOG("Removing alive corpse... %u ", GetUInt32Value(OBJECT_FIELD_ENTRY));
-                }
-                else
-                {
-                    m_deathTimer -= update_diff;
                 }
             }
 
@@ -562,7 +561,7 @@ void Creature::Update(uint32 update_diff, uint32 diff)
 
             // creature can be dead after Unit::Update call
             // CORPSE/DEAD state will processed at next tick (in other case death timer will be updated unexpectedly)
-            if (!isAlive())
+            if (!IsAlive())
                 break;
 
             // if creature is charmed, switch to charmed AI
@@ -586,14 +585,16 @@ void Creature::Update(uint32 update_diff, uint32 diff)
             {
                 // do not allow the AI to be changed during update
                 m_AI_locked = true;
-                i_AI->UpdateAI(diff);
+                i_AI->UpdateAI(update_diff);
                 m_AI_locked = false;
             }
 
-            // creature can be dead after UpdateAI call
+            // Trentone says: Some scripts make creatures kill themself - and then they're not in combat - thus dynamicflags are set to normal - which should not happen
+            // creature can be dead after UpdateAI call (example: Kalecgos / Illidan)
             // CORPSE/DEAD state will processed at next tick (in other case death timer will be updated unexpectedly)
-            if (!isAlive())
+            if (!IsAlive())
                 break;
+
             if (m_regenTimer > 0)
             {
                 if (update_diff >= m_regenTimer)
@@ -605,7 +606,7 @@ void Creature::Update(uint32 update_diff, uint32 diff)
             if (m_regenTimer != 0)
                 break;
 
-            if (!isInCombat())
+            if (!IsInCombat())
             {
                 if (HasFlag(UNIT_DYNAMIC_FLAGS, UNIT_DYNFLAG_OTHER_TAGGER))
                     SetUInt32Value(UNIT_DYNAMIC_FLAGS, GetCreatureInfo()->dynamicflags);
@@ -613,7 +614,7 @@ void Creature::Update(uint32 update_diff, uint32 diff)
                 RegenerateHealth();
             }
             else if (IsPolymorphed())
-                    RegenerateHealth();
+                RegenerateHealth();
 
             RegenerateMana();
 
@@ -626,13 +627,16 @@ void Creature::Update(uint32 update_diff, uint32 diff)
 
     if (m_aiReinitializeCheckTimer <= update_diff)
     {
-        if (!isInCombat() && !IsInEvadeMode() && !isCharmed() && m_aiInitializeTime < CreatureAIReInitialize[GetEntry()])
+        if (!IsInCombat() && !IsInEvadeMode() && !isCharmed() && m_aiInitializeTime < CreatureAIReInitialize[GetEntry()])
             AIM_Initialize();
 
         m_aiReinitializeCheckTimer = 10000;
     }
     else
         m_aiReinitializeCheckTimer -= update_diff;
+
+    for (uint8 i = SPELL_SCHOOL_NORMAL; i < MAX_SPELL_SCHOOL; i++)
+        m_schoolCooldowns[i].Update(update_diff);
 }
 
 void Creature::RegenerateMana()
@@ -649,7 +653,7 @@ void Creature::RegenerateMana()
     uint32 addvalue = 0;
 
     // Combat and any controlled creature
-    if (isInCombat() || GetCharmerOrOwnerGUID())
+    if (IsInCombat() || GetCharmerOrOwnerGUID())
     {
         if (!IsUnderLastManaUseEffect())
         {
@@ -783,7 +787,7 @@ bool Creature::isCanTrainingOf(Player* pPlayer, bool msg) const
     switch (GetCreatureInfo()->trainer_type)
     {
         case TRAINER_TYPE_CLASS:
-            if (pPlayer->getClass()!=GetCreatureInfo()->classNum)
+            if (pPlayer->GetClass()!=GetCreatureInfo()->classNum)
             {
                 if (msg)
                 {
@@ -805,7 +809,7 @@ bool Creature::isCanTrainingOf(Player* pPlayer, bool msg) const
             }
             break;
         case TRAINER_TYPE_PETS:
-            if (pPlayer->getClass()!=CLASS_HUNTER)
+            if (pPlayer->GetClass()!=CLASS_HUNTER)
             {
                 pPlayer->PlayerTalkClass->ClearMenus();
                 pPlayer->PlayerTalkClass->SendGossipMenu(3620,GetGUID());
@@ -813,7 +817,7 @@ bool Creature::isCanTrainingOf(Player* pPlayer, bool msg) const
             }
             break;
         case TRAINER_TYPE_MOUNTS:
-            if (GetCreatureInfo()->race && pPlayer->getRace() != GetCreatureInfo()->race)
+            if (GetCreatureInfo()->race && pPlayer->GetRace() != GetCreatureInfo()->race)
             {
                 if (msg)
                 {
@@ -883,9 +887,9 @@ bool Creature::isCanInteractWithBattleMaster(Player* pPlayer, bool msg) const
 
 bool Creature::isCanTrainingAndResetTalentsOf(Player* pPlayer) const
 {
-    return pPlayer->getLevel() >= 10
+    return pPlayer->GetLevel() >= 10
         && GetCreatureInfo()->trainer_type == TRAINER_TYPE_CLASS
-        && pPlayer->getClass() == GetCreatureInfo()->classNum;
+        && pPlayer->GetClass() == GetCreatureInfo()->classNum;
 }
 
 void Creature::prepareGossipMenu(Player *pPlayer,uint32 gossipid)
@@ -932,7 +936,7 @@ void Creature::prepareGossipMenu(Player *pPlayer,uint32 gossipid)
                         cantalking=false;                   // added in special mode
                         break;
                     case GOSSIP_OPTION_SPIRITHEALER:
-                        if (!pPlayer->isDead())
+                        if (!pPlayer->IsDead())
                             cantalking=false;
                         break;
                     case GOSSIP_OPTION_VENDOR:
@@ -951,6 +955,7 @@ void Creature::prepareGossipMenu(Player *pPlayer,uint32 gossipid)
                             cantalking=false;
                         break;
                     case GOSSIP_OPTION_UNLEARNTALENTS:
+                    case GOSSIP_OPTION_BUY_FREE_RESPEC:
                         if (!isCanTrainingAndResetTalentsOf(pPlayer))
                             cantalking=false;
                         break;
@@ -987,21 +992,8 @@ void Creature::prepareGossipMenu(Player *pPlayer,uint32 gossipid)
             //note for future dev: should have database fields for BoxMessage & BoxMoney
             if (!gso->OptionText.empty() && cantalking)
             {
-                std::string OptionText = gso->OptionText;
-                std::string BoxText = gso->BoxText;
-                int loc_idx = pPlayer->GetSession()->GetSessionDbLocaleIndex();
-                if (loc_idx >= 0)
-                {
-                    NpcOptionLocale const *no = sObjectMgr.GetNpcOptionLocale(gso->Id);
-                    if (no)
-                    {
-                        if (no->OptionText.size() > loc_idx && !no->OptionText[loc_idx].empty())
-                            OptionText=no->OptionText[loc_idx];
-                        if (no->BoxText.size() > loc_idx && !no->BoxText[loc_idx].empty())
-                            BoxText=no->BoxText[loc_idx];
-                    }
-                }
-                pm->GetGossipMenu().AddMenuItem((uint8)gso->Icon,OptionText, gossipid,gso->Action,BoxText,gso->BoxMoney,gso->Coded);
+                pm->GetGossipMenu().AddMenuItem((uint8)gso->Icon,gso->OptionText, gossipid,
+                    gso->Action,gso->BoxText,gso->BoxMoney,gso->Coded);
             }
         }
     }
@@ -1080,7 +1072,7 @@ void Creature::OnGossipSelect(Player* player, uint32 option)
             sOutdoorPvPMgr.HandleGossipOption(player, GetGUID(), option);
             break;
         case GOSSIP_OPTION_SPIRITHEALER:
-            if (player->isDead())
+            if (player->IsDead())
                 CastSpell(this,17251,true,NULL,NULL,player->GetGUID());
             break;
         case GOSSIP_OPTION_QUESTGIVER:
@@ -1138,6 +1130,9 @@ void Creature::OnGossipSelect(Player* player, uint32 option)
             player->GetSession()->SendBattlegGroundList(ObjectGuid(GetGUID()), bgTypeId);
             break;
         }
+        case GOSSIP_OPTION_BUY_FREE_RESPEC:
+            player->buyFreeRespec();
+            break;
         default:
             OnPoiSelect(player, gossip);
             break;
@@ -1421,11 +1416,8 @@ void Creature::SelectLevel(const CreatureInfo *cinfo)
     SetBaseWeaponDamage(RANGED_ATTACK, MINDAMAGE, cinfo->minrangedmg * damagemod);
     SetBaseWeaponDamage(RANGED_ATTACK, MAXDAMAGE, cinfo->maxrangedmg * damagemod);
 
-    // this value is not accurate, but should be close to the real value
     SetModifierValue(UNIT_MOD_ATTACK_POWER, BASE_VALUE, level * 5);
     SetModifierValue(UNIT_MOD_ATTACK_POWER_RANGED, BASE_VALUE, level * 5);
-    //SetModifierValue(UNIT_MOD_ATTACK_POWER, BASE_VALUE, cinfo->attackpower * damagemod);
-    //SetModifierValue(UNIT_MOD_ATTACK_POWER_RANGED, BASE_VALUE, cinfo->rangedattackpower * damagemod);
 }
 
 float Creature::_GetHealthMod(int32 Rank)
@@ -1576,7 +1568,7 @@ bool Creature::LoadFromDB(uint32 guid, Map *map)
     m_creatureData = data;
 
     // check if it is rabbit day
-    if (isAlive() && sWorld.getConfig(CONFIG_RABBIT_DAY))
+    if (IsAlive() && sWorld.getConfig(CONFIG_RABBIT_DAY))
     {
         time_t rabbit_day = time_t(sWorld.getConfig(CONFIG_RABBIT_DAY));
         tm rabbit_day_tm = *localtime(&rabbit_day);
@@ -1613,6 +1605,10 @@ void Creature::LoadEquipment(uint32 equip_entry, bool force)
     m_equipmentId = equip_entry;
     for (uint8 i = 0; i < 3; i++)
     {
+        // most possibly equipslot 0x000000(sheath) equipinfo 0x(inventorytype)(material)(subclass)(class)
+        // usualy used values like 0x00000003 0x01FF????
+        // for weapon to be shown properly it is enough to set class (slot 0x0  info 0x2)
+        // for shield slot 0xE info 0x4
         SetUInt32Value(UNIT_VIRTUAL_ITEM_SLOT_DISPLAY + i, einfo->equipmodel[i]);
         SetUInt32Value(UNIT_VIRTUAL_ITEM_INFO + (i * 2), einfo->equipinfo[i]);
         SetUInt32Value(UNIT_VIRTUAL_ITEM_INFO + (i * 2) + 1, einfo->equipslot[i]);
@@ -1639,6 +1635,14 @@ bool Creature::hasInvolvedQuest(uint32 quest_id) const
             return true;
     }
     return false;
+}
+
+void Creature::SetLastHitPos(WorldLocation wl)
+{
+    float sqdis = (homeLocation.coord_x - wl.coord_x)*(homeLocation.coord_x - wl.coord_x);
+    sqdis += (homeLocation.coord_y - wl.coord_y)*(homeLocation.coord_y - wl.coord_y);
+    if (sqdis < sWorld.getConfig(CONFIG_EVADE_HOMEDIST)*sWorld.getConfig(CONFIG_EVADE_HOMEDIST))
+        lastHitPos = wl;
 }
 
 void Creature::DeleteFromDB()
@@ -1679,7 +1683,7 @@ bool Creature::canSeeOrDetect(Unit const* u, WorldObject const* viewPoint, bool 
         return false;
 
     // all dead creatures/players not visible for any creatures
-    if (!u->isAlive() || !isAlive())
+    if (!u->IsAlive() || !IsAlive())
         return false;
 
     // Always can see self
@@ -1697,7 +1701,7 @@ bool Creature::canSeeOrDetect(Unit const* u, WorldObject const* viewPoint, bool 
         return false;
 
     // invisible aura
-    if ((m_invisibilityMask || u->m_invisibilityMask) && !canDetectInvisibilityOf(u, viewPoint))
+    if ((m_invisibilityMask || u->m_invisibilityMask) && !canDetectInvisibilityOf(u) && !u->canDetectInvisibilityOf(this))
         return false;
 
     // unit got in stealth in this moment and must ignore old detected state
@@ -1708,7 +1712,7 @@ bool Creature::canSeeOrDetect(Unit const* u, WorldObject const* viewPoint, bool 
     if (u->GetVisibility() == VISIBILITY_GROUP_STEALTH)
     {
         //do not know what is the use of this detect
-        if (!detect || !canDetectStealthOf(u, viewPoint, viewPoint->GetDistance(u)))
+        if (!detect || !canDetectStealthOf(u, viewPoint))
             return false;
     }
 
@@ -1796,12 +1800,12 @@ void Creature::setDeathState(DeathState s)
 {
     if ((s == JUST_DIED && !m_isDeadByDefault)||(s == JUST_ALIVED && m_isDeadByDefault))
     {
-        m_deathTimer = m_corpseDelay*IN_MILISECONDS;
+        m_deathTimer = time(NULL)+m_corpseDelay;
 
         // if no loot in DB, remove corpse quickly (20 sec ?)
         CreatureInfo const* cInfo = GetCreatureInfo();
         if (cInfo && !cInfo->lootid && !(cInfo->mingold || cInfo->maxgold) && !isWorldBoss())
-            m_deathTimer = 20*IN_MILISECONDS;
+            m_deathTimer = time(NULL)+20;
 
         // always save boss respawn time at death to prevent crash cheating
         if (sWorld.getConfig(CONFIG_SAVE_RESPAWN_TIME_IMMEDIATELY) || isWorldBoss())
@@ -1836,7 +1840,7 @@ void Creature::setDeathState(DeathState s)
         if (!loot.empty())
         {
             // Loot is filled in Unit:Kill, here we just do some additional work
-            loot.looterTimer = time(NULL) + (m_deathTimer * 3 / 4 / IN_MILISECONDS);
+            loot.looterTimer = time(NULL)/4 + m_deathTimer *3/4;
             loot.looterCheckTimer = time(NULL) + 1;
             if (GetLootRecipient() && GetLootRecipient()->GetGroup())
                 GetLootRecipient()->GetGroup()->SendRoundRobin(&loot, this);
@@ -1859,8 +1863,9 @@ void Creature::setDeathState(DeathState s)
         SetWalk(true);
 
         SetUInt32Value(UNIT_NPC_FLAGS, cinfo->npcflag);
+        SetUInt32Value(UNIT_FIELD_FLAGS, cinfo->unit_flags);
 
-        clearUnitState(UNIT_STAT_ALL_STATE);
+        ClearUnitState(UNIT_STAT_ALL_STATE);
         GetMotionMaster()->Initialize();
 
         SetMeleeDamageSchool(SpellSchools(cinfo->dmgschool));
@@ -1878,9 +1883,8 @@ void Creature::Respawn()
     // forced recreate creature object at clients
     UnitVisibility currentVis = GetVisibility();
     SetVisibility(VISIBILITY_RESPAWN);
-    SetVisibility(currentVis);                              // restore visibility state
 
-    if (getDeathState()==DEAD)
+    if (GetDeathState()==DEAD)
     {
         if (m_DBTableGuid)
             sObjectMgr.SaveCreatureRespawnTime(m_DBTableGuid,GetInstanceId(),0);
@@ -1901,7 +1905,7 @@ void Creature::Respawn()
             setDeathState(JUST_DIED);
             SetHealth(0);
             GetUnitStateMgr().InitDefaults(true);
-            clearUnitState(UNIT_STAT_ALL_STATE);
+            ClearUnitState(UNIT_STAT_ALL_STATE);
             LoadCreaturesAddon(true);
         }
         else
@@ -1910,13 +1914,10 @@ void Creature::Respawn()
         //Call AI respawn virtual function
         AI()->Reset();
         AI()->JustRespawned();
-
-        //GetMap()->Add(this);
-        uint16 poolid = sPoolMgr.IsPartOfAPool<Creature>(GetGUIDLow());
-        if (poolid)
-            sPoolMgr.UpdatePool<Creature>(poolid, GetGUIDLow());
     }
+    SetVisibility(currentVis);                              // restore visibility state
 
+    SendHeartBeat();
     SendMonsterStop();
 }
 
@@ -1926,11 +1927,11 @@ void Creature::ForcedDespawn(uint32 timeMSToDespawn)
     {
         ForcedDespawnDelayEvent *pEvent = new ForcedDespawnDelayEvent(*this);
 
-        m_Events.AddEvent(pEvent, m_Events.CalculateTime(timeMSToDespawn));
+        AddEvent(pEvent, timeMSToDespawn, true);
         return;
     }
 
-    if (isAlive())
+    if (IsAlive())
         setDeathState(JUST_DIED);
 
     RemoveCorpse();
@@ -1954,6 +1955,27 @@ bool Creature::IsImmunedToSpellEffect(uint32 effect, uint32 mechanic) const
         return true;
 
     return Unit::IsImmunedToSpellEffect(effect, mechanic);
+}
+
+void Creature::ProhibitSpellSchool(SpellSchoolMask idSchoolMask, uint32 unTimeMs)
+{
+    for (uint8 i = SPELL_SCHOOL_NORMAL; i < MAX_SPELL_SCHOOL; i++)
+    {
+        if (idSchoolMask & (1 << i) && m_schoolCooldowns[i].GetExpiry() < unTimeMs)
+            m_schoolCooldowns[i].Reset(unTimeMs);
+    }
+}
+
+bool Creature::isSchoolProhibited(SpellSchoolMask idSchoolMask) const
+{
+    if (idSchoolMask == SPELL_SCHOOL_MASK_NONE)
+        return false;
+    for (uint8 i = SPELL_SCHOOL_NORMAL; i < MAX_SPELL_SCHOOL; i++)
+    {
+        if (idSchoolMask & (1 << i) && !m_schoolCooldowns[i].Passed())
+            return true;
+    }
+    return false;
 }
 
 SpellEntry const *Creature::reachWithSpellAttack(Unit *pVictim)
@@ -2055,15 +2077,15 @@ SpellEntry const *Creature::reachWithSpellCure(Unit *pVictim)
 bool Creature::IsVisibleInGridForPlayer(Player const* pl) const
 {
     // gamemaster in GM mode see all, including ghosts
-    if (pl->isGameMaster())
+    if (pl->IsGameMaster())
         return true;
 
     // Live player (or with not release body see live creatures or death creatures with corpse disappearing time > 0
-    if (pl->isAlive() || pl->GetDeathTimer() > 0)
+    if (pl->IsAlive() || pl->GetDeathTimer() > 0)
     {
-        if (GetEntry() == VISUAL_WAYPOINT && !pl->isGameMaster())
+        if (GetEntry() == VISUAL_WAYPOINT && !pl->IsGameMaster())
             return false;
-        return isAlive() || m_deathTimer > 0 || m_isDeadByDefault && m_deathState==CORPSE;
+        return IsAlive() || (m_deathTimer > time(NULL)) || m_isDeadByDefault && m_deathState==CORPSE;
     }
 
     // Dead player see creatures near own corpse
@@ -2089,10 +2111,10 @@ bool Creature::IsVisibleInGridForPlayer(Player const* pl) const
 
 void Creature::DoFleeToGetAssistance()
 {
-    if (!getVictim())
+    if (!GetVictim())
         return;
 
-    if (HasAuraType(SPELL_AURA_PREVENTS_FLEEING) || hasUnitState(UNIT_STAT_NOT_MOVE))
+    if (HasAuraType(SPELL_AURA_PREVENTS_FLEEING) || HasUnitState(UNIT_STAT_NOT_MOVE))
         return;
 
     float radius = sWorld.getConfig(CONFIG_CREATURE_FAMILY_FLEE_RADIUS);
@@ -2100,7 +2122,7 @@ void Creature::DoFleeToGetAssistance()
     {
         Creature* pCreature = NULL;
 
-        Hellground::NearestAssistCreatureInCreatureRangeCheck u_check(this, getVictim(), radius);
+        Hellground::NearestAssistCreatureInCreatureRangeCheck u_check(this, GetVictim(), radius);
         Hellground::ObjectLastSearcher<Creature, Hellground::NearestAssistCreatureInCreatureRangeCheck> searcher(pCreature, u_check);
 
         Cell::VisitGridObjects(this, searcher, radius);
@@ -2109,7 +2131,7 @@ void Creature::DoFleeToGetAssistance()
         UpdateSpeed(MOVE_RUN, false);
 
         if (!pCreature)
-            SetFeared(true, getVictim(), sWorld.getConfig(CONFIG_CREATURE_FAMILY_FLEE_DELAY));
+            SetFeared(true, GetVictim(), sWorld.getConfig(CONFIG_CREATURE_FAMILY_FLEE_DELAY));
         else
             GetMotionMaster()->MoveSeekAssistance(pCreature->GetPositionX(), pCreature->GetPositionY(), pCreature->GetPositionZ());
     }
@@ -2130,12 +2152,12 @@ Unit* Creature::SelectNearestTarget(float dist) const
 
 void Creature::CallAssistance()
 {
-    if (!getVictim() || isPet() || isCharmed())
+    if (!GetVictim() || isPet() || isCharmed())
         return;
 
     if (CreatureGroup *formation = GetFormation())
     {
-        formation->MemberAttackStart(this, getVictim());
+        formation->MemberAttackStart(this, GetVictim());
     }
     else
     {
@@ -2149,7 +2171,7 @@ void Creature::CallAssistance()
         {
             std::list<Creature*> assistList;
             {
-                Hellground::AnyAssistCreatureInRangeCheck u_check(this, getVictim(), radius);
+                Hellground::AnyAssistCreatureInRangeCheck u_check(this, GetVictim(), radius);
                 Hellground::ObjectListSearcher<Creature, Hellground::AnyAssistCreatureInRangeCheck> searcher(assistList, u_check);
 
                 Cell::VisitGridObjects(this, searcher, radius);
@@ -2164,7 +2186,7 @@ void Creature::CallAssistance()
                     e->AddAssistant((*assistList.begin())->GetGUID());
                     assistList.pop_front();
                 }
-                m_Events.AddEvent(e, m_Events.CalculateTime(sWorld.getConfig(CONFIG_CREATURE_FAMILY_ASSISTANCE_DELAY)));
+                AddEvent(e, sWorld.getConfig(CONFIG_CREATURE_FAMILY_ASSISTANCE_DELAY), true);
             }
         }
     }
@@ -2172,10 +2194,10 @@ void Creature::CallAssistance()
 
 void Creature::CallForHelp(float fRadius)
 {
-    if (fRadius <= 0.0f || !getVictim() || isPet() || isCharmed())
+    if (fRadius <= 0.0f || !GetVictim() || isPet() || isCharmed())
         return;
 
-    Hellground::CallOfHelpCreatureInRangeDo u_do(this, getVictim(), fRadius);
+    Hellground::CallOfHelpCreatureInRangeDo u_do(this, GetVictim(), fRadius);
     Hellground::ObjectWorker<Creature, Hellground::CallOfHelpCreatureInRangeDo> worker(u_do);
 
     Cell::VisitGridObjects(this, worker, fRadius);
@@ -2188,11 +2210,11 @@ bool Creature::CanAssistTo(const Unit* u, const Unit* enemy, bool checkfaction /
         return false;
 
     // we don't need help from zombies :)
-    if (!isAlive())
+    if (!IsAlive())
         return false;
 
     // skip fighting creature
-    if (isInCombat())
+    if (IsInCombat())
         return false;
 
     // only from same creature faction
@@ -2225,8 +2247,8 @@ void Creature::SaveRespawnTime()
 
     if (m_respawnTime > time(NULL))                          // dead (no corpse)
         sObjectMgr.SaveCreatureRespawnTime(m_DBTableGuid,GetInstanceId(),m_respawnTime);
-    else if (m_deathTimer > 0)                               // dead (corpse)
-        sObjectMgr.SaveCreatureRespawnTime(m_DBTableGuid,GetInstanceId(),time(NULL)+m_respawnDelay+m_deathTimer/1000);
+    else if (m_deathTimer > time(NULL))                               // dead (corpse)
+        sObjectMgr.SaveCreatureRespawnTime(m_DBTableGuid,GetInstanceId(),m_respawnDelay+m_deathTimer);
 }
 
 bool Creature::IsOutOfThreatArea(Unit* pVictim) const
@@ -2251,16 +2273,21 @@ bool Creature::IsOutOfThreatArea(Unit* pVictim) const
     uint32 distToHome = std::max(AttackDist, sWorld.getConfig(CONFIG_EVADE_HOMEDIST));
     uint32 distToTarget = std::max(AttackDist, sWorld.getConfig(CONFIG_EVADE_TARGETDIST));
 
-    if (!IsWithinDistInMap(&homeLocation, distToHome))
+    //if (pVictim->GetPet() && !IsOutOfThreatArea(pVictim->GetPet()))
+    //    return false; tanking with pet at mobs max range
+    if (pVictim->GetCharm() && !IsOutOfThreatArea(pVictim->GetCharm()))
+        return false;
+
+    if (!IsWithinDistInMap(&lastHitPos, distToHome))
         return true;
 
     if (!IsWithinDistInMap(pVictim, distToTarget))
         return true;
 
-    if (!pVictim->IsWithinDistInMap(&homeLocation, distToHome))
+    if (!pVictim->IsWithinDistInMap(&lastHitPos, distToHome) && !pVictim->IsWithinDistInMap(&homeLocation, distToHome))
         return true;
 
-    return  false;
+    return false;
 }
 
 CreatureDataAddon const* Creature::GetCreatureAddon() const
@@ -2367,68 +2394,16 @@ void Creature::SetInCombatWithZone()
     {
         if (Player* pPlayer = i->getSource())
         {
-            if (pPlayer->isGameMaster())
+            if (pPlayer->IsGameMaster())
                 continue;
 
-            if (pPlayer->isAlive())
+            if (pPlayer->IsAlive())
             {
                 pPlayer->SetInCombatWith(this);
                 AddThreat(pPlayer, 0.0f);
             }
         }
     }
-}
-
-void Creature::_AddCreatureSpellCooldown(uint32 spell_id, time_t end_time)
-{
-    m_CreatureSpellCooldowns[spell_id] = end_time;
-}
-
-void Creature::_AddCreatureCategoryCooldown(uint32 category, time_t end_time)
-{
-    m_CreatureCategoryCooldowns[category] = end_time;
-}
-
-void Creature::AddCreatureSpellCooldown(uint32 spellid)
-{
-    SpellEntry const *spellInfo = sSpellStore.LookupEntry(spellid);
-    if (!spellInfo)
-        return;
-
-    uint32 cooldown = SpellMgr::GetSpellRecoveryTime(spellInfo);
-    uint32 CategoryCooldown = spellInfo->CategoryRecoveryTime;
-
-    if (isPet())
-        if (Unit* Owner = GetOwner())
-            if (Owner->GetTypeId() == TYPEID_PLAYER)
-            {
-                Owner->ToPlayer()->ApplySpellMod(spellid, SPELLMOD_COOLDOWN, CategoryCooldown);
-                if (CategoryCooldown < 0)
-                    CategoryCooldown = 0;
-                cooldown = CategoryCooldown;
-            }
-
-     if (cooldown)
-         _AddCreatureSpellCooldown(spellid, time(NULL) + cooldown/1000);
-
-     if (spellInfo->Category && CategoryCooldown)
-         _AddCreatureCategoryCooldown(spellInfo->Category, time(NULL) + CategoryCooldown/1000);
-}
-
-bool Creature::HasCategoryCooldown(uint32 spell_id) const
-{
-    SpellEntry const *spellInfo = sSpellStore.LookupEntry(spell_id);
-    if (!spellInfo)
-        return false;
-
-    CreatureSpellCooldowns::const_iterator itr = m_CreatureCategoryCooldowns.find(spellInfo->Category);
-    return(itr != m_CreatureCategoryCooldowns.end() && itr->second > time(NULL));
-}
-
-bool Creature::HasSpellCooldown(uint32 spell_id) const
-{
-    CreatureSpellCooldowns::const_iterator itr = m_CreatureSpellCooldowns.find(spell_id);
-    return (itr != m_CreatureSpellCooldowns.end() && itr->second > time(NULL)) || HasCategoryCooldown(spell_id);
 }
 
 bool Creature::IsInEvadeMode() const
@@ -2471,8 +2446,8 @@ time_t Creature::GetRespawnTimeEx() const
     time_t now = time(NULL);
     if (m_respawnTime > now)                                 // dead (no corpse)
         return m_respawnTime;
-    else if (m_deathTimer > 0)                               // dead (corpse)
-        return now+m_respawnDelay+m_deathTimer/1000;
+    else if (m_deathTimer > now)                               // dead (corpse)
+        return m_respawnDelay+m_deathTimer;
     else
         return now;
 }
@@ -2520,14 +2495,15 @@ void Creature::AllLootRemovedFromCorpse()
 
         // corpse was not skinnable -> apply corpse looted timer
         if (!cinfo || !cinfo->SkinLootId)
-            nDeathTimer = (uint32)((m_corpseDelay * 1000) * sWorld.getConfig(RATE_CORPSE_DECAY_LOOTED));
+            nDeathTimer = std::max<uint32>(
+                (uint32)(m_corpseDelay * sWorld.getConfig(RATE_CORPSE_DECAY_LOOTED)),uint32(20));
         // corpse skinnable, but without skinning flag, and then skinned, corpse will despawn next update
         else
             nDeathTimer = 0;
 
         // update death timer only if looted timer is shorter
-        if (m_deathTimer > nDeathTimer)
-            m_deathTimer = nDeathTimer;
+        if ((m_deathTimer - time(NULL)) > nDeathTimer)
+            m_deathTimer = time(NULL) + nDeathTimer;
     }
 }
 
@@ -2536,7 +2512,7 @@ uint32 Creature::getLevelForTarget(Unit const* target) const
     if (!isWorldBoss())
         return Unit::getLevelForTarget(target);
 
-    uint32 level = target->getLevel()+sWorld.getConfig(CONFIG_WORLD_BOSS_LEVEL_DIFF);
+    uint32 level = target->GetLevel()+sWorld.getConfig(CONFIG_WORLD_BOSS_LEVEL_DIFF);
     if (level < 1)
         return 1;
     if (level > 255)
@@ -2641,14 +2617,6 @@ TrainerSpellData const* Creature::GetTrainerSpells() const
     return sObjectMgr.GetNpcTrainerSpells(GetEntry());
 }
 
-// overwrite WorldObject function for proper name localization
-const char* Creature::GetNameForLocaleIdx(int32 loc_idx) const
-{
-    char const* name = GetName();
-    sObjectMgr.GetCreatureLocaleStrings(GetEntry(), loc_idx, &name);
-    return name;
-}
-
 const CreatureData* Creature::GetLinkedRespawnCreatureData() const
 {
     if (!m_DBTableGuid) // only hard-spawned creatures from DB can have a linked master
@@ -2705,7 +2673,7 @@ void Creature::SetLevitate(bool enable)
     else
     {
         RemoveUnitMovementFlag(MOVEFLAG_LEVITATING);
-        clearUnitState(UNIT_STAT_IGNORE_PATHFINDING);
+        ClearUnitState(UNIT_STAT_IGNORE_PATHFINDING);
     }
 
     WorldPacket data(enable ? SMSG_SPLINE_MOVE_SET_FLYING : SMSG_SPLINE_MOVE_UNSET_FLYING, 9);
@@ -2735,13 +2703,13 @@ bool Creature::CanFly() const
 
 bool AttackResumeEvent::Execute(uint64 /*e_time*/, uint32 /*p_time*/)
 {
-    if (!m_owner.isAlive())
+    if (!m_owner.IsAlive())
         return true;
 
-    if (m_owner.hasUnitState(UNIT_STAT_CAN_NOT_REACT) || m_owner.HasFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_PACIFIED))
+    if (m_owner.HasUnitState(UNIT_STAT_CAN_NOT_REACT) || m_owner.HasFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_PACIFIED))
         return true;
 
-    Unit* victim = m_owner.getVictim();
+    Unit* victim = m_owner.GetVictim();
     if (!victim || !victim->IsInMap(&m_owner))
         return true;
 
@@ -2764,6 +2732,8 @@ bool AttackResumeEvent::Execute(uint64 /*e_time*/, uint32 /*p_time*/)
         case HIGHGUID_PLAYER:
             if (m_owner.IsAIEnabled)
                 m_owner.ToPlayer()->AI()->AttackStart(victim);
+            else if (m_owner.canAttack(victim))
+                m_owner.Attack(victim, true);
             break;
         default:
             sLog.outLog(LOG_DEFAULT, "ERROR: AttackResumeEvent::Execute try execute for unsupported owner %s!", m_owner.GetObjectGuid().GetString().c_str());
@@ -2788,7 +2758,7 @@ bool RestoreReactState::Execute(uint64 e_time, uint32 p_time)
     if (_owner.ToPet())
         return true;
 
-    _owner.clearUnitState(UNIT_STAT_IGNORE_ATTACKERS);
+    _owner.ClearUnitState(UNIT_STAT_IGNORE_ATTACKERS);
     _owner.SetReactState(_oldState);
     return true;
 }

@@ -1,7 +1,7 @@
 /*
  * Copyright (C) 2005-2009 MaNGOS <http://getmangos.com/>
  * Copyright (C) 2008-2010 TrinityCore <http://www.trinitycore.org/>
- * Copyright (C) 2008-2014 Hellground <http://hellground.net/>
+ * Copyright (C) 2008-2015 Hellground <http://hellground.net/>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -72,7 +72,7 @@
 #   pragma warning(disable:4311)                            // 'variable' : pointer truncation from 'type' to 'type'
 #   pragma warning(disable:4355)                            // 'this' : used in base member initializer list
 #   pragma warning(disable:4800)                            // 'type' : forcing value to bool 'true' or 'false' (performance warning)
-#   pragma warning(disable:4522)                            //warning when class has 2 constructors
+#   pragma warning(disable:4522)                            // warning when class has 2 constructors
 #endif                                                      // __SHOW_STUPID_WARNINGS__
 #endif                                                      // __GNUC__
 
@@ -131,7 +131,7 @@
 
 #define I32FMT "%08I32X"
 #define I64FMT "%016I64X"
-#define snprintf _snprintf
+//#define snprintf _snprintf
 #define atoll __atoi64
 #define vsnprintf _vsnprintf
 #define finite(X) _finite(X)
@@ -167,7 +167,7 @@ enum TimeConstants
     WEEK   = DAY*7,
     MONTH  = DAY*30,
     YEAR   = MONTH*12,
-    IN_MILISECONDS = 1000
+    IN_MILISECONDS = 1000,
 };
 
 enum AccountPermissionMasks
@@ -284,6 +284,10 @@ enum RunModes
 #define M_PI            3.14159265358979323846
 #endif
 
+#ifndef M_PI_F
+#define M_PI_F          float(M_PI)
+#endif
+
 // used for creating values for respawn for example
 #define MAKE_PAIR64(l, h)  uint64(uint32(l) | (uint64(h) << 32))
 #define PAIR64_HIPART(x)   (uint32)((uint64(x) >> 32) & UI64LIT(0x00000000FFFFFFFF))
@@ -292,11 +296,5 @@ enum RunModes
 #define MAKE_PAIR32(l, h)  uint32(uint16(l) | (uint32(h) << 16))
 #define PAIR32_HIPART(x)   (uint16)((uint32(x) >> 16) & 0x0000FFFF)
 #define PAIR32_LOPART(x)   (uint16)(uint32(x)         & 0x0000FFFF)
-
-#ifdef MAP_UPDATE_DIFF_INFO
-    #define MAP_UPDATE_DIFF(t) t;
-#else
-    #define MAP_UPDATE_DIFF(t)
-#endif
 
 #endif

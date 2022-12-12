@@ -1,6 +1,6 @@
 /* 
  * Copyright (C) 2006-2008 ScriptDev2 <https://scriptdev2.svn.sourceforge.net/>
- * Copyright (C) 2008-2014 Hellground <http://hellground.net/>
+ * Copyright (C) 2008-2015 Hellground <http://hellground.net/>
  * 
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -37,13 +37,13 @@ struct boss_instructormaliciaAI : public ScriptedAI
 {
     boss_instructormaliciaAI(Creature *c) : ScriptedAI(c) {}
 
-    uint32 CallOfGraves_Timer;
-    uint32 Corruption_Timer;
-    uint32 FlashHeal_Timer;
-    uint32 Renew_Timer;
-    uint32 HealingTouch_Timer;
-    uint32 FlashCounter;
-    uint32 TouchCounter;
+    int32 CallOfGraves_Timer;
+    int32 Corruption_Timer;
+    int32 FlashHeal_Timer;
+    int32 Renew_Timer;
+    int32 HealingTouch_Timer;
+    int32 FlashCounter;
+    int32 TouchCounter;
 
     void Reset()
     {
@@ -77,65 +77,65 @@ struct boss_instructormaliciaAI : public ScriptedAI
         if (!UpdateVictim())
             return;
 
-        //CallOfGraves_Timer
-        if (CallOfGraves_Timer < diff)
+        CallOfGraves_Timer -= diff;
+        if (CallOfGraves_Timer <= diff)
         {
-            DoCast(m_creature->getVictim(),SPELL_CALLOFGRAVES);
-            CallOfGraves_Timer = 65000;
-        }else CallOfGraves_Timer -= diff;
+            DoCast(m_creature->GetVictim(),SPELL_CALLOFGRAVES);
+            CallOfGraves_Timer += 65000;
+        }
 
-        //Corruption_Timer
-        if (Corruption_Timer < diff)
+        Corruption_Timer -= diff;
+        if (Corruption_Timer <= diff)
         {
             Unit* target = NULL;
             target = SelectUnit(SELECT_TARGET_RANDOM,0);
             if (target) DoCast(target,SPELL_CORRUPTION);
 
-            Corruption_Timer = 24000;
-        }else Corruption_Timer -= diff;
+            Corruption_Timer += 24000;
+        }
 
-        //Renew_Timer
-        if (Renew_Timer < diff)
+        Renew_Timer -= diff;
+        if (Renew_Timer <= diff)
         {
             DoCast(m_creature, SPELL_RENEW);
-            Renew_Timer = 10000;
-        }else Renew_Timer -= diff;
+            Renew_Timer += 10000;
+        }
 
-        //FlashHeal_Timer
-        if (FlashHeal_Timer < diff)
+        FlashHeal_Timer -= diff;
+        if (FlashHeal_Timer <= diff)
         {
             DoCast(m_creature,SPELL_FLASHHEAL);
 
             //5 Flashheals will be cast
             if (FlashCounter < 2)
             {
-                FlashHeal_Timer = 5000;
+                FlashHeal_Timer += 5000;
                 FlashCounter++;
             }
             else
             {
                 FlashCounter=0;
-                FlashHeal_Timer = 30000;
+                FlashHeal_Timer += 30000;
             }
-        }else FlashHeal_Timer -= diff;
+        }
 
-        //HealingTouch_Timer
-        if (HealingTouch_Timer < diff)
+        HealingTouch_Timer -= diff;
+        if (HealingTouch_Timer <= diff)
         {
             DoCast(m_creature,SPELL_HEALINGTOUCH);
 
             //3 Healingtouchs will be cast
             if (HealingTouch_Timer < 2)
             {
-                HealingTouch_Timer = 5500;
+                HealingTouch_Timer += 5500;
                 TouchCounter++;
             }
             else
             {
                 TouchCounter=0;
-                HealingTouch_Timer = 30000;
+                HealingTouch_Timer += 30000;
             }
-        }else HealingTouch_Timer -= diff;
+        }
 
         DoMeleeAttackIfReady();
     }

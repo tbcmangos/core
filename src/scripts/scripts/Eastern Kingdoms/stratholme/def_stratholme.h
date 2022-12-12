@@ -1,6 +1,6 @@
 /* 
  * Copyright (C) 2006-2008 ScriptDev2 <https://scriptdev2.svn.sourceforge.net/>
- * Copyright (C) 2008-2014 Hellground <http://hellground.net/>
+ * Copyright (C) 2008-2015 Hellground <http://hellground.net/>
  * 
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -27,6 +27,7 @@
 #define TYPE_RAMSTEIN           5
 #define TYPE_BARON              6
 #define TYPE_GAUNTLET_MOB       7
+#define TYPE_POSTBOXES          8
 
 #define DATA_BARON              10
 #define DATA_YSIDA_TRIGGER      11

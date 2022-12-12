@@ -1,7 +1,7 @@
 /*
  * Copyright (C) 2005-2008 MaNGOS <http://getmangos.com/>
  * Copyright (C) 2008 TrinityCore <http://www.trinitycore.org/>
- * Copyright (C) 2008-2014 Hellground <http://hellground.net/>
+ * Copyright (C) 2008-2017 Hellground <http://wow-hellground.com/>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -29,6 +29,7 @@ class Guild;
 typedef UNORDERED_MAP< uint32, Guild * >    GuildMap;
 typedef std::vector< uint32 >               GuildBankTabPriceMap;
 typedef UNORDERED_MAP<uint32,time_t>        GuildCooldowns;
+struct bossrecord { uint32 record; std::string name; uint32 points; };
 
 class GuildMgr
 {
@@ -50,7 +51,11 @@ class GuildMgr
         void RemoveGuild( const uint32 & Id );
 
         void LoadGuilds();
-        void LoadGuildAnnCooldowns();
+
+        // GBK stuff
+        void UpdateWeek();
+        uint32 BossKilled(uint32 boss, uint32 guildid, uint32 mstime);
+
 
         time_t GetGuildAnnCooldown(uint32 guild_id) { return m_guildCooldownTimes[guild_id]; }
         void SaveGuildAnnCooldown(uint32 guild_id);
@@ -63,6 +68,8 @@ class GuildMgr
         GuildMap                m_guildsMap;
         GuildCooldowns          m_guildCooldownTimes;
         GuildBankTabPriceMap    m_guildBankTabPrices;
+        std::vector<bossrecord> m_bossrecords;
+        uint32                  m_bosskill;
 
 };
 

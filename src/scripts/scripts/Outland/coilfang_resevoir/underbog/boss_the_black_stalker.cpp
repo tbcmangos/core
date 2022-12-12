@@ -1,6 +1,6 @@
 /* 
  * Copyright (C) 2006-2009 ScriptDev2 <https://scriptdev2.svn.sourceforge.net/>
- * Copyright (C) 2008-2014 Hellground <http://hellground.net/>
+ * Copyright (C) 2008-2015 Hellground <http://hellground.net/>
  * 
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -40,29 +40,27 @@ struct boss_the_black_stalkerAI : public ScriptedAI
 {
     boss_the_black_stalkerAI(Creature *c) : ScriptedAI(c)
     {
-        HeroicMode = me->GetMap()->IsHeroic();
         c->GetPosition(wLoc);
     }
 
     WorldLocation wLoc;
-    bool HeroicMode;
-    uint32 SporeStriders_Timer;
-    uint32 Levitate_Timer;
-    uint32 ChainLightning_Timer;
-    uint32 StaticCharge_Timer;
+    Timer SporeStriders_Timer;
+    Timer Levitate_Timer;
+    Timer ChainLightning_Timer;
+    Timer StaticCharge_Timer;
     uint64 LevitatedTarget;
-    uint32 LevitatedTarget_Timer;
+    Timer LevitatedTarget_Timer;
     bool InAir;
-    uint32 check_Timer;
+    Timer check_Timer;
     std::list<uint64> Striders;
 
     void Reset()
     {
-        Levitate_Timer = 12000;
-        ChainLightning_Timer = 6000;
-        StaticCharge_Timer = 10000;
-        SporeStriders_Timer = 10000+rand()%5000;
-        check_Timer = 5000;
+        Levitate_Timer.Reset(12000);
+        ChainLightning_Timer.Reset(6000);
+        StaticCharge_Timer.Reset(10000);
+        SporeStriders_Timer.Reset(10000 + rand() % 5000);
+        check_Timer.Reset(5000);
         LevitatedTarget = 0;
         LevitatedTarget_Timer = 0;
         Striders.clear();
@@ -78,8 +76,8 @@ struct boss_the_black_stalkerAI : public ScriptedAI
             if(Unit *target = SelectUnit(SELECT_TARGET_RANDOM, 0, 200, true, me->getVictimGUID()))
                 summon->AI()->AttackStart(target);
             else
-                if(me->getVictim())
-                    summon->AI()->AttackStart(me->getVictim());
+                if(me->GetVictim())
+                    summon->AI()->AttackStart(me->GetVictim());
         }
     }
 
@@ -100,7 +98,7 @@ struct boss_the_black_stalkerAI : public ScriptedAI
             return;
 
         // Evade if too far
-        if(check_Timer < diff)
+        if (check_Timer.Expired(diff))
         {
             if(!me->IsWithinDistInMap(&wLoc, 60))
             {
@@ -108,19 +106,19 @@ struct boss_the_black_stalkerAI : public ScriptedAI
                 return;
             }
             check_Timer = 1000;
-        }else check_Timer -= diff;
+        }
 
         // Spore Striders
-        if(HeroicMode && SporeStriders_Timer < diff)
+        if (HeroicMode && SporeStriders_Timer.Expired(diff))
         {
             DoCast(me,SPELL_SUMMON_SPORE_STRIDER);
             SporeStriders_Timer = 10000+rand()%5000;
-        }else SporeStriders_Timer -= diff;
+        }
 
         // Levitate
         if(LevitatedTarget)
         {
-            if(LevitatedTarget_Timer < diff)
+            if (LevitatedTarget_Timer.Expired(diff))
             {
                 if(Unit* target = (Unit*)Unit::GetUnit(*me, LevitatedTarget))
                 {
@@ -143,9 +141,9 @@ struct boss_the_black_stalkerAI : public ScriptedAI
                 }
                 else
                     LevitatedTarget = 0;
-            }else LevitatedTarget_Timer -= diff;
+            }
         }
-        if(Levitate_Timer < diff)
+        if (Levitate_Timer.Expired(diff))
         {
             if(Unit *target = SelectUnit(SELECT_TARGET_RANDOM, 0, 200, true, me->getVictimGUID()))
             {
@@ -155,23 +153,23 @@ struct boss_the_black_stalkerAI : public ScriptedAI
                 InAir = false;
             }
             Levitate_Timer = 12000+rand()%3000;
-        }else Levitate_Timer -= diff;
+        }
 
         // Chain Lightning
-        if(ChainLightning_Timer < diff)
+        if (ChainLightning_Timer.Expired(diff))
         {
             if(Unit *target = SelectUnit(SELECT_TARGET_RANDOM,0))
                 DoCast(target, SPELL_CHAIN_LIGHTNING);
             ChainLightning_Timer = 7000;
-        }else ChainLightning_Timer -= diff;
+        }
 
         // Static Charge
-        if(StaticCharge_Timer < diff)
+        if (StaticCharge_Timer.Expired(diff))
         {
             if(Unit *target = SelectUnit(SELECT_TARGET_RANDOM,0,30,true))
                 DoCast(target, SPELL_STATIC_CHARGE);
             StaticCharge_Timer = 10000;
-        }else StaticCharge_Timer -= diff;
+        }
 
         DoMeleeAttackIfReady();
     }

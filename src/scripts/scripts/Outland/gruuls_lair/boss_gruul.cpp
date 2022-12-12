@@ -1,7 +1,7 @@
-/* 
+/*
  * Copyright (C) 2006-2008 ScriptDev2 <https://scriptdev2.svn.sourceforge.net/>
- * Copyright (C) 2008-2014 Hellground <http://hellground.net/>
- * 
+ * Copyright (C) 2008-2015 Hellground <http://hellground.net/>
+ *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 2 of the License, or
@@ -79,30 +79,33 @@ struct boss_gruulAI : public ScriptedAI
     {
         pInstance = c->GetInstanceData();
         c->GetPosition(wLoc);
+        c->SetAggroRange(42.0f);
     }
 
     ScriptedInstance *pInstance;
 
     WorldLocation wLoc;
 
-    uint32 Growth_Timer;
-    uint32 CaveIn_Timer;
-    uint32 GroundSlamTimer;
-    uint32 ShatterTimer;
+    Timer Growth_Timer;
+    Timer CaveIn_Timer;
+    uint32 CaveIn_StaticTimer;
+    Timer GroundSlamTimer;
+    Timer ShatterTimer;
     uint32 PerformingGroundSlam;
-    uint32 HurtfulStrike_Timer;
-    uint32 Reverberation_Timer;
-    uint32 Check_Timer;
+    Timer HurtfulStrike_Timer;
+    Timer Reverberation_Timer;
+    Timer Check_Timer;
 
     void Reset()
     {
-        Growth_Timer = 30000;
-        CaveIn_Timer = 40000;
-        GroundSlamTimer = 35000;
+        Growth_Timer.Reset(30000);
+        CaveIn_Timer.Reset(27000);
+        CaveIn_StaticTimer = 30000;
+        GroundSlamTimer.Reset(35000);
         ShatterTimer = 0;
-        HurtfulStrike_Timer = 8000;
-        Reverberation_Timer = 105000;
-        Check_Timer = 3000;
+        HurtfulStrike_Timer.Reset(8000);
+        Reverberation_Timer.Reset(105000);
+        Check_Timer.Reset(3000);
 
         pInstance->SetData(DATA_GRUULEVENT, NOT_STARTED);
     }
@@ -131,7 +134,7 @@ struct boss_gruulAI : public ScriptedAI
         if (!UpdateVictim())
             return;
 
-        if (Check_Timer < diff)
+        if (Check_Timer.Expired(diff))
         {
             if (!me->IsWithinDistInMap(&wLoc, 74.0f))
             {
@@ -143,40 +146,34 @@ struct boss_gruulAI : public ScriptedAI
             me->SetSpeed(MOVE_RUN, 2.0f);
             Check_Timer= 3000;
         }
-        else
-            Check_Timer -= diff;
 
         // Growth
         // Gruul can cast this spell up to 30 times
-        if (Growth_Timer < diff)
+        if (Growth_Timer.Expired(diff))
         {
             AddSpellToCast(me, SPELL_GROWTH);
             DoScriptText(EMOTE_GROW, me);
             Growth_Timer = 30000;
         }
-        else
-            Growth_Timer -= diff;
 
         // Reverberation - timer should expiring even if in ground slam mode
-        if (Reverberation_Timer < diff)
+        if (Reverberation_Timer.Expired(diff))
         {
             AddSpellToCast(SPELL_REVERBERATION, CAST_NULL);
             Reverberation_Timer = 30000;
         }
-        else
-            Reverberation_Timer -= diff;
 
-        if (ShatterTimer)
+        if (ShatterTimer.GetInterval())
         {
-            if (ShatterTimer <= diff)
+            if (ShatterTimer.Expired(diff))
             {
                 me->GetMotionMaster()->Clear();
 
-                Unit *victim = me->getVictim();
+                Unit *victim = me->GetVictim();
                 if (victim)
                 {
                     // re-chase target after 2 seconds
-                    me->m_Events.AddEvent(new ChaseEvent(me->getVictimGUID(), *me), me->m_Events.CalculateTime(2000), true);
+                    me->AddEvent(new ChaseEvent(me->getVictimGUID(), *me), 2000, true);
                     me->SetSelection(victim->GetGUID());
                 }
 
@@ -186,39 +183,36 @@ struct boss_gruulAI : public ScriptedAI
                 //The dummy shatter spell is cast
                 ForceSpellCastWithScriptText(SPELL_SHATTER, CAST_SELF, RAND(SAY_SHATTER1, SAY_SHATTER2), INTERRUPT_AND_CAST_INSTANTLY);
             }
-            else
-                ShatterTimer -= diff;
 
             CastNextSpellIfAnyAndReady();
         }
         else
         {
             // Hurtful Strike
-            if (HurtfulStrike_Timer < diff)
+            if (HurtfulStrike_Timer.Expired(diff))
             {
-                Unit* target = SelectUnit(SELECT_TARGET_TOPAGGRO, 0, me->GetMeleeReach(), true, me->getVictimGUID());
+                Unit* target = SelectUnit(SELECT_TARGET_TOPAGGRO, 0, me->GetCombatReach()+5.0f, true, me->getVictimGUID());
                 if (!target)
-                    target = me->getVictim();
+                    target = me->GetVictim();
 
                 AddSpellToCast(target, SPELL_HURTFUL_STRIKE);
                 HurtfulStrike_Timer = 8000;
             }
-            else
-                HurtfulStrike_Timer -= diff;
 
             // Cave In
-            if (CaveIn_Timer < diff)
+            if (CaveIn_Timer.Expired(diff))
             {
                 if (Unit* target = SelectUnit(SELECT_TARGET_RANDOM, 0, 100.0f, true))
                     AddSpellToCast(target, SPELL_CAVE_IN);
 
-                CaveIn_Timer = 20000;
+                if (CaveIn_StaticTimer >= 4000)
+                    CaveIn_StaticTimer -= 2000;
+
+                CaveIn_Timer = CaveIn_StaticTimer;
             }
-            else
-                CaveIn_Timer -= diff;
 
             // Ground Slam, Gronn Lord's Grasp, Stoned, Shatter
-            if (GroundSlamTimer < diff)
+            if (GroundSlamTimer.Expired(diff))
             {
                 me->GetMotionMaster()->Clear();
                 me->GetMotionMaster()->MoveIdle();
@@ -228,14 +222,12 @@ struct boss_gruulAI : public ScriptedAI
                 GroundSlamTimer = urand(60000, 65000);
 
                 // is this true ? Oo
-                if (Reverberation_Timer < 10000 + ShatterTimer)
-                    Reverberation_Timer = 10000 + ShatterTimer;
+                if (Reverberation_Timer.GetTimeLeft() < 10000 + ShatterTimer.GetInterval())
+                    Reverberation_Timer.Reset(10000 + ShatterTimer.GetInterval());
 
                 DoScriptText(EMOTE_SHATTER, me);
                 ForceSpellCastWithScriptText(SPELL_GROUND_SLAM, CAST_SELF, RAND(SAY_SLAM1, SAY_SLAM2));
             }
-            else
-                GroundSlamTimer -= diff;
 
             CastNextSpellIfAnyAndReady();
             DoMeleeAttackIfReady();

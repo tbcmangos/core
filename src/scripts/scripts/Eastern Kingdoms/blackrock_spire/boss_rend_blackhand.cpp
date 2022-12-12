@@ -1,6 +1,6 @@
 /* 
  * Copyright (C) 2006-2008 ScriptDev2 <https://scriptdev2.svn.sourceforge.net/>
- * Copyright (C) 2008-2014 Hellground <http://hellground.net/>
+ * Copyright (C) 2008-2015 Hellground <http://hellground.net/>
  * 
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -34,9 +34,9 @@ struct boss_rend_blackhandAI : public ScriptedAI
 {
     boss_rend_blackhandAI(Creature *c) : ScriptedAI(c) {}
 
-    uint32 WhirlWind_Timer;
-    uint32 Cleave_Timer;
-    uint32 Thunderclap_Timer;
+    int32 WhirlWind_Timer;
+    int32 Cleave_Timer;
+    int32 Thunderclap_Timer;
 
     void Reset()
     {
@@ -55,26 +55,26 @@ struct boss_rend_blackhandAI : public ScriptedAI
         if (!UpdateVictim() )
             return;
 
-        //WhirlWind_Timer
-        if (WhirlWind_Timer < diff)
+        WhirlWind_Timer -= diff;
+        if (WhirlWind_Timer <= diff)
         {
-            DoCast(m_creature->getVictim(),SPELL_WHIRLWIND);
-            WhirlWind_Timer = 18000;
-        }else WhirlWind_Timer -= diff;
+            DoCast(m_creature->GetVictim(),SPELL_WHIRLWIND);
+            WhirlWind_Timer += 18000;
+        }
 
-        //Cleave_Timer
-        if (Cleave_Timer < diff)
+        Cleave_Timer -= diff;
+        if (Cleave_Timer <= diff)
         {
-            DoCast(m_creature->getVictim(),SPELL_CLEAVE);
-            Cleave_Timer = 10000;
-        }else Cleave_Timer -= diff;
+            DoCast(m_creature->GetVictim(),SPELL_CLEAVE);
+            Cleave_Timer += 10000;
+        }
 
-        //Thunderclap_Timer
-        if (Thunderclap_Timer < diff)
+        Thunderclap_Timer -= diff;
+        if (Thunderclap_Timer <= diff)
         {
-            DoCast(m_creature->getVictim(),SPELL_THUNDERCLAP);
-            Thunderclap_Timer = 16000;
-        }else Thunderclap_Timer -= diff;
+            DoCast(m_creature->GetVictim(),SPELL_THUNDERCLAP);
+            Thunderclap_Timer += 16000;
+        }
 
         DoMeleeAttackIfReady();
     }

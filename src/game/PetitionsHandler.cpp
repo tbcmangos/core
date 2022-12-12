@@ -1,7 +1,7 @@
 /*
  * Copyright (C) 2005-2008 MaNGOS <http://getmangos.com/>
  * Copyright (C) 2008 TrinityCore <http://www.trinitycore.org/>
- * Copyright (C) 2008-2014 Hellground <http://hellground.net/>
+ * Copyright (C) 2008-2017 Hellground <http://wow-hellground.com/>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -92,7 +92,7 @@ void WorldSession::HandlePetitionBuyOpcode(WorldPacket & recv_data)
     }
 
     // remove fake death
-    if (GetPlayer()->hasUnitState(UNIT_STAT_DIED))
+    if (GetPlayer()->HasFlag(UNIT_FIELD_FLAGS_2, UNIT_FLAG2_FEIGN_DEATH))
         GetPlayer()->RemoveSpellsCausingAura(SPELL_AURA_FEIGN_DEATH);
 
     uint32 charterid = 0;
@@ -112,7 +112,7 @@ void WorldSession::HandlePetitionBuyOpcode(WorldPacket & recv_data)
     else
     {
         // TODO: find correct opcode
-        if (_player->getLevel() < sWorld.getConfig(CONFIG_MAX_PLAYER_LEVEL))
+        if (_player->GetLevel() < sWorld.getConfig(CONFIG_MAX_PLAYER_LEVEL))
         {
             SendNotification(LANG_ARENA_ONE_TOOLOW, sWorld.getConfig(CONFIG_MAX_PLAYER_LEVEL));
             return;
@@ -484,7 +484,7 @@ void WorldSession::HandlePetitionSignOpcode(WorldPacket & recv_data)
 
     if (type != 9)
     {
-        if (_player->getLevel() < sWorld.getConfig(CONFIG_MAX_PLAYER_LEVEL))
+        if (_player->GetLevel() < sWorld.getConfig(CONFIG_MAX_PLAYER_LEVEL))
         {
             SendArenaTeamCommandResult(ERR_ARENA_TEAM_CREATE_S, "", _player->GetName(), ERR_ARENA_TEAM_PLAYER_TO_LOW);
             return;
@@ -632,7 +632,7 @@ void WorldSession::HandleOfferPetitionOpcode(WorldPacket & recv_data)
 
     if (type != 9)
     {
-        if (player->getLevel() < sWorld.getConfig(CONFIG_MAX_PLAYER_LEVEL))
+        if (player->GetLevel() < sWorld.getConfig(CONFIG_MAX_PLAYER_LEVEL))
         {
             // player is too low level to join an arena team
             SendArenaTeamCommandResult(ERR_ARENA_TEAM_CREATE_S, player->GetName(), "", ERR_ARENA_TEAM_PLAYER_TO_LOW);
@@ -894,7 +894,7 @@ void WorldSession::SendPetitionShowList(uint64 guid)
     }
 
     // remove fake death
-    if (GetPlayer()->hasUnitState(UNIT_STAT_DIED))
+    if (GetPlayer()->HasFlag(UNIT_FIELD_FLAGS_2, UNIT_FLAG2_FEIGN_DEATH))
         GetPlayer()->RemoveSpellsCausingAura(SPELL_AURA_FEIGN_DEATH);
 
     uint8 count = 0;

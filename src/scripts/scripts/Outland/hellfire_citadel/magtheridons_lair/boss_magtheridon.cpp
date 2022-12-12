@@ -1,6 +1,6 @@
 /* 
  * Copyright(C) 2006-2008 ScriptDev2 <https://scriptdev2.svn.sourceforge.net/>
- * Copyright (C) 2008-2014 Hellground <http://hellground.net/>
+ * Copyright (C) 2008-2015 Hellground <http://hellground.net/>
  * 
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -109,11 +109,11 @@ struct mob_abyssalAI : public ScriptedAI
 {
     mob_abyssalAI(Creature *c) : ScriptedAI(c) { }
 
-    uint32 FireBlast_Timer;
+    Timer FireBlast_Timer;
 
     void Reset()
     {
-        FireBlast_Timer = 6000;
+        FireBlast_Timer.Reset(6000);
     }
 
     void EnterCombat(Unit*)
@@ -126,13 +126,11 @@ struct mob_abyssalAI : public ScriptedAI
         if (!UpdateVictim())
             return;
 
-        if (FireBlast_Timer < diff)
+        if (FireBlast_Timer.Expired(diff))
         {
             AddSpellToCast(SPELL_FIRE_BLAST, CAST_TANK);
             FireBlast_Timer = urand(5000, 15000);
         }
-        else
-            FireBlast_Timer -= diff;
 
         CastNextSpellIfAnyAndReady();
         DoMeleeAttackIfReady();
@@ -148,7 +146,7 @@ struct boss_magtheridonAI : public BossAI
     }
 
     uint8 clickersCount;
-    uint32 RandChat_Timer;
+    Timer RandChat_Timer;
 
     bool Phase3;
 
@@ -166,7 +164,7 @@ struct boss_magtheridonAI : public BossAI
         events.ScheduleEvent(MAGTHERIDON_EVENT_CLEAVE, 15000);
         events.ScheduleEvent(MAGTHERIDON_EVENT_QUAKE, 40000);
 
-        RandChat_Timer = 90000;
+        RandChat_Timer.Reset(90000);
 
         Phase3 = false;
 
@@ -240,13 +238,11 @@ struct boss_magtheridonAI : public BossAI
     {
         if (!UpdateVictim())
         {
-            if (RandChat_Timer < diff)
+            if (RandChat_Timer.Expired(diff))
             {
                 DoScriptText(RAND(MAGT_RANDOM_YELL_1, MAGT_RANDOM_YELL_2, MAGT_RANDOM_YELL_3, MAGT_RANDOM_YELL_4, MAGT_RANDOM_YELL_5, MAGT_RANDOM_YELL_6), m_creature);
                 RandChat_Timer = 90000;
             }
-            else
-                RandChat_Timer -= diff;
 
             return;
         }
@@ -273,7 +269,7 @@ struct boss_magtheridonAI : public BossAI
                 case MAGTHERIDON_EVENT_BLAST_NOVA:
                 {
                     AddSpellToCastWithScriptText(SPELL_BLASTNOVA, CAST_NULL, MAGTHERIDON_EMOTE_BLASTNOVA);
-                    events.ScheduleEvent(MAGTHERIDON_EVENT_BLAST_NOVA, 60000);
+                    events.ScheduleEvent(MAGTHERIDON_EVENT_BLAST_NOVA, 45000);
                     break;
                 }
                 case MAGTHERIDON_EVENT_BLAZE:
@@ -301,7 +297,7 @@ struct boss_magtheridonAI : public BossAI
         }
 
         // don't do rest of script if in earth quake mode :P
-        if (m_creature->hasUnitState(UNIT_STAT_STUNNED))
+        if (m_creature->HasUnitState(UNIT_STAT_STUNNED))
             return;
 
         if (!Phase3 && HealthBelowPct(30))
@@ -329,20 +325,20 @@ struct mob_hellfire_channelerAI : public ScriptedAI
 
     ScriptedInstance* pInstance;
 
-    uint32 ShadowBoltVolley_Timer;
-    uint32 DarkMending_Timer;
-    uint32 Fear_Timer;
-    uint32 Infernal_Timer;
-    uint32 Check_Timer;
+    Timer ShadowBoltVolley_Timer;
+    Timer DarkMending_Timer;
+    Timer Fear_Timer;
+    Timer Infernal_Timer;
+    Timer Check_Timer;
 
     void Reset()
     {
-        ShadowBoltVolley_Timer = urand(8000, 10000);
-        DarkMending_Timer = 10000;
-        Fear_Timer = urand(15000, 20000);
-        Infernal_Timer = urand(10000, 50000);
+        ShadowBoltVolley_Timer.Reset(urand(8000, 10000));
+        DarkMending_Timer.Reset(10000);
+        Fear_Timer.Reset(urand(15000, 20000));
+        Infernal_Timer.Reset(urand(10000, 50000));
 
-        Check_Timer = 5000;
+        Check_Timer.Reset(5000);
     }
 
     void EnterCombat(Unit *who)
@@ -364,55 +360,50 @@ struct mob_hellfire_channelerAI : public ScriptedAI
             me->CastSpell(me, SPELL_SOUL_TRANSFER, true);
     }
 
-    void JustReachedHome()
-    {
-        me->CastSpell((Unit*)NULL, SPELL_SHADOW_GRASP_C, false);
-    }
-
     void UpdateAI(const uint32 diff)
     {
         if (!UpdateVictim())
+        {
+            if (Check_Timer.Expired(diff))
+            {
+                Check_Timer = 5000;
+                if (!m_creature->IsNonMeleeSpellCast(true))
+                    me->CastSpell((Unit*)NULL, SPELL_SHADOW_GRASP_C, false);
+            }
             return;
+        }
 
-        if (ShadowBoltVolley_Timer < diff)
+        if (ShadowBoltVolley_Timer.Expired(diff))
         {
             AddSpellToCast(SPELL_SHADOW_BOLT_VOLLEY, CAST_SELF);
             ShadowBoltVolley_Timer = urand(10000, 20000);
         }
-        else
-            ShadowBoltVolley_Timer -= diff;
 
-        if (DarkMending_Timer < diff)
+        if (DarkMending_Timer.Expired(diff))
         {
             Unit * target = SelectLowestHpFriendly(30.0f);
-            if (!target && HealthBelowPct(50))
+            if (!target)
                 target = me;
 
-            if (target)
+            if (target && target->HealthBelowPct(50))
+            {
                 AddSpellToCast(target, SPELL_DARK_MENDING);
-
-            DarkMending_Timer = urand(10000, 20000);
+                DarkMending_Timer = urand(10000, 20000);
+            }
+            else
+                DarkMending_Timer = 2000;
         }
-        else
-            DarkMending_Timer -= diff;
 
-        if (Fear_Timer < diff)
+        if (Fear_Timer.Expired(diff))
         {
             AddSpellToCast(SPELL_FEAR, CAST_RANDOM_WITHOUT_TANK);
             Fear_Timer = urand(25000, 40000);
         }
-        else
-            Fear_Timer -= diff;
 
-        if (Infernal_Timer)
+        if (Infernal_Timer.Expired(diff))
         {
-            if (Infernal_Timer <= diff)
-            {
-                AddSpellToCast(SPELL_BURNING_ABYSSAL, CAST_RANDOM);
-                Infernal_Timer = 0;
-            }
-            else
-                Infernal_Timer -= diff;
+            AddSpellToCast(SPELL_BURNING_ABYSSAL, CAST_RANDOM);
+            Infernal_Timer = 0;
         }
 
         CastNextSpellIfAnyAndReady();
@@ -427,7 +418,7 @@ struct mob_magtheridon_triggerAI : public Scripted_NoMovementAI
         m_creature->setActive(true);
     }
 
-    uint32 debrisTimer;
+    Timer debrisTimer;
 
     void JustRespawned()
     {
@@ -437,15 +428,30 @@ struct mob_magtheridon_triggerAI : public Scripted_NoMovementAI
 
     void UpdateAI(const uint32 diff)
     {
-        if (debrisTimer)
+        if (debrisTimer.Expired(diff))
         {
-            if (debrisTimer <= diff)
-            {
-                me->CastSpell(me, SPELL_DEBRIS_DAMAGE, true);
-                debrisTimer = 0;
-            }
-            else
-                debrisTimer -= diff;
+            me->CastSpell(me, SPELL_DEBRIS_DAMAGE, true);
+            debrisTimer = 0;
+        }
+    }
+};
+
+struct mob_magtheridon_bfAI : public Scripted_NoMovementAI
+{
+    mob_magtheridon_bfAI(Creature* c) : Scripted_NoMovementAI(c) {}
+
+    Timer yellTimer;
+    void Reset()
+    {
+        yellTimer.Reset(90000);
+    }
+
+    void UpdateAI(const uint32 diff)
+    {
+        if (yellTimer.Expired(diff))
+        {
+            DoScriptText(RAND(MAGT_RANDOM_YELL_1, MAGT_RANDOM_YELL_2, MAGT_RANDOM_YELL_3, MAGT_RANDOM_YELL_4, MAGT_RANDOM_YELL_5, MAGT_RANDOM_YELL_6), m_creature);
+            yellTimer = 90000;
         }
     }
 };
@@ -463,7 +469,7 @@ bool GOUse_go_Manticron_Cube(Player *player, GameObject* _GO)
 
     Creature *Magtheridon = _GO->GetMap()->GetCreature(pInstance->GetData64(DATA_MAGTHERIDON));
 
-    if (!Magtheridon || !Magtheridon->isAlive())
+    if (!Magtheridon || !Magtheridon->IsAlive())
         return true;
 
     // if exhausted or already channeling return
@@ -502,6 +508,11 @@ CreatureAI* GetAI_mob_magtheridon_triggerAI(Creature *_Creature)
     return new mob_magtheridon_triggerAI(_Creature);
 }
 
+CreatureAI* GetAI_mob_magtheridon_bfAI(Creature* _Creature)
+{
+    return new mob_magtheridon_bfAI(_Creature);
+}
+
 void AddSC_boss_magtheridon()
 {
     Script *newscript;
@@ -528,5 +539,10 @@ void AddSC_boss_magtheridon()
     newscript = new Script();
     newscript->Name = "mob_magtheridon_trigger";
     newscript->GetAI = &GetAI_mob_magtheridon_triggerAI;
+    newscript->RegisterSelf();
+
+    newscript = new Script();
+    newscript->Name = "mob_magtheridon_bf";
+    newscript->GetAI = &GetAI_mob_magtheridon_bfAI;
     newscript->RegisterSelf();
 }

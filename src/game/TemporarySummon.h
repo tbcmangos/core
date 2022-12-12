@@ -1,7 +1,7 @@
 /*
  * Copyright (C) 2005-2008 MaNGOS <http://getmangos.com/>
  * Copyright (C) 2008 TrinityCore <http://www.trinitycore.org/>
- * Copyright (C) 2008-2014 Hellground <http://hellground.net/>
+ * Copyright (C) 2008-2017 Hellground <http://wow-hellground.com/>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -36,7 +36,8 @@ class TemporarySummon : public Creature
         void Update(uint32 update_diff, uint32 time); 
         void Summon(TemporarySummonType type, uint32 lifetime);
         void UnSummon();
-        void SaveToDB();
+        void SaveToDB() {};
+        void SaveToDB(uint32 mapid, uint8 spawnmask) {};
         Unit* GetSummoner() const { return m_summoner ? GetMap()->GetUnit(m_summoner) : NULL; }
     private:
         TemporarySummonType m_type;

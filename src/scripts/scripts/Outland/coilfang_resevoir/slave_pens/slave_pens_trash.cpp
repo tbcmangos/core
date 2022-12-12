@@ -1,5 +1,5 @@
 /* 
- * Copyright (C) 2008-2014 Hellground <http://hellground.net/>
+ * Copyright (C) 2008-2015 Hellground <http://hellground.net/>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -33,15 +33,15 @@ struct mob_coilfang_slavehandlerAI : public ScriptedAI
 {
     mob_coilfang_slavehandlerAI(Creature *c) : ScriptedAI(c) {}
 
-    uint32 hamstringtimer;
-    uint32 headcracktimer;
-    uint32 yelltimer;
+    Timer hamstringtimer;
+    Timer headcracktimer;
+    Timer yelltimer;
 
     void Reset()
     {
-        hamstringtimer = urand(5800,6200);
-        headcracktimer = 11100;
-        yelltimer = urand(60000,120000);
+        hamstringtimer.Reset(urand(5800, 6200));
+        headcracktimer.Reset(11100);
+        yelltimer.Reset(urand(60000, 120000));
     }
 
     void JustDied(Unit* )
@@ -59,7 +59,7 @@ struct mob_coilfang_slavehandlerAI : public ScriptedAI
         {
             if ((*itr)->GetFormation() == me->GetFormation())
             {
-                if ((*itr)->isAlive())
+                if ((*itr)->IsAlive())
                 {
                     (*itr)->RemoveAllAuras();
                     (*itr)->DeleteThreatList();
@@ -83,33 +83,30 @@ struct mob_coilfang_slavehandlerAI : public ScriptedAI
 
     void UpdateAI(const uint32 diff)
     {
-        if(!me->isInCombat())
-            if(yelltimer < diff)
+        if(!me->IsInCombat())
+            if (yelltimer.Expired(diff))
             {
                 me->Yell(RAND(YELL_OOC1,YELL_OOC2,YELL_OOC3,YELL_OOC4,YELL_OOC5,YELL_OOC6),0,0);
                 yelltimer = urand(60000,120000);
             }
-            else
-                yelltimer -=diff;
+
 
         if(!UpdateVictim())
             return;
 
-        if(hamstringtimer < diff)
+        if (hamstringtimer.Expired(diff))
         {
             AddSpellToCast(SPELL_HAMSTRING);
             hamstringtimer = 9000;
         }
-        else
-            hamstringtimer -= diff;
+        
 
-        if(headcracktimer < diff)
+        if (headcracktimer.Expired(diff))
         {
             AddSpellToCast(SPELL_HEAD_CRACK,CAST_RANDOM);
             headcracktimer = urand(20000,25000);
         }
-        else
-            headcracktimer -= diff;
+        
 
         DoMeleeAttackIfReady();
         CastNextSpellIfAnyAndReady(diff);
@@ -130,17 +127,17 @@ struct npc_coilfang_slavemasterAI : public ScriptedAI
 {
     npc_coilfang_slavemasterAI(Creature *c) : ScriptedAI(c) {}
 
-    uint32 hamstringtimer;
-    uint32 headcracktimer;
-    uint32 yelltimer;
+    Timer hamstringtimer;
+    Timer headcracktimer;
+    Timer yelltimer;
 
     bool frenzy;
 
     void Reset()
     {
-        hamstringtimer = urand(5800,6200);
-        headcracktimer = 11100;
-        yelltimer = urand(60000,120000);
+        hamstringtimer.Reset(urand(5800, 6200));
+        headcracktimer.Reset(11100);
+        yelltimer.Reset(urand(60000, 120000));
         frenzy = false;
     }
 
@@ -156,7 +153,7 @@ struct npc_coilfang_slavemasterAI : public ScriptedAI
         {
             if ((*itr)->GetFormation() == me->GetFormation())
             {
-                if ((*itr)->isAlive())
+                if ((*itr)->IsAlive())
                 {
                     (*itr)->RemoveAllAuras();
                     (*itr)->DeleteThreatList();
@@ -175,33 +172,30 @@ struct npc_coilfang_slavemasterAI : public ScriptedAI
 
     void UpdateAI(const uint32 diff)
     {
-        if(!me->isInCombat())
-            if(yelltimer < diff)
+        if(!me->IsInCombat())
+            if (yelltimer.Expired(diff))
             {
                 me->Yell(RAND(YELL_OOC1,YELL_OOC2,YELL_OOC3,YELL_OOC4,YELL_OOC5,YELL_OOC6),0,0);
                 yelltimer = urand(60000,120000);
             }
-            else
-                yelltimer -=diff;
+
 
         if(!UpdateVictim())
             return;
 
-        if(hamstringtimer < diff)
+        if (hamstringtimer.Expired(diff))
         {
             AddSpellToCast(SPELL_DISARM);
             hamstringtimer = 9000;
         }
-        else
-            hamstringtimer -= diff;
+        
 
-        if(headcracktimer < diff)
+        if (headcracktimer.Expired(diff))
         {
             AddSpellToCast(SPELL_GEYSER);
             headcracktimer = urand(20000,25000);
         }
-        else
-            headcracktimer -= diff;
+        
 
         if (HealthBelowPct(20.0f) && !frenzy)
         {

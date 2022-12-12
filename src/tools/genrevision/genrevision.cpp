@@ -1,6 +1,6 @@
 /*
  * Copyright (C) 2005-2009 MaNGOS <http://getmangos.com/>
- * Copyright (C) 2008-2014 Hellground <http://hellground.net/>
+ * Copyright (C) 2008-2015 Hellground <http://hellground.net/>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -341,6 +341,10 @@ bool extractDataFromHG(std::string path, bool use_url, RawData& data)
         res = extractDataFromHG(path+".hg/cache/branch",path,use_url,data);
     if (!res)
         res = extractDataFromHG(path+"_hg/cache/branch",path,use_url,data);
+    if (!res)
+        res = extractDataFromHG(path + ".hg/cache/branch2-served", path, use_url, data);
+    if (!res)
+        res = extractDataFromHG(path + ".hg/cache/branch2-base", path, use_url, data);
 
     return res;
 }

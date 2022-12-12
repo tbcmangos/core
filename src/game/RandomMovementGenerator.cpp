@@ -1,6 +1,6 @@
 /*
  * Copyright (C) 2005-2010 MaNGOS <http://getmangos.com/>
- * Copyright (C) 2008-2014 Hellground <http://hellground.net/>
+ * Copyright (C) 2008-2017 Hellground <http://wow-hellground.com/>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -30,31 +30,40 @@ template<>
 void RandomMovementGenerator<Creature>::_setRandomLocation(Creature &creature)
 {
     Position dest;
-    creature.GetRespawnCoord(dest.x, dest.y, dest.z, &dest.o, &wander_distance);
+    creature.GetRespawnCoord(dest.x, dest.y, dest.z, &dest.o, &i_wanderDistance);
 
-    bool is_air_ok = creature.CanFly();
+    if (i_wanderDistance < 0.1f)
+        i_wanderDistance = 0.1f;
 
-    const float angle = frand(0.0f, M_PI*2.0f);
-    const float range = frand(0.0f, wander_distance);
-
-    creature.GetValidPointInAngle(dest, range, angle, false);
+    const float range = frand(0.1f, i_wanderDistance);
+    if (!creature.GetMap()->GetReachableRandomPosition(&creature, dest.x, dest.y, dest.z, range))
+        return;
 
     Movement::MoveSplineInit init(creature);
     init.MoveTo(dest.x, dest.y, dest.z);
     init.SetWalk(true);
     init.Launch();
 
+    if (i_wanderSteps) // Creature has yet to do steps before pausing
+    {
+        --i_wanderSteps;
+        i_nextMoveTime.Reset(50);
+    }
+    else
+    {
+        // Creature has made all its steps, time for a little break
+        i_nextMoveTime.Reset(urand(4, 10) * 1000); // Retails seems to use rounded numbers so we do as well
+        i_wanderSteps = urand(0, ((i_wanderDistance <= 1.0f) ? 2 : 8));
+    }
     static_cast<MovementGenerator*>(this)->_recalculateTravel = false;
-    i_nextMoveTime.Reset(urand(500, 10000));
 }
 
 template<>
 void RandomMovementGenerator<Creature>::Initialize(Creature &creature)
 {
-    if (!creature.isAlive())
+    if (!creature.IsAlive())
         return;
 
-    creature.addUnitState(UNIT_STAT_ROAMING);
     _setRandomLocation(creature);
 }
 
@@ -67,14 +76,12 @@ void RandomMovementGenerator<Creature>::Reset(Creature &creature)
 template<>
 void RandomMovementGenerator<Creature>::Interrupt(Creature &creature)
 {
-    creature.clearUnitState(UNIT_STAT_ROAMING);
     creature.SetWalk(false);
 }
 
 template<>
 void RandomMovementGenerator<Creature>::Finalize(Creature &creature)
 {
-    creature.clearUnitState(UNIT_STAT_ROAMING);
     creature.SetWalk(false);
 }
 
@@ -83,8 +90,7 @@ bool RandomMovementGenerator<Creature>::Update(Creature &creature, const uint32 
 {
     if (creature.IsStopped() || static_cast<MovementGenerator*>(this)->_recalculateTravel)
     {
-        i_nextMoveTime.Update(diff);
-        if (i_nextMoveTime.Passed() || static_cast<MovementGenerator*>(this)->_recalculateTravel)
+        if (i_nextMoveTime.Expired(diff) || static_cast<MovementGenerator*>(this)->_recalculateTravel)
             _setRandomLocation(creature);
     }
     return true;

@@ -1,6 +1,6 @@
 /* 
  * Copyright (C) 2006-2008 ScriptDev2 <https://scriptdev2.svn.sourceforge.net/>
- * Copyright (C) 2008-2014 Hellground <http://hellground.net/>
+ * Copyright (C) 2008-2015 Hellground <http://hellground.net/>
  * 
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -53,11 +53,11 @@ struct npc_raliq_the_drunkAI : public ScriptedAI
 {
     npc_raliq_the_drunkAI(Creature* creature) : ScriptedAI(creature) {}
 
-    uint32 Uppercut_Timer;
+    Timer Uppercut_Timer;
 
     void Reset()
     {
-        Uppercut_Timer = 5000;
+        Uppercut_Timer.Reset(5000);
         me->setFaction(FACTION_FRIENDLY_RD);
     }
 
@@ -68,11 +68,11 @@ struct npc_raliq_the_drunkAI : public ScriptedAI
         if(!UpdateVictim())
             return;
 
-        if( Uppercut_Timer < diff )
+        if (Uppercut_Timer.Expired(diff))
         {
-            DoCast(me->getVictim(),SPELL_UPPERCUT);
+            DoCast(me->GetVictim(),SPELL_UPPERCUT);
             Uppercut_Timer = 15000;
-        }else Uppercut_Timer -= diff;
+        }
 
         DoMeleeAttackIfReady();
     }
@@ -85,9 +85,9 @@ CreatureAI* GetAI_npc_raliq_the_drunk(Creature *creature)
 bool GossipHello_npc_raliq_the_drunk(Player *player, Creature *creature )
 {
     if( player->GetQuestStatus(10009) == QUEST_STATUS_INCOMPLETE )
-        player->ADD_GOSSIP_ITEM(1, GOSSIP_RALIQ, GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF+1);
+        player->ADD_GOSSIP_ITEM(0, GOSSIP_RALIQ, GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF+1);
 
-    player->SEND_GOSSIP_MENU(9440, creature->GetGUID());
+    player->SEND_GOSSIP_MENU(creature->GetNpcTextId(), creature->GetGUID());
     return true;
 }
 
@@ -116,11 +116,11 @@ struct npc_salsalabimAI : public ScriptedAI
 {
     npc_salsalabimAI(Creature* creature) : ScriptedAI(creature) {}
 
-    uint32 MagneticPull_Timer;
+    Timer MagneticPull_Timer;
 
     void Reset()
     {
-        MagneticPull_Timer = 15000;
+        MagneticPull_Timer.Reset(15000);
         me->setFaction(FACTION_FRIENDLY_SA);
     }
 
@@ -142,11 +142,11 @@ struct npc_salsalabimAI : public ScriptedAI
         if(!UpdateVictim())
             return;
 
-        if( MagneticPull_Timer < diff )
+        if (MagneticPull_Timer.Expired(diff))
         {
-            DoCast(me->getVictim(),SPELL_MAGNETIC_PULL);
+            DoCast(me->GetVictim(),SPELL_MAGNETIC_PULL);
             MagneticPull_Timer = 15000;
-        }else MagneticPull_Timer -= diff;
+        }
 
         DoMeleeAttackIfReady();
     }
@@ -300,26 +300,27 @@ struct npc_kservantAI : public npc_escortAI
     npc_kservantAI(Creature *creature) : npc_escortAI(creature) {}
 
     uint32 PointId;
-    uint32 TalkTimer;
+    Timer TalkTimer;
     uint32 TalkCount;
-    uint32 RandomTalkCooldown;
+    Timer RandomTalkCooldown;
 
     void Reset()
     {
-        TalkTimer = 2500;
+        TalkTimer.Reset(2500);
         TalkCount = 0;
         PointId = 0;
         RandomTalkCooldown = 0;
 
         me->SetReactState(REACT_PASSIVE);
         Start(false, false, me->GetCharmerOrOwnerGUID());
+        me->addUnitState(UNIT_STAT_IGNORE_PATHFINDING);
     }
 
     void EnterCombat(Unit* who) {}
 
     void MoveInLineOfSight(Unit* who)
     {
-        if (!RandomTalkCooldown && who->GetTypeId() == TYPEID_UNIT && me->IsWithinDistInMap(who, 10.0f))
+        if (!RandomTalkCooldown.GetInterval() && who->GetTypeId() == TYPEID_UNIT && me->IsWithinDistInMap(who, 10.0f))
         {
             switch(who->GetEntry())
             {
@@ -376,13 +377,8 @@ struct npc_kservantAI : public npc_escortAI
 
     void UpdateEscortAI(const uint32 diff)
     {
-        if (RandomTalkCooldown)
-        {
-            if (RandomTalkCooldown <= diff)
-                RandomTalkCooldown = 0;
-            else
-                RandomTalkCooldown -= diff;
-        }
+        if (RandomTalkCooldown.Expired(diff))
+            RandomTalkCooldown = 0;
 
         if (HasEscortState(STATE_ESCORT_PAUSED))
         {
@@ -390,7 +386,7 @@ struct npc_kservantAI : public npc_escortAI
             if (!player)
                 return;
 
-            if (TalkTimer <= diff)
+            if (TalkTimer.Expired(diff))
             {
                 TalkTimer = 7500;
 
@@ -514,8 +510,6 @@ struct npc_kservantAI : public npc_escortAI
                 }
                 ++TalkCount;
             }
-            else
-                TalkTimer -= diff;
         }
         return;
     }
@@ -556,8 +550,8 @@ struct npc_dirty_larryAI : public ScriptedAI
 
     uint64 PlayerGUID;
 
-    uint32 SayTimer;
-    uint32 EvadeTimer;
+    Timer SayTimer;
+    Timer EvadeTimer;
     uint32 Step;
 
     WorldLocation wLoc;
@@ -569,25 +563,25 @@ struct npc_dirty_larryAI : public ScriptedAI
         Done = false;
 
         PlayerGUID = 0;
-        SayTimer = 0;
+        SayTimer.Reset(1);
         Step = 0;
-        EvadeTimer = 3000;
+        EvadeTimer.Reset(3000);
 
-        me->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
+        me->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_SPAWNING);
         me->setFaction(1194);
         Unit* Creepjack = FindCreature(NPC_CREEPJACK, 20, me);
         if(Creepjack)
         {
             ((Creature*)Creepjack)->AI()->EnterEvadeMode();
             Creepjack->setFaction(1194);
-            Creepjack->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
+            Creepjack->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_SPAWNING);
         }
         Unit* Malone = FindCreature(NPC_MALONE, 20, me);
         if(Malone)
         {
             ((Creature*)Malone)->AI()->EnterEvadeMode();
             Malone->setFaction(1194);
-            Malone->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
+            Malone->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_SPAWNING);
         }
     }
 
@@ -620,42 +614,42 @@ struct npc_dirty_larryAI : public ScriptedAI
 
     void UpdateAI(const uint32 diff)
     {
-        if(SayTimer < diff)
+        if(SayTimer.Expired(diff))
         {
             if(Event)
                 SayTimer = NextStep(++Step);
-        }else SayTimer -= diff;
+        }
 
         if(Attack)
         {
             Player *player = Unit::GetPlayer(PlayerGUID);
             me->setFaction(14);
-            me->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
+            me->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_SPAWNING);
             if(player)
             {
             Unit* Creepjack = FindCreature(NPC_CREEPJACK, 20, me);
             if(Creepjack)
             {
-                if(Creepjack->isDead())
+                if(Creepjack->IsDead())
                 {
                     ((Creature*)Creepjack)->Respawn();
                 }
                 Creepjack->Attack(player, true);
                 Creepjack->setFaction(14);
                 Creepjack->GetMotionMaster()->MoveChase(player);
-                Creepjack->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
+                Creepjack->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_SPAWNING);
             }
             Unit* Malone = FindCreature(NPC_MALONE, 20, me);
             if(Malone)
             {
-                if(Malone->isDead())
+                if(Malone->IsDead())
                 {
                    ((Creature*)Malone)->Respawn();
                 }
                 Malone->Attack(player, true);
                 Malone->setFaction(14);
                 Malone->GetMotionMaster()->MoveChase(player);
-                Malone->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
+                Malone->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_SPAWNING);
             }
                 DoStartMovement(player);
                 AttackStart(player);
@@ -665,7 +659,7 @@ struct npc_dirty_larryAI : public ScriptedAI
 
         if((me->GetHealth()*100)/me->GetMaxHealth() < 5 && !Done)
         {
-            me->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
+            me->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_SPAWNING);
             me->RemoveAllAuras();
             Unit* Creepjack = FindCreature(NPC_CREEPJACK, 20, me);
             if(Creepjack)
@@ -673,7 +667,7 @@ struct npc_dirty_larryAI : public ScriptedAI
                 ((Creature*)Creepjack)->AI()->EnterEvadeMode();
                 Creepjack->setFaction(1194);
                 Creepjack->GetMotionMaster()->MoveTargetedHome();
-                Creepjack->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
+                Creepjack->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_SPAWNING);
             }
             Unit* Malone = FindCreature(NPC_MALONE, 20, me);
             if(Malone)
@@ -681,7 +675,7 @@ struct npc_dirty_larryAI : public ScriptedAI
                 ((Creature*)Malone)->AI()->EnterEvadeMode();
                 Malone->setFaction(1194);
                 Malone->GetMotionMaster()->MoveTargetedHome();
-                Malone->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
+                Malone->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_SPAWNING);
             }
             me->setFaction(1194);
             Done = true;
@@ -694,14 +688,15 @@ struct npc_dirty_larryAI : public ScriptedAI
                 player->GroupEventHappens(QUEST_WBI, me);
             Reset();
         }
-        if(EvadeTimer < diff)
+
+        if(EvadeTimer.Expired(diff))
         {
-                if(me->GetDistance2d(wLoc.coord_x, wLoc.coord_y) >= 50)
+            if(me->GetDistance2d(wLoc.coord_x, wLoc.coord_y) >= 50)
                 EnterEvadeMode();
-                EvadeTimer = 3000;
-                return;
+            EvadeTimer = 3000;
+            return;
         }
-        else EvadeTimer -= diff;
+
         DoMeleeAttackIfReady();
     }
 };
@@ -858,7 +853,7 @@ struct npc_kaelthas_imageAI : public ScriptedAI
     npc_kaelthas_imageAI(Creature* creature) : ScriptedAI(creature) {}
 
     uint8 Step;
-    uint32 NextStep_Timer;
+    Timer NextStep_Timer;
     std::list<uint64> PlayersInCity;
     bool Init;
     std::string Defeater_Name;
@@ -868,7 +863,7 @@ struct npc_kaelthas_imageAI : public ScriptedAI
     void Reset()
     {
         Step = 0;
-        NextStep_Timer = 2000;
+        NextStep_Timer.Reset(2000);
         PlayersInCity.clear();
         Init = false;
         FireGO = 0;
@@ -914,7 +909,7 @@ struct npc_kaelthas_imageAI : public ScriptedAI
             Init = true;
         }
 
-        if(NextStep_Timer < diff)
+        if(NextStep_Timer.Expired(diff))
         {
             NextStep_Timer = 13000;
             Creature* adal = NULL;
@@ -984,9 +979,6 @@ struct npc_kaelthas_imageAI : public ScriptedAI
             }
             Step++;
         }
-        else
-            NextStep_Timer -= diff;
-
     }
 };
 
@@ -1017,6 +1009,7 @@ void AddSC_shattrath_city()
 
     newscript = new Script;
     newscript->Name="npc_raliq_the_drunk";
+    newscript->GetAI =  &GetAI_npc_raliq_the_drunk;
     newscript->pGossipHello =  &GossipHello_npc_raliq_the_drunk;
     newscript->pGossipSelect = &GossipSelect_npc_raliq_the_drunk;
     newscript->RegisterSelf();

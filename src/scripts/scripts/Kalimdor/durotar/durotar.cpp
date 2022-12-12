@@ -1,6 +1,6 @@
 /*
  * Copyright (C) 2008-2010 TrinityCore <http://www.trinitycore.org/>
- * Copyright (C) 2008-2014 Hellground <http://hellground.net/>
+ * Copyright (C) 2008-2015 Hellground <http://hellground.net/>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -38,8 +38,8 @@ enum LazyPeon
 {
     SAY_SPELL_HIT             = -1000622,
 
-    MIN_TIME_TO_GO_ASLEEP     = 60000,         //1 minute
-    MAX_TIME_TO_GO_ASLEEP     = 600000,        //10 minutes
+    MIN_TIME_TO_GO_ASLEEP     = 30000,        // 30 to 60 sec, buff has 120 sec max duration
+    MAX_TIME_TO_GO_ASLEEP     = 60000,
 
     QUEST_LAZY_PEONS          = 5441,
     GO_LUMBERPILE             = 175784,
@@ -51,14 +51,12 @@ struct npc_lazy_peonAI : public ScriptedAI
 {
     npc_lazy_peonAI(Creature *c) : ScriptedAI(c) {}
 
-    uint64 uiPlayerGUID;
-
-    uint32 m_uiRebuffTimer;
+    Timer m_uiRebuffTimer;
     bool work;
 
     void Reset ()
     {
-        uiPlayerGUID = 0;
+        m_uiRebuffTimer.Reset(urand(MIN_TIME_TO_GO_ASLEEP, MAX_TIME_TO_GO_ASLEEP));
         work = false;
     }
 
@@ -78,6 +76,7 @@ struct npc_lazy_peonAI : public ScriptedAI
         {
             DoScriptText(SAY_SPELL_HIT, me, caster);
             me->RemoveAllAuras();
+            m_uiRebuffTimer.Reset(urand(MIN_TIME_TO_GO_ASLEEP, MAX_TIME_TO_GO_ASLEEP)); // refresh the buff
             if (GameObject* Lumberpile = FindGameObject(GO_LUMBERPILE, 20, me))
                 me->GetMotionMaster()->MovePoint(1,Lumberpile->GetPositionX()-1,Lumberpile->GetPositionY(),Lumberpile->GetPositionZ());
         }
@@ -88,13 +87,11 @@ struct npc_lazy_peonAI : public ScriptedAI
         if (work == true)
             me->HandleEmoteCommand(466);
 
-        if (m_uiRebuffTimer <= uiDiff)
+        if (m_uiRebuffTimer.Expired(uiDiff))
         {
             DoCast(me, SPELL_BUFF_SLEEP);
-            m_uiRebuffTimer = urand(MIN_TIME_TO_GO_ASLEEP, MAX_TIME_TO_GO_ASLEEP);        //Rebuff agian in 1-10 minutes
+            m_uiRebuffTimer = MAX_TIME_TO_GO_ASLEEP; // refresh the buff
         }
-        else
-            m_uiRebuffTimer -= uiDiff;
 
         if (!UpdateVictim())
             return;

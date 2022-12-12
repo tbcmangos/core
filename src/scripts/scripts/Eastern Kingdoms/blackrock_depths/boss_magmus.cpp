@@ -1,6 +1,6 @@
 /* 
  * Copyright (C) 2006-2008 ScriptDev2 <https://scriptdev2.svn.sourceforge.net/>
- * Copyright (C) 2008-2014 Hellground <http://hellground.net/>
+ * Copyright (C) 2008-2015 Hellground <http://hellground.net/>
  * 
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -33,8 +33,8 @@ struct boss_magmusAI : public ScriptedAI
 {
     boss_magmusAI(Creature *c) : ScriptedAI(c) {}
 
-    uint32 FieryBurst_Timer;
-    uint32 WarStomp_Timer;
+    int32 FieryBurst_Timer;
+    int32 WarStomp_Timer;
 
     void Reset()
     {
@@ -52,25 +52,23 @@ struct boss_magmusAI : public ScriptedAI
         if (!UpdateVictim() )
             return;
 
-        //FieryBurst_Timer
-        if (FieryBurst_Timer < diff)
+        FieryBurst_Timer -= diff;
+        if (FieryBurst_Timer <= diff)
         {
-            DoCast(me->getVictim(),SPELL_FIERYBURST);
-            FieryBurst_Timer = 6000;
+            DoCast(me->GetVictim(),SPELL_FIERYBURST);
+            FieryBurst_Timer += 6000;
         }
-        else
-            FieryBurst_Timer -= diff;
+        
 
         //WarStomp_Timer
         if ( me->GetHealth()*100 / me->GetMaxHealth() < 51 )
         {
-            if (WarStomp_Timer < diff)
+            WarStomp_Timer -= diff;
+            if (WarStomp_Timer <= diff)
             {
-                DoCast(me->getVictim(),SPELL_WARSTOMP);
-                WarStomp_Timer = 8000;
+                DoCast(me->GetVictim(),SPELL_WARSTOMP);
+                WarStomp_Timer += 8000;
             }
-            else
-                WarStomp_Timer -= diff;
         }
 
         DoMeleeAttackIfReady();

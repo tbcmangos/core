@@ -1,6 +1,6 @@
 /* 
  * Copyright (C) 2006-2008 ScriptDev2 <https://scriptdev2.svn.sourceforge.net/>
- * Copyright (C) 2008-2014 Hellground <http://hellground.net/>
+ * Copyright (C) 2008-2015 Hellground <http://hellground.net/>
  * 
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -50,9 +50,9 @@ struct boss_high_botanist_freywinnAI : public ScriptedAI
 
     std::list<uint64> Adds_List;
 
-    uint32 SummonSeedling_Timer;
-    uint32 TreeForm_Timer;
-    uint32 MoveCheck_Timer;
+    Timer SummonSeedling_Timer;
+    Timer TreeForm_Timer; 
+    Timer MoveCheck_Timer;
     uint32 DeadAddsCount;
     bool MoveFree;
 
@@ -60,9 +60,9 @@ struct boss_high_botanist_freywinnAI : public ScriptedAI
     {
         Adds_List.clear();
 
-        SummonSeedling_Timer = 6000;
-        TreeForm_Timer = 30000;
-        MoveCheck_Timer = 1000;
+        SummonSeedling_Timer.Reset(6000);
+        TreeForm_Timer.Reset(30000);
+        MoveCheck_Timer.Reset(1000);
         DeadAddsCount = 0;
         MoveFree = true;
     }
@@ -93,7 +93,7 @@ struct boss_high_botanist_freywinnAI : public ScriptedAI
         if( !UpdateVictim() )
             return;
 
-        if( TreeForm_Timer < diff )
+        if (TreeForm_Timer.Expired(diff))
         {
             DoScriptText(RAND(SAY_TREE_1, SAY_TREE_2), m_creature);
 
@@ -110,11 +110,11 @@ struct boss_high_botanist_freywinnAI : public ScriptedAI
             MoveFree = false;
 
             TreeForm_Timer = 75000;
-        }else TreeForm_Timer -= diff;
+        }
 
         if( !MoveFree )
         {
-            if( MoveCheck_Timer < diff )
+            if (MoveCheck_Timer.Expired(diff))
             {
                 if( !Adds_List.empty() )
                 {
@@ -122,7 +122,7 @@ struct boss_high_botanist_freywinnAI : public ScriptedAI
                     {
                         if( Unit *temp = Unit::GetUnit(*m_creature,*itr) )
                         {
-                            if( !temp->isAlive() )
+                            if( !temp->IsAlive() )
                             {
                                 Adds_List.erase(itr);
                                 ++DeadAddsCount;
@@ -132,7 +132,7 @@ struct boss_high_botanist_freywinnAI : public ScriptedAI
                     }
                 }
 
-                if( DeadAddsCount < 3 && TreeForm_Timer-30000 < diff )
+                if( DeadAddsCount < 3 && TreeForm_Timer.GetTimeLeft() < 30000 )
                     DeadAddsCount = 3;
 
                 if( DeadAddsCount >= 3 )
@@ -142,12 +142,11 @@ struct boss_high_botanist_freywinnAI : public ScriptedAI
 
                     m_creature->InterruptNonMeleeSpells(true);
                     m_creature->RemoveAllAuras();
-                    m_creature->GetMotionMaster()->MoveChase(m_creature->getVictim());
+                    m_creature->GetMotionMaster()->MoveChase(m_creature->GetVictim());
                     MoveFree = true;
                 }
                 MoveCheck_Timer = 500;
             }
-            else MoveCheck_Timer -= diff;
 
             return;
         }
@@ -156,11 +155,11 @@ struct boss_high_botanist_freywinnAI : public ScriptedAI
             return;*/
 
         //one random seedling every 5 secs, but not in tree form
-        if( SummonSeedling_Timer < diff )
+        if (SummonSeedling_Timer.Expired(diff))
         {
             DoCast(m_creature, RAND(SPELL_PLANT_WHITE, SPELL_PLANT_GREEN, SPELL_PLANT_BLUE, SPELL_PLANT_RED));
             SummonSeedling_Timer = 6000;
-        }else SummonSeedling_Timer -= diff;
+        }
 
         DoMeleeAttackIfReady();
     }

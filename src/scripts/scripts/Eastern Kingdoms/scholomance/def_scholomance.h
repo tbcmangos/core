@@ -1,6 +1,6 @@
 /* 
  * Copyright (C) 2006-2008 ScriptDev2 <https://scriptdev2.svn.sourceforge.net/>
- * Copyright (C) 2008-2014 Hellground <http://hellground.net/>
+ * Copyright (C) 2008-2015 Hellground <http://hellground.net/>
  * 
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -27,5 +27,6 @@
 #define DATA_LORDALEXEIBAROV_DEATH          5
 #define DATA_LOREKEEPERPOLKELT_DEATH        6
 #define DATA_THERAVENIAN_DEATH              7
+#define DATA_KIRTONOS_THE_HERALD            8
 #endif
 

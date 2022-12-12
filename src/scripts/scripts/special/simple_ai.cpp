@@ -1,6 +1,6 @@
 /* 
  * Copyright (C) 2006-2008 ScriptDev2 <https://scriptdev2.svn.sourceforge.net/>
- * Copyright (C) 2008-2014 Hellground <http://hellground.net/>
+ * Copyright (C) 2008-2015 Hellground <http://hellground.net/>
  * 
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -77,35 +77,44 @@ void SimpleAI::EnterCombat(Unit *who)
 {
             //Reset cast timers
             if (Spell[0].First_Cast >= 0)
-                Spell_Timer[0] = Spell[0].First_Cast;
-            else Spell_Timer[0] = 1000;
+                Spell_Timer[0].Reset(Spell[0].First_Cast);
+            else Spell_Timer[0].Reset(1000);
+
             if (Spell[1].First_Cast >= 0)
-                Spell_Timer[1] = Spell[1].First_Cast;
-            else Spell_Timer[1] = 1000;
+                Spell_Timer[1].Reset(Spell[1].First_Cast);
+            else Spell_Timer[1].Reset(1000);
+
             if (Spell[2].First_Cast >= 0)
-                Spell_Timer[2] = Spell[2].First_Cast;
-            else Spell_Timer[2] = 1000;
+                Spell_Timer[2].Reset(Spell[2].First_Cast);
+            else Spell_Timer[2].Reset(1000);
+
             if (Spell[3].First_Cast >= 0)
-                Spell_Timer[3] = Spell[3].First_Cast;
-            else Spell_Timer[3] = 1000;
+                Spell_Timer[3].Reset(Spell[3].First_Cast);
+            else Spell_Timer[3].Reset(1000);
+
             if (Spell[4].First_Cast >= 0)
-                Spell_Timer[4] = Spell[4].First_Cast;
-            else Spell_Timer[4] = 1000;
+                Spell_Timer[4].Reset(Spell[4].First_Cast);
+            else Spell_Timer[4].Reset(1000);
+
             if (Spell[5].First_Cast >= 0)
-                Spell_Timer[5] = Spell[5].First_Cast;
-            else Spell_Timer[5] = 1000;
+                Spell_Timer[5].Reset(Spell[5].First_Cast);
+            else Spell_Timer[5].Reset(1000);
+
             if (Spell[6].First_Cast >= 0)
-                Spell_Timer[6] = Spell[6].First_Cast;
-            else Spell_Timer[6] = 1000;
+                Spell_Timer[6].Reset(Spell[6].First_Cast);
+            else Spell_Timer[6].Reset(1000);
+
             if (Spell[7].First_Cast >= 0)
-                Spell_Timer[7] = Spell[7].First_Cast;
-            else Spell_Timer[7] = 1000;
+                Spell_Timer[7].Reset(Spell[7].First_Cast);
+            else Spell_Timer[7].Reset(1000);
+
             if (Spell[8].First_Cast >= 0)
-                Spell_Timer[8] = Spell[8].First_Cast;
-            else Spell_Timer[8] = 1000;
+                Spell_Timer[8].Reset(Spell[8].First_Cast);
+            else Spell_Timer[8].Reset(1000);
+
             if (Spell[9].First_Cast >= 0)
-                Spell_Timer[9] = Spell[9].First_Cast;
-            else Spell_Timer[9] = 1000;
+                Spell_Timer[9].Reset(Spell[9].First_Cast);
+            else Spell_Timer[9].Reset(1000);
 
             uint32 random_text = rand()%3;
 
@@ -145,7 +154,7 @@ void SimpleAI::KilledUnit(Unit *victim)
         target = m_creature;
         break;
     case CAST_HOSTILE_TARGET:
-        target = m_creature->getVictim();
+        target = m_creature->GetVictim();
         break;
     case CAST_HOSTILE_SECOND_AGGRO:
         target = SelectUnit(SELECT_TARGET_TOPAGGRO,1);
@@ -195,7 +204,7 @@ void SimpleAI::DamageTaken(Unit *killer, uint32 &damage)
         target = m_creature;
         break;
     case CAST_HOSTILE_TARGET:
-        target = m_creature->getVictim();
+        target = m_creature->GetVictim();
         break;
     case CAST_HOSTILE_SECOND_AGGRO:
         target = SelectUnit(SELECT_TARGET_TOPAGGRO,1);
@@ -219,7 +228,7 @@ void SimpleAI::DamageTaken(Unit *killer, uint32 &damage)
 void SimpleAI::UpdateAI(const uint32 diff)
 {
     //Return since we have no target
-    if (!UpdateVictim() || m_creature->hasUnitState(UNIT_STAT_LOST_CONTROL) || m_creature->IsPolymorphed())
+    if (!UpdateVictim() || m_creature->HasUnitState(UNIT_STAT_LOST_CONTROL) || m_creature->IsPolymorphed())
         return;
 
     //Spells
@@ -229,7 +238,7 @@ void SimpleAI::UpdateAI(const uint32 diff)
         if (!Spell[i].Enabled || !Spell[i].Spell_Id)
             continue;
 
-        if (Spell_Timer[i] < diff)
+        if (Spell_Timer[i].Expired(diff))
         {
             //Check if this is a percentage based
             if (Spell[i].First_Cast < 0 && Spell[i].First_Cast > -100 && m_creature->GetHealth()*100 / m_creature->GetMaxHealth() > -Spell[i].First_Cast)
@@ -246,7 +255,7 @@ void SimpleAI::UpdateAI(const uint32 diff)
                     target = m_creature;
                     break;
                 case CAST_HOSTILE_TARGET:
-                    target = m_creature->getVictim();
+                    target = m_creature->GetVictim();
                     break;
                 case CAST_HOSTILE_SECOND_AGGRO:
                     target = SelectUnit(SELECT_TARGET_TOPAGGRO,1);
@@ -292,8 +301,7 @@ void SimpleAI::UpdateAI(const uint32 diff)
                 Spell_Timer[i] = Spell[i].Cooldown;
 
         }
-        else
-            Spell_Timer[i] -= diff;
+        
     }
 
     DoMeleeAttackIfReady();

@@ -1,7 +1,7 @@
 /*
  * Copyright (C) 2005-2008 MaNGOS <http://getmangos.com/>
  * Copyright (C) 2008 TrinityCore <http://www.trinitycore.org/>
- * Copyright (C) 2008-2014 Hellground <http://hellground.net/>
+ * Copyright (C) 2008-2017 Hellground <http://wow-hellground.com/>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -34,7 +34,6 @@ namespace FactorySelector
         const CreatureAICreator *ai_factory = NULL;
         CreatureAIRegistry &ai_registry(*CreatureAIRepository::instance());
 
-        //script name in db
         if ((!creature->isPet() || !((Pet*)creature)->isControlled()) && !creature->isCharmed())
             if (CreatureAI* scriptedAI = sScriptMgr.GetCreatureAI(creature))
                 return scriptedAI;
@@ -61,6 +60,9 @@ namespace FactorySelector
                     case 417:
                         ai_factory = ai_registry.GetRegistryItem("FelhunterAI");
                         break;
+                    case 510:
+                        ai_factory = ai_registry.GetRegistryItem("WaterElementalAI");
+                        break;
                     default:
                         ai_factory = ai_registry.GetRegistryItem("PetAI");
                         break;
@@ -77,18 +79,6 @@ namespace FactorySelector
             }
             else if (creature->GetCreatureType() == CREATURE_TYPE_CRITTER)
                 ai_factory = ai_registry.GetRegistryItem("CritterAI");
-        }
-
-        if (!ai_factory)
-        {
-            for (uint32 i = 0; i < CREATURE_MAX_SPELLS; ++i)
-            {
-                if (creature->m_spells[i])
-                {
-                    ai_factory = ai_registry.GetRegistryItem("CombatAI");
-                    break;
-                }
-            }
         }
 
         // select by permit check
@@ -115,7 +105,7 @@ namespace FactorySelector
         ainame = (ai_factory == NULL) ? "NullCreatureAI" : ai_factory->key();
 
         DEBUG_LOG("Creature %u used AI is %s.", creature->GetGUIDLow(), ainame.c_str());
-        return (ai_factory == NULL ? new NullCreatureAI(creature) : ai_factory->Create(creature));
+        return (ai_factory == NULL ? ai_registry.GetRegistryItem("NullCreatureAI")->Create(creature) : ai_factory->Create(creature));
     }
 
     MovementGenerator* selectMovementGenerator(Creature *creature)

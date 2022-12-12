@@ -1,7 +1,7 @@
 /*
  * Copyright (C) 2005-2008 MaNGOS <http://getmangos.com/>
  * Copyright (C) 2008 TrinityCore <http://www.trinitycore.org/>
- * Copyright (C) 2008-2014 Hellground <http://hellground.net/>
+ * Copyright (C) 2008-2017 Hellground <http://wow-hellground.com/>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -283,7 +283,7 @@ namespace Hellground
             CannibalizeObjectCheck(Unit* funit, float range) : i_funit(funit), i_range(range) {}
             bool operator()(Player* u)
             {
-                if (i_funit->IsFriendlyTo(u) || u->isAlive() || u->IsTaxiFlying())
+                if (i_funit->IsFriendlyTo(u) || u->IsAlive() || u->IsTaxiFlying())
                     return false;
 
                 if (i_funit->IsWithinDistInMap(u, i_range))
@@ -294,7 +294,7 @@ namespace Hellground
             bool operator()(Corpse* u);
             bool operator()(Creature* u)
             {
-                if (i_funit->IsFriendlyTo(u) || u->isAlive() || u->IsTaxiFlying() ||
+                if (i_funit->IsFriendlyTo(u) || u->IsAlive() || u->IsTaxiFlying() ||
                     (u->GetCreatureTypeMask() & CREATURE_TYPEMASK_HUMANOID_OR_UNDEAD)==0)
                     return false;
 
@@ -409,24 +409,21 @@ namespace Hellground
     class AnyUnfriendlyUnitInObjectRangeCheck
     {
         public:
-            AnyUnfriendlyUnitInObjectRangeCheck(WorldObject const* obj, Unit const* funit, float range) : i_obj(obj), i_funit(funit), i_range(range) {}
-            bool operator()(Unit* u)
-            {
-                if (i_obj->GetTypeId()==TYPEID_UNIT || i_obj->GetTypeId()==TYPEID_PLAYER)   // cant target when out of phase -> invisibility 10
-                {
-                    if (u->m_invisibilityMask && u->m_invisibilityMask & (1 << 10) && !u->canDetectInvisibilityOf((Unit*)i_obj, u))
-                        return false;
-                }
-
-                if (u->isAlive() && i_obj->IsWithinDistInMap(u, i_range) && !i_funit->IsFriendlyTo(u))
-                    return true;
-                else
-                    return false;
-            }
+            AnyUnfriendlyUnitInObjectRangeCheck(WorldObject const* obj, Unit const* unit, float range) : i_obj(obj), i_unit(unit), i_range(range) {}
+            bool operator()(Unit* u);
         private:
             WorldObject const* i_obj;
-            Unit const* i_funit;
+            Unit const* i_unit;
             float i_range;
+    };
+
+    class AnyUnfriendlyUnitInPetAttackRangeCheck
+    {
+    public:
+        AnyUnfriendlyUnitInPetAttackRangeCheck(Unit const* unit) : i_unit(unit) {}
+        bool operator()(Unit* u);
+    private:
+        Unit const* i_unit;
     };
 
     class AnyUnfriendlyNoTotemUnitInObjectRangeCheck
@@ -435,22 +432,22 @@ namespace Hellground
             AnyUnfriendlyNoTotemUnitInObjectRangeCheck(WorldObject const* obj, Unit const* funit, float range) : i_obj(obj), i_funit(funit), i_range(range) {}
             bool operator()(Unit* u)
             {
-                if (!u->isAlive())
+                if (!u->IsAlive())
                     return false;
 
                 if (i_obj->GetTypeId()==TYPEID_UNIT || i_obj->GetTypeId()==TYPEID_PLAYER)   // cant target when out of phase -> invisibility 10
                 {
-                    if (u->m_invisibilityMask && u->m_invisibilityMask & (1 << 10) && !u->canDetectInvisibilityOf((Unit*)i_obj, u))
+                    if (u->m_invisibilityMask && u->m_invisibilityMask & (1 << 10) && !u->canDetectInvisibilityOf((Unit*)i_obj))
                         return false;
                 }
 
                 if (u->GetTypeId()==TYPEID_UNIT && ((Creature*)u)->isTotem())
                     return false;
 
-                if (/*u->hasUnitState(UNIT_STAT_ISOLATED) || */u->HasFlag(UNIT_FIELD_FLAGS, (UNIT_FLAG_NON_ATTACKABLE | UNIT_FLAG_NOT_SELECTABLE)))
+                if (/*u->HasUnitState(UNIT_STAT_ISOLATED) || */u->HasFlag(UNIT_FIELD_FLAGS, (UNIT_FLAG_SPAWNING | UNIT_FLAG_NOT_SELECTABLE)))
                     return false;
 
-                return i_obj->IsWithinDistInMap(u, i_range) && !i_funit->IsFriendlyTo(u);
+                return i_obj->IsWithinExactDistInMap(u, i_range) && !i_funit->IsFriendlyTo(u);
             }
         private:
             WorldObject const* i_obj;
@@ -477,7 +474,7 @@ namespace Hellground
             AnyFriendlyUnitInObjectRangeCheck(WorldObject const* obj, Unit const* funit, float range) : i_obj(obj), i_funit(funit), i_range(range) {}
             bool operator()(Unit* u)
             {
-                if (u->isAlive() && i_obj->IsWithinDistInMap(u, i_range) && i_funit->IsFriendlyTo(u))
+                if (u->IsAlive() && i_obj->IsWithinDistInMap(u, i_range) && i_funit->IsFriendlyTo(u))
                     return true;
                 else
                     return false;
@@ -494,7 +491,7 @@ namespace Hellground
             AnyFriendlyNonSelfUnitInObjectRangeCheck(WorldObject const* obj, Unit const* funit, float range) : i_obj(obj), i_funit(funit), i_range(range) {}
             bool operator()(Unit* u)
             {
-                if (u->isAlive() && u->GetGUID() != i_obj->GetGUID() && i_obj->IsWithinDistInMap(u, i_range) && i_funit->IsFriendlyTo(u))
+                if (u->IsAlive() && u->GetGUID() != i_obj->GetGUID() && i_obj->IsWithinDistInMap(u, i_range) && i_funit->IsFriendlyTo(u))
                     return true;
                 else
                     return false;
@@ -511,7 +508,7 @@ namespace Hellground
             AnyUnitInObjectRangeCheck(WorldObject const* obj, float range) : i_obj(obj), i_range(range) {}
             bool operator()(Unit* u)
             {
-                if (u->isAlive() && i_obj->IsWithinDistInMap(u, i_range))
+                if (u->IsAlive() && i_obj->IsWithinDistInMap(u, i_range))
                     return true;
 
                 return false;
@@ -529,7 +526,8 @@ namespace Hellground
             bool operator()(Unit* u)
             {
                 if (u->isTargetableForAttack() && i_obj->IsWithinDistInMap(u, i_range) &&
-                    !i_funit->IsFriendlyTo(u) && u->isVisibleForOrDetect(i_funit, i_funit, false) )
+                    (i_funit->IsHostileTo(u) || (!i_funit->IsFriendlyTo(u) && u->IsInCombat()))
+                    && u->isVisibleForOrDetect(i_funit, i_funit, false))
                 {
                     i_range = i_obj->GetDistance(u);        // use found unit range as new range limit for next check
                     return true;
@@ -565,7 +563,7 @@ namespace Hellground
                     return false;
                 if (i_obj->GetTypeId()==TYPEID_UNIT || i_obj->GetTypeId()==TYPEID_PLAYER)   // cant target when out of phase -> invisibility 10
                 {
-                    if (u->m_invisibilityMask && u->m_invisibilityMask & (1 << 10) && !u->canDetectInvisibilityOf((Unit*)i_obj, u))
+                    if (u->m_invisibilityMask && u->m_invisibilityMask & (1 << 10) && !u->canDetectInvisibilityOf((Unit*)i_obj))
                         return false;
                 }
                 if (u->GetTypeId()==TYPEID_UNIT && ((Creature*)u)->isTotem())
@@ -617,28 +615,10 @@ namespace Hellground
 #pragma endregion Workers
 
 #pragma region Checks
-    // Prepare using Builder localized packets with caching and send to player
-    template<class Builder>
-    class LocalizedPacketDo
-    {
-        public:
-            explicit LocalizedPacketDo(Builder& builder) : i_builder(builder) {}
-
-            ~LocalizedPacketDo()
-            {
-                for (size_t i = 0; i < i_data_cache.size(); ++i)
-                    delete i_data_cache[i];
-            }
-            void operator()( Player* p );
-
-        private:
-            Builder& i_builder;
-            std::vector<WorldPacket*> i_data_cache;         // 0 = default, i => i-1 locale index
-    };
 
     struct AnyDeadUnitCheck
     {
-        bool operator()(Unit* u) { return !u->isAlive(); }
+        bool operator()(Unit* u) { return !u->IsAlive(); }
     };
 
     struct AnyStealthedCheck
@@ -689,7 +669,7 @@ namespace Hellground
 
             bool operator()(Creature* u)
             {
-                if (u->getFaction() == i_obj->getFaction() && !u->isInCombat() && !u->GetCharmerOrOwnerGUID() && u->IsHostileTo(i_enemy) && u->isAlive()&& i_obj->IsWithinDistInMap(u, i_range) && i_obj->IsWithinLOSInMap(u))
+                if (u->getFaction() == i_obj->getFaction() && !u->IsInCombat() && !u->GetCharmerOrOwnerGUID() && u->IsHostileTo(i_enemy) && u->IsAlive()&& i_obj->IsWithinDistInMap(u, i_range) && i_obj->IsWithinLOSInMap(u))
                 {
                     i_range = i_obj->GetDistance(u);         // use found unit range as new range limit for next check
                     return true;
@@ -746,7 +726,7 @@ namespace Hellground
 
             bool operator()(Creature* u)
             {
-                if (u->GetEntry() == i_entry && u->isAlive()==i_alive && i_obj.IsWithinDistInMap(u, i_range) && (!i_inLoS || i_obj.IsWithinLOSInMap(u)))
+                if (u->GetEntry() == i_entry && u->IsAlive()==i_alive && i_obj.IsWithinDistInMap(u, i_range) && (!i_inLoS || i_obj.IsWithinLOSInMap(u)))
                 {
                     i_range = i_obj.GetDistance(u);         // use found unit range as new range limit for next check
                     return true;
@@ -771,7 +751,7 @@ namespace Hellground
         AnyPlayerInObjectRangeCheck(WorldObject const* obj, float range, bool alive = true) : i_obj(obj), i_range(range), i_alive(alive) {}
         bool operator()(Player* u)
         {
-            if ((i_alive && u->isAlive() || !i_alive && !u->isAlive()) && i_obj->IsWithinDistInMap(u, i_range))
+            if ((i_alive && u->IsAlive() || !i_alive && !u->IsAlive()) && i_obj->IsWithinDistInMap(u, i_range))
                 return true;
 
             return false;
@@ -789,7 +769,7 @@ namespace Hellground
         MostHPMissingInRange(Unit const* obj, float range, uint32 hp) : i_obj(obj), i_range(range), i_hp(hp) {}
         bool operator()(Unit* u)
         {
-            if (u->isAlive() && u->isInCombat() && !i_obj->IsHostileTo(u) && i_obj->IsWithinDistInMap(u, i_range) && u->GetMaxHealth() - u->GetHealth() > i_hp)
+            if (u->IsAlive() && u->IsInCombat() && !i_obj->IsHostileTo(u) && i_obj->IsWithinDistInMap(u, i_range) && u->GetMaxHealth() - u->GetHealth() > i_hp)
             {
                 i_hp = u->GetMaxHealth() - u->GetHealth();
                 return true;
@@ -808,7 +788,7 @@ namespace Hellground
         FriendlyCCedInRange(Unit const* obj, float range) : i_obj(obj), i_range(range) {}
         bool operator()(Unit* u)
         {
-            if (u->isAlive() && u->isInCombat() && !i_obj->IsHostileTo(u) && i_obj->IsWithinDistInMap(u, i_range) &&
+            if (u->IsAlive() && u->IsInCombat() && !i_obj->IsHostileTo(u) && i_obj->IsWithinDistInMap(u, i_range) &&
                 u->isCrowdControlled())
             {
                 return true;
@@ -826,7 +806,7 @@ namespace Hellground
         FriendlyMissingBuffInRange(Unit const* obj, float range, uint32 spellid) : i_obj(obj), i_range(range), i_spell(spellid) {}
         bool operator()(Unit* u)
         {
-            if (u->isAlive() && u->isInCombat() && /*!i_obj->IsHostileTo(u)*/ i_obj->IsFriendlyTo(u) && i_obj->IsWithinDistInMap(u, i_range) &&
+            if (u->IsAlive() && u->IsInCombat() && /*!i_obj->IsHostileTo(u)*/ i_obj->IsFriendlyTo(u) && i_obj->IsWithinDistInMap(u, i_range) &&
                 !(u->HasAura(i_spell, 0) || u->HasAura(i_spell, 1) || u->HasAura(i_spell, 2)))
             {
                 return true;
@@ -845,7 +825,7 @@ namespace Hellground
         AllFriendlyCreaturesInGrid(Unit const* obj) : pUnit(obj) {}
         bool operator() (Unit* u)
         {
-            if (u->isAlive() && u->GetVisibility() == VISIBILITY_ON && u->IsFriendlyTo(pUnit))
+            if (u->IsAlive() && u->GetVisibility() == VISIBILITY_ON && u->IsFriendlyTo(pUnit))
                 return true;
 
             return false;
@@ -905,7 +885,7 @@ namespace Hellground
         AllDeadUnitsInRange(Unit const* obj, float range) : i_obj(obj), i_range(range) {}
         bool operator()(Unit* u)
         {
-            if (!u->isAlive() && i_obj->IsWithinDistInMap(u, i_range))
+            if (!u->IsAlive() && i_obj->IsWithinDistInMap(u, i_range))
                 return true;
             return false;
         }
@@ -939,6 +919,23 @@ namespace Hellground
         private:
             TypeID _typeId;
             bool _equals;
+    };
+
+    class ObjectEntryCheck
+    {
+    public:                            //Set to true to remove given entry, set to false to remove all but this entry
+        ObjectEntryCheck(uint32 entry, bool RemoveOrLeave) : _entry(entry), _RemoveOrLeave(RemoveOrLeave) {}
+        bool operator()(WorldObject* object)
+        {
+            if (_RemoveOrLeave)
+                return object->GetEntry() == _entry;
+            else
+                return object->GetEntry() != _entry;
+        }
+
+    private:
+        uint32 _entry;
+        bool _RemoveOrLeave;
     };
 
     class ObjectIsTotemCheck
@@ -977,7 +974,7 @@ namespace Hellground
             UnitPowerTypeCheck(Powers power, bool present = true) : _present(present), _power(power) {}
             bool operator()(Unit* unit)
             {
-                return ((_present && unit->getPowerType() == _power) || (!_present && unit->getPowerType() != _power));
+                return ((_present && unit->GetPowerType() == _power) || (!_present && unit->GetPowerType() != _power));
             }
 
         private:
@@ -1013,6 +1010,18 @@ namespace Hellground
             WorldObject *_source;
             bool _within;
     };
+
+    // returns true for alive creature contested guards in LOS with enabled AI
+    struct ContestedGuardCheck
+    {
+        ContestedGuardCheck(WorldObject* source) : _source(source) {};
+        bool operator()(Unit* u)
+        { 
+            return (u->IsContestedGuard() && u->IsAlive() && u->IsWithinLOSInMap(_source) && (u->GetTypeId() == TYPEID_UNIT) && u->IsAIEnabled);
+        }
+        WorldObject* _source;
+    };
+
 #pragma endregion Checks
 
 #pragma region Sorters

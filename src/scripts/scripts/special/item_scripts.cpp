@@ -1,6 +1,6 @@
 /* 
  * Copyright (C) 2006-2008 ScriptDev2 <https://scriptdev2.svn.sourceforge.net/>
- * Copyright (C) 2008-2014 Hellground <http://hellground.net/>
+ * Copyright (C) 2008-2015 Hellground <http://hellground.net/>
  * 
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -251,7 +251,7 @@ bool ItemUse_item_muiseks_vessel(Player *player, Item* _Item, SpellCastTargets c
                 cEntry4 = 14604;
                 break;
         }
-        if( uTarget && uTarget->GetTypeId()==TYPEID_UNIT && uTarget->isDead() &&
+        if( uTarget && uTarget->GetTypeId()==TYPEID_UNIT && uTarget->IsDead() &&
             (uTarget->GetEntry()==cEntry || uTarget->GetEntry()==cEntry2 || uTarget->GetEntry()==cEntry3 || uTarget->GetEntry()==cEntry4) )
         {
             ((Creature*)uTarget)->RemoveCorpse();
@@ -359,7 +359,7 @@ bool ItemUse_item_specific_target(Player *player, Item* _Item, SpellCastTargets 
         case 12284: cEntry[0] = 7047;  cEntry[1] = 7048;  cEntry[2] = 7049; break;      // Draco-Incarcinatrix 900
         case 23337: cEntry[0] = 16880; targetState = T_ALIVE; break;                    // Cenarion Antidote
         case 29818: cEntry[0] = 20774; targetState = T_ALIVE; break;                    // Energy Field Modulator
-        case 13289: cEntry[0] = 10384; cEntry[1] = 10385; targetState = T_ALIVE; break; // Egan's Blaster
+        case 13289: cEntry[0] = 10384; cEntry[1] = 10385; cEntry[2] = 11122; targetState = T_ALIVE; break; // Egan's Blaster
         case 10699: cEntry[0] = 5307;  cEntry[1] = 5308;  targetState = T_DEAD; break;  // Yehkinyas Bramble
         case 25552: cEntry[0] = 17148; cEntry[1] = 17147; cEntry[2] = 17146; targetState = T_DEAD; break; // Warmaul Ogre Banner
     }
@@ -384,7 +384,7 @@ bool ItemUse_item_specific_target(Player *player, Item* _Item, SpellCastTargets 
                     return false;
                 case T_ALIVE:
                 {
-                    if(uTarget->isAlive())
+                    if(uTarget->IsAlive())
                         return false;
                     else
                     {
@@ -398,9 +398,9 @@ bool ItemUse_item_specific_target(Player *player, Item* _Item, SpellCastTargets 
                 }
                 case T_DEAD:
                 {
-                    if(uTarget->getDeathState() == CORPSE)
+                    if(uTarget->GetDeathState() == CORPSE)
                         return false;
-                    else if (uTarget->getDeathState() != DEAD)
+                    else if (uTarget->GetDeathState() != DEAD)
                     {
                         WorldPacket data(SMSG_CAST_FAILED, (4+2));              // prepare packet error message
                         data << uint32(_Item->GetEntry());                      // itemId

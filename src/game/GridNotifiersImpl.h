@@ -1,7 +1,7 @@
 /*
  * Copyright (C) 2005-2008 MaNGOS <http://getmangos.com/>
  * Copyright (C) 2008 TrinityCore <http://www.trinitycore.org/>
- * Copyright (C) 2008-2014 Hellground <http://hellground.net/>
+ * Copyright (C) 2008-2017 Hellground <http://wow-hellground.com/>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -44,13 +44,13 @@ inline void VisibleNotifier::Visit(GridRefManager<T> &m)
 
 inline void PlayerCreatureRelocationWorker(Player* p, Creature* c)
 {
-    if (!p->isAlive() || !c->isAlive())
+    if (!p->IsAlive() || !c->IsAlive())
         return;
 
     if (p->IsTaxiFlying() && !c->CanReactToPlayerOnTaxi())
         return;
 
-    if (c->hasUnitState(UNIT_STAT_LOST_CONTROL | UNIT_STAT_SIGHTLESS | UNIT_STAT_IGNORE_ATTACKERS))
+    if (c->HasUnitState(UNIT_STAT_LOST_CONTROL | UNIT_STAT_IGNORE_ATTACKERS))
         return;
 
     // Creature AI reaction
@@ -60,10 +60,10 @@ inline void PlayerCreatureRelocationWorker(Player* p, Creature* c)
 
 inline void CreatureCreatureRelocationWorker(Creature* c1, Creature* c2)
 {
-    if (c1->hasUnitState(UNIT_STAT_LOST_CONTROL | UNIT_STAT_SIGHTLESS | UNIT_STAT_IGNORE_ATTACKERS))
+    if (c1->HasUnitState(UNIT_STAT_LOST_CONTROL | UNIT_STAT_IGNORE_ATTACKERS))
         return;
 
-    if (c2->hasUnitState(UNIT_STAT_IGNORE_ATTACKERS))
+    if (c2->HasUnitState(UNIT_STAT_IGNORE_ATTACKERS))
         return;
 
     // Creature AI reaction
@@ -92,7 +92,7 @@ inline void PlayerRelocationNotifier::Visit(CreatureMapType &m)
 
 inline void CreatureRelocationNotifier::Visit(PlayerMapType &m)
 {
-    if (!_creature.isAlive())
+    if (!_creature.IsAlive())
         return;
 
     for (PlayerMapType::iterator iter = m.begin(); iter != m.end(); ++iter)
@@ -101,7 +101,7 @@ inline void CreatureRelocationNotifier::Visit(PlayerMapType &m)
 
 inline void CreatureRelocationNotifier::Visit(CreatureMapType &m)
 {
-    if (!_creature.isAlive())
+    if (!_creature.IsAlive())
         return;
 
     for (CreatureMapType::iterator iter = m.begin(); iter != m.end(); ++iter)
@@ -118,7 +118,7 @@ struct UpdateListSorter : public std::binary_function<Creature*, Creature*, bool
     // functor for operator ">"
     bool operator()(Creature* left, Creature* right) const
     {
-        return left->GetUpdateCounter().timeElapsed() > right->GetUpdateCounter().timeElapsed();
+        return left->GetUpdateCounter() > right->GetUpdateCounter();
     }
 };
 
@@ -127,9 +127,6 @@ inline void ObjectUpdater::Visit(CreatureMapType &m)
     UpdateList updateList;
     for (CreatureMapType::iterator iter = m.begin(); iter != m.end(); ++iter)
     {
-        if (iter->getSource()->isSpiritGuide())
-            continue;
-
         if (WorldObject::UpdateHelper::ProcessUpdate(iter->getSource()))
             updateList.push_back(iter->getSource());
     }
@@ -140,6 +137,19 @@ inline void ObjectUpdater::Visit(CreatureMapType &m)
         // sort list (objects updated old time ago will be first)
         updateList.sort(UpdateListSorter());
         updateList.resize(sWorld.getConfig(CONFIG_MAPUPDATE_MAXVISITORS), NULL); // set initial value for added elements to NULL
+        
+        for (UpdateList::iterator it = updateList.begin(); it != updateList.end(); ++it)
+        {
+            WorldObject::UpdateHelper helper(*it);
+            if (maxListSize > 0)
+            {
+                helper.Update(i_timeDiff);
+                maxListSize--;
+            }
+            else
+                helper.NoUpdate(i_timeDiff); // just tell then they wont be updated
+        }
+        return;
     }
 
     for (UpdateList::iterator it = updateList.begin(); it != updateList.end(); ++it)
@@ -257,30 +267,6 @@ void UnitListSearcher<Check>::Visit(CreatureMapType &m)
             i_objects.push_back(itr->getSource());
 }
 
-template<class Builder>
-void LocalizedPacketDo<Builder>::operator()( Player* p )
-{
-    uint32 loc_idx = p->GetSession()->GetSessionDbLocaleIndex();
-    uint32 cache_idx = loc_idx+1;
-    WorldPacket* data;
-
-    // create if not cached yet
-    if(i_data_cache.size() < cache_idx+1 || !i_data_cache[cache_idx])
-    {
-        if(i_data_cache.size() < cache_idx+1)
-            i_data_cache.resize(cache_idx+1);
-
-        data = new WorldPacket(SMSG_MESSAGECHAT, 200);
-
-        i_builder(*data,loc_idx);
-
-        i_data_cache[cache_idx] = data;
-    }
-    else
-        data = i_data_cache[cache_idx];
-
-    p->SendPacketToSelf(data);
-}
 }
 
 #endif

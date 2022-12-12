@@ -1,7 +1,7 @@
 /*
  * Copyright (C) 2005-2008 MaNGOS <http://getmangos.com/>
  * Copyright (C) 2008 TrinityCore <http://www.trinitycore.org/>
- * Copyright (C) 2008-2014 Hellground <http://hellground.net/>
+ * Copyright (C) 2008-2017 Hellground <http://wow-hellground.com/>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -69,7 +69,7 @@ class HELLGROUND_IMPORT_EXPORT EffectMovementGenerator : public MovementGenerato
         explicit EffectMovementGenerator(uint32 Id) : m_Id(Id) {}
         void Initialize(Unit &);
         void Finalize(Unit &);
-        void Interrupt(Unit &u) { Finalize(u); }
+        void Interrupt(Unit &u);
         void Reset(Unit &) {}
         bool Update(Unit &, const uint32 &);
 

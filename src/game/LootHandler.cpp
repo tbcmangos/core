@@ -1,7 +1,7 @@
 /*
  * Copyright (C) 2005-2008 MaNGOS <http://getmangos.com/>
  * Copyright (C) 2008 TrinityCore <http://www.trinitycore.org/>
- * Copyright (C) 2008-2014 Hellground <http://hellground.net/>
+ * Copyright (C) 2008-2017 Hellground <http://wow-hellground.com/>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -24,14 +24,13 @@
 #include "Corpse.h"
 #include "GameObject.h"
 #include "Player.h"
-#include "ObjectAccessor.h"
+#include "ObjectMgr.h"
 #include "WorldSession.h"
 #include "LootMgr.h"
 #include "Object.h"
 #include "Group.h"
 #include "World.h"
 #include "Util.h"
-#include "luaengine/HookMgr.h"
 
 void WorldSession::HandleAutostoreLootItemOpcode(WorldPacket & recv_data)
 {
@@ -84,7 +83,7 @@ void WorldSession::HandleAutostoreLootItemOpcode(WorldPacket & recv_data)
     {
         Creature* pCreature = GetPlayer()->GetMap()->GetCreature(lguid);
 
-        bool ok_loot = pCreature && pCreature->isAlive() == (player->getClass()==CLASS_ROGUE && pCreature->lootForPickPocketed);
+        bool ok_loot = pCreature && pCreature->IsAlive() == (player->GetClass()==CLASS_ROGUE && pCreature->lootForPickPocketed);
 
         if (!ok_loot || !pCreature->IsWithinDistInMap(_player,INTERACTION_DISTANCE))
         {
@@ -95,11 +94,27 @@ void WorldSession::HandleAutostoreLootItemOpcode(WorldPacket & recv_data)
         loot = &pCreature->loot;
     }
 
+    if (!loot->IsPlayerAllowedToLoot(player, NULL))
+    {
+        std::ostringstream str;
+        str << "HandleAutostoreLootItem - player " << player->GetName() << " (GUID: " << player->GetGUIDLow();
+        if (lootSlot < loot->items.size())
+            str << ") is trying to loot item " << loot->items[lootSlot].itemid << " from ";
+        else
+            str << ") is trying to loot quest item (O_o) from ";
+        str << (IS_GAMEOBJECT_GUID(lguid) ? "gobject" : "creature");
+        str << " Entry " << GUID_ENPART(lguid) << " LowGUID " << GUID_LOPART(lguid) << "but he is not alowed to do so.\n";
+        str << "MapID: " << player->GetMapId() << " InstanceID: " << player->GetInstanceId() << " position X: ";
+        str << player->GetPositionX() << " Y: " << player->GetPositionY() << " Z: " << player->GetPositionZ();
+        sLog.outLog(LOG_EXPLOITS_CHEATS, "%s", str.str().c_str());
+        player->SendLootRelease(lguid);
+        return;
+    }
+
     QuestItem *qitem = NULL;
     QuestItem *ffaitem = NULL;
-    QuestItem *conditem = NULL;
 
-    LootItem *item = loot->LootItemInSlot(lootSlot,player,&qitem,&ffaitem,&conditem);
+    LootItem *item = loot->LootItemInSlot(lootSlot,player,&qitem,&ffaitem);
 
     if (!item)
     {
@@ -108,7 +123,7 @@ void WorldSession::HandleAutostoreLootItemOpcode(WorldPacket & recv_data)
     }
 
     // questitems use the blocked field for other purposes
-    if (!qitem && item->is_blocked)
+    if (!qitem && (item->is_blocked || !item->AllowedForPlayer(player)))
     {
         player->SendLootRelease(lguid);
         return;
@@ -140,10 +155,6 @@ void WorldSession::HandleAutostoreLootItemOpcode(WorldPacket & recv_data)
             }
             else
             {
-                //not freeforall, notify everyone
-                if (conditem)
-                    conditem->is_looted = true;
-
                 loot->NotifyItemRemoved(lootSlot);
             }
         }
@@ -169,6 +180,7 @@ void WorldSession::HandleLootMoneyOpcode(WorldPacket & /*recv_data*/)
         return;
 
     Loot *pLoot = NULL;
+    bool isPickpocket = false;
 
     switch (GUID_HIPART(guid))
     {
@@ -201,11 +213,12 @@ void WorldSession::HandleLootMoneyOpcode(WorldPacket & /*recv_data*/)
         {
              Creature* pCreature = GetPlayer()->GetMap()->GetCreature(guid);
 
-            bool ok_loot = pCreature && pCreature->isAlive() == (player->getClass()==CLASS_ROGUE && pCreature->lootForPickPocketed);
+            bool ok_loot = pCreature && pCreature->IsAlive() == (player->GetClass()==CLASS_ROGUE && pCreature->lootForPickPocketed);
 
             if (ok_loot && pCreature->IsWithinDistInMap(_player,INTERACTION_DISTANCE))
                 pLoot = &pCreature->loot ;
-
+            if (pCreature && pCreature->IsAlive())
+                isPickpocket = true;
             break;
         }
         default:
@@ -214,7 +227,15 @@ void WorldSession::HandleLootMoneyOpcode(WorldPacket & /*recv_data*/)
 
     if (pLoot)
     {
-        if (!IS_ITEM_GUID(guid) && player->GetGroup())      //item can be looted only single player
+        if (!pLoot->IsPlayerAllowedToLoot(player, NULL))
+        {
+            sLog.outLog(LOG_EXPLOITS_CHEATS, "HandleLootMoneyOpcode - player %s(%u) is trying to loot money (Hi %04X En %u Lo %u) but he is not allowed to",
+                player->GetName(), player->GetGUIDLow(), GUID_HIPART(guid), GUID_ENPART(guid), GUID_LOPART(guid));
+            player->SendLootRelease(guid);
+            return;
+        }
+
+        if (!IS_ITEM_GUID(guid) && player->GetGroup() && !isPickpocket)      //item can be looted only single player
         {
             Group *group = player->GetGroup();
 
@@ -224,7 +245,7 @@ void WorldSession::HandleLootMoneyOpcode(WorldPacket & /*recv_data*/)
                 Player* playerGroup = itr->getSource();
                 if (!playerGroup)
                     continue;
-                if (player->GetDistance2d(playerGroup) < sWorld.getConfig(CONFIG_GROUP_XP_DISTANCE))
+                if (player->GetDistance(playerGroup) < sWorld.getConfig(CONFIG_GROUP_XP_DISTANCE))
                     playersNear.push_back(playerGroup);
             }
 
@@ -242,9 +263,6 @@ void WorldSession::HandleLootMoneyOpcode(WorldPacket & /*recv_data*/)
         else
             player->ModifyMoney(pLoot->gold);
 
-        // used by eluna
-        sHookMgr->OnLootMoney(player, pLoot->gold);
-
         pLoot->gold = 0;
         pLoot->NotifyMoneyRemoved();
     }
@@ -259,6 +277,7 @@ void WorldSession::HandleLootOpcode(WorldPacket & recv_data)
     uint64 guid;
     recv_data >> guid;
 
+    GetPlayer()->RemoveAurasWithInterruptFlags(AURA_INTERRUPT_FLAG_TALK);
     GetPlayer()->SendLoot(guid, LOOT_CORPSE);
 }
 
@@ -272,6 +291,8 @@ void WorldSession::HandleLootReleaseOpcode(WorldPacket & recv_data)
     // use internal stored guid
     //uint64   lguid;
     //recv_data >> lguid;
+    GetPlayer()->SendCombatStats(1 << COMBAT_STATS_LOOTING, "received loot release opcode", NULL);
+
 
     if (uint64 lguid = GetPlayer()->GetLootGUID())
         DoLootRelease(lguid);
@@ -347,6 +368,7 @@ void WorldSession::DoLootRelease(uint64 lguid)
         Item *pItem = player->GetItemByGuid(lguid);
         if (!pItem)
             return;
+        loot = &pItem->loot;
 
         ItemPrototype const* proto = pItem->GetProto();
         // destroy only 5 items from stack in case prospecting and milling
@@ -354,21 +376,35 @@ void WorldSession::DoLootRelease(uint64 lguid)
             proto->Class == ITEM_CLASS_TRADE_GOODS)
         {
             pItem->m_lootGenerated = false;
-            pItem->loot.clear();
+            loot->clear();
 
             uint32 count = 5;
             player->DestroyItemCount(pItem, count, true);
         }
         else
+        {
             // FIXME: item don't must be deleted in case not fully looted state. But this pre-request implement loot saving in DB at item save. Or checting possible.
-            player->DestroyItem(pItem->GetBagSlot(),pItem->GetSlot(), true);
+            // for now autoloot first item if its quest one
+            if (!loot->isLooted())
+            {
+                LootItem* li = loot->LootItemInSlot(0, GetPlayer());
+                if (li && ObjectMgr::GetItemPrototype(li->itemid)->Class == ITEM_CLASS_QUEST)
+                {
+                    ItemPosCountVec dest;
+                    uint8 msg = player->CanStoreNewItem(NULL_BAG, NULL_SLOT, dest, li->itemid, li->count);
+                    if (!li->is_looted && !li->is_blocked && msg == EQUIP_ERR_OK)
+                        player->StoreNewItem(dest, li->itemid, true, li->randomPropertyId);
+                }
+            }
+            player->DestroyItem(pItem->GetBagSlot(), pItem->GetSlot(), true);
+        }
         return;                                             // item can be looted only single player
     }
     else
     {
         Creature* pCreature = GetPlayer()->GetMap()->GetCreature(lguid);
 
-        bool ok_loot = pCreature && pCreature->isAlive() == (player->getClass()==CLASS_ROGUE && pCreature->lootForPickPocketed);
+        bool ok_loot = pCreature && pCreature->IsAlive() == (player->GetClass()==CLASS_ROGUE && pCreature->lootForPickPocketed);
         if (!ok_loot || !pCreature->IsWithinDistInMap(_player,INTERACTION_DISTANCE))
             return;
 
@@ -384,7 +420,7 @@ void WorldSession::DoLootRelease(uint64 lguid)
         if (loot->isLooted())
         {
             // skip pickpocketing loot for speed, skinning timer redunction is no-op in fact
-            if (!pCreature->isAlive())
+            if (!pCreature->IsAlive())
                 pCreature->AllLootRemovedFromCorpse();
 
             pCreature->RemoveFlag(UNIT_DYNAMIC_FLAGS, UNIT_DYNFLAG_LOOTABLE);
@@ -450,12 +486,16 @@ void WorldSession::HandleLootMasterGiveOpcode(WorldPacket & recv_data)
 
     if (slotid > pLoot->items.size())
     {
-        sLog.outDebug("AutoLootItem: Player %s might be using a hack! (slot %d, size %d)",GetPlayer()->GetName(), slotid, pLoot->items.size());
+        sLog.outDebug("AutoLootItem: Player %s might be using a hack! (slot %d, size %lu)",GetPlayer()->GetName(), slotid, pLoot->items.size());
         return;
     }
 
     LootItem& item = pLoot->items[slotid];
-
+    if (!item.AllowedForPlayer(target))
+    {
+        _player->SendEquipError(EQUIP_ERR_ITEM_LOCKED,NULL,NULL); // cannot give this to him, sorry
+        return;
+    }
     ItemPosCountVec dest;
     uint8 msg = target->CanStoreNewItem(NULL_BAG, NULL_SLOT, dest, item.itemid, item.count);
     if (msg != EQUIP_ERR_OK)
@@ -470,9 +510,6 @@ void WorldSession::HandleLootMasterGiveOpcode(WorldPacket & recv_data)
     target->SendNewItem(newitem, uint32(item.count), false, false, true);
 
     target->SaveToDB();
-
-    // used by eluna
-    sHookMgr->OnLootItem(target, newitem, item.count, lootguid);
 
     // mark as looted
     item.count=0;

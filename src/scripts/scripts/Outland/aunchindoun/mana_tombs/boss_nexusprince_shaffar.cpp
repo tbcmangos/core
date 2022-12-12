@@ -1,6 +1,6 @@
 /* 
  * Copyright (C) 2006-2008 ScriptDev2 <https://scriptdev2.svn.sourceforge.net/>
- * Copyright (C) 2008-2014 Hellground <http://hellground.net/>
+ * Copyright (C) 2008-2015 Hellground <http://hellground.net/>
  * 
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -46,8 +46,8 @@ EndContentData */
 #define SAY_DEAD                        -1557007
 
 #define SPELL_BLINK                     34605
-#define SPELL_FROSTBOLT                 32370
-#define SPELL_FIREBALL                  20420
+#define SPELL_FROSTBOLT                 (HeroicMode ? 32364:32370)
+#define SPELL_FIREBALL                  (HeroicMode ? 32363:32369)
 #define SPELL_FROSTNOVA                 32365
 
 #define SPELL_ETHEREAL_BEACON           32371               // Summon 18431
@@ -60,7 +60,7 @@ EndContentData */
 
 struct boss_nexusprince_shaffarAI : public ScriptedAI
 {
-    boss_nexusprince_shaffarAI(Creature *c) : ScriptedAI(c)
+    boss_nexusprince_shaffarAI(Creature *c) : ScriptedAI(c), Summons(c)
     {
         pInstance = c->GetInstanceData();    
     }
@@ -68,11 +68,12 @@ struct boss_nexusprince_shaffarAI : public ScriptedAI
 
     ScriptedInstance *pInstance;
 
-    uint32 Blink_Timer;
-    uint32 Beacon_Timer;
-    uint32 FireBall_Timer;
-    uint32 Frostbolt_Timer;
-    uint32 FrostNova_Timer;
+    Timer Blink_Timer;
+    Timer Beacon_Timer;
+    Timer FireBall_Timer;
+    Timer Frostbolt_Timer;
+    Timer FrostNova_Timer;
+    SummonList Summons;
 
     Creature* Beacon[NR_INITIAL_BEACONS];
 
@@ -88,11 +89,11 @@ struct boss_nexusprince_shaffarAI : public ScriptedAI
 
     void Reset()
     {
-        Blink_Timer = 1500;
-        Beacon_Timer = 10000;
-        FireBall_Timer = 8000;
-        Frostbolt_Timer = 4000;
-        FrostNova_Timer = 15000;
+        Blink_Timer.Reset(1500);
+        Beacon_Timer.Reset(10000);
+        FireBall_Timer.Reset(8000);
+        Frostbolt_Timer.Reset(4000);
+        FrostNova_Timer.Reset(15000);
 
         HasTaunted = false;
         CanBlink = false;
@@ -117,22 +118,13 @@ struct boss_nexusprince_shaffarAI : public ScriptedAI
 
     void EnterEvadeMode()
     {
-        //Despawn still living initial beacons.
-        for(uint8 i = 0; i < NR_INITIAL_BEACONS; i++)
-        {
-            if(Beacon[i] && Beacon[i]->isAlive())
-            {
-                Beacon[i]->RemoveAllAuras();
-                Beacon[i]->CombatStop();
-                Beacon[i]->Kill(Beacon[i]);
-            }
-        }
+        Summons.DespawnAll();
         ScriptedAI::EnterEvadeMode();
     }
 
     void MoveInLineOfSight(Unit *who)
     {
-        if( !m_creature->getVictim() && who->isTargetableForAttack() && ( m_creature->IsHostileTo( who )) && who->isInAccessiblePlacefor(m_creature) )
+        if( !m_creature->GetVictim() && who->isTargetableForAttack() && ( m_creature->IsHostileTo( who )) && who->isInAccessiblePlacefor(m_creature) )
         {
             if( !HasTaunted && m_creature->IsWithinDistInMap(who, 100.0) )
             {
@@ -158,7 +150,7 @@ struct boss_nexusprince_shaffarAI : public ScriptedAI
 
         // Send initial beacons to join the fight if not already
         for(uint8 i = 0; i < NR_INITIAL_BEACONS; i++)
-            if(Beacon[i] && Beacon[i]->isAlive() && !Beacon[i]->isInCombat())
+            if(Beacon[i] && Beacon[i]->IsAlive() && !Beacon[i]->IsInCombat())
                 Beacon[i]->AI()->AttackStart(who);
 
         if(pInstance)
@@ -174,6 +166,7 @@ struct boss_nexusprince_shaffarAI : public ScriptedAI
             if( Unit *target = SelectUnit(SELECT_TARGET_RANDOM,0, 60, true) )
                 summoned->AI()->AttackStart(target);
         }
+        Summons.Summon(summoned);
     }
 
     void KilledUnit(Unit* victim)
@@ -194,7 +187,7 @@ struct boss_nexusprince_shaffarAI : public ScriptedAI
         if (!UpdateVictim())
             return;
 
-        if( FrostNova_Timer < diff )
+        if (FrostNova_Timer.Expired(diff))
         {
             if( m_creature->IsNonMeleeSpellCast(false) )
                 m_creature->InterruptNonMeleeSpells(true);
@@ -203,28 +196,25 @@ struct boss_nexusprince_shaffarAI : public ScriptedAI
             FrostNova_Timer  = 17500 + rand()%7500;
             CanBlink = true;
         }
-        else
-            FrostNova_Timer -= diff;
+        
 
-        if( Frostbolt_Timer < diff )
+        if (Frostbolt_Timer.Expired(diff))
         {
-            DoCast(m_creature->getVictim(),SPELL_FROSTBOLT);
+            DoCast(m_creature->GetVictim(),SPELL_FROSTBOLT);
             Frostbolt_Timer = 4500 + rand()%1500;
         }
-        else
-            Frostbolt_Timer -= diff;
+        
 
-        if( FireBall_Timer < diff )
+        if (FireBall_Timer.Expired(diff))
         {
-            DoCast(m_creature->getVictim(),SPELL_FIREBALL);
+            DoCast(m_creature->GetVictim(),SPELL_FIREBALL);
             FireBall_Timer = 4500 + rand()%1500;
         }
-        else
-            FireBall_Timer -= diff;
+        
 
         if( CanBlink )
         {
-            if( Blink_Timer < diff )
+            if (Blink_Timer.Expired(diff))
             {
                 if( m_creature->IsNonMeleeSpellCast(false) )
                     m_creature->InterruptNonMeleeSpells(true);
@@ -233,11 +223,10 @@ struct boss_nexusprince_shaffarAI : public ScriptedAI
                 Blink_Timer = 1000 + rand()%1500;
                 CanBlink = false;
             }
-            else
-                Blink_Timer -= diff;
+            
         }
 
-        if( Beacon_Timer < diff)
+        if (Beacon_Timer.Expired(diff))
         {
             if( m_creature->IsNonMeleeSpellCast(false) )
                 m_creature->InterruptNonMeleeSpells(true);
@@ -249,8 +238,7 @@ struct boss_nexusprince_shaffarAI : public ScriptedAI
 
             Beacon_Timer = 10000;
         }
-        else
-            Beacon_Timer -= diff;
+        
 
         DoMeleeAttackIfReady();
     }
@@ -272,9 +260,9 @@ struct mob_ethereal_beaconAI : public ScriptedAI
     }
 
     bool HeroicMode;
-    uint32 Apprentice_Timer;
-    uint32 ArcaneBolt_Timer;
-    uint32 Check_Timer;
+    Timer Apprentice_Timer;
+    Timer ArcaneBolt_Timer;
+    Timer Check_Timer;
 
     void KillSelf()
     {
@@ -283,28 +271,30 @@ struct mob_ethereal_beaconAI : public ScriptedAI
 
     void Reset()
     {
-        Apprentice_Timer = (HeroicMode ? 10000 : 20000);
-        ArcaneBolt_Timer = 1000;
-        Check_Timer = 1000;
+        Apprentice_Timer.Reset((HeroicMode ? 10000 : 20000));
+        ArcaneBolt_Timer.Reset(1000);
+        Check_Timer.Reset(1000);
     }
 
     void EnterCombat(Unit *who)
     {
         // Send Shaffar to fight
         Unit* Shaffar = FindCreature(ENTRY_SHAFFAR, 100, m_creature);
-        if(!Shaffar || Shaffar->isDead())
+        if(!Shaffar || Shaffar->IsDead())
         {
             KillSelf();
             return;
         }
 
-        if(!Shaffar->isInCombat())
+        if(!Shaffar->IsInCombat())
             ((Creature*)Shaffar)->AI()->AttackStart(who);
     }
 
     void JustSummoned(Creature *summoned)
     {
-        summoned->AI()->AttackStart(m_creature->getVictim());
+        summoned->AI()->AttackStart(m_creature->GetVictim());
+        if (me->GetOwner())
+            me->GetOwner()->ToCreature()->AI()->JustSummoned(summoned);
     }
 
     void JustDied(Unit* Killer)
@@ -319,28 +309,26 @@ struct mob_ethereal_beaconAI : public ScriptedAI
         if (!UpdateVictim())
             return;
 
-        if(Check_Timer < diff)
+        if (Check_Timer.Expired(diff))
         {
             Unit *Shaffar = FindCreature(ENTRY_SHAFFAR, 100, m_creature);
-            if(!Shaffar || Shaffar->isDead() || !Shaffar->isInCombat())
+            if(!Shaffar || Shaffar->IsDead() || !Shaffar->IsInCombat())
             {
                 KillSelf();
                 return;
             }
             Check_Timer = 1000;
         }
-        else
-            Check_Timer -= diff;
+        
 
-        if( ArcaneBolt_Timer < diff )
+        if (ArcaneBolt_Timer.Expired(diff))
         {
-            DoCast(m_creature->getVictim(),SPELL_ARCANE_BOLT);
+            DoCast(m_creature->GetVictim(),SPELL_ARCANE_BOLT);
             ArcaneBolt_Timer = 2000 + rand()%2500;
         }
-        else
-            ArcaneBolt_Timer -= diff;
+        
 
-        if( Apprentice_Timer < diff )
+        if (Apprentice_Timer.Expired(diff))
         {
             if( m_creature->IsNonMeleeSpellCast(false) )
                 m_creature->InterruptNonMeleeSpells(true);
@@ -351,8 +339,6 @@ struct mob_ethereal_beaconAI : public ScriptedAI
             KillSelf();
             return;
         }
-        else
-            Apprentice_Timer -= diff;
     }
 };
 
@@ -368,13 +354,13 @@ struct mob_ethereal_apprenticeAI : public ScriptedAI
 {
     mob_ethereal_apprenticeAI(Creature *c) : ScriptedAI(c) {}
 
-    uint32 Cast_Timer;
+    Timer Cast_Timer;
 
     bool isFireboltTurn;
 
     void Reset()
     {
-        Cast_Timer = 3000;
+        Cast_Timer.Reset(3000);
         isFireboltTurn = true;
     }
 
@@ -383,22 +369,20 @@ struct mob_ethereal_apprenticeAI : public ScriptedAI
         if(!UpdateVictim())
             return;
 
-        if(Cast_Timer < diff)
+        if (Cast_Timer.Expired(diff))
         {
             if(isFireboltTurn)
             {
-                m_creature->CastSpell(m_creature->getVictim(), SPELL_ETHEREAL_APPRENTICE_FIREBOLT, true);
+                m_creature->CastSpell(m_creature->GetVictim(), SPELL_ETHEREAL_APPRENTICE_FIREBOLT, true);
                 isFireboltTurn = false;
             }
             else
             {
-                m_creature->CastSpell(m_creature->getVictim(), SPELL_ETHEREAL_APPRENTICE_FROSTBOLT, true);
+                m_creature->CastSpell(m_creature->GetVictim(), SPELL_ETHEREAL_APPRENTICE_FROSTBOLT, true);
                 isFireboltTurn = true;
             }
             Cast_Timer = 3000;
         }
-        else
-            Cast_Timer -= diff;
     }
 };
 

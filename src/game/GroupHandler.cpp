@@ -1,7 +1,7 @@
 /*
  * Copyright (C) 2005-2009 MaNGOS <http://getmangos.com/>
  * Copyright (C) 2008-2009 TrinityCore <http://www.trinitycore.org/>
- * Copyright (C) 2008-2014 Hellground <http://hellground.net/>
+ * Copyright (C) 2008-2017 Hellground <http://wow-hellground.com/>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -78,7 +78,7 @@ void WorldSession::HandleGroupInviteOpcode(WorldPacket & recv_data)
     }
 
     // restrict invite to GMs
-    if (!sWorld.getConfig(CONFIG_ALLOW_GM_GROUP) && !GetPlayer()->isGameMaster() && player->isGameMaster())
+    if (!sWorld.getConfig(CONFIG_ALLOW_GM_GROUP) && !GetPlayer()->IsGameMaster() && player->IsGameMaster())
     {
         SendPartyResult(PARTY_OP_INVITE, membername, PARTY_RESULT_CANT_FIND_TARGET);
         return;
@@ -100,6 +100,19 @@ void WorldSession::HandleGroupInviteOpcode(WorldPacket & recv_data)
     }
     // just ignore us
     if (player->GetInstanceId() != 0 && player->GetDifficulty() != GetPlayer()->GetDifficulty())
+    {
+        SendPartyResult(PARTY_OP_INVITE, membername, PARTY_RESULT_TARGET_IGNORE_YOU);
+        return;
+    }
+
+    if (player->InBattleGround()) // bg players have ffa pvp
+    {
+        SendPartyResult(PARTY_OP_INVITE, membername, PARTY_RESULT_ALREADY_IN_GROUP);
+        return;
+    }
+
+    // OK result but not send invite
+    if (player->GetSocial()->HasIgnore(GetPlayer()->GetGUIDLow()))
     {
         SendPartyResult(PARTY_OP_INVITE, membername, PARTY_RESULT_TARGET_IGNORE_YOU);
         return;
@@ -392,6 +405,8 @@ void WorldSession::HandleLootMethodOpcode(WorldPacket & recv_data)
     group->SetLooterGuid(lootMaster);
     group->SetLootThreshold((ItemQualities)lootThreshold);
     group->SendUpdate();
+    if (group->isRaidGroup() && lootMethod == MASTER_LOOT)
+        sLog.outLog(LOG_BOSS, "Master looter set, leader %s %u looter %u", GetPlayer()->GetName(), GetPlayer()->GetGUID(), lootMaster);
 }
 
 void WorldSession::HandleLootRoll(WorldPacket &recv_data)
@@ -403,19 +418,15 @@ void WorldSession::HandleLootRoll(WorldPacket &recv_data)
 
     uint64 Guid;
     uint32 NumberOfPlayers;
-    uint8  Choise;
+    uint8  Choice;
     recv_data >> Guid;                                      //guid of the item rolled
     recv_data >> NumberOfPlayers;
-    recv_data >> Choise;                                    //0: pass, 1: need, 2: greed
+    recv_data >> Choice;                                    //0: pass, 1: need, 2: greed
 
-    //sLog.outDebug("WORLD RECIEVE CMSG_LOOT_ROLL, From:%u, Numberofplayers:%u, Choise:%u", (uint32)Guid, NumberOfPlayers, Choise);
-
-    Group* group = GetPlayer()->GetGroup();
-    if (!group)
-        return;
+    //sLog.outDebug("WORLD RECIEVE CMSG_LOOT_ROLL, From:%u, Numberofplayers:%u, Choice:%u", (uint32)Guid, NumberOfPlayers, Choice);
 
     // everything's fine, do it
-    group->CountRollVote(GetPlayer()->GetGUID(), Guid, NumberOfPlayers, Choise);
+    sObjectMgr.CountRollVote(GetPlayer()->GetGUID(), Guid, Choice);
 }
 
 void WorldSession::HandleMinimapPingOpcode(WorldPacket& recv_data)
@@ -466,7 +477,13 @@ void WorldSession::HandleRandomRollOpcode(WorldPacket& recv_data)
     data << roll;
     data << GetPlayer()->GetGUID();
     if (GetPlayer()->GetGroup())
+    {
         GetPlayer()->GetGroup()->BroadcastPacket(&data, false);
+        char out[30];
+        sprintf(out, "%u-%u = %u", minimum, maximum, roll);
+        sLog.outChat(GetPlayer()->GetGroup()->isRaidGroup() ? LOG_CHAT_RAID_A : LOG_CHAT_PARTY_A,
+            GetPlayer()->GetTeam(), (std::string("roll") + GetPlayer()->GetName()).c_str(), out);
+    }
     else
         SendPacket(&data);
 }
@@ -690,7 +707,7 @@ void WorldSession::BuildPartyMemberStatsChangedPacket(Player *player, WorldPacke
     if (mask & GROUP_UPDATE_FLAG_MAX_HP)
         *data << (uint16) player->GetMaxHealth();
 
-    Powers powerType = player->getPowerType();
+    Powers powerType = player->GetPowerType();
     if (mask & GROUP_UPDATE_FLAG_POWER_TYPE)
         *data << (uint8) powerType;
 
@@ -701,7 +718,7 @@ void WorldSession::BuildPartyMemberStatsChangedPacket(Player *player, WorldPacke
         *data << (uint16) player->GetMaxPower(powerType);
 
     if (mask & GROUP_UPDATE_FLAG_LEVEL)
-        *data << (uint16) player->getLevel();
+        *data << (uint16) player->GetLevel();
 
     if (mask & GROUP_UPDATE_FLAG_ZONE)
         *data << (uint16) player->GetCachedZone();
@@ -768,7 +785,7 @@ void WorldSession::BuildPartyMemberStatsChangedPacket(Player *player, WorldPacke
     if (mask & GROUP_UPDATE_FLAG_PET_POWER_TYPE)
     {
         if (pet)
-            *data << (uint8)  pet->getPowerType();
+            *data << (uint8)  pet->GetPowerType();
         else
             *data << (uint8)  0;
     }
@@ -776,7 +793,7 @@ void WorldSession::BuildPartyMemberStatsChangedPacket(Player *player, WorldPacke
     if (mask & GROUP_UPDATE_FLAG_PET_CUR_POWER)
     {
         if (pet)
-            *data << (uint16) pet->GetPower(pet->getPowerType());
+            *data << (uint16) pet->GetPower(pet->GetPowerType());
         else
             *data << (uint16) 0;
     }
@@ -784,7 +801,7 @@ void WorldSession::BuildPartyMemberStatsChangedPacket(Player *player, WorldPacke
     if (mask & GROUP_UPDATE_FLAG_PET_MAX_POWER)
     {
         if (pet)
-            *data << (uint16) pet->GetMaxPower(pet->getPowerType());
+            *data << (uint16) pet->GetMaxPower(pet->GetPowerType());
         else
             *data << (uint16) 0;
     }
@@ -841,7 +858,7 @@ void WorldSession::HandleRequestPartyMemberStatsOpcode(WorldPacket &recv_data)
 
     uint16 online_status = GetPlayer()->IsReferAFriendLinked(player) ? (MEMBER_STATUS_ONLINE | MEMBER_STATUS_RAF) : MEMBER_STATUS_ONLINE;
 
-    Powers powerType = player->getPowerType();
+    Powers powerType = player->GetPowerType();
     data << (uint32) mask1;                                 // group update mask
     data << (uint16) online_status;                         // member's online status
     data << (uint16) player->GetHealth();                   // GROUP_UPDATE_FLAG_CUR_HP
@@ -849,7 +866,7 @@ void WorldSession::HandleRequestPartyMemberStatsOpcode(WorldPacket &recv_data)
     data << (uint8)  powerType;                             // GROUP_UPDATE_FLAG_POWER_TYPE
     data << (uint16) player->GetPower(powerType);           // GROUP_UPDATE_FLAG_CUR_POWER
     data << (uint16) player->GetMaxPower(powerType);        // GROUP_UPDATE_FLAG_MAX_POWER
-    data << (uint16) player->getLevel();                    // GROUP_UPDATE_FLAG_LEVEL
+    data << (uint16) player->GetLevel();                    // GROUP_UPDATE_FLAG_LEVEL
     data << (uint16) player->GetCachedZone();               // GROUP_UPDATE_FLAG_ZONE
     data << (uint16) player->GetPositionX();                // GROUP_UPDATE_FLAG_POSITION
     data << (uint16) player->GetPositionY();                // GROUP_UPDATE_FLAG_POSITION
@@ -870,7 +887,7 @@ void WorldSession::HandleRequestPartyMemberStatsOpcode(WorldPacket &recv_data)
 
     if (pet)
     {
-        Powers petpowertype = pet->getPowerType();
+        Powers petpowertype = pet->GetPowerType();
         data << (uint64) pet->GetGUID();                    // GROUP_UPDATE_FLAG_PET_GUID
         data << pet->GetName();                             // GROUP_UPDATE_FLAG_PET_NAME
         data << (uint16) pet->GetDisplayId();               // GROUP_UPDATE_FLAG_PET_MODEL_ID

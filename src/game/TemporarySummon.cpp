@@ -1,7 +1,7 @@
 /*
  * Copyright (C) 2005-2008 MaNGOS <http://getmangos.com/>
  * Copyright (C) 2008 TrinityCore <http://www.trinitycore.org/>
- * Copyright (C) 2008-2014 Hellground <http://hellground.net/>
+ * Copyright (C) 2008-2017 Hellground <http://wow-hellground.com/>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -55,7 +55,7 @@ void TemporarySummon::Update(uint32 update_diff, uint32 diff)
         }
         case TEMPSUMMON_TIMED_DESPAWN_OUT_OF_COMBAT:
         {
-            if (!isInCombat())
+            if (!IsInCombat())
             {
                 if (m_timer <= update_diff)
                 {
@@ -114,7 +114,7 @@ void TemporarySummon::Update(uint32 update_diff, uint32 diff)
                 return;
             }
 
-            if (!isInCombat())
+            if (!IsInCombat())
             {
                 if (m_timer <= update_diff)
                 {
@@ -137,7 +137,7 @@ void TemporarySummon::Update(uint32 update_diff, uint32 diff)
                 return;
             }
 
-            if (!isInCombat() && isAlive())
+            if (!IsInCombat() && IsAlive())
             {
                 if (m_timer <= update_diff)
                 {
@@ -178,8 +178,4 @@ void TemporarySummon::UnSummon()
     {
         ((Creature*)sum)->AI()->SummonedCreatureDespawn(this);
     }
-}
-
-void TemporarySummon::SaveToDB()
-{
 }

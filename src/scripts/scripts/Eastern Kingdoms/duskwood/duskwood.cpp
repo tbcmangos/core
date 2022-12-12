@@ -1,6 +1,6 @@
 /* 
  * Copyright (C) 2006-2008 ScriptDev2 <https://scriptdev2.svn.sourceforge.net/>
- * Copyright (C) 2008-2014 Hellground <http://hellground.net/>
+ * Copyright (C) 2008-2015 Hellground <http://hellground.net/>
  * 
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -104,14 +104,14 @@ struct boss_twilight_corrupterAI : public ScriptedAI
     {
         if(!UpdateVictim())
             return;
-        if(SoulCorruption_Timer < diff)
+        if(SoulCorruption_Timer <= diff)
         {
-            DoCast(m_creature->getVictim(),SPELL_SOUL_CORRUPTION);
+            DoCast(m_creature->GetVictim(),SPELL_SOUL_CORRUPTION);
             SoulCorruption_Timer = rand()%4000+15000;
         } else SoulCorruption_Timer-=diff;
-        if(CreatureOfNightmare_Timer < diff)
+        if(CreatureOfNightmare_Timer <= diff)
         {
-            DoCast(m_creature->getVictim(),SPELL_CREATURE_OF_NIGHTMARE);
+            DoCast(m_creature->GetVictim(),SPELL_CREATURE_OF_NIGHTMARE);
             CreatureOfNightmare_Timer = 45000;
         } else CreatureOfNightmare_Timer-=diff;
         DoMeleeAttackIfReady();

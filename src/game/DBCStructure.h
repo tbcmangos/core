@@ -1,7 +1,7 @@
 /*
  * Copyright (C) 2005-2008 MaNGOS <http://getmangos.com/>
  * Copyright (C) 2008 TrinityCore <http://www.trinitycore.org/>
- * Copyright (C) 2008-2014 Hellground <http://hellground.net/>
+ * Copyright (C) 2008-2017 Hellground <http://wow-hellground.com/>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -25,6 +25,7 @@
 #include "Platform/Define.h"
 #include "Path.h"
 #include "SharedDefines.h"
+#include "SpellAuraDefines.h"
 #include <map>
 #include <set>
 #include <vector>
@@ -123,7 +124,7 @@ struct CharTitlesEntry
     uint32      bit_index;                                  // 36 used in PLAYER_CHOSEN_TITLE and 1<<index in PLAYER__FIELD_KNOWN_TITLES
 };
 
-struct ChatChannelsEntry
+/*struct ChatChannelsEntry
 {
     uint32      ChannelID;                                  // 0
     uint32      flags;                                      // 1
@@ -131,7 +132,7 @@ struct ChatChannelsEntry
                                                             // 19 string flags, unused
     //char*       name[16];                                 // 20-35 unused
                                                             // 36 string flag, unused
-};
+};*/
 
 struct ChrClassesEntry
 {
@@ -792,6 +793,19 @@ struct SpellEntry
         return false;
     }
 
+    bool IsSpellAppliesAura() const
+    {
+        for (uint8 i = 0; i < 3; ++i)
+            if (EffectApplyAuraName[i])
+                return true;
+        return false;
+    }
+
+    bool IsCharmSpell() const
+    {
+        return HasApplyAura(SPELL_AURA_MOD_CHARM) || HasApplyAura(SPELL_AURA_MOD_POSSESS);
+    }
+
     bool IsDestTargetEffect(uint8 eff) const
     {
         switch (EffectImplicitTargetA[eff])
@@ -861,13 +875,21 @@ struct SpellEntry
         return false;
     }
 
-    private:
-        // prevent creating custom entries (copy data from original in fact)
-        SpellEntry(SpellEntry const&);                      // DON'T must have implementation
+    inline bool HasAttribute(SpellAttributes attribute) const { return (Attributes & attribute) != 0; }
+    inline bool HasAttribute(SpellAttributesEx attribute) const { return (AttributesEx & attribute) != 0; }
+    inline bool HasAttribute(SpellAttributesEx2 attribute) const { return (AttributesEx2 & attribute) != 0; }
+    inline bool HasAttribute(SpellAttributesEx3 attribute) const { return (AttributesEx3 & attribute) != 0; }
+    inline bool HasAttribute(SpellAttributesEx4 attribute) const { return (AttributesEx4 & attribute) != 0; }
+    inline bool HasAttribute(SpellAttributesEx5 attribute) const { return (AttributesEx5 & attribute) != 0; }
+    inline bool HasAttribute(SpellAttributesEx6 attribute) const { return (AttributesEx6 & attribute) != 0; }
+
+    bool HasSpellInterruptFlag(SpellInterruptFlags flag) const { return InterruptFlags & flag; }
+    bool HasAuraInterruptFlag(SpellAuraInterruptFlags flag) const { return AuraInterruptFlags & flag; }
+    bool HasChannelInterruptFlag(SpellAuraInterruptFlags flag) const { return ChannelInterruptFlags & flag; }
 };
 
 typedef std::set<uint32> SpellCategorySet;
-typedef std::map<uint32,SpellCategorySet > SpellCategoryStore;
+typedef std::map<int32, SpellCategorySet > SpellCategoryStore;
 typedef std::set<uint32> PetFamilySpellsSet;
 typedef std::map<uint32,PetFamilySpellsSet > PetFamilySpellsStore;
 
@@ -979,6 +1001,8 @@ struct SummonPropertiesEntry
     uint32  Flags;                                          // 5, enum SummonPropFlags
 };
 */
+
+#define MAX_TALENT_RANK 5
 
 struct TalentEntry
 {

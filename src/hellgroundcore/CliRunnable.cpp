@@ -1,7 +1,7 @@
 /*
  * Copyright (C) 2005-2008 MaNGOS <http://getmangos.com/>
  * Copyright (C) 2008 TrinityCore <http://www.trinitycore.org/>
- * Copyright (C) 2008-2014 Hellground <http://hellground.net/>
+ * Copyright (C) 2008-2015 Hellground <http://hellground.net/>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -99,7 +99,7 @@ void utf8print(const char* str)
     CharToOemBuffW(&wtemp_buf[0],&temp_buf[0],wtemp_len+1);
     printf(temp_buf);
 #else
-    printf(str);
+    printf("%s", str);
 #endif
 }
 

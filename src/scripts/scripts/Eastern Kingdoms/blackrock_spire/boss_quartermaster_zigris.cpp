@@ -1,6 +1,6 @@
 /* 
  * Copyright (C) 2006-2008 ScriptDev2 <https://scriptdev2.svn.sourceforge.net/>
- * Copyright (C) 2008-2014 Hellground <http://hellground.net/>
+ * Copyright (C) 2008-2015 Hellground <http://hellground.net/>
  * 
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -35,8 +35,8 @@ struct boss_quatermasterzigrisAI : public ScriptedAI
 {
     boss_quatermasterzigrisAI(Creature *c) : ScriptedAI(c) {}
 
-    uint32 Shoot_Timer;
-    uint32 StunBomb_Timer;
+    int32 Shoot_Timer;
+    int32 StunBomb_Timer;
     //uint32 HelingPotion_Timer;
 
     void Reset()
@@ -56,19 +56,19 @@ struct boss_quatermasterzigrisAI : public ScriptedAI
         if (!UpdateVictim() )
             return;
 
-        //Shoot_Timer
-        if (Shoot_Timer < diff)
+        Shoot_Timer -= diff;
+        if (Shoot_Timer <= diff)
         {
-            DoCast(m_creature->getVictim(),SPELL_SHOOT);
-            Shoot_Timer = 500;
-        }else Shoot_Timer -= diff;
+            DoCast(m_creature->GetVictim(),SPELL_SHOOT);
+            Shoot_Timer += 500;
+        }
 
-        //StunBomb_Timer
-        if (StunBomb_Timer < diff)
+        StunBomb_Timer -= diff;
+        if (StunBomb_Timer <= diff)
         {
-            DoCast(m_creature->getVictim(),SPELL_STUNBOMB);
-            StunBomb_Timer = 14000;
-        }else StunBomb_Timer -= diff;
+            DoCast(m_creature->GetVictim(),SPELL_STUNBOMB);
+            StunBomb_Timer += 14000;
+        }
 
         DoMeleeAttackIfReady();
     }

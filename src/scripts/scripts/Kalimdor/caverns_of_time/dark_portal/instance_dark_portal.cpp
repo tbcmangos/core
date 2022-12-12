@@ -1,6 +1,6 @@
 /* 
  * Copyright (C) 2006-2008 ScriptDev2 <https://scriptdev2.svn.sourceforge.net/>
- * Copyright (C) 2008-2014 Hellground <http://hellground.net/>
+ * Copyright (C) 2008-2015 Hellground <http://hellground.net/>
  * 
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -47,12 +47,12 @@ EndScriptData */
 
 inline uint32 RandRiftBoss() { return rand()%2 ? C_RKEEP : C_RLORD; }
 
-float PortalLocation[4][4]=
+static float PortalLocation[4][4]=
 {
-    {-2041.06, 7042.08, 29.99, 1.30},
-    {-1968.18, 7042.11, 21.93, 2.12},
-    {-1885.82, 7107.36, 22.32, 3.07},
-    {-1928.11, 7175.95, 22.11, 3.44}
+    {-2041.06f, 7042.08f, 29.99f, 1.30f},
+    {-1968.18f, 7042.11f, 21.93f, 2.12f},
+    {-1885.82f, 7107.36f, 22.32f, 3.07f},
+    {-1928.11f, 7175.95f, 22.11f, 3.44f}
 };
 
 struct Wave
@@ -60,7 +60,7 @@ struct Wave
     uint32 PortalBoss;                                      //protector of current portal
 };
 
-Wave RiftWaves[]=
+static Wave RiftWaves[]=
 {
     {RIFT_BOSS},
     {C_DEJA},
@@ -307,7 +307,7 @@ struct instance_dark_portal : public ScriptedInstance
                     {
                         if (Unit *medivh = Unit::GetUnit(*player,MedivhGUID))
                         {
-                            if (medivh->isAlive())
+                            if (medivh->IsAlive())
                             {
                                 medivh->DealDamage(medivh, medivh->GetHealth(), DIRECT_DAMAGE, SPELL_SCHOOL_MASK_NORMAL, NULL, false);
                                 Encounter[0] = FAIL;
@@ -470,7 +470,7 @@ struct instance_dark_portal : public ScriptedInstance
                     {
                         PortalGUID.push_back(temp->GetGUID());
                         temp->setActive(true);
-                        temp->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
+                        temp->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_SPAWNING);
                         temp->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
 
 

@@ -1,7 +1,7 @@
 /*
  * Copyright (C) 2005-2008 MaNGOS <http://getmangos.com/>
  * Copyright (C) 2008 TrinityCore <http://www.trinitycore.org/>
- * Copyright (C) 2008-2014 Hellground <http://hellground.net/>
+ * Copyright (C) 2008-2015 Hellground <http://hellground.net/>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -24,6 +24,14 @@
 #include "ace/Singleton.h"
 #include "ace/Thread_Mutex.h"
 #include "Common.h"
+
+enum LogLevel
+{
+    LOG_LVL_MINIMAL = 0,                                    // unconditional and errors
+    LOG_LVL_BASIC   = 1,
+    LOG_LVL_DETAIL  = 2,
+    LOG_LVL_DEBUG   = 3
+};
 
 // bitmask
 enum LogFilters
@@ -55,8 +63,35 @@ enum LogNames
     LOG_EXP             = 17,
     LOG_TRADE           = 18,
     LOG_RACE_CHANGE     = 19,
+    LOG_EXPLOITS_CHEATS = 20,
+    LOG_RAID_BINDS      = 21,
+    LOG_SERVER_RECORDS  = 22,
 
     LOG_MAX_FILES
+};
+
+enum ChatLogs
+{
+    LOG_CHAT_SAY_A      = 0,
+    LOG_CHAT_SAY_H      = 1,
+    LOG_CHAT_LOCAL_A    = 2,
+    LOG_CHAT_LOCAL_H    = 3,
+    LOG_CHAT_WORLD_A    = 4,
+    LOG_CHAT_WORLD_H    = 5,
+    LOG_CHAT_LFG_A      = 6,
+    LOG_CHAT_LFG_H      = 7,
+    LOG_CHAT_PARTY_A    = 8,
+    LOG_CHAT_PARTY_H    = 9,
+    LOG_CHAT_RAID_A     = 10,
+    LOG_CHAT_RAID_H     = 11,
+    LOG_CHAT_BG_A       = 12,
+    LOG_CHAT_BG_H       = 13,
+    LOG_CHAT_TRADE_A    = 14,
+    LOG_CHAT_TRADE_H    = 15,
+    LOG_CHAT_GUILD_A    = 16,
+    LOG_CHAT_GUILD_H    = 17,
+
+    LOG_CHAT_MAX
 };
 
 class Log
@@ -82,6 +117,7 @@ class Log
                                                             // any log level
         void outString();
         void outString(const char * str, ...)       ATTR_PRINTF(2, 3);
+        void outLog(LogNames log);
         void outLog(LogNames log, const char * str, ...) ATTR_PRINTF(3, 4);
                                                             // log level >= 1
         void outBasic(const char * str, ...)        ATTR_PRINTF(2, 3);
@@ -94,6 +130,7 @@ class Log
                                                             // any log level
         void outWhisp(uint32 account, const char * str, ...) ATTR_PRINTF(3, 4);
         void outPacket(uint32 glow, const char * str, ...) ATTR_PRINTF(3, 4);
+        void outChat(uint32 type, uint32 faction, const char* who, const char* str);
 
         void SetLogFileLevel(char * Level);
         void outTime();
@@ -107,24 +144,29 @@ class Log
 
     private:
         FILE* openLogFile(LogNames log);
+        FILE* openLogFile(ChatLogs log);
         FILE* openGmlogPerAccount(uint32 account);
 
-        FILE *logFile[LOG_MAX_FILES];
+        FILE *logFile[LOG_MAX_FILES] = {};
         std::string logFileNames[LOG_MAX_FILES];
+        FILE *chatLogFile[LOG_CHAT_MAX] = {};
 
         FILE* openWhisplogPerAccount(uint32 account);
 
         // log/console control
-        uint32 m_logFileLevel;
-        bool m_includeTime;
-        uint32 m_logFilter;
+        uint32 m_logLevel = 0;
+        uint32 m_logFileLevel = 0;
+        bool m_includeTime = false;
+        bool m_chatLogEnabled = false;
+        uint32 m_logFilter = 0;
 
         // cache values for after initilization use (like gm log per account case)
         std::string m_logsDir;
         std::string m_logsTimestamp;
+        std::string m_chatLogsDir;
 
         // gm log control
-        bool m_gmlog_per_account;
+        bool m_gmlog_per_account = false;
 
         std::string m_gmlog_filename_format;
         std::string m_whisplog_filename_format;
@@ -139,6 +181,7 @@ class Log
 #endif
 
 // primary for script library
+void outstring_log();
 void outstring_log(const char * str, ...) ATTR_PRINTF(1,2);
 void detail_log(const char * str, ...) ATTR_PRINTF(1,2);
 void debug_log(const char * str, ...) ATTR_PRINTF(1,2);

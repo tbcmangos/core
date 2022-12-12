@@ -1,7 +1,7 @@
-/* 
+/*
  * Copyright (C) 2006-2008 ScriptDev2 <https://scriptdev2.svn.sourceforge.net/>
- * Copyright (C) 2008-2014 Hellground <http://hellground.net/>
- * 
+ * Copyright (C) 2008-2015 Hellground <http://hellground.net/>
+ *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 2 of the License, or
@@ -25,6 +25,7 @@ SDCategory: Script Examples
 EndScriptData */
 
 #include "precompiled.h"
+#include "ObjectMgr.h"
 
 // **** This script is designed as an example for others to build on ****
 // **** Please modify whatever you'd like to as this script is only for developement ****
@@ -69,25 +70,25 @@ struct custom_exampleAI : public ScriptedAI
     //These variables are for use only by this individual script.
     //Nothing else will ever call them but us.
 
-    uint32 Say_Timer;                                       //Timer for random chat
-    uint32 Rebuff_Timer;                                    //Timer for rebuffing
-    uint32 Spell_1_Timer;                                   //Timer for spell 1 when in combat
-    uint32 Spell_2_Timer;                                   //Timer for spell 1 when in combat
-    uint32 Spell_3_Timer;                                   //Timer for spell 1 when in combat
-    uint32 Beserk_Timer;                                    //Timer until we go into Beserk (enraged) mode
-    uint32 Phase;                                           //The current battle phase we are in
-    uint32 Phase_Timer;                                     //Timer until phase transition
+    Timer Say_Timer;                                       //Timer for random chat
+    Timer Rebuff_Timer;                                    //Timer for rebuffing
+    Timer Spell_1_Timer;                                   //Timer for spell 1 when in combat
+    Timer Spell_2_Timer;                                   //Timer for spell 1 when in combat
+    Timer Spell_3_Timer;                                   //Timer for spell 1 when in combat
+    Timer Beserk_Timer;                                    //Timer until we go into Beserk (enraged) mode
+    uint32 Phase;                                          //The current battle phase we are in
+    Timer Phase_Timer;                                     //Timer until phase transition
 
     //*** HANDLED FUNCTION ***
     //This is called whenever the core decides we need to evade
     void Reset()
     {
         Phase = 1;                                          //Start in phase 1
-        Phase_Timer = 60000;                                //60 seconds
-        Spell_1_Timer = 5000;                               //5 seconds
-        Spell_2_Timer = 37000;                              //37 seconds
-        Spell_3_Timer = 19000;                              //19 seconds
-        Beserk_Timer = 120000;                              //2 minutes
+        Phase_Timer.Reset(60000);                                //60 seconds
+        Spell_1_Timer.Reset(5000);                               //5 seconds
+        Spell_2_Timer.Reset(37000);                              //37 seconds
+        Spell_3_Timer.Reset(19000);                              //19 seconds
+        Beserk_Timer.Reset(120000);                              //2 minutes
     }
 
     //*** HANDLED FUNCTION ***
@@ -104,10 +105,10 @@ struct custom_exampleAI : public ScriptedAI
     void UpdateAI(const uint32 diff)
     {
         //Out of combat timers
-        if (!m_creature->getVictim())
+        if (!m_creature->GetVictim())
         {
             //Random Say timer
-            if (Say_Timer < diff)
+            if (Say_Timer.Expired(diff))
             {
                 //Random switch between 5 outcomes
                 switch (rand()%5)
@@ -140,17 +141,13 @@ struct custom_exampleAI : public ScriptedAI
 
                 Say_Timer = 45000;                          //Say something agian in 45 seconds
             }
-            else
-                Say_Timer -= diff;
 
             //Rebuff timer
-            if (Rebuff_Timer < diff)
+            if (Rebuff_Timer.Expired(diff))
             {
                 DoCast(m_creature,SPELL_BUFF);
                 Rebuff_Timer = 900000;                      //Rebuff agian in 15 minutes
             }
-            else
-                Rebuff_Timer -= diff;
         }
 
         //Return since we have no target
@@ -158,69 +155,59 @@ struct custom_exampleAI : public ScriptedAI
             return;
 
         //Spell 1 timer
-        if (Spell_1_Timer < diff)
+        if (Spell_1_Timer.Expired(diff))
         {
             //Cast spell one on our current target.
             if (rand()%50 > 10)
-                DoCast(m_creature->getVictim(),SPELL_ONE_ALT);
+                DoCast(m_creature->GetVictim(),SPELL_ONE_ALT);
             else
-                if (m_creature->IsWithinDistInMap(m_creature->getVictim(), 25))
-                    DoCast(m_creature->getVictim(),SPELL_ONE);
+                if (m_creature->IsWithinDistInMap(m_creature->GetVictim(), 25))
+                    DoCast(m_creature->GetVictim(),SPELL_ONE);
 
             Spell_1_Timer = 5000;
         }
-        else
-            Spell_1_Timer -= diff;
 
         //Spell 2 timer
-        if (Spell_2_Timer < diff)
+        if (Spell_2_Timer.Expired(diff))
         {
             //Cast spell one on our current target.
-            DoCast(m_creature->getVictim(),SPELL_TWO);
+            DoCast(m_creature->GetVictim(),SPELL_TWO);
 
             Spell_2_Timer = 37000;
         }
-        else
-            Spell_2_Timer -= diff;
 
         //Spell 3 timer
         if (Phase > 1)
-            if (Spell_3_Timer < diff)
+            if (Spell_3_Timer.Expired(diff))
         {
             //Cast spell one on our current target.
-            DoCast(m_creature->getVictim(),SPELL_THREE);
+            DoCast(m_creature->GetVictim(),SPELL_THREE);
 
             Spell_3_Timer = 19000;
         }
-        else
-            Spell_3_Timer -= diff;
 
         //Beserk timer
         if (Phase > 1)
-            if (Beserk_Timer < diff)
+            if (Beserk_Timer.Expired(diff))
         {
             //Say our line then cast uber death spell
             DoPlaySoundToSet(m_creature,8588);
-            DoYell(SAY_BESERK,LANG_UNIVERSAL,m_creature->getVictim());
-            DoCast(m_creature->getVictim(),SPELL_BESERK);
+            DoYell(SAY_BESERK,LANG_UNIVERSAL,m_creature->GetVictim());
+            DoCast(m_creature->GetVictim(),SPELL_BESERK);
 
             //Cast our beserk spell agian in 12 seconds if we didn't kill everyone
             Beserk_Timer = 12000;
         }
-        else
-            Beserk_Timer -= diff;
 
         //Phase timer
         if (Phase == 1)
-            if (Phase_Timer < diff)
+            if (Phase_Timer.Expired(diff))
             {
                 //Go to next phase
                 Phase++;
                 DoYell(SAY_PHASE,LANG_UNIVERSAL,NULL);
                 DoCast(m_creature,SPELL_ENRAGE);
             }
-            else
-                Phase_Timer -= diff;
 
         DoMeleeAttackIfReady();
     }
@@ -277,15 +264,345 @@ bool ReceiveEmote_custom_example(Player *player, Creature *_Creature, uint32 emo
     return true;
 }
 
+void LearnSkillRecipesHelper(Player *player, uint32 skill_id)
+{
+    uint32 classmask = player->getClassMask();
+
+    for (uint32 j = 0; j < sSkillLineAbilityStore.GetNumRows(); ++j)
+    {
+        SkillLineAbilityEntry const *skillLine = sSkillLineAbilityStore.LookupEntry(j);
+        if (!skillLine)
+            continue;
+
+        // wrong skill
+        if (skillLine->skillId != skill_id)
+            continue;
+
+        // not high rank
+        if (skillLine->forward_spellid)
+            continue;
+
+        // skip racial skills
+        if (skillLine->racemask != 0)
+            continue;
+
+        // skip wrong class skills
+        if (skillLine->classmask && (skillLine->classmask & classmask) == 0)
+            continue;
+
+        SpellEntry const* spellEntry = sSpellStore.LookupEntry(skillLine->spellId);
+        if (!spellEntry || !SpellMgr::IsSpellValid(spellEntry, player, false))
+            continue;
+
+        player->LearnSpell(skillLine->spellId);
+    }
+}
+
+bool LearnAllRecipesInProfession(Player *pPlayer, SkillType skill)
+{
+    ChatHandler handler(pPlayer->GetSession());
+    char* skill_name;
+
+    SkillLineEntry const *SkillInfo = sSkillLineStore.LookupEntry(skill);
+    skill_name = SkillInfo->name[sWorld.GetDefaultDbcLocale()];
+
+    if (!SkillInfo)
+    {
+        sLog.outDebug("Profession NPC: received non-valid skill ID");
+        return false;
+    }
+
+    pPlayer->SetSkill(SkillInfo->id, 300, 300);
+    LearnSkillRecipesHelper(pPlayer, SkillInfo->id);
+    pPlayer->GetSession()->SendNotification("All recipes for %s learned", skill_name);
+    return true;
+}
+
+void CompleteLearnProfession(Player *pPlayer, Creature *pCreature, SkillType skill)
+{
+    if (pPlayer->GetFreePrimaryProfessionPoints() == 0 && !(skill == SKILL_COOKING || skill == SKILL_FIRST_AID))
+    {
+        pPlayer->GetSession()->SendNotification("You already know two primary professions.");
+    }
+    else
+    {
+        if (!LearnAllRecipesInProfession(pPlayer, skill))
+            pPlayer->GetSession()->SendNotification("Internal error.");
+    }
+}
+
+bool GossipHello_Paymaster(Player *player, Creature *_Creature)
+{
+    _Creature->prepareGossipMenu(player); // why to rewrite other function? just add new line if nessessary
+
+    player->ADD_GOSSIP_ITEM(0, "5,000 Gold", GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF + 1);
+    player->ADD_GOSSIP_ITEM(0, "Profession Trainer", GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF + 2);
+    player->ADD_GOSSIP_ITEM(0, "I want to be Aldor.", GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF + 3);
+    player->ADD_GOSSIP_ITEM(0, "Let's go Scryer.", GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF + 4);
+    player->SEND_GOSSIP_MENU(8850, _Creature->GetGUID());
+
+    return true;
+}
+
+bool GossipSelect_Paymaster(Player* player, Creature* creature, uint32 sender, uint32 action)
+{
+    if (sender == GOSSIP_SENDER_MAIN)
+    {
+        switch (action)
+        {
+            case GOSSIP_ACTION_INFO_DEF + 1:
+                player->CLOSE_GOSSIP_MENU();
+                player->SetMoney(50000000);
+                break;
+            case GOSSIP_ACTION_INFO_DEF + 2:
+                player->ADD_GOSSIP_ITEM(GOSSIP_ICON_INTERACT_2, "Alchemy", 2, 1);
+                player->ADD_GOSSIP_ITEM(GOSSIP_ICON_INTERACT_2, "Blacksmithing", 2, 2);
+                player->ADD_GOSSIP_ITEM(GOSSIP_ICON_INTERACT_2, "Leatherworking", 2, 3);
+                player->ADD_GOSSIP_ITEM(GOSSIP_ICON_INTERACT_2, "Tailoring", 2, 4);
+                player->ADD_GOSSIP_ITEM(GOSSIP_ICON_INTERACT_2, "Engineering", 2, 5);
+                player->ADD_GOSSIP_ITEM(GOSSIP_ICON_INTERACT_2, "Enchanting", 2, 6);
+                player->ADD_GOSSIP_ITEM(GOSSIP_ICON_INTERACT_2, "Jewelcrafting", 2, 7);
+                player->ADD_GOSSIP_ITEM(GOSSIP_ICON_INTERACT_2, "Herbalism", 2, 9);
+                player->ADD_GOSSIP_ITEM(GOSSIP_ICON_INTERACT_2, "Skinning", 2, 10);
+                player->ADD_GOSSIP_ITEM(GOSSIP_ICON_INTERACT_2, "Mining", 2, 11);
+                player->ADD_GOSSIP_ITEM(GOSSIP_ICON_INTERACT_2, "First Aid", 2, 12);
+                player->ADD_GOSSIP_ITEM(GOSSIP_ICON_INTERACT_2, "Fishing", 2, 13);
+                player->ADD_GOSSIP_ITEM(GOSSIP_ICON_INTERACT_2, "Cooking", 2, 14);
+                player->SEND_GOSSIP_MENU(1301, creature->GetGUID());
+                break;
+            case GOSSIP_ACTION_INFO_DEF + 3:
+            {
+                player->CLOSE_GOSSIP_MENU();
+                FactionEntry const *scryer = sFactionStore.LookupEntry(934);
+                player->GetReputationMgr().SetReputation(scryer, 0);
+                FactionEntry const *aldor = sFactionStore.LookupEntry(932);
+                player->GetReputationMgr().SetReputation(aldor, 84000);
+                break;
+            }
+            case GOSSIP_ACTION_INFO_DEF + 4:
+            {
+                player->CLOSE_GOSSIP_MENU();
+                FactionEntry const *aldor = sFactionStore.LookupEntry(932);
+                player->GetReputationMgr().SetReputation(aldor, 0);
+                FactionEntry const *scryer = sFactionStore.LookupEntry(934);
+                player->GetReputationMgr().SetReputation(scryer, 84000);
+                break;
+            }
+        }
+    }
+    else
+    {
+        switch (action)
+        {
+            case 1:
+                if (!player->HasSkill(SKILL_ALCHEMY))
+                    CompleteLearnProfession(player, creature, SKILL_ALCHEMY);
+                break;
+            case 2:
+                if (!player->HasSkill(SKILL_BLACKSMITHING))
+                    CompleteLearnProfession(player, creature, SKILL_BLACKSMITHING);
+                break;
+            case 3:
+                if (!player->HasSkill(SKILL_LEATHERWORKING))
+                    CompleteLearnProfession(player, creature, SKILL_LEATHERWORKING);
+                break;
+            case 4:
+                if (!player->HasSkill(SKILL_TAILORING))
+                    CompleteLearnProfession(player, creature, SKILL_TAILORING);
+                break;
+            case 5:
+                if (!player->HasSkill(SKILL_ENGINERING))
+                    CompleteLearnProfession(player, creature, SKILL_ENGINERING);
+                break;
+            case 6:
+                if (!player->HasSkill(SKILL_ENCHANTING))
+                    CompleteLearnProfession(player, creature, SKILL_ENCHANTING);
+                break;
+            case 7:
+                if (!player->HasSkill(SKILL_JEWELCRAFTING))
+                    CompleteLearnProfession(player, creature, SKILL_JEWELCRAFTING);
+                break;
+            case 9:
+                if (!player->HasSkill(SKILL_HERBALISM))
+                    CompleteLearnProfession(player, creature, SKILL_HERBALISM);
+                break;
+            case 10:
+                if (!player->HasSkill(SKILL_SKINNING))
+                    CompleteLearnProfession(player, creature, SKILL_SKINNING);
+                break;
+            case 11:
+                if (!player->HasSkill(SKILL_MINING))
+                    CompleteLearnProfession(player, creature, SKILL_MINING);
+                break;
+            case 12:
+                if (!player->HasSkill(SKILL_FIRST_AID))
+                    CompleteLearnProfession(player, creature, SKILL_FIRST_AID);
+                break;
+            case 13:
+                if (!player->HasSkill(SKILL_FISHING))
+                    CompleteLearnProfession(player, creature, SKILL_FISHING);
+                break;
+            case 14:
+                if (!player->HasSkill(SKILL_COOKING))
+                    CompleteLearnProfession(player, creature, SKILL_COOKING);
+                break;
+        }
+        player->CLOSE_GOSSIP_MENU();
+    }
+    
+    // TODO: returning false should force core to handle casual options normal way, it does not
+    return true;
+}
+
+bool GossipHello_Donjon(Player* player, Creature* creature)
+{
+    creature->prepareGossipMenu(player);
+
+    player->ADD_GOSSIP_ITEM(0, "I want to go to Serpentshine Cavern (Raid).", GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF + 1);
+    player->ADD_GOSSIP_ITEM(0, "I want to go to Tempest Keep (Raid).", GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF + 2);
+    player->SEND_GOSSIP_MENU(42730, creature->GetGUID());
+
+    return true;
+}
+
+bool GossipSelect_Donjon(Player* player, Creature* creature, uint32 sender, uint32 action)
+{
+    switch (action)
+    {
+        case GOSSIP_ACTION_INFO_DEF + 1:
+            player->CLOSE_GOSSIP_MENU();
+            player->TeleportTo(530, 820.025f, 6864.93f, -66.7556f, 6.28127f);
+            break;
+        case GOSSIP_ACTION_INFO_DEF + 2:
+            player->CLOSE_GOSSIP_MENU();
+            player->TeleportTo(530, 3099.36f, 1518.73f, 190.3f, 4.72592f);
+            break;
+    }
+
+    return true;
+}
+
+bool GossipHello_Beastmaster(Player* player, Creature* creature)
+{
+    creature->prepareGossipMenu(player);
+
+    if (player->GetClass() == CLASS_HUNTER)
+    {
+        //player->ADD_GOSSIP_ITEM(0, "Stable", 0, GOSSIP_OPTION_STABLEPET);
+        player->ADD_GOSSIP_ITEM(0, "New Pet", 0, GOSSIP_ACTION_INFO_DEF + 1);
+        player->ADD_GOSSIP_ITEM(0, "Untrain Pet", 0, GOSSIP_OPTION_UNLEARNPETSKILLS);
+        player->SEND_GOSSIP_MENU(12562, creature->GetGUID());
+    }
+    else
+        player->SEND_GOSSIP_MENU(12539, creature->GetGUID());
+
+    return true;
+}
+
+bool GossipSelect_Beastmaster(Player* player, Creature* creature, uint32 sender, uint32 action)
+{
+    if (sender == 0)
+    {
+        switch (action)
+        {
+            case GOSSIP_ACTION_INFO_DEF + 1:
+                player->ADD_GOSSIP_ITEM(0, "Bat", 2, 26017);
+                player->ADD_GOSSIP_ITEM(0, "Boar", 2, 26020);
+                player->ADD_GOSSIP_ITEM(0, "Carrion Bird", 2, 26019);
+                player->ADD_GOSSIP_ITEM(0, "Cat", 2, 26021);
+                player->ADD_GOSSIP_ITEM(0, "Dragonhawk", 2, 26024);
+                player->ADD_GOSSIP_ITEM(0, "Nether Ray", 2, 26027);
+                player->ADD_GOSSIP_ITEM(0, "Owl", 2, 26028);
+                player->ADD_GOSSIP_ITEM(0, "Raptor", 2, 26029);
+                player->ADD_GOSSIP_ITEM(0, "Ravager", 2, 26030);
+                player->ADD_GOSSIP_ITEM(0, "Scorpid", 2, 26031);
+                player->ADD_GOSSIP_ITEM(0, "Serpent", 2, 26032);
+                player->ADD_GOSSIP_ITEM(0, "Spider", 2, 26033);
+                player->ADD_GOSSIP_ITEM(0, "Warp Stalker", 2, 26037);
+                player->ADD_GOSSIP_ITEM(0, "Wind Serpent", 2, 26038);
+                player->ADD_GOSSIP_ITEM(0, "Wolf", 2, 26016);
+                player->SEND_GOSSIP_MENU(12561, creature->GetGUID());
+                break;
+            case GOSSIP_OPTION_STABLEPET:
+                player->CLOSE_GOSSIP_MENU();
+                player->GetSession()->SendStablePet(creature->GetGUID());
+                break;
+            case GOSSIP_OPTION_UNLEARNPETSKILLS:
+                player->CLOSE_GOSSIP_MENU();
+                player->SendPetSkillWipeConfirm();
+                break;
+        }
+    }
+    else
+    {
+        player->CLOSE_GOSSIP_MENU();
+
+        CreatureInfo const* pInfo = sObjectMgr.GetCreatureTemplate(action);
+        if (!pInfo || pInfo->type != CREATURE_TYPE_BEAST)
+            return false;
+
+        if (Pet* pPet = player->GetPet())
+            player->RemovePet(pPet, PET_SAVE_AS_DELETED);
+
+        if (Creature* pSummon = creature->SummonCreature(action, player->GetPositionX(), player->GetPositionY(), player->GetPositionZ(), 0, TEMPSUMMON_TIMED_DESPAWN, 30000))
+        {
+            Pet* pet = new Pet(HUNTER_PET);
+
+            if (!pet)
+                return false;
+
+            if (!pet->CreateBaseAtCreature(pSummon))
+            {
+                delete pet;
+                return false;
+            }
+
+            pet->SetUInt64Value(UNIT_FIELD_SUMMONEDBY, player->GetGUID());
+            pet->SetUInt64Value(UNIT_FIELD_CREATEDBY, player->GetGUID());
+            pet->SetUInt32Value(UNIT_FIELD_FACTIONTEMPLATE, player->getFaction());
+
+            if (!pet->InitStatsForLevel(pSummon->GetLevel()))
+            {
+                delete pet;
+                return false;
+            }
+
+            // prepare visual effect for levelup
+            pet->SetUInt32Value(UNIT_FIELD_LEVEL, pSummon->GetLevel() - 1);
+
+            pet->GetCharmInfo()->SetPetNumber(sObjectMgr.GeneratePetNumber(), true);
+            // this enables pet details window (Shift+P)
+
+            pet->InitPetCreateSpells();
+            pet->SetHealth(pet->GetMaxHealth());
+
+            Map * pMap = pet->GetMap();
+            pMap->Add((Creature*)pet);
+
+            // visual effect for levelup
+            pet->SetUInt32Value(UNIT_FIELD_LEVEL, pSummon->GetLevel());
+
+            player->SetPet(pet);
+            pet->SavePetToDB(PET_SAVE_AS_CURRENT);
+            player->DelayedPetSpellInitialize();
+            pSummon->AddObjectToRemoveList();
+        }
+    }
+    
+    // TODO: returning false should force core to handle casual options normal way, it does not
+    return true;
+}
+
 //This is the actual function called only once durring InitScripts()
 //It must define all handled functions that are to be run in this script
 //For example if you want this Script to handle Emotes you must include
 //newscript->ReciveEmote = My_Emote_Function;
 void AddSC_custom_example()
 {
-/*
+
     Script *newscript;
 
+    /*
     newscript = new Script;
     newscript->Name="custom_example";
     newscript->GetAI = &GetAI_custom_example;
@@ -293,6 +610,24 @@ void AddSC_custom_example()
     newscript->pGossipSelect = &GossipSelect_custom_example;
     newscript->pReceiveEmote = &ReceiveEmote_custom_example;
     newscript->RegisterSelf();
-*/
+    */
+
+    newscript = new Script;
+    newscript->Name = "ptr_paymaster";
+    newscript->pGossipHello = &GossipHello_Paymaster;
+    newscript->pGossipSelect = &GossipSelect_Paymaster;
+    newscript->RegisterSelf(false);
+
+    newscript = new Script;
+    newscript->Name = "ptr_donjon";
+    newscript->pGossipHello = &GossipHello_Donjon;
+    newscript->pGossipSelect = &GossipSelect_Donjon;
+    newscript->RegisterSelf(false);
+
+    newscript = new Script;
+    newscript->Name = "ptr_beastmaster";
+    newscript->pGossipHello = &GossipHello_Beastmaster;
+    newscript->pGossipSelect = &GossipSelect_Beastmaster;
+    newscript->RegisterSelf(false);
 }
 

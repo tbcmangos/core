@@ -1,7 +1,7 @@
 /*
  * Copyright (C) 2005-2008 MaNGOS <http://getmangos.com/>
  * Copyright (C) 2008 TrinityCore <http://www.trinitycore.org/>
- * Copyright (C) 2008-2014 Hellground <http://hellground.net/>
+ * Copyright (C) 2008-2017 Hellground <http://wow-hellground.com/>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -42,6 +42,12 @@ struct MapID
         if(nMapId == val.nMapId)
             return nInstanceId < val.nInstanceId;
 
+        // 0 < 1< 530 < 2 < ...
+        if (nMapId == 530)
+            return 1 < val.nMapId;
+        if (val.nMapId == 530)
+            return nMapId <= 1;
+
         return nMapId < val.nMapId;
     }
 
@@ -75,10 +81,9 @@ class MapManager
                 i_gridCleanUpDelay = t;
         }
 
-        //void LoadGrid(int mapid, float x, float y, WorldObject const* obj, bool no_unload = false);
         void UnloadAll();
 
-        static bool ExistMapAndVMap(uint32 mapid, float x, float y);
+        static bool ExistMap(uint32 mapid, float x, float y);
         static bool IsValidMAP(uint32 mapid);
 
         static bool IsValidMapCoord(uint32 mapid, float x,float y)

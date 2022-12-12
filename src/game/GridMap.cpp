@@ -1,6 +1,6 @@
 /*
  * Copyright (C) 2005-2010 MaNGOS <http://getmangos.com/>
- * Copyright (C) 2008-2014 Hellground <http://hellground.net/>
+ * Copyright (C) 2008-2017 Hellground <http://wow-hellground.com/>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -62,6 +62,8 @@ GridMap::GridMap()
     m_liquidLevel = INVALID_HEIGHT_VALUE;
     m_liquid_type = NULL;
     m_liquid_map  = NULL;
+
+    lastTimeUsed = 0;
 }
 
 GridMap::~GridMap()
@@ -611,6 +613,10 @@ bool GridMap::ExistVMap(uint32 mapid,int gx,int gy)
 }
 
 //////////////////////////////////////////////////////////////////////////
+
+//clean up GridMap objects every few minutes
+#define GRID_CLEANUP_INTERVAL 60000
+
 TerrainInfo::TerrainInfo(uint32 mapid, TerrainSpecifics terrainspecifics) : m_mapId(mapid)
 {
     for (int k = 0; k < MAX_NUMBER_OF_GRIDS; ++k)
@@ -622,13 +628,8 @@ TerrainInfo::TerrainInfo(uint32 mapid, TerrainSpecifics terrainspecifics) : m_ma
         }
     }
 
-    //clean up GridMap objects every minute
-    const uint32 iCleanUpInterval = 60;
-    //schedule start randomly
-    const uint32 iRandomStart = urand(20, 40);
-
-    i_timer.SetInterval(iCleanUpInterval * 1000);
-    i_timer.SetCurrent(iRandomStart * 1000);
+    i_timer.SetInterval(GRID_CLEANUP_INTERVAL);
+    i_timer.SetCurrent(urand(10000,50000));
 
     m_specifics = new MapTemplate(terrainspecifics);
 }
@@ -651,50 +652,33 @@ GridMap * TerrainInfo::Load(const uint32 x, const uint32 y)
      ASSERT(x < MAX_NUMBER_OF_GRIDS);
      ASSERT(y < MAX_NUMBER_OF_GRIDS);
 
-     //reference grid as a first step
-     RefGrid(x, y);
-
      //quick check if GridMap already loaded
      GridMap * pMap = m_GridMaps[x][y];
      if(!pMap)
          pMap = LoadMapAndVMap(x, y);
 
+     if (pMap)
+         pMap->lastTimeUsed = WorldTimer::getMSTime();
+
      return pMap;
-}
-
-//schedule lazy GridMap object cleanup
-void TerrainInfo::Unload(const uint32 x, const uint32 y)
-{
-     ASSERT(x < MAX_NUMBER_OF_GRIDS);
-     ASSERT(y < MAX_NUMBER_OF_GRIDS);
-
-     if(m_GridMaps[x][y])
-     {
-         //decrease grid reference count...
-         if(UnrefGrid(x, y) == 0)
-         {
-             //TODO: add your additional logic here
-
-         }
-     }
 }
 
 //call this method only
 void TerrainInfo::CleanUpGrids(const uint32 diff)
 {
-     i_timer.Update(diff);
-     if( !i_timer.Passed() )
+     // do not unload continent maps ever, its just pointless
+     if (GetMapId() == 0 || GetMapId() == 1 || GetMapId() == 530 || !i_timer.Expired(diff)) 
          return;
-
+     uint32 timeNow = WorldTimer::getMSTime();
      for (int y = 0; y < MAX_NUMBER_OF_GRIDS; ++y)
      {
          for (int x = 0; x < MAX_NUMBER_OF_GRIDS; ++x)
          {
              const int16& iRef = m_GridRef[x][y];
              GridMap * pMap = m_GridMaps[x][y];
-
+             
              //delete those GridMap objects which have refcount = 0
-             if(pMap && iRef == 0 )
+             if (pMap && iRef == 0 && (pMap->lastTimeUsed + GRID_CLEANUP_INTERVAL * 5) < timeNow)
              {
                  m_GridMaps[x][y] = NULL;
                  //delete grid data if reference count == 0
@@ -708,86 +692,63 @@ void TerrainInfo::CleanUpGrids(const uint32 diff)
          }
      }
 
-     i_timer.Reset();
-}
-
-int TerrainInfo::RefGrid(const uint32& x, const uint32& y)
-{
-     ASSERT(x < MAX_NUMBER_OF_GRIDS);
-     ASSERT(y < MAX_NUMBER_OF_GRIDS);
-
-     LOCK_GUARD _lock(m_refMutex);
-     return (m_GridRef[x][y] += 1);
-}
-
-int TerrainInfo::UnrefGrid(const uint32& x, const uint32& y)
-{
-     ASSERT(x < MAX_NUMBER_OF_GRIDS);
-     ASSERT(y < MAX_NUMBER_OF_GRIDS);
-
-     int16& iRef = m_GridRef[x][y];
-
-     LOCK_GUARD _lock(m_refMutex);
-     if(iRef > 0)
-         return (iRef -= 1);
-
-     return 0;
+     i_timer.SetCurrent(0);
 }
 
 float TerrainInfo::GetHeight(float x, float y, float z, bool pUseVmaps, float maxSearchDist) const
 {
-     // find raw .map surface under Z coordinates
-     float mapHeight;
-     float z2 = z + 2.f;
-     if (GridMap *gmap = const_cast<TerrainInfo*>(this)->GetGrid(x, y))
-     {
-         float _mapheight = gmap->getHeight(x,y);
+    float mapHeight = VMAP_INVALID_HEIGHT_VALUE;            // Store Height obtained by maps
+    float vmapHeight = VMAP_INVALID_HEIGHT_VALUE;           // Store Height obtained by vmaps (in "corridor" of z (or slightly above z)
 
-         // look from a bit higher pos to find the floor, ignore under surface case
-         if (z2 > _mapheight)
-             mapHeight = _mapheight;
-         else
-             mapHeight = VMAP_INVALID_HEIGHT_VALUE;
-     }
-     else
-         mapHeight = VMAP_INVALID_HEIGHT_VALUE;
+    float z2 = z + 2.f;
 
-     float vmapHeight;
-     if (pUseVmaps)
-     {
-         VMAP::IVMapManager* vmgr = VMAP::VMapFactory::createOrGetVMapManager();
-         // if mapHeight has been found search vmap height at least until mapHeight point
-         // this prevent case when original Z "too high above ground and vmap height search fail"
-         // this will not affect most normal cases (no map in instance, or stay at ground at continent)
-         if (mapHeight > INVALID_HEIGHT && z2 - mapHeight > maxSearchDist)
-             maxSearchDist = z2 - mapHeight + 1.0f;      // 1.0 make sure that we not fail for case when map height near but above for vamp height
+    // find raw .map surface under Z coordinates (or well-defined above)
+    if (GridMap* gmap = const_cast<TerrainInfo*>(this)->GetGrid(x, y))
+        mapHeight = gmap->getHeight(x, y);
 
-         // look from a bit higher pos to find the floor
-         vmapHeight = vmgr->getHeight(GetMapId(), x, y, z2, maxSearchDist);
-     }
-     else
-         vmapHeight = VMAP_INVALID_HEIGHT_VALUE;
+    if (pUseVmaps)
+    {
+        VMAP::IVMapManager* vmgr = VMAP::VMapFactory::createOrGetVMapManager();
+        // if mapHeight has been found search vmap height at least until mapHeight point
+        // this prevent case when original Z "too high above ground and vmap height search fail"
+        // this will not affect most normal cases (no map in instance, or stay at ground at continent)
+        if (mapHeight > INVALID_HEIGHT && z2 - mapHeight > maxSearchDist)
+            maxSearchDist = z2 - mapHeight + 1.0f;      // 1.0 make sure that we not fail for case when map height near but above for vamp height
 
-     // mapHeight set for any above raw ground Z or <= INVALID_HEIGHT
-     // vmapheight set for any under Z value or <= INVALID_HEIGHT
-     if (vmapHeight > INVALID_HEIGHT)
-     {
-         if (mapHeight > INVALID_HEIGHT)
-         {
-             // we have mapheight and vmapheight and must select more appropriate
+                                                        // look from a bit higher pos to find the floor
+        vmapHeight = vmgr->getHeight(GetMapId(), x, y, z2, maxSearchDist);
 
-             // we are already under the surface or vmap height above map heigt
-             // or if the distance of the vmap height is less the land height distance
-             if (z < mapHeight || vmapHeight > mapHeight || fabs(mapHeight-z) > fabs(vmapHeight-z))
-                 return vmapHeight;
-             else
-                 return mapHeight;                           // better use .map surface height
-         }
-         else
-             return vmapHeight;                              // we have only vmapHeight (if have)
-     }
+        // if not found in expected range, look for infinity range (case of far above floor, but below terrain-height)
+        if (vmapHeight <= INVALID_HEIGHT)
+            vmapHeight = vmgr->getHeight(GetMapId(), x, y, z2, 10000.0f);
 
-     return mapHeight;
+        // look upwards
+        if (vmapHeight <= INVALID_HEIGHT && mapHeight > z2 && std::abs(z2 - mapHeight) > 30.f)
+            vmapHeight = vmgr->getHeight(GetMapId(), x, y, z2, -maxSearchDist);
+
+        // still not found, look near terrain height
+        if (vmapHeight <= INVALID_HEIGHT && mapHeight > INVALID_HEIGHT && z2 < mapHeight)
+            vmapHeight = vmgr->getHeight(GetMapId(), x, y, mapHeight + 2.0f, DEFAULT_HEIGHT_SEARCH);
+    }
+
+    // mapHeight set for any above raw ground Z or <= INVALID_HEIGHT
+    // vmapheight set for any under Z value or <= INVALID_HEIGHT
+    if (vmapHeight > INVALID_HEIGHT)
+    {
+        if (mapHeight > INVALID_HEIGHT)
+        {
+            // we have mapheight and vmapheight and must select more appropriate
+
+            // we are already under the surface or vmap height above map heigt
+            if (z < mapHeight || vmapHeight > mapHeight)
+                return vmapHeight;
+            return mapHeight;                               // better use .map surface height
+        }
+        else
+            return vmapHeight;                              // we have only vmapHeight (if have)
+    }
+
+    return mapHeight;
 }
 
 inline bool IsOutdoorWMO(uint32 mogpFlags, uint32 mapid)
@@ -986,7 +947,13 @@ float TerrainInfo::GetWaterOrGroundLevel(float x, float y, float z, float* pGrou
         GridMapLiquidData liquid_status;
 
         GridMapLiquidStatus res = getLiquidStatus(x, y, ground_z, MAP_ALL_LIQUIDS, &liquid_status);
-        return res ? ( swim ? liquid_status.level - 2.0f : liquid_status.level) : ground_z;
+        if (res)
+        {
+            float liquidZ = swim ? liquid_status.level - 2.0f : liquid_status.level;
+            if (liquidZ > ground_z)
+                return liquidZ;
+        }
+        return ground_z;
     }
 
     return VMAP_INVALID_HEIGHT_VALUE;
@@ -1008,6 +975,9 @@ GridMap* TerrainInfo::GetGrid(const float x, const float y)
     GridMap * pMap = m_GridMaps[gx][gy];
     if(!pMap)
          pMap = LoadMapAndVMap(gx, gy);
+
+    if(pMap)
+        pMap->lastTimeUsed = WorldTimer::getMSTime();
 
     return pMap;
 }
@@ -1163,7 +1133,7 @@ void TerrainManager::LoadTerrainSpecifics()
 
         bar.step();
 
-        sLog.outString("");
+        sLog.outString();
         sLog.outString(">> Loaded 0 map template data. DB table `map_template` is empty.");
         return;
     }
@@ -1191,7 +1161,7 @@ void TerrainManager::LoadTerrainSpecifics()
     while (result->NextRow());
 
     sLog.outString();
-    sLog.outString(">> Loaded %u map template data.", i_TerrainSpecifics.size());
+    sLog.outString(">> Loaded %lu map template data.", i_TerrainSpecifics.size());
 }
 
 TerrainInfo * TerrainManager::LoadTerrain(const uint32 mapId)

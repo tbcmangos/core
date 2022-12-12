@@ -1,5 +1,5 @@
 /* 
- * Copyright (C) 2008-2014 Hellground <http://hellground.net/>
+ * Copyright (C) 2008-2015 Hellground <http://hellground.net/>
  * 
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -36,8 +36,8 @@ enum SpawnDefinitions
 
 static cPosition spawnEntrancePoints[MAX] =
 {
-    {-35.8699, -161.351, -91.1765},
-    {-35.813, -268.307, -91.1498}
+    {-35.8699f, -161.351f, -91.1765f},
+    {-35.813f,  -268.307f, -91.1498f}
 };
 
 enum OnyxiaData

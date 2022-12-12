@@ -1,6 +1,6 @@
 /* 
  * Copyright (C) 2006-2008 ScriptDev2 <https://scriptdev2.svn.sourceforge.net/>
- * Copyright (C) 2008-2014 Hellground <http://hellground.net/>
+ * Copyright (C) 2008-2015 Hellground <http://hellground.net/>
  * 
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -49,14 +49,14 @@ struct boss_venoxisAI : public ScriptedAI
 
     ScriptedInstance *pInstance;
 
-    uint32 HolyFire_Timer;
-    uint32 HolyWrath_Timer;
-    uint32 VenomSpit_Timer;
-    uint32 Renew_Timer;
-    uint32 PoisonCloud_Timer;
-    uint32 HolyNova_Timer;
-    uint32 Dispell_Timer;
-    uint32 TargetInRange;
+    int32 HolyFire_Timer;
+    int32 HolyWrath_Timer;
+    int32 VenomSpit_Timer;
+    int32 Renew_Timer;
+    int32 PoisonCloud_Timer;
+    int32 HolyNova_Timer;
+    int32 Dispell_Timer;
+    int32 TargetInRange;
 
     bool PhaseTwo;
     bool InBerserk;
@@ -96,52 +96,52 @@ struct boss_venoxisAI : public ScriptedAI
 
             if ((m_creature->GetHealth()*100 / m_creature->GetMaxHealth() > 50))
             {
-                if (Dispell_Timer < diff)
+                Dispell_Timer -= diff;
+                if (Dispell_Timer <= diff)
                 {
                     DoCast(m_creature, SPELL_DISPELL);
-                    Dispell_Timer = 15000 + rand()%15000;
+                    Dispell_Timer += 15000 + rand()%15000;
                 }
-                else
-                    Dispell_Timer -= diff;
+                
 
-                if (Renew_Timer < diff)
+                Renew_Timer -= diff;
+                if (Renew_Timer <= diff)
                 {
                     DoCast(m_creature, SPELL_RENEW);
-                    Renew_Timer = 20000 + rand()%10000;
+                    Renew_Timer += 20000 + rand()%10000;
                 }
-                else
-                    Renew_Timer -= diff;
+                
 
-                if(HolyWrath_Timer < diff)
+                HolyWrath_Timer -= diff;
+                if(HolyWrath_Timer <= diff)
                 {
-                    DoCast(m_creature->getVictim(), SPELL_HOLY_WRATH);
-                    HolyWrath_Timer = 15000 + rand()%10000;
+                    DoCast(m_creature->GetVictim(), SPELL_HOLY_WRATH);
+                    HolyWrath_Timer += 15000 + rand()%10000;
                 }
-                else
-                    HolyWrath_Timer -= diff;
+                
 
-                if(HolyNova_Timer < diff)
+                HolyNova_Timer -= diff;
+                if(HolyNova_Timer <= diff)
                 {
                     if(Unit* target = SelectUnit(SELECT_TARGET_RANDOM,0, 5, true))
                     {
                         DoCast(m_creature,SPELL_HOLY_NOVA);
-                        HolyNova_Timer = 1000;
+                        HolyNova_Timer += 1000;
                     }
                     else
-                        HolyNova_Timer = 2000;
+                        HolyNova_Timer += 2000;
                 }
-                else
-                    HolyNova_Timer -= diff;
+                
 
-                if (HolyFire_Timer < diff && TargetInRange < 3)
+                HolyFire_Timer -= diff;
+                if (HolyFire_Timer <= diff && TargetInRange < 3)
                 {
                     if(Unit* target = SelectUnit(SELECT_TARGET_RANDOM,0, GetSpellMaxRange(SPELL_HOLY_FIRE), true))
                         DoCast(target, SPELL_HOLY_FIRE);
 
-                    HolyFire_Timer = 8000;
+                    HolyFire_Timer += 8000;
                 }
-                else
-                    HolyFire_Timer -= diff;
+                
             }
             else
             {
@@ -159,23 +159,23 @@ struct boss_venoxisAI : public ScriptedAI
                     PhaseTwo = true;
                 }
 
-                if(PhaseTwo && PoisonCloud_Timer < diff)
+                PoisonCloud_Timer -= diff;
+                if(PhaseTwo && PoisonCloud_Timer <= diff)
                 {
-                    DoCast(m_creature->getVictim(), SPELL_POISON_CLOUD);
-                    PoisonCloud_Timer = 15000;
+                    DoCast(m_creature->GetVictim(), SPELL_POISON_CLOUD);
+                    PoisonCloud_Timer += 15000;
                 }
-                else
-                    PoisonCloud_Timer -=diff;
+                
 
-                if(PhaseTwo && VenomSpit_Timer < diff)
+                VenomSpit_Timer -= diff;
+                if(PhaseTwo && VenomSpit_Timer <= diff)
                 {
                     if (Unit* target = SelectUnit(SELECT_TARGET_RANDOM, 0, GetSpellMaxRange(SPELL_VENOMSPIT), true))
                         DoCast(target, SPELL_VENOMSPIT);
 
-                    VenomSpit_Timer = 15000 + rand()%5000;
+                    VenomSpit_Timer += 15000 + rand()%5000;
                 }
-                else
-                    VenomSpit_Timer -= diff;
+                
 
                 if(PhaseTwo && (m_creature->GetHealth()*100 / m_creature->GetMaxHealth() < 11))
                 {

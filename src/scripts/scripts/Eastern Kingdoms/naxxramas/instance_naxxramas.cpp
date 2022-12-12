@@ -1,5 +1,5 @@
 /* 
- * Copyright (C) 2008-2014 Hellground <http://hellground.net/>
+ * Copyright (C) 2008-2015 Hellground <http://hellground.net/>
  * 
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -52,7 +52,7 @@ struct instance_naxxramas : public ScriptedInstance
     uint64 m_sir_zeliekGUID;
     uint64 m_highlord_mograineGUID;
 
-    uint64 screemTimer;
+    int32 screemTimer;
 
     void Initialize()
     {
@@ -139,8 +139,6 @@ struct instance_naxxramas : public ScriptedInstance
 
         HandleInitCreatureState(creature);
     }
-
-    void OnObjectCreate(GameObject* go){}
 
     void SetData(uint32 type, uint32 data)
     {
@@ -366,7 +364,8 @@ struct instance_naxxramas : public ScriptedInstance
 
     void Update(uint32 diff)
     {
-        if (screemTimer < diff)
+        screemTimer -= diff;
+        if (screemTimer <= diff)
         {
             if (GetData(DATA_THADDIUS) != DONE)
             {
@@ -378,7 +377,7 @@ struct instance_naxxramas : public ScriptedInstance
                         player->SendPlaySound(sound, true);
             }
 
-            screemTimer = urand(3*MINUTE*IN_MILISECONDS, 5*MINUTE*IN_MILISECONDS);
+            screemTimer += urand(3*MINUTE*IN_MILISECONDS, 5*MINUTE*IN_MILISECONDS);
         }
     }
 };

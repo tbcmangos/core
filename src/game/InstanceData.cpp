@@ -1,7 +1,7 @@
 /*
  * Copyright (C) 2005-2008 MaNGOS <http://getmangos.com/>
  * Copyright (C) 2008 TrinityCore <http://www.trinitycore.org/>
- * Copyright (C) 2008-2014 Hellground <http://hellground.net/>
+ * Copyright (C) 2008-2017 Hellground <http://wow-hellground.com/>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -29,6 +29,7 @@
 #include "MapReference.h"
 #include "Language.h"
 #include "Player.h"
+#include "GuildMgr.h"
 
 void InstanceData::SaveToDB()
 {
@@ -79,7 +80,7 @@ void InstanceData::LoadDoorData(const DoorData *data)
 
         ++data;
     }
-    sLog.outDebug("InstanceData::LoadDoorData: %u doors loaded.", doors.size());
+    sLog.outDebug("InstanceData::LoadDoorData: %lu doors loaded.", doors.size());
 }
 
 void InstanceData::UpdateDoorState(GameObject *door)
@@ -199,7 +200,7 @@ void InstanceData::HandleInitCreatureState(Creature * mob)
 
     uint32 encounter = GetEncounterForEntry(tmp->id);
 
-    if (encounter && mob->isAlive() && GetData(encounter) == DONE)
+    if (encounter && mob->IsAlive() && GetData(encounter) == DONE)
     {
         mob->setDeathState(JUST_DIED);
         mob->RemoveCorpse();
@@ -208,9 +209,9 @@ void InstanceData::HandleInitCreatureState(Creature * mob)
 
     encounter = GetRequiredEncounterForEntry(tmp->id);
 
-    if (encounter && mob->isAlive() && GetData(encounter) != DONE)
+    if (encounter && mob->IsAlive() && GetData(encounter) != DONE)
     {
-        mob->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
+        mob->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_SPAWNING);
         requiredEncounterToMobs[encounter].push_back(mob->GetGUID());
     }
 }
@@ -229,7 +230,7 @@ void InstanceData::HandleRequiredEncounter(uint32 encounter)
                                                     {
                                                         Creature * tmp = GetCreature(var);
                                                         if (tmp != nullptr)
-                                                            tmp->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
+                                                            tmp->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_SPAWNING);
                                                     });
     }
 }
@@ -245,8 +246,93 @@ void InstanceData::LogPossibleCheaters(const char* cheatName)
             playerlist += itr->getSource()->GetName();
             playerlist += " ";
         }
-        sLog.outLog(LOG_CHEAT,"Possible cheaters(%s): %s",cheatName,playerlist.c_str());
+        sLog.outLog(LOG_EXPLOITS_CHEATS,"Possible cheaters(%s): %s, instance_id %u",cheatName,playerlist.c_str(), instance->GetInstanceId());
     
         sWorld.SendGMText(LANG_POSSIBLE_CHEAT, cheatName, pPlayer->GetName(),playerlist.c_str());
     }
+}
+
+void GBK_handler::StopCombat(GBK_Encounters encounter, bool win)
+{
+    if (m_encounter == GBK_ANTISPAMINLOGSINATOR)
+        return;
+
+    if (win)
+    {
+        if (m_encounter == GBK_NONE || m_encounter != encounter)
+        {
+            sLog.outLog(LOG_DEFAULT, "GBK_handler: problems in StopCombat(%u,%u), m_encouter %u Map %u InstanceId %u",
+                uint32(encounter), win, uint32(m_encounter), m_map->GetId(), m_map->GetInstanceId());
+            m_timer = 0;
+            stats.clear();
+            m_encounter = GBK_ANTISPAMINLOGSINATOR;
+            return;
+        }
+
+        uint32 guild_id = 0;
+        uint32 totalcount = 0;
+        std::map<uint32, uint32> guilds;
+        Map::PlayerList const& list = m_map->GetPlayers();
+        for (Map::PlayerList::const_iterator i = list.begin(); i != list.end(); ++i)
+        {
+            if (Player* plr = i->getSource())
+                if (plr->GetSession() && plr->GetSession()->GetPermissions() == PERM_PLAYER)
+                {
+                    guilds[plr->GetGuildId()]++;
+                    totalcount++;
+                }
+        }
+        for (std::map<uint32, uint32>::iterator mitr = guilds.begin(); mitr != guilds.end(); mitr++)
+        {
+            if (mitr->second >= GBK_REQUIRED_AMOUNT * totalcount)
+            {
+                guild_id = mitr->first;
+                break;
+            }
+        }
+
+        uint32 kill_id = sGuildMgr.BossKilled(encounter, guild_id, WorldTimer::getMSTimeDiffToNow(m_timer));
+        RealmDataDatabase.BeginTransaction();
+        RealmDataDatabase.DirectPExecute("INSERT INTO boss_fights VALUES (%u,%u,%u,%u,%u,SYSDATE())",
+            kill_id, uint32(m_encounter), m_map->GetInstanceId(), guild_id, WorldTimer::getMSTimeDiffToNow(m_timer));
+        for (Map::PlayerList::const_iterator i = list.begin(); i != list.end(); ++i)
+        {
+            if (Player* plr = i->getSource())
+            {
+                RealmDataDatabase.PExecute("INSERT INTO boss_fights_detailed VALUES (%u,%u,%u,%u,%u)",
+                    kill_id, plr->GetGUIDLow(), stats[plr->GetGUIDLow()].damage,
+                    stats[plr->GetGUIDLow()].healing, stats[plr->GetGUIDLow()].deaths);
+            }
+        }
+        RealmDataDatabase.PExecute("INSERT INTO boss_fights_loot "
+            "(SELECT \"%u\", itemId, SUM(itemCount) FROM group_saved_loot WHERE instanceId = %u GROUP BY itemId);",
+            kill_id, m_map->GetInstanceId());
+        RealmDataDatabase.CommitTransaction();
+    }
+
+    if (m_encounter == encounter) //do not reset timers when some boss is just spamming not_started
+    {
+        m_encounter = GBK_NONE;
+        m_timer = 0;
+        stats.clear();
+    }
+}
+
+void GBK_handler::StartCombat(GBK_Encounters encounter)
+{
+    if (m_encounter != GBK_NONE && m_encounter != encounter)
+    {
+        if (m_encounter != GBK_ANTISPAMINLOGSINATOR)
+        {
+            sLog.outLog(LOG_DEFAULT, "GBK_handler: StartCombat(%u) while already in combat(%u) Map %u InstanceId %u",
+                encounter, m_encounter, m_map->GetId(), m_map->GetInstanceId());
+            m_encounter = GBK_ANTISPAMINLOGSINATOR;
+        }
+        return;
+    }
+    else if (m_encounter == encounter)
+        return; // combat in progress anyway, just dance
+
+    m_encounter = encounter;
+    m_timer = WorldTimer::getMSTime();
 }

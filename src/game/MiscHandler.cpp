@@ -1,7 +1,7 @@
 /*
  * Copyright (C) 2005-2008 MaNGOS <http://getmangos.com/>
  * Copyright (C) 2008 TrinityCore <http://www.trinitycore.org/>
- * Copyright (C) 2008-2014 Hellground <http://hellground.net/>
+ * Copyright (C) 2008-2017 Hellground <http://wow-hellground.com/>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -49,14 +49,13 @@
 #include "CellImpl.h"
 #include "AccountMgr.h"
 #include "Group.h"
-#include "luaengine/HookMgr.h"
 #include "GuildMgr.h"
 
 void WorldSession::HandleRepopRequestOpcode(WorldPacket & /*recv_data*/)
 {
     sLog.outDebug("WORLD: Recvd CMSG_REPOP_REQUEST Message");
 
-    if (GetPlayer()->isAlive() || GetPlayer()->HasFlag(PLAYER_FLAGS, PLAYER_FLAGS_GHOST))
+    if (GetPlayer()->IsAlive() || GetPlayer()->HasFlag(PLAYER_FLAGS, PLAYER_FLAGS_GHOST))
         return;
 
     // the world update order is sessions, players, creatures
@@ -64,86 +63,16 @@ void WorldSession::HandleRepopRequestOpcode(WorldPacket & /*recv_data*/)
     // creatures can kill players
     // so if the server is lagging enough the player can
     // release spirit after he's killed but before he is updated
-    if (GetPlayer()->getDeathState() == JUST_DIED)
+    if (GetPlayer()->GetDeathState() == JUST_DIED)
     {
         sLog.outDebug("HandleRepopRequestOpcode: got request after player %s(%d) was killed and before he was updated", GetPlayer()->GetName(), GetPlayer()->GetGUIDLow());
         GetPlayer()->KillPlayer();
     }
 
-    // used by eluna
-    sHookMgr->OnRepop(GetPlayer());
-
     //this is spirit release confirm?
     GetPlayer()->RemovePet(NULL, PET_SAVE_NOT_IN_SLOT, true);
     GetPlayer()->BuildPlayerRepop();
     GetPlayer()->RepopAtGraveyard();
-}
-
-void WorldSession::HandleGossipSelectOptionOpcode(WorldPacket & recv_data)
-{
-    CHECK_PACKET_SIZE(recv_data,8+4+4);
-
-    sLog.outDebug("WORLD: CMSG_GOSSIP_SELECT_OPTION");
-
-    uint32 option;
-    uint32 unk;
-    uint64 guid;
-    std::string code = "";
-
-    recv_data >> guid >> unk >> option;
-
-    if (_player->PlayerTalkClass->GossipOptionCoded(option))
-    {
-        // recheck
-        CHECK_PACKET_SIZE(recv_data,8+4+1);
-        sLog.outBasic("reading string");
-        recv_data >> code;
-        sLog.outBasic("string read: %s", code.c_str());
-    }
-
-    Creature *unit = NULL;
-    GameObject *go = NULL;
-
-    uint32 sender = _player->PlayerTalkClass->GossipOptionSender(option);
-    uint32 action = _player->PlayerTalkClass->GossipOptionAction(option);
-
-    if (IS_CREATURE_GUID(guid))
-    {
-        unit = GetPlayer()->GetNPCIfCanInteractWith(guid, UNIT_NPC_FLAG_NONE);
-        if (!unit)
-        {
-            sLog.outDebug("WORLD: HandleGossipSelectOptionOpcode - Unit (GUID: %u) not found or you can't interact with him.", uint32(GUID_LOPART(guid)));
-            return;
-        }
-    }
-    else if (IS_GAMEOBJECT_GUID(guid))
-    {
-        go = _player->GetMap()->GetGameObject(guid);
-        if (!go)
-        {
-            sLog.outDebug("WORLD: HandleGossipSelectOptionOpcode - GameObject (GUID: %u) not found.", uint32(GUID_LOPART(guid)));
-            return;
-        }
-    }
-    else
-    {
-        sLog.outDebug("WORLD: HandleGossipSelectOptionOpcode - unsupported GUID type for highguid %u. lowpart %u.", uint32(GUID_HIPART(guid)), uint32(GUID_LOPART(guid)));
-        return;
-    }
-
-    // remove fake death
-    if (GetPlayer()->hasUnitState(UNIT_STAT_DIED))
-        GetPlayer()->RemoveSpellsCausingAura(SPELL_AURA_FEIGN_DEATH);
-
-    if (unit)
-    {
-        if (!sScriptMgr.OnGossipSelect(_player, unit, sender, action, code.empty() ? NULL : code.c_str()))
-            unit->OnGossipSelect(_player, option);
-    }
-    else
-        sScriptMgr.OnGossipSelect(_player, go, sender, action, code.empty() ? NULL : code.c_str());
-
-    sHookMgr->HandleGossipSelectOption(GetPlayer(), action, GetPlayer()->PlayerTalkClass->GossipOptionSender(option), GetPlayer()->PlayerTalkClass->GossipOptionAction(option), code);
 }
 
 void WorldSession::HandleWhoOpcode(WorldPacket & recv_data)
@@ -260,22 +189,22 @@ void WorldSession::HandleWhoOpcode(WorldPacket & recv_data)
             continue;
 
         // check if target's level is in level range
-        uint32 lvl = itr->second->getLevel();
+        uint32 lvl = itr->second->GetLevel();
         if (lvl < level_min || lvl > level_max)
             continue;
 
         // check if class matches classmask
-        uint32 class_ = itr->second->getClass();
+        uint32 class_ = itr->second->GetClass();
         if (!(classmask & (1 << class_)))
             continue;
 
         // check if race matches racemask
-        uint32 race = itr->second->getRace();
+        uint32 race = itr->second->GetRace();
         if (!(racemask & (1 << race)))
             continue;
 
         uint32 pzoneid = itr->second->GetCachedZone();
-        if (!GetPlayer()->isGameMaster() && sWorld.getConfig(CONFIG_ENABLE_FAKE_WHO_ON_ARENA))
+        if (!GetPlayer()->IsGameMaster() && sWorld.getConfig(CONFIG_ENABLE_FAKE_WHO_ON_ARENA))
         {
             if (itr->second->InArena())
             {
@@ -363,13 +292,13 @@ void WorldSession::HandleWhoOpcode(WorldPacket & recv_data)
 
 void WorldSession::HandleLogoutRequestOpcode(WorldPacket & /*recv_data*/)
 {
-    sLog.outDebug("WORLD: Recvd CMSG_LOGOUT_REQUEST Message, security - %u", GetPermissions());
+    sLog.outDebug("WORLD: Recvd CMSG_LOGOUT_REQUEST Message, security - %lu", GetPermissions());
 
     if (uint64 lguid = GetPlayer()->GetLootGUID())
         DoLootRelease(lguid);
 
     //Can not logout if...
-    if (GetPlayer()->isInCombat() ||                        //...is in combat
+    if (GetPlayer()->IsInCombat() ||                        //...is in combat
         GetPlayer()->duel         ||                        //...is in Duel
         GetPlayer()->HasAura(9454,0)         ||             //...is frozen by GM via freeze command
                                                             //...is jumping ...is falling
@@ -756,8 +685,8 @@ void WorldSession::HandleBugOpcode(WorldPacket & recv_data)
     else
         sLog.outDebug("WORLD: Received CMSG_BUG [Suggestion]");
 
-    sLog.outDebug(type.c_str());
-    sLog.outDebug(content.c_str());
+    sLog.outDebug("%s", type.c_str());
+    sLog.outDebug("%s", content.c_str());
 
     RealmDataDatabase.escape_string(type);
     RealmDataDatabase.escape_string(content);
@@ -769,7 +698,7 @@ void WorldSession::HandleCorpseReclaimOpcode(WorldPacket &recv_data)
     CHECK_PACKET_SIZE(recv_data,8);
 
     sLog.outDetail("WORLD: Received CMSG_RECLAIM_CORPSE");
-    if (GetPlayer()->isAlive())
+    if (GetPlayer()->IsAlive())
         return;
 
     // do not allow corpse reclaim in arena
@@ -789,8 +718,8 @@ void WorldSession::HandleCorpseReclaimOpcode(WorldPacket &recv_data)
     if (corpse->GetGhostTime() + GetPlayer()->GetCorpseReclaimDelay(corpse->GetType()==CORPSE_RESURRECTABLE_PVP) > time(NULL))
         return;
 
-    float dist = corpse->GetDistance2d(GetPlayer());
-    sLog.outDebug("Corpse 2D Distance: \t%f",dist);
+    float dist = corpse->GetDistance(GetPlayer());
+    sLog.outDebug("Corpse 3D Distance: \t%f",dist);
     if (dist > CORPSE_RECLAIM_RADIUS)
         return;
 
@@ -810,7 +739,7 @@ void WorldSession::HandleResurrectResponseOpcode(WorldPacket & recv_data)
 
     sLog.outDetail("WORLD: Received CMSG_RESURRECT_RESPONSE");
 
-    if (GetPlayer()->isAlive())
+    if (GetPlayer()->IsAlive())
         return;
 
     uint64 guid;
@@ -865,6 +794,10 @@ void WorldSession::HandleAreaTriggerOpcode(WorldPacket & recv_data)
     // check if player in the range of areatrigger
     Player* pl = GetPlayer();
 
+    pl->SendCombatStats(1 << COMBAT_STATS_AREA_TRIGGER, "CMSG_AREATRIGGER player pos %f %f %f at %u (%f %f %f %f|%f %f %f %f)", NULL,
+        pl->GetPositionX(), pl->GetPositionY(), pl->GetPositionZ(), Trigger_ID, atEntry->x, atEntry->y, atEntry->z, atEntry->radius,
+        atEntry->box_orientation, atEntry->box_x, atEntry->box_y, atEntry->box_z);
+
     if (atEntry->radius > 0)
     {
         // if we have radius check it
@@ -885,8 +818,8 @@ void WorldSession::HandleAreaTriggerOpcode(WorldPacket & recv_data)
         double es = sin(atEntry->box_orientation);
         double ec = cos(atEntry->box_orientation);
         // calc rotated vector based on extent axis
-        double rotateDx = dx*ec - dy*es;
-        double rotateDy = dx*es + dy*ec;
+        double rotateDx = dx*ec + dy*es;
+        double rotateDy = dx*es - dy*ec;
 
         if ((fabs(rotateDx) > atEntry->box_x/2 + delta) ||
             (fabs(rotateDy) > atEntry->box_y/2 + delta) ||
@@ -902,7 +835,7 @@ void WorldSession::HandleAreaTriggerOpcode(WorldPacket & recv_data)
         return;
 
     uint32 quest_id = sObjectMgr.GetQuestForAreaTrigger(Trigger_ID);
-    if (quest_id && GetPlayer()->isAlive() && GetPlayer()->IsActiveQuest(quest_id))
+    if (quest_id && GetPlayer()->IsAlive() && GetPlayer()->IsActiveQuest(quest_id))
     {
         Quest const* pQuest = sObjectMgr.GetQuestTemplate(quest_id);
         if (pQuest)
@@ -1174,10 +1107,10 @@ void WorldSession::HandleInspectOpcode(WorldPacket& recv_data)
     for (uint32 i = 0; i < talent_points; ++i)
         data << uint8(0);
 
-    if (sWorld.getConfig(CONFIG_TALENTS_INSPECTING) || _player->isGameMaster())
+    if (sWorld.getConfig(CONFIG_TALENTS_INSPECTING) || _player->IsGameMaster())
     {
         // find class talent tabs (all players have 3 talent tabs)
-        uint32 const* talentTabIds = GetTalentTabPages(plr->getClass());
+        uint32 const* talentTabIds = GetTalentTabPages(plr->GetClass());
 
         uint32 talentTabPos = 0;                            // pos of first talent rank in tab including all prev tabs
         for (uint32 i = 0; i < 3; ++i)
@@ -1253,7 +1186,8 @@ void WorldSession::HandleInspectHonorStatsOpcode(WorldPacket& recv_data)
 
     if (!player)
     {
-        sLog.outLog(LOG_DEFAULT, "ERROR: InspectHonorStats: WTF, player not found...");
+        //sLog.outLog(LOG_DEFAULT, "ERROR: InspectHonorStats: WTF, player %lu not found...",guid);
+        // no reason to log, this is caused by inspecting 'ghosts' of players that recently logged off
         return;
     }
 
@@ -1514,7 +1448,7 @@ void WorldSession::HandleResetInstancesOpcode(WorldPacket & /*recv_data*/)
             }
             else
             {
-                sLog.outLog(LOG_DEFAULT, "ERROR: WorldSession::HandleResetInstancesOpcode: player %d tried to reset instances while player %d offline!", _player->GetGUIDLow(), citr->guid);
+                sLog.outLog(LOG_DEFAULT, "ERROR: WorldSession::HandleResetInstancesOpcode: player %d tried to reset instances while player %lu offline!", _player->GetGUIDLow(), citr->guid);
                 //_player->SendResetInstanceFailed(0, /* mapid pl ktorego nie ma ;] */);
                 return;
             }
@@ -1552,14 +1486,14 @@ void WorldSession::HandleDungeonDifficultyOpcode(WorldPacket & recv_data)
         return;
     }
 
-    if (_player->getLevel() < LEVELREQUIREMENT_HEROIC)
+    if (_player->GetLevel() < LEVELREQUIREMENT_HEROIC)
         return;
     Group *pGroup = _player->GetGroup();
     if (pGroup)
     {
         if (pGroup->isRaidGroup())
         {
-            sLog.outLog(LOG_DEFAULT, "ERROR: WorldSession::HandleDungeonDifficultyOpcode: player %d tried to change difficulty while in raid group!", _player->GetGUIDLow());
+            sLog.outDebug("ERROR: WorldSession::HandleDungeonDifficultyOpcode: player %d tried to change difficulty while in raid group!", _player->GetGUIDLow());
             ChatHandler(this).SendSysMessage(LANG_CHANGE_DIFFICULTY_RAID);
             return;
         }
@@ -1574,14 +1508,14 @@ void WorldSession::HandleDungeonDifficultyOpcode(WorldPacket & recv_data)
                 const MapEntry *mapEntry = sMapStore.LookupEntry(pl->GetMapId());
                 if (mapEntry->IsDungeon())
                 {
-                    sLog.outLog(LOG_DEFAULT, "ERROR: WorldSession::HandleDungeonDifficultyOpcode: player %d tried to change difficulty while player %d inside the instance!", _player->GetGUIDLow(), pl->GetGUIDLow());
+                    sLog.outDebug("ERROR: WorldSession::HandleDungeonDifficultyOpcode: player %d tried to change difficulty while player %d inside the instance!", _player->GetGUIDLow(), pl->GetGUIDLow());
                     ChatHandler(this).SendSysMessage(LANG_CHANGE_DIFFICULTY_INSIDE);
                     return;
                 }
             }
             else
             {
-                sLog.outLog(LOG_DEFAULT, "ERROR: WorldSession::HandleDungeonDifficultyOpcode: player %d tried to change difficulty while player %d offline!", _player->GetGUIDLow(), citr->guid);
+                sLog.outDebug("ERROR: WorldSession::HandleDungeonDifficultyOpcode: player %d tried to change difficulty while player %lu offline!", _player->GetGUIDLow(), citr->guid);
                 ChatHandler(this).SendSysMessage(LANG_CHANGE_DIFFICULTY_OFFLINE);
                 return;
             }
@@ -1730,5 +1664,5 @@ void WorldSession::HandleAcceptGrantLevel(WorldPacket& recv_data)
     else
         return;
 
-    _player->GiveLevel(_player->getLevel() + 1);
+    _player->GiveLevel(_player->GetLevel() + 1);
 }

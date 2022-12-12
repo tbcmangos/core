@@ -1,7 +1,7 @@
 /*
  * Copyright (C) 2006-2009 ScriptDev2 <https://scriptdev2.svn.sourceforge.net/>
  * Copyright (C) 2008-2010 TrinityCore <http://www.trinitycore.org/>
- * Copyright (C) 2008-2014 Hellground <http://hellground.net/>
+ * Copyright (C) 2008-2015 Hellground <http://hellground.net/>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -95,7 +95,7 @@ struct npc_tapoke_slim_jahnAI : public npc_escortAI
 
     void AttackedBy(Unit* pAttacker)
     {
-        if (me->getVictim())
+        if (me->GetVictim())
             return;
 
         if (me->IsFriendlyTo(pAttacker))
@@ -108,20 +108,16 @@ struct npc_tapoke_slim_jahnAI : public npc_escortAI
     {
         if (me->GetHealth()*100 < me->GetMaxHealth()*20)
         {
-            if (Player* pPlayer = GetPlayerForEscort())
-            {
-                if (pPlayer->GetTypeId() == TYPEID_PLAYER)
-                    CAST_PLR(pPlayer)->GroupEventHappens(QUEST_MISSING_DIPLO_PT11, me);
+            uiDamage = 0;
 
-                uiDamage = 0;
+            me->RestoreFaction();
+            me->RemoveAllAuras();
+            me->DeleteThreatList();
+            me->CombatStop(true);
 
-                me->RestoreFaction();
-                me->RemoveAllAuras();
-                me->DeleteThreatList();
-                me->CombatStop(true);
-
-                SetRun(false);
-            }
+            SetRun(false);
+            if (pDoneBy->GetTypeId() == TYPEID_PLAYER)
+                ((Player*)pDoneBy)->AreaExploredOrEventHappens(QUEST_MISSING_DIPLO_PT11);
         }
     }
 };

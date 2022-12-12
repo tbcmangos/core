@@ -1,7 +1,7 @@
 /*
  * Copyright (C) 2005-2008 MaNGOS <http://getmangos.com/>
  * Copyright (C) 2008 TrinityCore <http://www.trinitycore.org/>
- * Copyright (C) 2008-2014 Hellground <http://hellground.net/>
+ * Copyright (C) 2008-2017 Hellground <http://wow-hellground.com/>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -43,7 +43,7 @@ void WaypointMgr::Load()
     result = GameDataDatabase.PQuery("SELECT `id`,`point`,`position_x`,`position_y`,`position_z`,`move_type`,`delay`,`action`,`action_chance` FROM `waypoint_data` ORDER BY `id`, `point`");
     if (!result)
     {
-        sLog.outLog(LOG_DB_ERR, "The table `creature_addon` is empty or corrupted");
+        sLog.outLog(LOG_DB_ERR, "The table `waypoint_data` is empty or corrupted");
         return;
     }
 

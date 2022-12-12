@@ -1,7 +1,7 @@
 /*
  * Copyright (C) 2005-2009 MaNGOS <http://getmangos.com/>
  * Copyright (C) 2008-2009 TrinityCore <http://www.trinitycore.org/>
- * Copyright (C) 2008-2014 Hellground <http://hellground.net/>
+ * Copyright (C) 2008-2017 Hellground <http://wow-hellground.com/>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -37,9 +37,8 @@
 #define DEFAULT_WORLD_OBJECT_SIZE   0.388999998569489f      // player size, also currently used (correctly?) for any non Unit world objects
 #define MAX_STEALTH_DETECT_RANGE    45.0f
 #define DEFAULT_COMBAT_REACH        1.5f
-#define MIN_MELEE_REACH             2.0f
 #define NOMINAL_MELEE_RANGE         5.0f
-#define MELEE_RANGE                 (NOMINAL_MELEE_RANGE - MIN_MELEE_REACH * 2) //center to center for players
+#define MELEE_RANGE                 1.33f
 #define COMMON_ALLOW_HEIGHT_DIFF    4.3f
 
 uint32 GuidHigh2TypeId(uint32 guid_hi);
@@ -87,9 +86,10 @@ typedef UNORDERED_MAP<Player*, UpdateData> UpdateDataMapType;
 struct Position
 {
     Position() : x(0.0f), y(0.0f), z(0.0f), o(0.0f) {}
+    Position(float x, float y, float z, float o = 0.0f) : x(x), y(y), z(z), o(o) {}
     float x, y, z, o;
 
-    bool operator!=(Position &b) { return (x != b.x || y != b.y || z != b.z/* || o != b.o*/); }
+    bool operator!=(const Position &b) const { return x != b.x || y != b.y || z != b.z/* || o != b.o*/; }
 };
 
 struct WorldLocation
@@ -154,6 +154,13 @@ class HELLGROUND_IMPORT_EXPORT Object
 
         uint8 GetTypeId() const { return m_objectTypeId; }
         bool isType(uint16 mask) const { return (mask & m_objectType); }
+
+        inline bool IsWorldObject() const { return isType(TYPEMASK_WORLDOBJECT); }
+        inline bool IsPlayer() const { return GetTypeId() == TYPEID_PLAYER; }
+        inline bool IsCreature() const { return GetTypeId() == TYPEID_UNIT; }
+        inline bool IsUnit() const { return isType(TYPEMASK_UNIT); }
+        inline bool IsGameObject() const { return GetTypeId() == TYPEID_GAMEOBJECT; }
+        inline bool IsCorpse() const { return GetTypeId() == TYPEID_CORPSE; }
 
         virtual void BuildCreateUpdateBlockForPlayer(UpdateData *data, Player *target) const;
         void SendCreateUpdateToPlayer(Player* player);
@@ -374,16 +381,18 @@ class HELLGROUND_IMPORT_EXPORT WorldObject : public Object//, public WorldLocati
 
                 void Update(uint32 time_diff)
                 {
-                    m_obj->Update(GetTimeElapsed(), time_diff);
-                    m_obj->m_updateTracker.Reset();
+                    m_obj->Update((m_obj->m_updateTracker + time_diff), time_diff);
+                    m_obj->m_updateTracker = 0;
                 }
-
+                void NoUpdate(uint32 time_diff)
+                {
+                    m_obj->m_updateTracker += time_diff;
+                }
                 //bool ProcessUpdate();
 
                 static bool ProcessUpdate(Creature*);
                 static bool ProcessUpdate(WorldObject*);
 
-                time_t GetTimeElapsed() const { return m_obj->m_updateTracker.timeElapsed(); }
 
             private:
                 UpdateHelper& operator=(const UpdateHelper&);
@@ -427,7 +436,7 @@ class HELLGROUND_IMPORT_EXPORT WorldObject : public Object//, public WorldLocati
 
 #pragma region Move all this shit to Position struct
         void UpdateGroundPositionZ(float x, float y, float &z) const;
-        void UpdateAllowedPositionZ(float x, float y, float &z) const;
+        void UpdateAllowedPositionZ(float x, float y, float &z, bool IgnoreLos = false) const;
 
         void GetNearPoint(float &x, float &y, float &z, float searcher_size, float distance2d = 0.0f,float absAngle = 0.0f) const;
 
@@ -439,7 +448,7 @@ class HELLGROUND_IMPORT_EXPORT WorldObject : public Object//, public WorldLocati
         }
 
         void GetRandomPoint(float x, float y, float z, float distance, float &rand_x, float &rand_y, float &rand_z) const;
-        void GetValidPointInAngle(Position &pos, float dist, float angle, bool meAsSourcePo, bool ignoreLOSOffset = false, float allowHeightDifference = COMMON_ALLOW_HEIGHT_DIFF) const;
+        void GetValidPointInAngle(Position &pos, float dist, float angle, bool meAsSourcePo, float allowHeightDifference = COMMON_ALLOW_HEIGHT_DIFF) const;
 
 #pragma endregion Move all this shit to Position struct
 
@@ -455,8 +464,6 @@ class HELLGROUND_IMPORT_EXPORT WorldObject : public Object//, public WorldLocati
 
         const char* GetName() const { return m_name.c_str(); }
         void SetName(const std::string& newname) { m_name=newname; }
-
-        virtual const char* GetNameForLocaleIdx(int32 /*locale_idx*/) const { return GetName(); }
 
         float GetDistance(WorldObject const* obj) const;
         float GetDistance(const float x, const float y, const float z) const;
@@ -507,6 +514,10 @@ class HELLGROUND_IMPORT_EXPORT WorldObject : public Object//, public WorldLocati
         {
             return wLoc && GetMapId() == wLoc->mapid && _IsWithinDist(wLoc,dist2compare,is3D);
         }
+        bool IsWithinExactDistInMap(WorldObject const* obj, float distance) const
+        {
+            return obj && IsInMap(obj) && (GetExactDist2dSq(obj->GetPositionX(), obj->GetPositionY()) < distance*distance);
+        }
         bool IsWithinLOS(const float x, const float y, const float z) const;
         bool IsWithinLOSInMap(WorldObject const* obj) const;
 
@@ -529,12 +540,12 @@ class HELLGROUND_IMPORT_EXPORT WorldObject : public Object//, public WorldLocati
         bool IsBeingTeleported() { return mSemaphoreTeleport; }
         void SetSemaphoreTeleport(bool semphsetting) { mSemaphoreTeleport = semphsetting; }
 
-        void MonsterSay(const char* text, uint32 language, uint64 TargetGuid);
-        void MonsterYell(const char* text, uint32 language, uint64 TargetGuid);
+        void MonsterSay(const char* text, uint32 language = LANG_UNIVERSAL, uint64 TargetGuid = 0);
+        void MonsterYell(const char* text, uint32 language = LANG_UNIVERSAL, uint64 TargetGuid = 0);
         void MonsterTextEmote(const char* text, uint64 TargetGuid, bool IsBossEmote = false);
         void MonsterWhisper(const char* text, uint64 receiver, bool IsBossWhisper = false);
-        void MonsterSay(int32 textId, uint32 language, uint64 TargetGuid);
-        void MonsterYell(int32 textId, uint32 language, uint64 TargetGuid);
+        void MonsterSay(int32 textId, uint32 language = LANG_UNIVERSAL, uint64 TargetGuid = 0);
+        void MonsterYell(int32 textId, uint32 language = LANG_UNIVERSAL, uint64 TargetGuid = 0);
         void MonsterTextEmote(int32 textId, uint64 TargetGuid, bool IsBossEmote = false, bool withoutPrename = false);
         void MonsterTextEmoteToZone(int32 textId, uint64 TargetGuid, bool IsBossEmote, bool withoutPrename = false);
         void MonsterWhisper(int32 textId, uint64 receiver, bool IsBossWhisper = false);
@@ -609,7 +620,7 @@ class HELLGROUND_IMPORT_EXPORT WorldObject : public Object//, public WorldLocati
         const Pet* ToPet() const;
 
         ViewPoint& GetViewPoint() { return m_viewPoint; }
-        WorldUpdateCounter& GetUpdateCounter() { return m_updateTracker; }
+        uint32 GetUpdateCounter() const { return m_updateTracker; }
 
     protected:
         explicit WorldObject();
@@ -631,7 +642,7 @@ class HELLGROUND_IMPORT_EXPORT WorldObject : public Object//, public WorldLocati
         float m_orientation;
 
         bool mSemaphoreTeleport;
-        WorldUpdateCounter m_updateTracker;
+        uint32 m_updateTracker;
 
         ViewPoint m_viewPoint;
 };

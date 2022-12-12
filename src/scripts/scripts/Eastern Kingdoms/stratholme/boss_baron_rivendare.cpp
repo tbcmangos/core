@@ -1,6 +1,6 @@
 /* 
  * Copyright (C) 2006-2008 ScriptDev2 <https://scriptdev2.svn.sourceforge.net/>
- * Copyright (C) 2008-2014 Hellground <http://hellground.net/>
+ * Copyright (C) 2008-2015 Hellground <http://hellground.net/>
  * 
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -87,11 +87,11 @@ struct boss_baron_rivendareAI : public ScriptedAI
 
     ScriptedInstance* pInstance;
 
-    uint32 ShadowBolt_Timer;
-    uint32 Cleave_Timer;
-    uint32 MortalStrike_Timer;
-    //    uint32 RaiseDead_Timer;
-    uint32 SummonSkeletons_Timer;
+    int32 ShadowBolt_Timer;
+    int32 Cleave_Timer;
+    int32 MortalStrike_Timer;
+    //    int32 RaiseDead_Timer;
+    int32 SummonSkeletons_Timer;
     Creature *Summoned;
 
     void Reset()
@@ -128,39 +128,39 @@ struct boss_baron_rivendareAI : public ScriptedAI
         if (!UpdateVictim())
             return;
 
-        //ShadowBolt
-        if (ShadowBolt_Timer < diff)
+        ShadowBolt_Timer -= diff;
+        if (ShadowBolt_Timer <= diff)
         {
             if (Unit* target = SelectUnit(SELECT_TARGET_RANDOM, 0))
-                DoCast(m_creature->getVictim(),SPELL_SHADOWBOLT);
+                DoCast(m_creature->GetVictim(),SPELL_SHADOWBOLT);
 
-            ShadowBolt_Timer = 10000;
-        }else ShadowBolt_Timer -= diff;
+            ShadowBolt_Timer += 10000;
+        }
 
-        //Cleave
-        if (Cleave_Timer < diff)
+        Cleave_Timer -= diff;
+        if (Cleave_Timer <= diff)
         {
-            DoCast(m_creature->getVictim(),SPELL_CLEAVE);
+            DoCast(m_creature->GetVictim(),SPELL_CLEAVE);
             //13 seconds until we should cast this again
-            Cleave_Timer = 7000 + (rand()%10000);
-        }else Cleave_Timer -= diff;
+            Cleave_Timer += 7000 + (rand()%10000);
+        }
 
-        //MortalStrike
-        if (MortalStrike_Timer < diff)
+        MortalStrike_Timer -= diff;
+        if (MortalStrike_Timer <= diff)
         {
-            DoCast(m_creature->getVictim(),SPELL_MORTALSTRIKE);
-            MortalStrike_Timer = 10000 + (rand()%15000);
-        }else MortalStrike_Timer -= diff;
+            DoCast(m_creature->GetVictim(),SPELL_MORTALSTRIKE);
+            MortalStrike_Timer += 10000 + (rand()%15000);
+        }
 
-        //RaiseDead
-        //            if (RaiseDead_Timer < diff)
+        //            RaiseDead_Timer -= diff;
+        //            if (RaiseDead_Timer <= diff)
         //          {
         //      DoCast(m_creature,SPELL_RAISEDEAD);
-        //                RaiseDead_Timer = 45000;
-        //            }else RaiseDead_Timer -= diff;
+        //                RaiseDead_Timer += 45000;
+        //            }
 
-        //SummonSkeletons
-        if (SummonSkeletons_Timer < diff)
+        SummonSkeletons_Timer -= diff;
+        if (SummonSkeletons_Timer <= diff)
         {
             m_creature->SummonCreature(11197,ADD_1X,ADD_1Y,ADD_1Z,ADD_1O,TEMPSUMMON_TIMED_DESPAWN,29000);
             m_creature->SummonCreature(11197,ADD_2X,ADD_2Y,ADD_2Z,ADD_2O,TEMPSUMMON_TIMED_DESPAWN,29000);
@@ -170,8 +170,8 @@ struct boss_baron_rivendareAI : public ScriptedAI
             m_creature->SummonCreature(11197,ADD_6X,ADD_6Y,ADD_6Z,ADD_6O,TEMPSUMMON_TIMED_DESPAWN,29000);
 
             //34 seconds until we should cast this again
-            SummonSkeletons_Timer = 40000;
-        }else SummonSkeletons_Timer -= diff;
+            SummonSkeletons_Timer += 34000;
+        }
 
         DoMeleeAttackIfReady();
     }

@@ -1,6 +1,6 @@
 /* 
  * Copyright (C) 2006-2008 ScriptDev2 <https://scriptdev2.svn.sourceforge.net/>
- * Copyright (C) 2008-2014 Hellground <http://hellground.net/>
+ * Copyright (C) 2008-2015 Hellground <http://hellground.net/>
  * 
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -57,19 +57,19 @@ struct boss_vexallusAI : public ScriptedAI
 
     ScriptedInstance* instance;
 
-    uint32 ChainLightningTimer;
-    uint32 ArcaneShockTimer;
-    uint32 SpawnAddInterval;
-    uint32 AlreadySpawnedAmount;
+    Timer ChainLightningTimer;
+    Timer ArcaneShockTimer;
+    int32 SpawnAddInterval;
+    int32 AlreadySpawnedAmount;
 
-    TimeTrackerSmall evadeTimer;
+    Timer evadeTimer;
 
     SummonList summons;
 
     void Reset()
     {
-        ChainLightningTimer = urand(12000, 20000);
-        ArcaneShockTimer = urand(14000, 19000);
+        ChainLightningTimer.Reset(urand(12000, 20000));
+        ArcaneShockTimer.Reset(urand(14000, 19000));
         SpawnAddInterval = 15;
         AlreadySpawnedAmount = 0;
         summons.DespawnAll();
@@ -134,17 +134,16 @@ struct boss_vexallusAI : public ScriptedAI
 
     bool UpdateVictim(uint32 diff)
     {
-        if (me->isInCombat() && !me->IsInEvadeMode())
+        if (me->IsInCombat() && !me->IsInEvadeMode())
         {
-            evadeTimer.Update(diff);
-            if (evadeTimer.Passed())
+            if (evadeTimer.Expired(diff))
             {
                 if (me->GetMap()->GetAlivePlayersCountExceptGMs() == 0)
                 {
                     EnterEvadeMode();
                     return false;
                 }
-                evadeTimer.Reset(2000);
+                evadeTimer = 2000;
             }
         }
 
@@ -177,24 +176,23 @@ struct boss_vexallusAI : public ScriptedAI
                 ++AlreadySpawnedAmount;
             };
 
-            if (ChainLightningTimer < diff)
+            
+            if (ChainLightningTimer.Expired(diff))
             {
                 if (Unit* target = SelectUnit(SELECT_TARGET_RANDOM, 0))
                     AddSpellToCast(target, SPELL_CHAIN_LIGHTNING);
 
                 ChainLightningTimer = urand(12000, 20000);
             }
-            else
-                ChainLightningTimer -= diff;
+            
 
-            if (ArcaneShockTimer < diff)
+            if (ArcaneShockTimer.Expired(diff))
             {
                 if(Unit *target = SelectUnit(SELECT_TARGET_RANDOM, 0))
                     AddSpellToCast(target, SPELL_ARCANE_SHOCK);
                 ArcaneShockTimer = urand(14000, 19000);
             }
-            else
-                ArcaneShockTimer -= diff;
+            
         }
         else
         {

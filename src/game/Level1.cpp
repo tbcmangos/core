@@ -1,7 +1,7 @@
 /*
  * Copyright (C) 2005-2008 MaNGOS <http://getmangos.com/>
  * Copyright (C) 2008 TrinityCore <http://www.trinitycore.org/>
- * Copyright (C) 2008-2014 Hellground <http://hellground.net/>
+ * Copyright (C) 2008-2017 Hellground <http://wow-hellground.com/>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -40,10 +40,7 @@
 #include "AccountMgr.h"
 #include "SocialMgr.h"
 #include "GuildMgr.h"
-
-#ifdef _DEBUG_VMAPS
 #include "VMapFactory.h"
-#endif
 
 bool ChatHandler::HandleNpcSayCommand(const char* args)
 {
@@ -137,67 +134,6 @@ bool ChatHandler::HandleNpcWhisperCommand(const char* args)
     return true;
 }
 
-bool ChatHandler::HandleGuildAnnounceCommand(const char *args)
-{
-    if (!*args)
-        return false;
-
-    std::string msg = args;
-
-    SetSentErrorMessage(true);
-    if (uint32 gId = m_session->GetPlayer()->GetGuildId())
-    {
-        if (sGuildMgr.GetGuildAnnCooldown(gId) < time(NULL))
-        {
-            if (msg.size() > sWorld.getConfig(CONFIG_GUILD_ANN_LENGTH))
-            {
-                PSendSysMessage("Your message is to long, limit: %i chars", sWorld.getConfig(CONFIG_GUILD_ANN_LENGTH));
-                return false;
-            }
-
-            Guild * pGuild = sGuildMgr.GetGuildById(gId);
-            if (!pGuild)
-            {
-                PSendSysMessage("Error occured while sending guild announce.");
-                return false;
-            }
-
-            if (pGuild->IsFlagged(GUILD_FLAG_DISABLE_ANN))
-            {
-                PSendSysMessage("Guild announce system has been blocked for your guild.");
-                return false;
-            }
-
-            if (!pGuild->HasRankRight(m_session->GetPlayer()->GetRank(), GR_RIGHT_OFFCHATLISTEN))
-            {
-                PSendSysMessage("Your guild rank is to low to use that command.");
-                return false;
-            }
-
-            if (pGuild->GetMemberSize() < 10)
-            {
-                PSendSysMessage("Your guild is too small, you need at least 10 members to send guild announce.");
-                return false;
-            }
-
-            PSendSysMessage("Your message has been queued and will be displayed soon. Please wait %s before sending another one.", secsToTimeString(sWorld.getConfig(CONFIG_GUILD_ANN_COOLDOWN)).c_str());
-
-            sGuildMgr.SaveGuildAnnCooldown(gId);
-            sLog.outLog(LOG_GUILD_ANN, "Player %s (" UI64FMTD ") - guild: %s (%u) append guild announce: %s", m_session->GetPlayer()->GetName(), m_session->GetPlayer()->GetGUID(), pGuild->GetName().c_str(), gId, msg.c_str());
-            sWorld.QueueGuildAnnounce(gId, m_session->GetPlayer()->GetTeam(), msg);
-            return true;
-        }
-        else
-        {
-            PSendSysMessage("Please wait before guild announce cooldown expires in %s", secsToTimeString(uint32(sGuildMgr.GetGuildAnnCooldown(gId) - time(NULL))).c_str());
-            return false;
-        }
-    }
-
-    PSendSysMessage("You need to be in guild to append guild announce.");
-    return false;
-}
-
 bool ChatHandler::HandleNameAnnounceCommand(const char* args)
 {
     WorldPacket data;
@@ -205,7 +141,18 @@ bool ChatHandler::HandleNameAnnounceCommand(const char* args)
         return false;
     //char str[1024];
     //sprintf(str, GetHellgroundString(LANG_ANNOUNCE_COLOR), m_session->GetPlayer()->GetName(), args);
-    sWorld.SendWorldText(LANG_ANNOUNCE_COLOR, 0, m_session->GetPlayer()->GetName(), args);
+    uint32 textid;
+    if (m_session->HasPermissions(PERM_ADM_HEAD))
+        textid = LANG_ANNOUNCE_COLOR_ADM;
+    else if (m_session->HasPermissions(PERM_ADM_NORM))
+        textid = LANG_ANNOUNCE_COLOR_HGM;
+    else if (m_session->HasPermissions(PERM_GM_HEAD | PERM_GM_HELPER))
+        textid = LANG_ANNOUNCE_COLOR_GM;
+    else if (m_session->HasPermissions(PERM_GM_TRIAL))
+        textid = LANG_ANNOUNCE_COLOR_TESTGM;
+    else
+        return false;
+    sWorld.SendWorldText(textid, 0, m_session->GetPlayer()->GetName(), args);
     return true;
 }
 
@@ -215,7 +162,7 @@ bool ChatHandler::HandleHDevAnnounceCommand(const char* args)
     if (!*args)
         return false;
 
-    sWorld.SendWorldText(LANG_HDEV_ANNOUNCE_COLOR, 0, m_session->GetPlayer()->GetName(), args);
+    sWorld.SendWorldText(LANG_ANNOUNCE_COLOR_HDEV, 0, m_session->GetPlayer()->GetName(), args);
     return true;
 }
 
@@ -286,7 +233,7 @@ bool ChatHandler::HandleGMCommand(const char* args)
 {
     if (!*args)
     {
-        if (m_session->GetPlayer()->isGameMaster())
+        if (m_session->GetPlayer()->IsGameMaster())
             m_session->SendNotification(LANG_GM_ON);
         else
             m_session->SendNotification(LANG_GM_OFF);
@@ -299,10 +246,6 @@ bool ChatHandler::HandleGMCommand(const char* args)
     {
         m_session->GetPlayer()->SetGameMaster(true);
         m_session->SendNotification(LANG_GM_ON);
-        #ifdef _DEBUG_VMAPS
-        VMAP::IVMapManager *vMapManager = VMAP::VMapFactory::createOrGetVMapManager();
-        vMapManager->processCommand("stoplog");
-        #endif
         return true;
     }
 
@@ -310,10 +253,6 @@ bool ChatHandler::HandleGMCommand(const char* args)
     {
         m_session->GetPlayer()->SetGameMaster(false);
         m_session->SendNotification(LANG_GM_OFF);
-        #ifdef _DEBUG_VMAPS
-        VMAP::IVMapManager *vMapManager = VMAP::VMapFactory::createOrGetVMapManager();
-        vMapManager->processCommand("startlog");
-        #endif
         return true;
     }
 
@@ -354,6 +293,37 @@ bool ChatHandler::HandleGMChatCommand(const char* args)
     SetSentErrorMessage(true);
     return false;
 }
+
+bool ChatHandler::HandleGMTriggersCommand(const char* args)
+{
+    if (!*args)
+    {
+        SendSysMessage(LANG_USE_BOL);
+        SetSentErrorMessage(true);
+        return false;
+    }
+
+    std::string argstr = (char*)args;
+
+    if (argstr == "off")
+    {
+        m_session->GetPlayer()->SetGMHideTriggers(true);
+        m_session->SendNotification(LANG_DONE);
+        return true;
+    }
+
+    if (argstr == "on")
+    {
+        m_session->GetPlayer()->SetGMHideTriggers(false);
+        m_session->SendNotification(LANG_DONE);
+        return true;
+    }
+    SendSysMessage(LANG_USE_BOL);
+    SetSentErrorMessage(true);
+    return false;
+    
+}
+
 
 std::string ChatHandler::PGetParseString(int32 entry, ...)
 {
@@ -462,9 +432,11 @@ bool ChatHandler::HandleGMTicketGetByIdCommand(const char* args)
     }
     ss <<  PGetParseString(LANG_COMMAND_TICKETLISTMESSAGE, ticket->message.c_str());
     if (ticket->comment != "")
-    {
         ss <<  PGetParseString(LANG_COMMAND_TICKETLISTCOMMENT, ticket->comment.c_str());
-    }
+    
+    if (ticket->response != "")
+        ss << PGetParseString(LANG_COMMAND_TICKETLISTRESPONSE, ticket->response.c_str());
+
     SendSysMessage(ss.str().c_str());
     return true;
 }
@@ -553,12 +525,13 @@ bool ChatHandler::HandleGMTicketCloseByIdCommand(const char* args)
 
     uint64 tguid = atoi(args);
     GM_Ticket *ticket = sTicketMgr.GetGMTicket(tguid);
+    uint64 pguid = m_session ? m_session->GetPlayer()->GetGUID() : 0;
     if (!ticket || ticket->closed != 0)
     {
         SendSysMessage(LANG_COMMAND_TICKETNOTEXIST);
         return true;
     }
-    if (ticket && ticket->assignedToGM != 0 && ticket->assignedToGM != m_session->GetPlayer()->GetGUID())
+    if (ticket && ticket->assignedToGM != 0 && ticket->assignedToGM != pguid)
     {
         PSendSysMessage(LANG_COMMAND_TICKETCANNOTCLOSE, ticket->guid);
         return true;
@@ -567,9 +540,9 @@ bool ChatHandler::HandleGMTicketCloseByIdCommand(const char* args)
 
     ss << PGetParseString(LANG_COMMAND_TICKETLISTGUID, ticket->guid);
     ss << PGetParseString(LANG_COMMAND_TICKETLISTNAME, GetNameLink(ticket->name).c_str());
-    ss << PGetParseString(LANG_COMMAND_TICKETCLOSED, m_session->GetPlayer()->GetName());
+    ss << PGetParseString(LANG_COMMAND_TICKETCLOSED, m_session ? m_session->GetPlayerName() : "CONSOLE");
     SendGlobalGMSysMessage(ss.str().c_str());
-    sTicketMgr.RemoveGMTicket(ticket->guid, m_session->GetPlayer()->GetGUID());
+    sTicketMgr.RemoveGMTicket(ticket->guid, pguid);
     Player *plr = sObjectMgr.GetPlayer(ticket->playerGuid);
 
     if (!plr || !plr->IsInWorld())
@@ -595,6 +568,7 @@ bool ChatHandler::HandleGMTicketResponseCommand(const char* args)
         return false;
 
     uint64 tguid = atoi(guid);
+    uint64 pguid = m_session ? m_session->GetPlayer()->GetGUID() : 0;
     GM_Ticket *ticket = sTicketMgr.GetGMTicket(tguid);
     if (!ticket || ticket->closed != 0)
     {
@@ -602,7 +576,7 @@ bool ChatHandler::HandleGMTicketResponseCommand(const char* args)
         return true;
     }
 
-    if (ticket && ticket->assignedToGM != 0 && ticket->assignedToGM != m_session->GetPlayer()->GetGUID())
+    if (ticket && ticket->assignedToGM != 0 && ticket->assignedToGM != pguid)
     {
         PSendSysMessage(LANG_COMMAND_TICKETCANNOTCLOSE, ticket->guid);
         return true;
@@ -626,6 +600,9 @@ bool ChatHandler::HandleGMTicketResponseCommand(const char* args)
     if (!msgText)
         return false;
 
+    ticket->response = msgText;
+    sTicketMgr.UpdateGMTicket(ticket);
+
     if (!SendGMMail(ticket->name.c_str(), "Ticket", msgText))
         return false;
 
@@ -633,9 +610,9 @@ bool ChatHandler::HandleGMTicketResponseCommand(const char* args)
 
     ss << PGetParseString(LANG_COMMAND_TICKETLISTGUID, ticket->guid);
     ss << PGetParseString(LANG_COMMAND_TICKETLISTNAME, GetNameLink(ticket->name).c_str());
-    ss << PGetParseString(LANG_COMMAND_TICKETCLOSED, m_session->GetPlayer()->GetName());
+    ss << PGetParseString(LANG_COMMAND_TICKETCLOSED, m_session ? m_session->GetPlayerName() : "CONSOLE");
     SendGlobalGMSysMessage(ss.str().c_str());
-    sTicketMgr.RemoveGMTicket(ticket->guid, m_session->GetPlayer()->GetGUID());
+    sTicketMgr.RemoveGMTicket(ticket->guid, pguid);
     Player *plr = sObjectMgr.GetPlayer(ticket->playerGuid);
 
     if (!plr || !plr->IsInWorld())
@@ -666,7 +643,7 @@ bool ChatHandler::HandleGMTicketAssignToCommand(const char* args)
     if (!normalizePlayerName(targm))
         return true;
 
-    Player *cplr = m_session->GetPlayer();
+    uint64 pguid = m_session ? m_session->GetPlayer()->GetGUID() : 0;
     std::string gmname;
     GM_Ticket *ticket = sTicketMgr.GetGMTicket(ticketGuid);
 
@@ -689,7 +666,7 @@ bool ChatHandler::HandleGMTicketAssignToCommand(const char* args)
         return true;
     }
     sObjectMgr.GetPlayerNameByGUID(tarGUID, gmname);
-    if (ticket->assignedToGM != 0 && ticket->assignedToGM != cplr->GetGUID())
+    if (ticket->assignedToGM != 0 && ticket->assignedToGM != pguid)
     {
         PSendSysMessage(LANG_COMMAND_TICKETALREADYASSIGNED, ticket->guid, gmname.c_str());
         return true;
@@ -712,7 +689,6 @@ bool ChatHandler::HandleGMTicketUnAssignCommand(const char* args)
         return false;
 
     uint64 ticketGuid = atoi(args);
-    Player *cplr = m_session->GetPlayer();
     GM_Ticket *ticket = sTicketMgr.GetGMTicket(ticketGuid);
 
     if (!ticket|| ticket->closed != 0)
@@ -729,7 +705,7 @@ bool ChatHandler::HandleGMTicketUnAssignCommand(const char* args)
     std::string gmname;
     sObjectMgr.GetPlayerNameByGUID(ticket->assignedToGM, gmname);
     Player *plr = sObjectMgr.GetPlayer(ticket->assignedToGM);
-    if (plr && plr->IsInWorld() && plr->GetSession()->GetPermissions() > cplr->GetSession()->GetPermissions())
+    if (plr && plr->IsInWorld() && m_session && plr->GetSession()->GetPermissions() > m_session->GetPermissions())
     {
         SendSysMessage(LANG_COMMAND_TICKETUNASSIGNSECURITY);
         return true;
@@ -740,7 +716,7 @@ bool ChatHandler::HandleGMTicketUnAssignCommand(const char* args)
     ss << PGetParseString(LANG_COMMAND_TICKETLISTGUID, ticket->guid);
     ss << PGetParseString(LANG_COMMAND_TICKETLISTNAME, GetNameLink(ticket->name).c_str());
     ss << PGetParseString(LANG_COMMAND_TICKETLISTASSIGNEDTO, gmname.c_str());
-    ss << PGetParseString(LANG_COMMAND_TICKETLISTUNASSIGNED, cplr->GetName());
+    ss << PGetParseString(LANG_COMMAND_TICKETLISTUNASSIGNED, m_session ? m_session->GetPlayerName() : "CONSOLE");
     SendGlobalGMSysMessage(ss.str().c_str());
     ticket->assignedToGM = 0;
     sTicketMgr.UpdateGMTicket(ticket);
@@ -759,7 +735,7 @@ bool ChatHandler::HandleGMTicketCommentCommand(const char* args)
     if (!comment)
         return false;
 
-    Player *cplr = m_session->GetPlayer();
+    uint64 pguid = m_session ? m_session->GetPlayer()->GetGUID() : 0;
     GM_Ticket *ticket = sTicketMgr.GetGMTicket(ticketGuid);
 
     if (!ticket || ticket->closed != 0)
@@ -767,7 +743,7 @@ bool ChatHandler::HandleGMTicketCommentCommand(const char* args)
         PSendSysMessage(LANG_COMMAND_TICKETNOTEXIST);
         return true;
     }
-    if (ticket->assignedToGM != 0 && ticket->assignedToGM != cplr->GetGUID())
+    if (ticket->assignedToGM != 0 && ticket->assignedToGM != pguid)
     {
         PSendSysMessage(LANG_COMMAND_TICKETALREADYASSIGNED, ticket->guid);
         return true;
@@ -785,7 +761,7 @@ bool ChatHandler::HandleGMTicketCommentCommand(const char* args)
     {
         ss << PGetParseString(LANG_COMMAND_TICKETLISTASSIGNEDTO, gmname.c_str());
     }
-    ss << PGetParseString(LANG_COMMAND_TICKETLISTADDCOMMENT, cplr->GetName(), ticket->comment.c_str());
+    ss << PGetParseString(LANG_COMMAND_TICKETLISTADDCOMMENT, (m_session ? m_session->GetPlayerName() : "CONSOLE"), ticket->comment.c_str());
     SendGlobalGMSysMessage(ss.str().c_str());
     return true;
 }
@@ -812,7 +788,7 @@ bool ChatHandler::HandleGMTicketDeleteByIdCommand(const char* args)
 
     ss << PGetParseString(LANG_COMMAND_TICKETLISTGUID, ticket->guid);
     ss << PGetParseString(LANG_COMMAND_TICKETLISTNAME, GetNameLink(ticket->name).c_str());
-    ss << PGetParseString(LANG_COMMAND_TICKETDELETED, m_session->GetPlayer()->GetName());
+    ss << PGetParseString(LANG_COMMAND_TICKETDELETED, m_session ? m_session->GetPlayerName() : "CONSOLE");
     SendGlobalGMSysMessage(ss.str().c_str());
     Player *plr = sObjectMgr.GetPlayer(ticket->playerGuid);
     sTicketMgr.DeleteGMTicketPermanently(ticket->guid);
@@ -924,7 +900,7 @@ bool ChatHandler::HandleGPSCommand(const char* args)
     Map2ZoneCoordinates(zone_x,zone_y,zone_id);
 
     TerrainInfo const *map = obj->GetTerrain();
-    float ground_z = map->GetHeight(obj->GetPositionX(), obj->GetPositionY(), MAX_HEIGHT);
+    float ground_z = map->GetHeight(obj->GetPositionX(), obj->GetPositionY(), MAX_HEIGHT, false);
     float floor_z = map->GetHeight(obj->GetPositionX(), obj->GetPositionY(), obj->GetPositionZ());
 
     GridPair p = Hellground::ComputeGridPair(obj->GetPositionX(), obj->GetPositionY());
@@ -937,10 +913,18 @@ bool ChatHandler::HandleGPSCommand(const char* args)
 
     if (have_vmap)
     {
+        VMAP::IVMapManager* vmgr = VMAP::VMapFactory::createOrGetVMapManager();
+        float liquid_level, ground_level = INVALID_HEIGHT_VALUE;
+        uint32 liquid_type = 0;
+        if (!vmgr->GetLiquidLevel(obj->GetMapId(), obj->GetPositionX(), obj->GetPositionY(), obj->GetPositionZ(),
+            MAP_ALL_LIQUIDS, liquid_level, ground_level, liquid_type))
+            liquid_type = -1;
+
+
         if (map->IsOutdoors(obj->GetPositionX(), obj->GetPositionY(), obj->GetPositionZ()))
-            PSendSysMessage("You are outdoors");
+            PSendSysMessage("You are outdoors, water data %u %f",liquid_type,liquid_level);
         else
-            PSendSysMessage("You are indoor");
+            PSendSysMessage("You are indoor, water data %u %f", liquid_type, liquid_level);
     }
     else
         PSendSysMessage("no VMAP available for area info");
@@ -1036,7 +1020,7 @@ bool ChatHandler::HandleNamegoCommand(const char* args)
         if (pMap->IsBattleGroundOrArena())
         {
             // only allow if gm mode is on
-            if (!target->isGameMaster())
+            if (!target->IsGameMaster())
             {
                 PSendSysMessage(LANG_CANNOT_GO_TO_BG_GM,target->GetName());
                 SetSentErrorMessage(true);
@@ -1132,7 +1116,7 @@ bool ChatHandler::HandleGonameCommand(const char* args)
         if (cMap->IsBattleGroundOrArena())
         {
             // only allow if gm mode is on
-            if (!_player->isGameMaster())
+            if (!_player->IsGameMaster())
             {
                 PSendSysMessage(LANG_CANNOT_GO_TO_BG_GM,target->GetName());
                 SetSentErrorMessage(true);
@@ -1170,7 +1154,7 @@ bool ChatHandler::HandleGonameCommand(const char* args)
             else
             {
                 // we are not in group, let's verify our GM mode
-                if (!_player->isGameMaster())
+                if (!_player->IsGameMaster())
                 {
                     PSendSysMessage(LANG_CANNOT_GO_TO_INST_GM,target->GetName());
                     SetSentErrorMessage(true);
@@ -1309,13 +1293,13 @@ bool ChatHandler::HandleModifyKnownTitlesCommand(const char* args)
         return false;
     }
 
-    uint64 titles2 = titles;
+    uint64 existingTitles;
 
-    for (int i=1; i < sCharTitlesStore.GetNumRows(); ++i)
+    for (int i = 1; i < sCharTitlesStore.GetNumRows(); ++i)
         if (CharTitlesEntry const* tEntry = sCharTitlesStore.LookupEntry(i))
-            titles2 &= ~(uint64(1) << tEntry->bit_index);
+            existingTitles |= (uint64(1) << tEntry->bit_index);
 
-    titles &= ~titles2;                                     // remove not existed titles
+    titles &= existingTitles;
 
     chr->SetUInt64Value(PLAYER__FIELD_KNOWN_TITLES, titles);
     SendSysMessage(LANG_DONE);
@@ -2485,7 +2469,10 @@ bool ChatHandler::HandleWhispersCommand(const char* args)
         return true;
     }
     
-    std::string secondpart = strtok(NULL, " ");
+    const char* sd = strtok(NULL, " ");
+    if (!sd)
+        return false;
+    std::string secondpart = sd;
     if (secondpart.empty())
         return false;
     
@@ -3089,4 +3076,71 @@ bool ChatHandler::HandleNpcStandState(const char* args)
     target->SetStandState(state);
 
     return true;
+}
+
+void AwardTitleCallback(QueryResultAutoPtr result, uint32 gamemaster)
+{
+    Player* gm = sObjectAccessor.GetPlayer(gamemaster);
+    if (!gm)
+        return;
+
+    if (!result)
+    {
+        ChatHandler(gm).SendSysMessage("Cannot find player in titles_to_award");
+        return;
+    }
+    Field* fields = result->Fetch();
+    Player* target = sObjectAccessor.GetPlayer(fields[0].GetUInt32());
+    if (!target)
+    {
+        ChatHandler(gm).SendSysMessage("WTF, player not found, just went offline?");
+        return;
+    }
+    
+    uint64 titles = target->GetUInt64Value(PLAYER__FIELD_KNOWN_TITLES);
+    titles |= fields[1].GetUInt64();
+    target->SetUInt64Value(PLAYER__FIELD_KNOWN_TITLES, titles);
+    ChatHandler(gm).SendSysMessage("Player awarded");
+}
+
+bool ChatHandler::HandleModifyAwardTitleCommand(const char* args)
+{
+    Player *chr = getSelectedPlayer();
+    if (!chr)
+    {
+        SendSysMessage(LANG_NO_CHAR_SELECTED);
+        SetSentErrorMessage(true);
+        return false;
+    }
+
+    RealmDataDatabase.AsyncPQuery(&AwardTitleCallback, m_session->GetPlayer()->GetGUIDLow(),
+        "SELECT guid, mask FROM titles_to_award WHERE guid = %u",chr->GetGUIDLow());
+    SendSysMessage("Command accepted");
+    return true;
+}
+
+bool ChatHandler::HandleModForceACCommand(const char* args)
+{
+    std::string string = args;
+    if (string.empty())
+        return false;
+
+    Player* target = getSelectedPlayer();
+    if (!target || target == m_session->GetPlayer())
+        return false;
+    
+    if (string == "on")
+    {
+        target->setForcedAC(true);
+        PSendSysMessage("Forced Anticheat checks enabled for %s", target->GetName());
+        return true;
+    }
+
+    if (string == "off")
+    {
+        target->setForcedAC(false);
+        PSendSysMessage("Forced Anticheat checks disabled for %s", target->GetName());
+        return true;
+    }
+    return false;
 }

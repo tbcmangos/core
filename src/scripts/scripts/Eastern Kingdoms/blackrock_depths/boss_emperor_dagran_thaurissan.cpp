@@ -1,6 +1,6 @@
 /* 
  * Copyright (C) 2006-2008 ScriptDev2 <https://scriptdev2.svn.sourceforge.net/>
- * Copyright (C) 2008-2014 Hellground <http://hellground.net/>
+ * Copyright (C) 2008-2015 Hellground <http://hellground.net/>
  * 
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -36,8 +36,8 @@ struct boss_draganthaurissanAI : public ScriptedAI
 {
     boss_draganthaurissanAI(Creature *c) : ScriptedAI(c) {}
 
-    uint32 HandOfThaurissan_Timer;
-    uint32 AvatarOfFlame_Timer;
+    int32 HandOfThaurissan_Timer;
+    int32 AvatarOfFlame_Timer;
     //uint32 Counter;
 
     void Reset()
@@ -59,7 +59,7 @@ struct boss_draganthaurissanAI : public ScriptedAI
     void JustDied(Unit*)
     {
         Unit* moira=FindCreature(8929,300,me);
-        if (moira && moira->isAlive())
+        if (moira && moira->IsAlive())
         {
             moira->setFaction(35);
             moira->ToCreature()->AI()->_EnterEvadeMode();
@@ -72,7 +72,8 @@ struct boss_draganthaurissanAI : public ScriptedAI
         if (!UpdateVictim() )
             return;
 
-        if (HandOfThaurissan_Timer < diff)
+        HandOfThaurissan_Timer -= diff;
+        if (HandOfThaurissan_Timer <= diff)
         {
             Unit* target = NULL;
             target = SelectUnit(SELECT_TARGET_RANDOM,0);
@@ -86,19 +87,18 @@ struct boss_draganthaurissanAI : public ScriptedAI
             //}
             //else
             //{
-                HandOfThaurissan_Timer = 5000;
+                HandOfThaurissan_Timer += 5000;
                 //Counter=0;
             //}
-        }else HandOfThaurissan_Timer -= diff;
-
-        //AvatarOfFlame_Timer
-        if (AvatarOfFlame_Timer < diff)
-        {
-            DoCast(me->getVictim(),SPELL_AVATAROFFLAME);
-            AvatarOfFlame_Timer = 18000;
         }
-        else
-            AvatarOfFlame_Timer -= diff;
+
+        AvatarOfFlame_Timer -= diff;
+        if (AvatarOfFlame_Timer <= diff)
+        {
+            DoCast(me->GetVictim(),SPELL_AVATAROFFLAME);
+            AvatarOfFlame_Timer += 18000;
+        }
+        
 
         DoMeleeAttackIfReady();
     }

@@ -1,6 +1,6 @@
 /* 
  * Copyright (C) 2006-2008 ScriptDev2 <https://scriptdev2.svn.sourceforge.net/>
- * Copyright (C) 2008-2014 Hellground <http://hellground.net/>
+ * Copyright (C) 2008-2015 Hellground <http://hellground.net/>
  * 
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -73,6 +73,8 @@ bool GossipSelect_npc_neeru_fireblade(Player *player, Creature *_Creature, uint3
 ## npc_shenthul
 ######*/
 
+#define RESTORE_ITEM_WHISTLE "I've misplaced my whistle."
+#define ITEM_WHISTLE 8066
 #define QUEST_2460  2460
 
 struct npc_shenthulAI : public ScriptedAI
@@ -96,21 +98,31 @@ struct npc_shenthulAI : public ScriptedAI
 
     void UpdateAI(const uint32 diff)
     {
-        if( CanEmote )
-            if( Reset_Timer < diff )
+        if (CanEmote)
         {
-            if( Player* temp = Unit::GetPlayer(playerGUID) )
-                temp->FailQuest(QUEST_2460);
-            Reset();
-        } else Reset_Timer -= diff;
+            
+            if (Reset_Timer <= diff)
+            {
+                if (Player* temp = Unit::GetPlayer(playerGUID))
+                    temp->FailQuest(QUEST_2460);
+                Reset();
+            }
+            else
+                Reset_Timer -= diff;
+        }
 
-        if( CanTalk && !CanEmote )
-            if( Salute_Timer < diff )
+        if (CanTalk && !CanEmote)
         {
-            m_creature->HandleEmoteCommand(EMOTE_ONESHOT_SALUTE);
-            CanEmote = true;
-            Reset_Timer = 60000;
-        } else Salute_Timer -= diff;
+            
+            if (Salute_Timer <= diff)
+            {
+                m_creature->HandleEmoteCommand(EMOTE_ONESHOT_SALUTE);
+                CanEmote = true;
+                Reset_Timer = 60000;
+            }
+            else
+                Salute_Timer -= diff;
+        }
 
         if (!UpdateVictim())
             return;
@@ -144,6 +156,34 @@ bool ReciveEmote_npc_shenthul(Player *player, Creature *_Creature, uint32 emote)
     return true;
 }
 
+bool GossipHello_npc_shenthul(Player *player, Creature *_Creature)
+{
+    if (_Creature->isQuestGiver())
+        player->PrepareQuestMenu(_Creature->GetGUID());
+
+    if (player->GetQuestStatus(2458) == QUEST_STATUS_COMPLETE && !player->HasItemCount(ITEM_WHISTLE,1,true))
+        player->ADD_GOSSIP_ITEM(0, RESTORE_ITEM_WHISTLE, GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF + 1);
+
+    player->SEND_GOSSIP_MENU(_Creature->GetNpcTextId(), _Creature->GetGUID());
+    return true;
+}
+
+bool GossipSelect_npc_shenthul(Player *player, Creature *_Creature, uint32 sender, uint32 action)
+{
+    if (action == GOSSIP_ACTION_INFO_DEF + 1 &&
+        player->GetQuestStatus(2458) == QUEST_STATUS_COMPLETE &&
+        !player->HasItemCount(ITEM_WHISTLE, 1, true))
+    {
+        ItemPosCountVec dest;
+        if (player->CanStoreNewItem(NULL_BAG, NULL_SLOT, dest, ITEM_WHISTLE, 1) == EQUIP_ERR_OK)
+        {
+            Item* item = player->StoreNewItem(dest, ITEM_WHISTLE, true);
+            player->SendNewItem(item, 1, true, false);
+        }
+    }
+    return true;
+}
+
 /*######
 ## npc_thrall_warchief
 ######*/
@@ -166,8 +206,8 @@ struct npc_thrall_warchiefAI : public ScriptedAI
 {
     npc_thrall_warchiefAI(Creature* c) : ScriptedAI(c) {}
 
-    uint32 ChainLightning_Timer;
-    uint32 Shock_Timer;
+    Timer ChainLightning_Timer;
+    Timer Shock_Timer;
 
     void Reset()
     {
@@ -182,17 +222,17 @@ struct npc_thrall_warchiefAI : public ScriptedAI
         if(!UpdateVictim())
             return;
 
-        if( ChainLightning_Timer < diff )
+        if( ChainLightning_Timer.Expired(diff) )
         {
-            DoCast(m_creature->getVictim(),SPELL_CHAIN_LIGHTNING);
+            DoCast(m_creature->GetVictim(),SPELL_CHAIN_LIGHTNING);
             ChainLightning_Timer = 9000;
-        }else ChainLightning_Timer -= diff;
+        }
 
-        if( Shock_Timer < diff )
+        if( Shock_Timer.Expired(diff))
         {
-            DoCast(m_creature->getVictim(),SPELL_SHOCK);
+            DoCast(m_creature->GetVictim(),SPELL_SHOCK);
             Shock_Timer = 15000;
-        }else Shock_Timer -= diff;
+        }
 
         DoMeleeAttackIfReady();
     }
@@ -333,6 +373,8 @@ void AddSC_orgrimmar()
     newscript->GetAI = &GetAI_npc_shenthul;
     newscript->pQuestAcceptNPC =  &QuestAccept_npc_shenthul;
     newscript->pReceiveEmote = &ReciveEmote_npc_shenthul;
+    newscript->pGossipHello = &GossipHello_npc_shenthul;
+    newscript->pGossipSelect = &GossipSelect_npc_shenthul;
     newscript->RegisterSelf();
 
     newscript = new Script;

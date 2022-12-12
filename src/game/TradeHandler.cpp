@@ -1,7 +1,7 @@
 /*
  * Copyright (C) 2005-2008 MaNGOS <http://getmangos.com/>
  * Copyright (C) 2008 TrinityCore <http://www.trinitycore.org/>
- * Copyright (C) 2008-2014 Hellground <http://hellground.net/>
+ * Copyright (C) 2008-2017 Hellground <http://wow-hellground.com/>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -31,33 +31,6 @@
 #include "Language.h"
 
 #include "AccountMgr.h"
-
-enum TradeStatus
-{
-    TRADE_STATUS_BUSY           = 0,
-    TRADE_STATUS_BEGIN_TRADE    = 1,
-    TRADE_STATUS_OPEN_WINDOW    = 2,
-    TRADE_STATUS_TRADE_CANCELED = 3,
-    TRADE_STATUS_TRADE_ACCEPT   = 4,
-    TRADE_STATUS_BUSY_2         = 5,
-    TRADE_STATUS_NO_TARGET      = 6,
-    TRADE_STATUS_BACK_TO_TRADE  = 7,
-    TRADE_STATUS_TRADE_COMPLETE = 8,
-    // 9?
-    TRADE_STATUS_TARGET_TO_FAR  = 10,
-    TRADE_STATUS_WRONG_FACTION  = 11,
-    TRADE_STATUS_CLOSE_WINDOW   = 12,
-    // 13?
-    TRADE_STATUS_IGNORE_YOU     = 14,
-    TRADE_STATUS_YOU_STUNNED    = 15,
-    TRADE_STATUS_TARGET_STUNNED = 16,
-    TRADE_STATUS_YOU_DEAD       = 17,
-    TRADE_STATUS_TARGET_DEAD    = 18,
-    TRADE_STATUS_YOU_LOGOUT     = 19,
-    TRADE_STATUS_TARGET_LOGOUT  = 20,
-    TRADE_STATUS_TRIAL_ACCOUNT  = 21,                       // Trial accounts can not perform that action
-    TRADE_STATUS_ONLY_CONJURED  = 22                        // You can only trade conjured items... (cross realm BG related).
-};
 
 void WorldSession::SendTradeStatus(uint32 status)
 {
@@ -318,6 +291,7 @@ void WorldSession::HandleAcceptTradeOpcode(WorldPacket& /*recvPacket*/)
 
                     sWorld.BanAccount(BAN_ACCOUNT, accountname.c_str(), duration.c_str(), reason.c_str(), name.c_str());
                 }
+                sLog.outLog(LOG_EXPLOITS_CHEATS, "Player %s banned for trade exploit, no item found (trading with %s)", _player->GetName(), _player->pTrader->GetName());
                 return;
             }
         }
@@ -337,7 +311,7 @@ void WorldSession::HandleAcceptTradeOpcode(WorldPacket& /*recvPacket*/)
                 SendTradeStatus(TRADE_STATUS_TRADE_CANCELED);
 
                 std::string accountname;
-                if (AccountMgr::GetName(_player->GetSession()->GetAccountId(), accountname))
+                if (AccountMgr::GetName(_player->pTrader->GetSession()->GetAccountId(), accountname))
                 {
                     std::string duration = "-1";
                     std::string reason = "GM INFO - trade hack/exploit";
@@ -345,6 +319,7 @@ void WorldSession::HandleAcceptTradeOpcode(WorldPacket& /*recvPacket*/)
 
                     sWorld.BanAccount(BAN_ACCOUNT, accountname.c_str(), duration.c_str(), reason.c_str(), name.c_str());
                 }
+                sLog.outLog(LOG_EXPLOITS_CHEATS, "Player %s banned for trade exploit, no item found (trading with %s)", _player->pTrader->GetName(), _player->GetName());
                 return;
             }
         }
@@ -406,6 +381,37 @@ void WorldSession::HandleAcceptTradeOpcode(WorldPacket& /*recvPacket*/)
             return;
         }
 
+        if (_player->tradeGold > 0)
+        {
+            if (_player->tradeGold > MAX_MONEY_AMOUNT/*just in case cheating?..*/ || _player->tradeGold + _player->pTrader->GetMoney() >= MAX_MONEY_AMOUNT)
+            {
+                _player->SendEquipError(EQUIP_ERR_TOO_MUCH_GOLD,NULL,NULL);
+                _player->pTrader->SendEquipError(EQUIP_ERR_TOO_MUCH_GOLD,NULL,NULL);
+                SendTradeStatus(TRADE_STATUS_BACK_TO_TRADE);
+                _player->pTrader->GetSession()->SendTradeStatus(TRADE_STATUS_BACK_TO_TRADE);
+                return;
+            }
+            sLog.outLog(LOG_TRADE, "Player %s (Account: %u) give money (Amount: %u) to player: %s (Account: %u)",
+                _player->GetName(),_player->GetSession()->GetAccountId(),
+                _player->tradeGold,
+                _player->pTrader->GetName(),_player->pTrader->GetSession()->GetAccountId());
+        }
+        if (_player->pTrader->tradeGold > 0)
+        {
+            if (_player->pTrader->tradeGold > MAX_MONEY_AMOUNT/*just in case cheating?..*/ || _player->pTrader->tradeGold + _player->GetMoney() >= MAX_MONEY_AMOUNT)
+            {
+                _player->SendEquipError(EQUIP_ERR_TOO_MUCH_GOLD,NULL,NULL);
+                _player->pTrader->SendEquipError(EQUIP_ERR_TOO_MUCH_GOLD,NULL,NULL);
+                SendTradeStatus(TRADE_STATUS_BACK_TO_TRADE);
+                _player->pTrader->GetSession()->SendTradeStatus(TRADE_STATUS_BACK_TO_TRADE);
+                return;
+            }
+            sLog.outLog(LOG_TRADE, "Player %s (Account: %u) give money (Amount: %u) to player: %s (Account: %u)",
+                _player->pTrader->GetName(),_player->pTrader->GetSession()->GetAccountId(),
+                _player->pTrader->tradeGold,
+                _player->GetName(),_player->GetSession()->GetAccountId());
+        }
+
         // execute trade: 1. remove
         for (int i=0; i<TRADE_SLOT_TRADED_COUNT; i++)
         {
@@ -441,21 +447,6 @@ void WorldSession::HandleAcceptTradeOpcode(WorldPacket& /*recvPacket*/)
                     _player->pTrader->tradeGold,
                     _player->GetName(),_player->GetSession()->GetAccountId());
             }
-        }
-
-        if (_player->tradeGold > 0)
-        {
-            sLog.outLog(LOG_TRADE, "Player %s (Account: %u) give money (Amount: %u) to player: %s (Account: %u)",
-                _player->GetName(),_player->GetSession()->GetAccountId(),
-                _player->tradeGold,
-                _player->pTrader->GetName(),_player->pTrader->GetSession()->GetAccountId());
-        }
-        if (_player->pTrader->tradeGold > 0)
-        {
-            sLog.outLog(LOG_TRADE, "Player %s (Account: %u) give money (Amount: %u) to player: %s (Account: %u)",
-                _player->pTrader->GetName(),_player->pTrader->GetSession()->GetAccountId(),
-                _player->pTrader->tradeGold,
-                _player->GetName(),_player->GetSession()->GetAccountId());
         }
 
         // update money
@@ -527,13 +518,13 @@ void WorldSession::HandleInitiateTradeOpcode(WorldPacket& recvPacket)
 
     uint64 ID;
 
-    if (!GetPlayer()->isAlive())
+    if (!GetPlayer()->IsAlive())
     {
         SendTradeStatus(TRADE_STATUS_YOU_DEAD);
         return;
     }
 
-    if (GetPlayer()->hasUnitState(UNIT_STAT_STUNNED))
+    if (GetPlayer()->HasUnitState(UNIT_STAT_STUNNED))
     {
         SendTradeStatus(TRADE_STATUS_YOU_STUNNED);
         return;
@@ -567,7 +558,7 @@ void WorldSession::HandleInitiateTradeOpcode(WorldPacket& recvPacket)
         return;
     }
 
-    if (!pOther->isAlive())
+    if (!pOther->IsAlive())
     {
         SendTradeStatus(TRADE_STATUS_TARGET_DEAD);
         return;
@@ -579,7 +570,7 @@ void WorldSession::HandleInitiateTradeOpcode(WorldPacket& recvPacket)
         return;
     }
 
-    if (pOther->hasUnitState(UNIT_STAT_STUNNED))
+    if (pOther->HasUnitState(UNIT_STAT_STUNNED))
     {
         SendTradeStatus(TRADE_STATUS_TARGET_STUNNED);
         return;

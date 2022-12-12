@@ -1,6 +1,6 @@
 /*
  * Copyright (C) 2006-2008 ScriptDev2 <https://scriptdev2.svn.sourceforge.net/>
- * Copyright (C) 2008-2014 Hellground <http://hellground.net/>
+ * Copyright (C) 2008-2015 Hellground <http://hellground.net/>
  * 
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -22,7 +22,7 @@
 
 #include "DBCStores.h"
 
-#include "../ScriptMgr.h"
+#include "ScriptMgr.h"
 #include "Cell.h"
 #include "CellImpl.h"
 #include "GridNotifiers.h"
@@ -35,17 +35,7 @@
 #include "sc_instance.h"
 #include "CombatAI.h"
 #include "PassiveAI.h"
-
-#ifdef WIN32
-#include <windows.h>
-BOOL APIENTRY DllMain( HANDLE hModule,
-DWORD  ul_reason_for_call,
-LPVOID lpReserved
-)
-{
-    return true;
-}
-#endif
+#include "Chat.h"
 
 #endif
 

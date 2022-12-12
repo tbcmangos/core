@@ -1,7 +1,7 @@
 /*
  * Copyright (C) 2005-2008 MaNGOS <http://getmangos.com/>
  * Copyright (C) 2008 TrinityCore <http://www.trinitycore.org/>
- * Copyright (C) 2008-2014 Hellground <http://hellground.net/>
+ * Copyright (C) 2008-2017 Hellground <http://wow-hellground.com/>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -26,18 +26,15 @@
 
 enum AuraFlags
 {
-    AFLAG_NONE              = 0x00,
-    AFLAG_EFF_INDEX_0       = 0x01,
-    AFLAG_EFF_INDEX_1       = 0x02,
-    AFLAG_EFF_INDEX_2       = 0x04,
-    AFLAG_NOT_GUID          = 0x08,
-    AFLAG_POSITIVE          = 0x10,
-    AFLAG_HAS_DURATION      = 0x20,
-    AFLAG_UNK2              = 0x40,
-    AFLAG_NEGATIVE          = 0x80,
-//    AFLAG_NEGATIVE          = AFLAG_VISIBLE | AFLAG_NOT_GUID,
-//              = AFLAG_VISIBLE | AFLAG_EFF_INDEX_1 | AFLAG_EFF_INDEX_2 | AFLAG_NOT_GUID | AFLAG_CANCELABLE,
-    AFLAG_MASK              = 0xFF,
+    AFLAG_NONE                  = 0x00,
+    AFLAG_EFFECT_0              = 0x01,
+    AFLAG_EFFECT_1              = 0x02,
+    AFLAG_EFFECT_2              = 0x04,
+    AFLAG_UNK4                  = 0x08,     // Pre-WotLK: unused in UI
+    AFLAG_CANCELABLE            = 0x10,
+    AFLAG_NOT_CANCELABLE        = 0x20,
+
+    AFLAG_MASK_ALL              = 0xFF
 };
 
 //m_schoolAbsorb
@@ -161,7 +158,7 @@ enum AuraType
     SPELL_AURA_ADD_TARGET_TRIGGER = 109,
     SPELL_AURA_MOD_POWER_REGEN_PERCENT = 110,
     SPELL_AURA_ADD_CASTER_HIT_TRIGGER = 111,
-    SPELL_AURA_override_CLASS_SCRIPTS = 112,
+    SPELL_AURA_OVERRIDE_CLASS_SCRIPTS = 112,
     SPELL_AURA_MOD_RANGED_DAMAGE_TAKEN = 113,
     SPELL_AURA_MOD_RANGED_DAMAGE_TAKEN_PCT = 114,
     SPELL_AURA_MOD_HEALING = 115,

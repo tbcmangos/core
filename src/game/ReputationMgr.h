@@ -1,6 +1,6 @@
 /*
  * Copyright (C) 2005-2009 MaNGOS <http://getmangos.com/>
- * Copyright (C) 2008-2014 Hellground <http://hellground.net/>
+ * Copyright (C) 2008-2017 Hellground <http://wow-hellground.com/>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -69,6 +69,7 @@ class HELLGROUND_EXPORT ReputationMgr
         static const int32 Reputation_Bottom = -42000;
 
         static ReputationRank ReputationToRank(int32 standing);
+        static int32 GetRepPointsToRank(ReputationRank rank);
     public:                                                 // accessors
         FactionStateList const& GetStateList() const { return m_factions; }
 

@@ -1,6 +1,6 @@
 /* 
  * Copyright (C) 2006-2008 ScriptDev2 <https://scriptdev2.svn.sourceforge.net/>
- * Copyright (C) 2008-2014 Hellground <http://hellground.net/>
+ * Copyright (C) 2008-2015 Hellground <http://hellground.net/>
  * 
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -36,7 +36,7 @@ struct boss_houndmaster_lokseyAI : public ScriptedAI
 {
     boss_houndmaster_lokseyAI(Creature *c) : ScriptedAI(c) {}
 
-    uint32 Enrage_Timer;
+    int32 Enrage_Timer;
 
     void Reset()
     {
@@ -56,12 +56,13 @@ struct boss_houndmaster_lokseyAI : public ScriptedAI
         if (!UpdateVictim())
             return;
 
+        Enrage_Timer -= diff;
         //If we are <10% hp cast healing spells at self and Mograine
-        if ( m_creature->GetHealth()*100 / m_creature->GetMaxHealth() <= 10 && !m_creature->IsNonMeleeSpellCast(false) && Enrage_Timer < diff)
+        if ( m_creature->GetHealth()*100 / m_creature->GetMaxHealth() <= 10 && !m_creature->IsNonMeleeSpellCast(false) && Enrage_Timer <= diff)
         {
             DoCast(m_creature,SPELL_ENRAGE);
-            Enrage_Timer = 900000;
-        }else Enrage_Timer -= diff;
+            Enrage_Timer += 900000;
+        }
 
         DoMeleeAttackIfReady();
     }

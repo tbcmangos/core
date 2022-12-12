@@ -1,7 +1,7 @@
 /*
  * Copyright (C) 2005-2008 MaNGOS <http://getmangos.com/>
  * Copyright (C) 2008 TrinityCore <http://www.trinitycore.org/>
- * Copyright (C) 2008-2014 Hellground <http://hellground.net/>
+ * Copyright (C) 2008-2017 Hellground <http://wow-hellground.com/>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -45,9 +45,9 @@ void WorldSession::SendNameQueryOpcode(Player *p)
     data << p->GetGUID();
     data << p->GetName();
     data << uint8(0);                                       // realm name for cross realm BG usage
-    data << uint32(p->getRace());
+    data << uint32(p->GetRace());
     data << uint32(p->getGender());
-    data << uint32(p->getClass());
+    data << uint32(p->GetClass());
     if (DeclinedName const* names = p->GetDeclinedNames())
     {
         data << uint8(1);                                   // is declined
@@ -157,7 +157,6 @@ void WorldSession::HandleCreatureQueryOpcode(WorldPacket & recv_data)
 
         char const* name = ci->Name;
         char const* subName = ci->SubName;
-        sObjectMgr.GetCreatureLocaleStrings(entry, loc_idx, &name, &subName);
 
         sLog.outDetail("WORLD: CMSG_CREATURE_QUERY '%s' - Entry: %u.", ci->Name, entry);
                                                             // guess size
@@ -215,18 +214,6 @@ void WorldSession::HandleGameObjectQueryOpcode(WorldPacket & recv_data)
         Name = info->name;
         CastBarCaption = info->castBarCaption;
 
-        int loc_idx = GetSessionDbLocaleIndex();
-        if (loc_idx >= 0)
-        {
-            GameObjectLocale const *gl = sObjectMgr.GetGameObjectLocale(entryID);
-            if (gl)
-            {
-                if (gl->Name.size() > loc_idx && !gl->Name[loc_idx].empty())
-                    Name = gl->Name[loc_idx];
-                if (gl->CastBarCaption.size() > loc_idx && !gl->CastBarCaption[loc_idx].empty())
-                    CastBarCaption = gl->CastBarCaption[loc_idx];
-            }
-        }
         sLog.outDetail("WORLD: CMSG_GAMEOBJECT_QUERY '%s' - Entry: %u. ", info->name, entryID);
         WorldPacket data (SMSG_GAMEOBJECT_QUERY_RESPONSE, 150);
         data << entryID;
@@ -343,30 +330,19 @@ void WorldSession::HandleNpcTextQueryOpcode(WorldPacket & recv_data)
     }
     else
     {
-        std::string Text_0[MAX_GOSSIP_TEXT_OPTIONS], Text_1[MAX_GOSSIP_TEXT_OPTIONS];
-        for (int i = 0; i < MAX_GOSSIP_TEXT_OPTIONS; ++i)
-        {
-            Text_0[i]=pGossip->Options[i].Text_0;
-            Text_1[i]=pGossip->Options[i].Text_1;
-        }
-
-        int loc_idx = GetSessionDbLocaleIndex();
-        sObjectMgr.GetNpcTextLocaleStringsAll(textID, loc_idx, &Text_0, &Text_1);
-
-
         for (uint8 i = 0; i < MAX_GOSSIP_TEXT_OPTIONS; ++i)
         {
             data << pGossip->Options[i].Probability;
 
-            if (Text_0[i].empty())
-                data << Text_1[i];
+            if (pGossip->Options[i].Text_0.empty())
+                data << pGossip->Options[i].Text_1;
             else
-                data << Text_0[i];
+                data << pGossip->Options[i].Text_0;
 
-            if (Text_1[i].empty())
-                data << Text_0[i];
+            if (pGossip->Options[i].Text_1.empty())
+                data << pGossip->Options[i].Text_0;
             else
-                data << Text_1[i];
+                data << pGossip->Options[i].Text_1;
 
             data << pGossip->Options[i].Language;
 
@@ -407,20 +383,7 @@ void WorldSession::HandlePageQueryOpcode(WorldPacket & recv_data)
         }
         else
         {
-            std::string Text = pPage->Text;
-
-            int loc_idx = GetSessionDbLocaleIndex();
-            if (loc_idx >= 0)
-            {
-                PageTextLocale const *pl = sObjectMgr.GetPageTextLocale(pageID);
-                if (pl)
-                {
-                    if (pl->Text.size() > loc_idx && !pl->Text[loc_idx].empty())
-                        Text = pl->Text[loc_idx];
-                }
-            }
-
-            data << Text;
+            data << pPage->Text;
             data << uint32(pPage->Next_Page);
             pageID = pPage->Next_Page;
         }

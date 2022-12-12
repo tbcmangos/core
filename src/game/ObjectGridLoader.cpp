@@ -1,7 +1,7 @@
 /*
  * Copyright (C) 2005-2009 MaNGOS <http://getmangos.com/>
  * Copyright (C) 2008-2009 TrinityCore <http://www.trinitycore.org/>
- * Copyright (C) 2008-2014 Hellground <http://hellground.net/>
+ * Copyright (C) 2008-2017 Hellground <http://wow-hellground.com/>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -284,7 +284,7 @@ void ObjectGridStoper::Visit(CreatureMapType &m)
     for (CreatureMapType::iterator iter=m.begin(); iter != m.end(); ++iter)
     {
         iter->getSource()->RemoveAllDynObjects();
-        if (iter->getSource()->isInCombat())
+        if (iter->getSource()->IsInCombat())
         {
             iter->getSource()->CombatStop();
             iter->getSource()->DeleteThreatList();

@@ -1,7 +1,7 @@
-/* 
+/*
  * Copyright (C) 2006-2008 ScriptDev2 <https://scriptdev2.svn.sourceforge.net/>
- * Copyright (C) 2008-2014 Hellground <http://hellground.net/>
- * 
+ * Copyright (C) 2008-2015 Hellground <http://hellground.net/>
+ *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 2 of the License, or
@@ -53,7 +53,7 @@ struct instance_molten_core : public ScriptedInstance
 
     uint32 Encounter[ENCOUNTERS];
     uint32 Runes, SummonRagnaros;
-    uint32 Runes_timer;
+    Timer Runes_timer;
 
     void Initialize()
     {
@@ -97,7 +97,7 @@ struct instance_molten_core : public ScriptedInstance
 
     void Update(uint32 diff)
     {
-        if(Runes_timer <= diff && GetData(DATA_RUNES) != RUNES_COMPLETE)
+        if(GetData(DATA_RUNES) != RUNES_COMPLETE && Runes_timer.Expired(diff))
         {
 //            uint32 runes = 0;
 
@@ -125,10 +125,9 @@ struct instance_molten_core : public ScriptedInstance
 
 //            if(GetData(DATA_RUNES) != runes)
                 SetData(DATA_RUNES, Runes);
+
             Runes_timer = 10000;
         }
-        else Runes_timer -= diff;
-
     }
 
     void OnObjectCreate(GameObject *go)

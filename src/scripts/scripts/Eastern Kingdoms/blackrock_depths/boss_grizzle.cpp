@@ -1,6 +1,6 @@
 /* 
  * Copyright (C) 2006-2008 ScriptDev2 <https://scriptdev2.svn.sourceforge.net/>
- * Copyright (C) 2008-2014 Hellground <http://hellground.net/>
+ * Copyright (C) 2008-2015 Hellground <http://hellground.net/>
  * 
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -33,8 +33,8 @@ struct boss_grizzleAI : public ScriptedAI
 {
     boss_grizzleAI(Creature *c) : ScriptedAI(c) {}
 
-    uint32 GroundTremor_Timer;
-    uint32 Frenzy_Timer;
+    int32 GroundTremor_Timer;
+    int32 Frenzy_Timer;
 
     void Reset()
     {
@@ -52,27 +52,25 @@ struct boss_grizzleAI : public ScriptedAI
         if (!UpdateVictim() )
             return;
 
-        //GroundTremor_Timer
-        if (GroundTremor_Timer < diff)
+        GroundTremor_Timer -= diff;
+        if (GroundTremor_Timer <= diff)
         {
-            DoCast(me->getVictim(),SPELL_GROUNDTREMOR);
-            GroundTremor_Timer = 8000;
+            DoCast(me->GetVictim(),SPELL_GROUNDTREMOR);
+            GroundTremor_Timer += 8000;
         }
-        else
-            GroundTremor_Timer -= diff;
+
 
         //Frenzy_Timer
         if ( me->GetHealth()*100 / me->GetMaxHealth() < 51 )
         {
-            if (Frenzy_Timer < diff)
+            Frenzy_Timer -= diff;
+            if (Frenzy_Timer <= diff)
             {
                 DoCast(me,SPELL_FRENZY);
                 DoTextEmote("goes into a killing frenzy!",NULL);
 
-                Frenzy_Timer = 15000;
+                Frenzy_Timer += 15000;
             }
-            else
-                Frenzy_Timer -= diff;
         }
 
         DoMeleeAttackIfReady();

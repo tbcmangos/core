@@ -1,7 +1,7 @@
-/* 
+/*
  * Copyright (C) 2009 TrinityCore <http://www.trinitycore.org/>
- * Copyright (C) 2008-2014 Hellground <http://hellground.net/>
- * 
+ * Copyright (C) 2008-2015 Hellground <http://hellground.net/>
+ *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 2 of the License, or
@@ -120,55 +120,55 @@ enum Side
     RIGHT_SIDE = 1
 };
 
-float FlightMarker[3][2][3] = 
+static float FlightMarker[3][2][3] =
 {
    //left                     //right
-    {{1446.56, 702.57, 50.08}, {1441.64, 502.52, 50.08}},
-    {{1469.94, 704.24, 50.08}, {1467.22, 516.32, 50.08}},
-    {{1494.76, 705.00, 50.08}, {1492.82, 515.67, 50.08}}
+    {{1446.56f, 702.57f, 50.08f}, {1441.64f, 502.52f, 50.08f}},
+    {{1469.94f, 704.24f, 50.08f}, {1467.22f, 516.32f, 50.08f}},
+    {{1494.76f, 705.00f, 50.08f}, {1492.82f, 515.67f, 50.08f}}
 };
 
-float FlightSide[2][3] = 
+static float FlightSide[2][3] =
 {
-    {1468.38, 730.27, 60.08},   // left
-    {1458.17, 501.3, 60.08}     // right
+    {1468.38f, 730.27f, 60.08f},   // left
+    {1458.17f, 501.3f, 60.08f}     // right
 };
 
-float FallCoord[2][3] = 
+static float FallCoord[2][3] =
 {
-    {1476.30, 649, 21.5},     // left
-    {1472.55, 580, 22.5}     // right
+    {1476.30f, 649, 21.5f},     // left
+    {1472.55f, 580, 22.5f}     // right
 };
 
-float FogCoords[25][3][3] =
+static float FogCoords[25][3][3] =
 {
      //left side
                //[0]                     [1]                       [2]
-    {{1451.98, 660.00, 23.05}, {1472.56, 680.00, 22.36}, {1507.31, 693.96, 28.85}}, //0
-    {{1451.98, 640.00, 23.06}, {1472.54, 660.00, 20.81}, {1495.10, 680.00, 21.22}}, //1
-    {{1451.98, 620.00, 23.06}, {1472.56, 640.00, 21.33}, {1513.84, 672.90, 25.21}}, //2
-    {{1451.98, 600.00, 23.06}, {1472.57, 620.00, 22.27}, {1531.06, 666.55, 27.41}}, //3
-    {{1451.98, 580.00, 23.06}, {1472.57, 600.00, 23.27}, {1495.10, 659.94, 22.84}}, //4
-    {{1451.98, 560.00, 23.06}, {1472.56, 580.02, 22.45}, {1530.79, 650.80, 35.89}}, //5
-    {{1451.98, 540.00, 23.06}, {1472.58, 560.00, 22.87}, {1495.29, 639.84, 23.64}}, //6
-    {{                      }, {1451.98, 560.00, 23.06}, {1516.20, 642.40, 27.16}}, //7
-    {{                      }, {                      }, {1526.31, 636.49, 36.26}}, //8
-    {{                      }, {                      }, {1495.13, 620.01, 25.37}}, //9
-    {{                      }, {                      }, {1525.77, 622.45, 35.69}}, //10
-    {{                      }, {                      }, {1517.40, 614.23, 29.78}}, //11
-    {{                      }, {                      }, {1530.97, 609.00, 35.89}}, //12
-    {{                      }, {                      }, {1494.96, 599.91, 25.30}}, //13
-    {{                      }, {                      }, {1545.40, 594.88, 35.95}}, //14
-    {{                      }, {                      }, {1523.57, 587.71, 31.00}}, //15
-    {{                      }, {                      }, {1495.94, 580.00, 23.84}}, //16
-    {{                      }, {                      }, {1513.26, 571.21, 28.79}}, //17
-    {{                      }, {                      }, {1494.96, 560.01, 25.24}}, //18
-    {{                      }, {                      }, {1532.74, 556.12, 33.09}}, //19
-    {{                      }, {                      }, {1514.72, 549.31, 30.14}}, //20
-    {{                      }, {                      }, {1494.97, 540.02, 25.81}}, //21
-    {{                      }, {                      }, {1527.60, 536.79, 30.63}}, //22
-    {{                      }, {                      }, {1550.99, 537.98, 33.60}}, //23
-    {{                      }, {                      }, {1510.45, 524.35, 26.63}}  //24
+    {{1451.98f, 660.00f, 23.05f}, {1472.56f, 680.00f, 22.36f}, {1507.31f, 693.96f, 28.85f}}, //0
+    {{1451.98f, 640.00f, 23.06f}, {1472.54f, 660.00f, 20.81f}, {1495.10f, 680.00f, 21.22f}}, //1
+    {{1451.98f, 620.00f, 23.06f}, {1472.56f, 640.00f, 21.33f}, {1513.84f, 672.90f, 25.21f}}, //2
+    {{1451.98f, 600.00f, 23.06f}, {1472.57f, 620.00f, 22.27f}, {1531.06f, 666.55f, 27.41f}}, //3
+    {{1451.98f, 580.00f, 23.06f}, {1472.57f, 600.00f, 23.27f}, {1495.10f, 659.94f, 22.84f}}, //4
+    {{1451.98f, 560.00f, 23.06f}, {1472.56f, 580.02f, 22.45f}, {1530.79f, 650.80f, 35.89f}}, //5
+    {{1451.98f, 540.00f, 23.06f}, {1472.58f, 560.00f, 22.87f}, {1495.29f, 639.84f, 23.64f}}, //6
+    {{                      },    {1451.98f, 560.00f, 23.06f}, {1516.20f, 642.40f, 27.16f}}, //7
+    {{                      },    {                      },    {1526.31f, 636.49f, 36.26f}}, //8
+    {{                      },    {                      },    {1495.13f, 620.01f, 25.37f}}, //9
+    {{                      },    {                      },    {1525.77f, 622.45f, 35.69f}}, //10
+    {{                      },    {                      },    {1517.40f, 614.23f, 29.78f}}, //11
+    {{                      },    {                      },    {1530.97f, 609.00f, 35.89f}}, //12
+    {{                      },    {                      },    {1494.96f, 599.91f, 25.30f}}, //13
+    {{                      },    {                      },    {1545.40f, 594.88f, 35.95f}}, //14
+    {{                      },    {                      },    {1523.57f, 587.71f, 31.00f}}, //15
+    {{                      },    {                      },    {1495.94f, 580.00f, 23.84f}}, //16
+    {{                      },    {                      },    {1513.26f, 571.21f, 28.79f}}, //17
+    {{                      },    {                      },    {1494.96f, 560.01f, 25.24f}}, //18
+    {{                      },    {                      },    {1532.74f, 556.12f, 33.09f}}, //19
+    {{                      },    {                      },    {1514.72f, 549.31f, 30.14f}}, //20
+    {{                      },    {                      },    {1494.97f, 540.02f, 25.81f}}, //21
+    {{                      },    {                      },    {1527.60f, 536.79f, 30.63f}}, //22
+    {{                      },    {                      },    {1550.99f, 537.98f, 33.60f}}, //23
+    {{                      },    {                      },    {1510.45f, 524.35f, 26.63f}}  //24
      //right side
 };
 
@@ -182,8 +182,7 @@ struct boss_felmystAI : public ScriptedAI
     ScriptedInstance *pInstance;
     PhaseFelmyst Phase;
     EventFelmyst Event;
-    uint32 Timer[10];
-    uint32 PulseCombat;
+    Timer _Timer[10];
 
     SummonList summons;
 
@@ -193,15 +192,14 @@ struct boss_felmystAI : public ScriptedAI
     uint32 FlightCount;
     uint32 BreathCount;
     uint32 IntroPhase;
-    uint32 IntroTimer;
+    Timer IntroTimer;
 
     void Reset()
     {
         Phase = PHASE_NULL;
         Event = EVENT_NULL;
-        Timer[EVENT_BERSERK] = 600000;
-        Timer[EVENT_CHECK] = 1000;
-        PulseCombat = 2000;
+        _Timer[EVENT_BERSERK].Reset(600000);
+        _Timer[EVENT_CHECK].Reset(1000);
         FlightCount = 0;
         IntroPhase = 0;
         IntroTimer = 0;
@@ -215,7 +213,6 @@ struct boss_felmystAI : public ScriptedAI
         me->SetFloatValue(UNIT_FIELD_COMBATREACH, 10);
         me->setActive(true);
         me->SetWalk(false);
-        DespawnSummons();   // for unyielding dead summoned by trigger
 
         if(pInstance)
             pInstance->SetData(DATA_FELMYST_EVENT, NOT_STARTED);
@@ -232,10 +229,14 @@ struct boss_felmystAI : public ScriptedAI
         DoZoneInCombat();
         RemoveMCAuraIfExist();  // just in case
         EnterPhase(PHASE_GROUND);
-        Phase = PHASE_NULL; // not attack yet, but counters on
         me->GetMotionMaster()->Clear();
         me->GetMotionMaster()->MoveIdle();
         me->SetSpeed(MOVE_FLIGHT, 2);
+
+        if (!me->HasAura(AURA_NOXIOUS_FUMES))
+            me->CastSpell(me, AURA_NOXIOUS_FUMES, true);
+
+
         if(Unit* target = SelectUnit(SELECT_TARGET_TOPAGGRO, 0))
         {
             float x, y, z;
@@ -294,13 +295,15 @@ struct boss_felmystAI : public ScriptedAI
     void JustRespawned()
     {
         Phase = PHASE_RESPAWNING;
-        me->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
+        me->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_SPAWNING);
         me->SetStandState(PLAYER_STATE_SLEEP);
         IntroTimer = 4000;
     }
 
     void JustDied(Unit* Killer)
     {
+        me->SetLevitate(false);
+        me->setHover(false);
         DoScriptText(YELL_DEATH, me);
         pInstance->SetData(DATA_FELMYST_EVENT, DONE);
         me->SummonCreature(MOB_KALECGOS, 1555, 737, 88, 0, TEMPSUMMON_TIMED_DESPAWN, 300000);
@@ -309,6 +312,7 @@ struct boss_felmystAI : public ScriptedAI
     void EnterEvadeMode()
     {
         CreatureAI::EnterEvadeMode();
+        me->HandleEmoteCommand(EMOTE_ONESHOT_LIFTOFF);
         me->SetSpeed(MOVE_FLIGHT, 1.7, false);
         me->GetMotionMaster()->MovePath(FELMYST_OOC_PATH, true);
         IntroPhase = 6; // to make proper landing on next EnterCombat
@@ -317,23 +321,10 @@ struct boss_felmystAI : public ScriptedAI
         for(Map::PlayerList::const_iterator i = players.begin(); i != players.end(); ++i)
             if(Player *p = i->getSource())
             {
-                if(p->isAlive() && p->HasAura(SPELL_FOG_CHARM, 0))
+                if(p->IsAlive() && p->HasAura(SPELL_FOG_CHARM, 0))
                     me->Kill(p, false);
             }
         summons.DespawnAll();
-    }
-
-    void DespawnSummons()
-    {
-        std::list<uint64> AddList = me->GetMap()->GetCreaturesGUIDList(MOB_UNYIELDING_DEAD, GET_FIRST_CREATURE_GUID, 0);
-        if (AddList.empty())
-            return;
-
-        for (std::list<uint64>::iterator i = AddList.begin(); i!= AddList.end(); ++i)
-        {
-            if(Creature* Skeleton = me->GetCreature(*i))
-                Skeleton->ForcedDespawn();
-        }
     }
 
     void JustSummoned(Creature *summon)
@@ -352,7 +343,7 @@ struct boss_felmystAI : public ScriptedAI
 
     void DamageTaken(Unit*, uint32 &damage)
     {
-        if(Phase != PHASE_GROUND && ((uint32(me->GetHealth()*100/me->GetMaxHealth()) <= 1)))
+        if (Phase != PHASE_GROUND && (damage >= me->GetHealth() || me->GetHealth() <= 1))
             damage = 0;
     }
 
@@ -361,19 +352,19 @@ struct boss_felmystAI : public ScriptedAI
         switch(NextPhase)
         {
             case PHASE_GROUND:
-                Timer[EVENT_CLEAVE] = urand(5000, 10000);
-                Timer[EVENT_CORROSION] = urand(12000, 20000);
-                Timer[EVENT_GAS_NOVA] = urand(20000, 25000);
-                Timer[EVENT_ENCAPSULATE] = 30000;
-                Timer[EVENT_FLIGHT] = 60000;
-                Timer[EVENT_CHECK] = 1000;
+                _Timer[EVENT_CLEAVE].Reset(urand(5000, 10000));
+                _Timer[EVENT_CORROSION].Reset(urand(12000, 20000));
+                _Timer[EVENT_GAS_NOVA].Reset(urand(20000, 25000));
+                _Timer[EVENT_ENCAPSULATE].Reset(30000);
+                _Timer[EVENT_FLIGHT].Reset(60000);
+                _Timer[EVENT_CHECK].Reset(1000);
                 //DoResetThreat();
                 break;
             case PHASE_FLIGHT:
                 side = RAND(LEFT_SIDE, RIGHT_SIDE);
-                Timer[EVENT_FLIGHT_SEQUENCE] = 1000;
-                Timer[EVENT_SUMMON_FOG] = 0;
-                Timer[EVENT_CHECK] = 1000;
+                _Timer[EVENT_FLIGHT_SEQUENCE].Reset(1000);
+                _Timer[EVENT_SUMMON_FOG].Reset(0);
+                _Timer[EVENT_CHECK].Reset(1000);
                 FlightCount = 0;
                 BreathCount = 0;
                 break;
@@ -411,19 +402,13 @@ struct boss_felmystAI : public ScriptedAI
                 break;
             case 5:
                 Phase = PHASE_NULL;
-                me->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
+                me->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_SPAWNING);
                 IntroTimer = 0;
                 break;
-            case 6:
-                Phase = PHASE_GROUND;
-                if (!me->HasAura(AURA_NOXIOUS_FUMES))
-                    me->CastSpell(me, AURA_NOXIOUS_FUMES, true);
-                AttackStart(me->getVictim());
-                break;
         }
-        IntroPhase++;
+        IntroPhase++;     
     }
-    
+
     void JustReachedHome()
     {
         me->SetLevitate(true);
@@ -435,8 +420,8 @@ struct boss_felmystAI : public ScriptedAI
         {
             // stop moving on each waypoint
             me->GetMotionMaster()->MoveIdle();
-            if(me->getVictim()) // cosmetics: to be tested if working
-                me->SetInFront(me->getVictim());
+            if(me->GetVictim()) // cosmetics: to be tested if working
+                me->SetInFront(me->GetVictim());
             switch(Id)
             {
                 case 0: // on landing after aggroing
@@ -448,16 +433,16 @@ struct boss_felmystAI : public ScriptedAI
                     break;
                 case 1: // on starting phase 2
                     me->setHover(true);
-                    Timer[EVENT_FLIGHT_SEQUENCE] = 1000;
+                    _Timer[EVENT_FLIGHT_SEQUENCE] = 1000;
                     break;
                 case 2: // on left/right side marker
                     me->setHover(true);
-                    Timer[EVENT_FLIGHT_SEQUENCE] = 3000;
+                    _Timer[EVENT_FLIGHT_SEQUENCE] = 3000;
                     break;
                 case 3: // on path start node
                     me->setHover(true);
                     me->SetSpeed(MOVE_FLIGHT, 3.5, false);
-                    Timer[EVENT_FLIGHT_SEQUENCE] = urand(3000, 4000);
+                    _Timer[EVENT_FLIGHT_SEQUENCE] = urand(3000, 4000);
                     break;
                 case 4: // on path stop node
                     me->setHover(true);
@@ -469,11 +454,11 @@ struct boss_felmystAI : public ScriptedAI
                         FlightCount = 4;
                     else
                         FlightCount = 7;
-                    Timer[EVENT_FLIGHT_SEQUENCE] = 3000;
+                    _Timer[EVENT_FLIGHT_SEQUENCE] = 3000;
                     break;
                 case 5: // on landing after phase 2
                     me->HandleEmoteCommand(EMOTE_ONESHOT_LAND);
-                    Timer[EVENT_FLIGHT_SEQUENCE] = 1500;
+                    _Timer[EVENT_FLIGHT_SEQUENCE] = 1500;
                     break;
                 case 6:
                     me->setHover(true);
@@ -494,11 +479,11 @@ struct boss_felmystAI : public ScriptedAI
             me->SetLevitate(true);
             me->setHover(true);
             DoScriptText(YELL_TAKEOFF, me);
-            Timer[EVENT_FLIGHT_SEQUENCE] = 2000;
+            _Timer[EVENT_FLIGHT_SEQUENCE] = 2000;
             break;
         case 1:
             me->GetMotionMaster()->MovePoint(1, me->GetPositionX()+10, me->GetPositionY(), me->GetPositionZ()+20);
-            Timer[EVENT_FLIGHT_SEQUENCE] = 0;
+            _Timer[EVENT_FLIGHT_SEQUENCE] = 0;
             break;
         case 2: // summon vapor on player 2 times
         case 3:
@@ -511,13 +496,13 @@ struct boss_felmystAI : public ScriptedAI
                 EnterEvadeMode();
                 return;
             }
-            Timer[EVENT_FLIGHT_SEQUENCE] = 11000;
+            _Timer[EVENT_FLIGHT_SEQUENCE] = 11000;
             break;
             }
         case 4: // go to side left/right marker
             me->SetSpeed(MOVE_FLIGHT, 1.7, false);
             me->GetMotionMaster()->MovePoint(2, FlightSide[side][0], FlightSide[side][1], FlightSide[side][2]);
-            Timer[EVENT_FLIGHT_SEQUENCE] = 0;
+            _Timer[EVENT_FLIGHT_SEQUENCE] = 0;
             break;
         case 5: // decide path to go breathing
             {
@@ -525,7 +510,7 @@ struct boss_felmystAI : public ScriptedAI
             float *pos = FlightMarker[path][side];
             counter = side ? (path ? (path%2 ? 7 : 24) : 6) : 0;
             me->GetMotionMaster()->MovePoint(3, pos[0], pos[1], pos[2]);
-            Timer[EVENT_FLIGHT_SEQUENCE] = 0;
+            _Timer[EVENT_FLIGHT_SEQUENCE] = 0;
             break;
             }
         case 6: // start fog breath
@@ -534,8 +519,8 @@ struct boss_felmystAI : public ScriptedAI
             me->GetMotionMaster()->MovePoint(4, pos[0], pos[1], pos[2]);
             DoScriptText(EMOTE_BREATH, me);
             AddSpellToCast(me, SPELL_FOG_BREATH);
-            Timer[EVENT_SUMMON_FOG] = 50;
-            Timer[EVENT_FLIGHT_SEQUENCE] = 0;
+            _Timer[EVENT_SUMMON_FOG] = 50;
+            _Timer[EVENT_FLIGHT_SEQUENCE] = 0;
             break;
             }
         case 7: // start landing..
@@ -550,7 +535,7 @@ struct boss_felmystAI : public ScriptedAI
                 EnterEvadeMode();
                 return;
             }
-            Timer[EVENT_FLIGHT_SEQUENCE] = 0;
+            _Timer[EVENT_FLIGHT_SEQUENCE] = 0;
             break;
         case 9: // ..and go for phase 1
             me->SetSpeed(MOVE_RUN, 2.0, false);
@@ -559,8 +544,8 @@ struct boss_felmystAI : public ScriptedAI
             me->setHover(false);
             me->SendHeartBeat();
             EnterPhase(PHASE_GROUND);
-            AttackStart(me->getVictim());
-            DoStartMovement(me->getVictim());
+            AttackStart(me->GetVictim());
+            DoStartMovement(me->GetVictim());
             break;
         default:
             break;
@@ -575,35 +560,38 @@ struct boss_felmystAI : public ScriptedAI
             case EVENT_BERSERK:
                 DoScriptText(YELL_BERSERK, me);
                 ForceSpellCast(me, SPELL_BERSERK, INTERRUPT_AND_CAST_INSTANTLY);
-                Timer[EVENT_BERSERK] = 300000;   // 5 min just in case :)
+                _Timer[EVENT_BERSERK] = 300000;   // 5 min just in case :)
                 break;
             case EVENT_CHECK:
                 DoZoneInCombat();
                 me->SetSpeed(MOVE_RUN, 2.0, false);
-                Timer[EVENT_CHECK]=1000;
+                _Timer[EVENT_CHECK]=1000;
                 break;
             case EVENT_CLEAVE:
-                AddSpellToCast(me->getVictim(), SPELL_CLEAVE);
-                Timer[EVENT_CLEAVE] = urand(5000, 10000);
+                AddSpellToCast(me->GetVictim(), SPELL_CLEAVE);
+                _Timer[EVENT_CLEAVE] = urand(5000, 10000);
                 break;
             case EVENT_CORROSION:
-                AddSpellToCast(me->getVictim(), SPELL_CORROSION);
-                Timer[EVENT_CORROSION] = urand(20000, 30000);
+                AddSpellToCast(me->GetVictim(), SPELL_CORROSION);
+                _Timer[EVENT_CORROSION] = urand(20000, 30000);
                 break;
             case EVENT_GAS_NOVA:
+            {
                 AddSpellToCastWithScriptText(me, SPELL_GAS_NOVA, YELL_BREATH);
                 // gas nova should only be used 2 times in phase 1
-                Timer[EVENT_GAS_NOVA] =(Timer[EVENT_FLIGHT] <= 20000)?40000:urand(20000, 25000);
+                uint32 intval = (_Timer[EVENT_FLIGHT].GetTimeLeft() <= 20000) ? 40000 : urand(20000, 25000);
+                _Timer[EVENT_GAS_NOVA].Reset(intval);
                 break;
+            }
             case EVENT_ENCAPSULATE:
                 if(Unit* target = SelectUnit(SELECT_TARGET_RANDOM, 0, 60, true))
                 {
                     ClearCastQueue();
                     me->SetSelection(target->GetGUID());
                     AddSpellToCast(target, SPELL_ENCAPSULATE_CHANNEL, false, true);
-                    Timer[EVENT_ENCAPSULATE] = urand(22000, 35000);
-                    if(Timer[EVENT_FLIGHT] < 7000)
-                        Timer[EVENT_FLIGHT] = 7000;
+                    _Timer[EVENT_ENCAPSULATE] = urand(22000, 35000);
+                    if(_Timer[EVENT_FLIGHT].GetTimeLeft() < 7000)
+                        _Timer[EVENT_FLIGHT].Reset(7000);
                 }
                 break;
             case EVENT_FLIGHT:
@@ -617,11 +605,11 @@ struct boss_felmystAI : public ScriptedAI
                 if(Creature *Fog = me->SummonCreature(MOB_FOG_OF_CORRUPTION, posFog[0], posFog[1], posFog[2], 0, TEMPSUMMON_TIMED_DESPAWN, 15000))
                     Fog->CastSpell(Fog, SPELL_FOG_TRIGGER, true);
                 if((side && !counter) || (!side && counter == (path ? (path%2 ? 7 : 24) : 6)))
-                    Timer[EVENT_SUMMON_FOG] = 0;
+                    _Timer[EVENT_SUMMON_FOG] = 0;
                 else
                 {
                     side ? counter-- : counter++;
-                    Timer[EVENT_SUMMON_FOG] = (6000/(path ? (path%2 ? 8 : 25) : 7));  // check this timer
+                    _Timer[EVENT_SUMMON_FOG].Reset(6000/(path ? (path%2 ? 8 : 25) : 7));  // check this timer
                 }
                 break;
         }
@@ -648,43 +636,28 @@ struct boss_felmystAI : public ScriptedAI
 
     void UpdateAI(const uint32 diff)
     {
-        if(IntroTimer)
-        {
-            if(IntroTimer <= diff)
-                DoIntro();
-            else
-                IntroTimer -= diff;
-        }
+
+        if (IntroTimer.Expired(diff))
+            DoIntro();
+
 
         if (!UpdateVictim())
             return;
 
-        if(PulseCombat < diff)
-        {
-            DoZoneInCombat();
-            PulseCombat = 2000;
-        }
-        else
-            PulseCombat -= diff;
+        DoSpecialThings(diff, DO_PULSE_COMBAT, 400.0f);
+
 
         // use enrage timer both phases
-        if(Timer[EVENT_BERSERK] <= diff)
+        if (_Timer[EVENT_BERSERK].Expired(diff))
             ProcessEvent(EVENT_BERSERK);
-        else
-            Timer[EVENT_BERSERK] -= diff;
+
 
         if(Phase == PHASE_GROUND || Phase == PHASE_NULL)
         {
             for(uint32 i = 2; i <= 7; i++)
-            {
-                if(Timer[i])
-                {
-                    if(Timer[i] <= diff)
-                        ProcessEvent((EventFelmyst)i);
-                    else
-                        Timer[i] -= diff;
-                }
-            }
+                if (_Timer[i].Expired(diff))
+                    ProcessEvent((EventFelmyst)i);
+
             CastNextSpellIfAnyAndReady();
             if(Phase == PHASE_GROUND)
                 DoMeleeAttackIfReady();
@@ -693,15 +666,9 @@ struct boss_felmystAI : public ScriptedAI
         if(Phase == PHASE_FLIGHT)
         {
             for(uint32 i = 8; i < 10; i++)
-            {
-                if(Timer[i])
-                {
-                    if(Timer[i] <= diff)
-                        ProcessEvent((EventFelmyst)i);
-                    else
-                        Timer[i] -= diff;
-                }
-            }
+                if (_Timer[i].Expired(diff))
+                    ProcessEvent((EventFelmyst)i);
+
             CastNextSpellIfAnyAndReady();
         }
     }
@@ -716,8 +683,10 @@ struct mob_felmyst_vaporAI : public ScriptedAI
         me->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
         me->SetSpeed(MOVE_RUN, 1.0);
         me->SetFloatValue(UNIT_FIELD_COMBATREACH, 0.01);
+        me->SetReactState(REACT_PASSIVE);
     }
     void Reset() {}
+    void MoveInLineOfSight(Unit*) {}
     void JustRespawned()
     {
         DoZoneInCombat();
@@ -729,7 +698,7 @@ struct mob_felmyst_vaporAI : public ScriptedAI
 
     void UpdateAI(const uint32 diff)
     {
-        if(!me->getVictim() || !me->getVictim()->isTargetableForAttack())
+        if(!me->GetVictim() || !me->GetVictim()->isTargetableForAttack() || me->GetVictim()->GetTypeId() != TYPEID_PLAYER)
             AttackStart(SelectUnit(SELECT_TARGET_NEAREST, 0, 100.0, true));
     }
 };
@@ -739,14 +708,16 @@ struct mob_felmyst_trailAI : public Scripted_NoMovementAI
 {
     mob_felmyst_trailAI(Creature *c) : Scripted_NoMovementAI(c)
     {
+        pInstance = (c->GetInstanceData());
         me->CastSpell(me, SPELL_TRAIL_TRIGGER, true);
         me->setFaction(1771);
-        Delay = 6000;
-        Despawn = 20000;
+        Delay.Reset(6000);
+        Despawn.Reset(20000);
     }
 
-    uint32 Delay;   // timer for Unyielding Dead summoning
-    uint32 Despawn; // for despawning
+    ScriptedInstance* pInstance;
+    Timer Delay;   // timer for Unyielding Dead summoning
+    Timer Despawn; // for despawning
 
     void SpellHitTarget(Unit* target, const SpellEntry *entry)
     {
@@ -756,34 +727,26 @@ struct mob_felmyst_trailAI : public Scripted_NoMovementAI
 
     void JustSummoned(Creature* summon)
     {
-        Map::PlayerList const& players = me->GetMap()->GetPlayers();
-        if (!players.isEmpty())
-        {
-            for(Map::PlayerList::const_iterator itr = players.begin(); itr != players.end(); ++itr)
-            {
-                if(Player* plr = itr->getSource())
-                {
-                    summon->SetInCombatWith(plr);
-                    summon->AddThreat(plr, 0.0f);
-                }
-            }
-        }
+        if(summon->AI())
+            summon->AI()->DoZoneInCombat();
+        if(Unit* Felmyst = me->GetUnit(pInstance->GetData64(DATA_FELMYST)))
+            Felmyst->ToCreature()->AI()->JustSummoned(summon);
     }
 
     void UpdateAI(const uint32 diff)
     {
-        if(Delay < diff)
+
+        if (Delay.Expired(diff))
         {
             DoCast(me, SPELL_DEAD_SUMMON);
             Delay = 30000;  // will despawn sooner
         }
-        else
-            Delay -= diff;
 
-        if(Despawn < diff)
+
+
+        if (Despawn.Expired(diff))
             me->ForcedDespawn();
-        else
-            Despawn -= diff;
+
     }
 };
 

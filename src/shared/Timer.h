@@ -1,7 +1,7 @@
 /*
  * Copyright (C) 2005-2008 MaNGOS <http://getmangos.com/>
  * Copyright (C) 2008 TrinityCore <http://www.trinitycore.org/>
- * Copyright (C) 2008-2014 Hellground <http://hellground.net/>
+ * Copyright (C) 2008-2015 Hellground <http://hellground.net/>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -57,13 +57,15 @@ class WorldTimer
         static uint32 tickPrevTime();
         // Tick world timer
         static uint32 tick();
+        // renew tickTime after sleep
+        static void tickTimeRenew();
 
     private:
         WorldTimer();
         WorldTimer(const WorldTimer& );
 
         // Analogue to WorldTimer::getMSTime() but it persists m_SystemTickTime
-        static uint32 getMSTime_internal(bool savetime = false);
+        static uint32 getMSTime_internal();
 
         static uint32 m_iTime;
         static uint32 m_iPrevTime;
@@ -98,31 +100,64 @@ class IntervalTimer
         time_t _current;
 };
 
-class ShortIntervalTimer
+struct ShortIntervalTimer
 {
-    public:
-        ShortIntervalTimer() : _interval(0), _current(0) {}
+    uint32 _interval;
+    uint32 _current;
 
-        void Update(uint32 diff)
-        {
+    ShortIntervalTimer() : _interval(0), _current(0) {}
+    ShortIntervalTimer(const uint32 interval) : _interval(interval), _current(0) {}
+
+    void Delay(const uint32 delay)
+    {
+        _interval += delay;
+    }
+
+    bool Expired(const uint32 diff)
+    {
+        Update(diff);
+        return Passed();
+    }
+
+    bool Passed() const
+    {
+        return _interval != 0 ? _current >= _interval : false;
+    }
+
+    void Reset(const uint32 interval)
+    {
+        SetCurrent(0);
+        SetInterval(interval);
+    }
+
+    void Reschedule(const uint32 interval)
+    {
+        if (interval == 0)
+            _current = 0;
+        else if (_current >= _interval)
+            _current -= _interval;
+
+        SetInterval(interval);
+    }
+
+    void Update(const uint32 diff)
+    {
+        if (_interval != 0)
             _current += diff;
-        }
+    }
 
-        bool Passed() const { return _current >= _interval; }
-        void Reset()
-        {
-            if (_current >= _interval)
-                _current -= _interval;
-        }
+    uint32 GetInterval() const { return _interval; }
+    uint32 GetCurrent() const { return _current; }
+    uint32 GetTimeLeft() const { return _interval > _current ? _interval - _current : 0; }
 
-        void SetCurrent(uint32 current) { _current = current; }
-        void SetInterval(uint32 interval) { _interval = interval; }
-        uint32 GetInterval() const { return _interval; }
-        uint32 GetCurrent() const { return _current; }
+    void SetCurrent(const uint32 current) { _current = current; }
+    void SetInterval(const uint32 interval) { _interval = interval; }
 
-    private:
-        uint32 _interval;
-        uint32 _current;
+    const uint32 operator=(const uint32 interval)
+    {
+        Reschedule(interval);
+        return interval;
+    }
 };
 
 struct TimeTracker
@@ -141,15 +176,22 @@ struct TimeTracker
 struct TimeTrackerSmall
 {
     public:
-        TimeTrackerSmall(int32 expiry =0) : i_expiryTime(expiry) {}
-        void Update(int32 diff) { i_expiryTime -= diff; }
+        TimeTrackerSmall(uint32 expiry =0) : i_expiryTime(expiry) {}
+        void Update(uint32 diff) { diff < i_expiryTime ? i_expiryTime -= diff : i_expiryTime = 0; }
         bool Passed(void) const { return (i_expiryTime <= 0); }
-        void Reset(int32 interval) { i_expiryTime = interval; }
+        void Reset(uint32 interval) { i_expiryTime = interval; }
+        bool Expired(uint32 diff) { Update(diff); return Passed(); }
         int32 GetExpiry(void) const { return i_expiryTime; }
 
     private:
-        int32 i_expiryTime;
+        uint32 i_expiryTime;
 };
+
+// for periodic events
+typedef ShortIntervalTimer Timer;
+// for single events
+typedef TimeTrackerSmall Countdown;
+typedef TimeTrackerSmall ShortTimeTracker;
 
 struct PeriodicTimer
 {
@@ -203,43 +245,36 @@ class WorldUpdateCounter
 class DiffRecorder
 {
     public:
-        DiffRecorder(std::string funcName, uint32 treshold = 0)
+        DiffRecorder(uint32 treshold = 0)
         {
-            ownerName = funcName;
             _diffTresholdForFile = treshold;
 
-            _startTime = WorldTimer::getMSTime();
+            _prevTime = WorldTimer::getMSTime();
         }
 
-        inline uint32 RecordTimeFor(char const* fmt, ...)
+        inline bool RecordTimeFor(char const* str, uint32 shorter = 0)
         {
-            uint32 diffTime = WorldTimer::getMSTimeDiffToNow(_startTime);
+            if (!shorter) shorter = _diffTresholdForFile;
+            if (!shorter) return false;
+            uint32 diffTime = WorldTimer::getMSTimeDiffToNow(_prevTime);
 
-            _startTime = WorldTimer::getMSTime();
+            _prevTime = WorldTimer::getMSTime();
 
-            if (_diffTresholdForFile && diffTime >= _diffTresholdForFile)
+            if (diffTime > shorter)
             {
-                va_list ap;
-                char str [256];
-                va_start(ap, fmt);
-                vsnprintf(str, 256, fmt, ap);
-                va_end(ap);
-
-                sLog.outLog(LOG_DIFF, "[%s]: %s [diff: %u].", ownerName.c_str(), str, diffTime);
+                sLog.outLog(LOG_DIFF, "%s [diff: %u].", str, diffTime);
+                return true;
             }
-
-            return diffTime;
+            return false;
         }
 
-        inline void ResetDiff()
+        inline void reset()
         {
-            _startTime = WorldTimer::getMSTime();
+            _prevTime = WorldTimer::getMSTime();
         }
 
     private:
-
-        std::string ownerName;
-        uint32 _startTime;
+        uint32 _prevTime;
         uint32 _diffTresholdForFile;
 };
 

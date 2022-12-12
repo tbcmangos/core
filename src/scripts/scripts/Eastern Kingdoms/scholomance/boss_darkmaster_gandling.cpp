@@ -1,6 +1,6 @@
 /* 
  * Copyright (C) 2006-2008 ScriptDev2 <https://scriptdev2.svn.sourceforge.net/>
- * Copyright (C) 2008-2014 Hellground <http://hellground.net/>
+ * Copyright (C) 2008-2015 Hellground <http://hellground.net/>
  * 
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -54,10 +54,10 @@ struct boss_darkmaster_gandlingAI : public ScriptedAI
 {
     boss_darkmaster_gandlingAI(Creature *c) : ScriptedAI(c) {}
 
-    uint32 ArcaneMissiles_Timer;
-    uint32 ShadowShield_Timer;
-    uint32 Curse_Timer;
-    uint32 Teleport_Timer;
+    int32 ArcaneMissiles_Timer;
+    int32 ShadowShield_Timer;
+    int32 Curse_Timer;
+    int32 Teleport_Timer;
     Creature *Summoned;
 
     void Reset()
@@ -77,32 +77,33 @@ struct boss_darkmaster_gandlingAI : public ScriptedAI
         if (!UpdateVictim())
             return;
 
-        //ArcaneMissiles_Timer
-        if (ArcaneMissiles_Timer < diff)
+        ArcaneMissiles_Timer -= diff;
+        if (ArcaneMissiles_Timer <= diff)
         {
-            DoCast(m_creature->getVictim(),SPELL_ARCANEMISSILES);
-            ArcaneMissiles_Timer = 8000;
-        }else ArcaneMissiles_Timer -= diff;
+            DoCast(m_creature->GetVictim(),SPELL_ARCANEMISSILES);
+            ArcaneMissiles_Timer += 8000;
+        }
 
-        //ShadowShield_Timer
-        if (ShadowShield_Timer < diff)
+        ShadowShield_Timer -= diff;
+        if (ShadowShield_Timer <= diff)
         {
             DoCast(m_creature,SPELL_SHADOWSHIELD);
-            ShadowShield_Timer = 14000 + rand()%14000;
-        }else ShadowShield_Timer -= diff;
+            ShadowShield_Timer += 14000 + rand()%14000;
+        }
 
-        //Curse_Timer
-        if (Curse_Timer < diff)
+        Curse_Timer -= diff;
+        if (Curse_Timer <= diff)
         {
-            DoCast(m_creature->getVictim(),SPELL_CURSE);
-            Curse_Timer = 15000 + rand()%12000;
-        }else Curse_Timer -= diff;
+            DoCast(m_creature->GetVictim(),SPELL_CURSE);
+            Curse_Timer += 15000 + rand()%12000;
+        }
 
         //Teleporting Random Target to one of the six pre boss rooms and spawn 3-4 skeletons near the gamer.
         //We will only telport if gandling has more than 3% of hp so teleported gamers can always loot.
         if ( m_creature->GetHealth()*100 / m_creature->GetMaxHealth() > 3 )
         {
-            if(Teleport_Timer < diff)
+            Teleport_Timer -= diff;
+            if(Teleport_Timer <= diff)
             {
                 Unit* target = NULL;
                 target = SelectUnit(SELECT_TARGET_RANDOM,0);
@@ -193,8 +194,8 @@ struct boss_darkmaster_gandlingAI : public ScriptedAI
                             break;
                     }
                 }
-                Teleport_Timer = 20000 + rand()%15000;
-            }else Teleport_Timer -= diff;
+                Teleport_Timer += 20000 + rand()%15000;
+            }
         }
 
         DoMeleeAttackIfReady();

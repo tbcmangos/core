@@ -1,6 +1,6 @@
 /* 
  * Copyright (C) 2006-2008 ScriptDev2 <https://scriptdev2.svn.sourceforge.net/>
- * Copyright (C) 2008-2014 Hellground <http://hellground.net/>
+ * Copyright (C) 2008-2015 Hellground <http://hellground.net/>
  * 
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -32,10 +32,10 @@ EndScriptData */
 
 SHostageInfo HostageInfo[] =
 {
-    {23790, 24442, 187377, 186648, -146, 1347, 48, 6.17}, // bear - Tanzar
-    {23999, 24443, 187378, 187021, 408, 1488, 81.65, 4.49}, // eagle - Harkor
-    {24024, 24444, 187379, 186667, -90, 1154, 6, 5.9}, // dragonhawk - Kraz
-    {24001, 24441, 187380, 186672, 337, 1087,  6.34, 3.1}  // lynx - Ashli
+    {23790, 24442, 187377, 186648, -146, 1347, 48,     6.17f}, // bear - Tanzar
+    {23999, 24443, 187378, 187021,  408, 1488, 81.65f, 4.49f}, // eagle - Harkor
+    {24024, 24444, 187379, 186667,  -90, 1154, 6,      5.9f},  // dragonhawk - Kraz
+    {24001, 24441, 187380, 186672,  337, 1087, 6.34f,  3.1f}   // lynx - Ashli
 };
 
 
@@ -59,9 +59,9 @@ struct instance_zulaman : public ScriptedInstance
     uint64 AkilzonGUID;
     uint64 HexLordGUID;
 
-    uint32 QuestTimer;
-    uint16 BossKilled;
-    uint16 QuestMinute;
+    Timer QuestTimer;
+    int16 BossKilled;
+    int16 QuestMinute;
     uint16 ChestLooted;
     uint32 AkilzonGauntlet;
 
@@ -87,7 +87,7 @@ struct instance_zulaman : public ScriptedInstance
 
         AkilzonGUID = 0;
         HarrisonGUID = 0;
-        QuestTimer = 0;
+        QuestTimer = 1;
         QuestMinute = 0;
         BossKilled = 0;
         ChestLooted = 0;
@@ -267,8 +267,15 @@ struct instance_zulaman : public ScriptedInstance
         if(BossKilled >= 4)
             HandleGameObject(HexLordEntranceGateGUID, true);
 
-        if(BossKilled >= 5)
+        if (BossKilled >= 5)
+        {
             HandleGameObject(HexLordExitGateGUID, true);
+            /* TODO: It should be activated by players
+            GameObject* gate = instance->GetGameObject(HexLordExitGateGUID);
+            if (gate)
+                gate->RemoveFlag(GAMEOBJECT_FLAGS, GO_FLAG_LOCKED);
+                */
+        }
     }
 
     void UpdateWorldState(uint32 field, uint32 value)
@@ -522,6 +529,8 @@ struct instance_zulaman : public ScriptedInstance
             player->SendUpdateWorldState(3104, 1);
             player->SendUpdateWorldState(3106, QuestMinute);
         }
+        else
+            player->SendUpdateWorldState(3104, 0);
     }
 
 
@@ -529,11 +538,11 @@ struct instance_zulaman : public ScriptedInstance
     {
         if(QuestMinute)
         {
-            if(QuestTimer < diff)
+            if (QuestTimer.Expired(diff))
             {
                 QuestMinute--;
                 SaveToDB();
-                QuestTimer += 60000;
+                QuestTimer = 60000;
                 if(QuestMinute)
                 {
                     UpdateWorldState(3104, 1);
@@ -572,7 +581,6 @@ struct instance_zulaman : public ScriptedInstance
                     UpdateWorldState(3104, 0);
                 }
             }
-            QuestTimer -= diff;
         }
     }
 };

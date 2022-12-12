@@ -1,6 +1,6 @@
 /* 
  * Copyright (C) 2006-2008 ScriptDev2 <https://scriptdev2.svn.sourceforge.net/>
- * Copyright (C) 2008-2014 Hellground <http://hellground.net/>
+ * Copyright (C) 2008-2015 Hellground <http://hellground.net/>
  * 
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -57,21 +57,21 @@ EndScriptData */
 #define SPELL_SUMMON_MURLOC_B9  39821
 #define SPELL_SUMMON_MURLOC_B10 39822*/
 
-uint32 summonGlobules[4] = {37854, 37858, 37860, 37861};
-uint32 wateryGraves[4] = {38023, 38024, 38025, 37850};
+static uint32 summonGlobules[4] = {37854, 37858, 37860, 37861};
+static uint32 wateryGraves[4] = {38023, 38024, 38025, 37850};
 
-float MurlocCords[10][5] =
+static float MurlocCords[10][5] =
 {
-    {21920, 424.36, -715.4, -7.14, 0.124},
-    {21920, 425.13, -719.3, -7.14, 0.124},
-    {21920, 425.05, -724.23, -7.14, 0.124},
-    {21920, 424.91, -728.68, -7.14, 0.124},
-    {21920, 424.84, -732.18, -7.14, 0.124},
-    {21920, 321.05, -734.2, -13.15, 0.124},
-    {21920, 321.05, -729.4, -13.15, 0.124},
-    {21920, 321.05, -724.03, -13.15, 0.124},
-    {21920, 321.05, -718.73, -13.15, 0.124},
-    {21920, 321.05, -714.24, -13.15, 0.124}
+    {21920, 514.36f, -715.4f, -7.14f, 0.124f},
+    {21920, 515.13f, -719.3f, -7.14f, 0.124f},
+    {21920, 515.05f, -724.23f, -7.14f, 0.124f},
+    {21920, 514.91f, -728.68f, -7.14f, 0.124f},
+    {21920, 514.84f, -732.18f, -7.14f, 0.124f},
+    {21920, 261.05f, -706.2f, -4.05f, 0.124f},
+    {21920, 261.05f, -712.4f, -4.05f, 0.124f},
+    {21920, 261.05f, -721.03f, -4.05f, 0.124f},
+    {21920, 261.05f, -718.73f, -4.05f, 0.124f},
+    {21920, 261.05f, -714.24f, -4.05f, 0.124f}
 };
 
 //Creatures
@@ -89,10 +89,10 @@ struct boss_morogrim_tidewalkerAI : public ScriptedAI
 
     ScriptedInstance* pInstance;
 
-    uint32 TidalWave_Timer;
-    uint32 WateryGrave_Timer;
-    uint32 Earthquake_Timer;
-    uint32 WateryGlobules_Timer;
+    Timer TidalWave_Timer;
+    Timer WateryGrave_Timer;
+    Timer Earthquake_Timer;
+    Timer WateryGlobules_Timer;
 
     WorldLocation wLoc;
 
@@ -101,10 +101,10 @@ struct boss_morogrim_tidewalkerAI : public ScriptedAI
 
     void Reset()
     {
-        TidalWave_Timer = 10000;
-        WateryGrave_Timer = 30000;
-        Earthquake_Timer = 40000;
-        WateryGlobules_Timer = 0;
+        TidalWave_Timer.Reset(10000);
+        WateryGrave_Timer.Reset(30000);
+        Earthquake_Timer.Reset(40000);
+        WateryGlobules_Timer = 1;
 
         Earthquake = false;
         Phase2 = false;
@@ -117,7 +117,7 @@ struct boss_morogrim_tidewalkerAI : public ScriptedAI
         DoScriptText(RAND(SAY_SLAY1, SAY_SLAY2, SAY_SLAY3), m_creature);
     }
 
-    void JustDied(Unit *victim)
+    void JustDied(Unit *Killer)
     {
         DoScriptText(SAY_DEATH, m_creature);
         pInstance->SetData(DATA_MOROGRIMTIDEWALKEREVENT, DONE);
@@ -138,7 +138,7 @@ struct boss_morogrim_tidewalkerAI : public ScriptedAI
         DoSpecialThings(diff, DO_EVERYTHING, 135.0f);
 
         //Earthquake_Timer
-        if (Earthquake_Timer < diff)
+        if (Earthquake_Timer.Expired(diff))
         {
             if (!Earthquake)
             {
@@ -166,22 +166,20 @@ struct boss_morogrim_tidewalkerAI : public ScriptedAI
                 Earthquake_Timer = urand(40000, 45000);
             }
         }
-        else
-            Earthquake_Timer -= diff;
+        
 
         //TidalWave_Timer
-        if (TidalWave_Timer < diff)
+        if (TidalWave_Timer.Expired(diff))
         {
             AddSpellToCast(SPELL_TIDAL_WAVE, CAST_NULL);
             TidalWave_Timer = 20000;
         }
-        else
-            TidalWave_Timer -= diff;
+        
 
         if (!Phase2)
         {
             //WateryGrave_Timer
-            if (WateryGrave_Timer < diff)
+            if (WateryGrave_Timer.Expired(diff))
             {
                 //Teleport 4 players under the waterfalls
                 std::list<Unit*> tmpList;
@@ -195,9 +193,7 @@ struct boss_morogrim_tidewalkerAI : public ScriptedAI
                 DoScriptText(EMOTE_WATERY_GRAVE, m_creature);
                 WateryGrave_Timer = 30000;
             }
-            else
-                WateryGrave_Timer -= diff;
-
+           
             //Start Phase2
             if (HealthBelowPct(25))
                 Phase2 = true;
@@ -205,7 +201,7 @@ struct boss_morogrim_tidewalkerAI : public ScriptedAI
         else
         {
             //WateryGlobules_Timer
-            if (WateryGlobules_Timer < diff)
+            if (WateryGlobules_Timer.Expired(diff))
             {
                 std::list<Unit*> tmpList;
                 SelectUnitList(tmpList, 4, SELECT_TARGET_RANDOM, 200.0f, true, me->getVictimGUID());
@@ -217,10 +213,9 @@ struct boss_morogrim_tidewalkerAI : public ScriptedAI
                 DoScriptText(EMOTE_WATERY_GLOBULES, m_creature);
                 WateryGlobules_Timer = 25000;
             }
-            else
-                WateryGlobules_Timer -= diff;
         }
 
+        me->SetInFront(me->GetVictim());
         CastNextSpellIfAnyAndReady();
         DoMeleeAttackIfReady();
     }
@@ -236,15 +231,15 @@ struct mob_water_globuleAI : public ScriptedAI
         c->GetPosition(wLoc);
     }
 
-    uint32 Check_Timer;
+    Timer Check_Timer;
     WorldLocation wLoc;
 
     void Reset()
     {
-        Check_Timer = 1000;
+        Check_Timer.Reset(1000);
 
         m_creature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
-        m_creature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
+        m_creature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_SPAWNING);
         m_creature->setFaction(14);
     }
 
@@ -269,7 +264,7 @@ struct mob_water_globuleAI : public ScriptedAI
         if (!UpdateVictim())
             return;
 
-        if (Check_Timer < diff)
+        if (Check_Timer.Expired(diff))
         {
             if (!m_creature->IsWithinDistInMap(&wLoc, 85.0f))
             {
@@ -277,16 +272,14 @@ struct mob_water_globuleAI : public ScriptedAI
                 return;
             }
 
-            if (m_creature->IsWithinDistInMap(m_creature->getVictim(), 5))
+            if (m_creature->IsWithinDistInMap(m_creature->GetVictim(), 5))
             {
-                m_creature->CastSpell(m_creature->getVictim(), SPELL_GLOBULE_EXPLOSION, false);
+                m_creature->CastSpell(m_creature->GetVictim(), SPELL_GLOBULE_EXPLOSION, false);
                 m_creature->ForcedDespawn();
             }
 
             Check_Timer = 1000;
         }
-        else
-            Check_Timer -= diff;
 
         //do NOT deal any melee damage to the target.
     }

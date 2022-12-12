@@ -1,6 +1,6 @@
 /* 
  * Copyright (C) 2006-2008 ScriptDev2 <https://scriptdev2.svn.sourceforge.net/>
- * Copyright (C) 2008-2014 Hellground <http://hellground.net/>
+ * Copyright (C) 2008-2015 Hellground <http://hellground.net/>
  * 
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -34,9 +34,9 @@ struct boss_shadowvoshAI : public ScriptedAI
 {
     boss_shadowvoshAI(Creature *c) : ScriptedAI(c) {}
 
-    uint32 CurseOfBlood_Timer;
-    uint32 Hex_Timer;
-    uint32 Cleave_Timer;
+    int32 CurseOfBlood_Timer;
+    int32 Hex_Timer;
+    int32 Cleave_Timer;
 
     void Reset()
     {
@@ -57,28 +57,28 @@ struct boss_shadowvoshAI : public ScriptedAI
         if (!UpdateVictim() )
             return;
 
-        //CurseOfBlood_Timer
-        if (CurseOfBlood_Timer < diff)
+        CurseOfBlood_Timer -= diff;
+        if (CurseOfBlood_Timer <= diff)
         {
-            DoCast(m_creature->getVictim(),SPELL_CURSEOFBLOOD);
-            CurseOfBlood_Timer = 45000;
-        }else CurseOfBlood_Timer -= diff;
+            DoCast(m_creature->GetVictim(),SPELL_CURSEOFBLOOD);
+            CurseOfBlood_Timer += 45000;
+        }
 
-        //Hex_Timer
-        if (Hex_Timer < diff)
+        Hex_Timer -= diff;
+        if (Hex_Timer <= diff)
         {
             Unit* target = NULL;
             target = SelectUnit(SELECT_TARGET_RANDOM,0);
             if (target) DoCast(target,SPELL_HEX);
-            Hex_Timer = 15000;
-        }else Hex_Timer -= diff;
+            Hex_Timer += 15000;
+        }
 
-        //Cleave_Timer
-        if (Cleave_Timer < diff)
+        Cleave_Timer -= diff;
+        if (Cleave_Timer <= diff)
         {
-            DoCast(m_creature->getVictim(),SPELL_CLEAVE);
-            Cleave_Timer = 7000;
-        }else Cleave_Timer -= diff;
+            DoCast(m_creature->GetVictim(),SPELL_CLEAVE);
+            Cleave_Timer += 7000;
+        }
 
         DoMeleeAttackIfReady();
     }
