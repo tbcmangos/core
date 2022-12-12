@@ -1,0 +1,1 @@
+UPDATE gameobject_template SET flags = 48, faction = 114 where entry = 186305;

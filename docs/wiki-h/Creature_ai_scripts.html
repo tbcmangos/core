@@ -1,0 +1,576 @@
+<!DOCTYPE html>
+<html lang="en-GB" dir="ltr" class="client-nojs">
+
+<!-- Mirrored from wiki.hellground.net/index.php/Creature_ai_scripts by HTTrack Website Copier/3.x [XR&CO'2014], Tue, 12 Apr 2016 10:51:07 GMT -->
+<!-- Added by HTTrack --><meta http-equiv="content-type" content="text/html;charset=UTF-8" /><!-- /Added by HTTrack -->
+<head>
+<title>creature_ai_scripts - HellGroundCore MMORPG framework educational and hobby project</title>
+<meta charset="UTF-8" />
+<meta name="generator" content="MediaWiki 1.21.4" />
+<link rel="shortcut icon" href="http://wiki.hellground.net/favicon.ico" />
+<link rel="search" type="application/opensearchdescription+xml" href="http://wiki.hellground.net/opensearch_desc.php" title="HellGroundCore MMORPG framework educational and hobby project (en-gb)" />
+<link rel="EditURI" type="application/rsd+xml" href="http://wiki.hellground.net/api.php?action=rsd" />
+<link rel="alternate" type="application/atom+xml" title="HellGroundCore MMORPG framework educational and hobby project Atom feed" href="http://wiki.hellground.net/index.php?title=Special:RecentChanges&amp;feed=atom" />
+<link rel="stylesheet" href="http://wiki.hellground.net/load.php?debug=false&amp;lang=en-gb&amp;modules=mediawiki.legacy.commonPrint%2Cshared%7Cskins.vector&amp;only=styles&amp;skin=vector&amp;*" />
+<meta name="ResourceLoaderDynamicStyles" content="" />
+<style>a:lang(ar),a:lang(ckb),a:lang(fa),a:lang(kk-arab),a:lang(mzn),a:lang(ps),a:lang(ur){text-decoration:none}
+/* cache key: admin_wikia:resourceloader:filter:minify-css:7:584a0492c58c82e3a4daddd5656471fb */</style>
+
+<script src="http://wiki.hellground.net/load.php?debug=false&amp;lang=en-gb&amp;modules=startup&amp;only=scripts&amp;skin=vector&amp;*"></script>
+<script>if(window.mw){
+mw.config.set({"wgCanonicalNamespace":"","wgCanonicalSpecialPageName":false,"wgNamespaceNumber":0,"wgPageName":"Creature_ai_scripts","wgTitle":"Creature ai scripts","wgCurRevisionId":1037,"wgArticleId":130,"wgIsArticle":true,"wgAction":"view","wgUserName":null,"wgUserGroups":["*"],"wgCategories":["World database","Database tables","EventAI","Reloadable tables"],"wgBreakFrames":false,"wgPageContentLanguage":"en-gb","wgSeparatorTransformTable":["",""],"wgDigitTransformTable":["",""],"wgDefaultDateFormat":"dmy","wgMonthNames":["","January","February","March","April","May","June","July","August","September","October","November","December"],"wgMonthNamesShort":["","Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"],"wgRelevantPageName":"Creature_ai_scripts","wgRestrictionEdit":[],"wgRestrictionMove":[]});
+}</script><script>if(window.mw){
+mw.loader.implement("user.options",function(){mw.user.options.set({"ccmeonemails":0,"cols":80,"date":"default","diffonly":0,"disablemail":0,"disablesuggest":0,"editfont":"default","editondblclick":0,"editsection":1,"editsectiononrightclick":0,"enotifminoredits":0,"enotifrevealaddr":0,"enotifusertalkpages":1,"enotifwatchlistpages":0,"extendwatchlist":0,"externaldiff":0,"externaleditor":0,"fancysig":0,"forceeditsummary":0,"gender":"unknown","hideminor":0,"hidepatrolled":0,"imagesize":2,"justify":0,"math":1,"minordefault":0,"newpageshidepatrolled":0,"nocache":0,"noconvertlink":0,"norollbackdiff":0,"numberheadings":0,"previewonfirst":0,"previewontop":1,"quickbar":5,"rcdays":7,"rclimit":50,"rememberpassword":0,"rows":25,"searchlimit":20,"showhiddencats":0,"showjumplinks":1,"shownumberswatching":1,"showtoc":1,"showtoolbar":1,"skin":"vector","stubthreshold":0,"thumbsize":2,"underline":2,"uselivepreview":0,"usenewrc":0,"watchcreations":0,"watchdefault":0,"watchdeletion":0,"watchlistdays":3,
+"watchlisthideanons":0,"watchlisthidebots":0,"watchlisthideliu":0,"watchlisthideminor":0,"watchlisthideown":0,"watchlisthidepatrolled":0,"watchmoves":0,"wllimit":250,"variant":"en-gb","language":"en-gb","searchNs0":true,"searchNs1":false,"searchNs2":false,"searchNs3":false,"searchNs4":false,"searchNs5":false,"searchNs6":false,"searchNs7":false,"searchNs8":false,"searchNs9":false,"searchNs10":false,"searchNs11":false,"searchNs12":false,"searchNs13":false,"searchNs14":false,"searchNs15":false});;},{},{});mw.loader.implement("user.tokens",function(){mw.user.tokens.set({"editToken":"+\\","patrolToken":false,"watchToken":false});;},{},{});
+/* cache key: admin_wikia:resourceloader:filter:minify-js:7:811a3adb8f714f1f28210df16d324ee9 */
+}</script>
+<script>if(window.mw){
+mw.loader.load(["mediawiki.page.startup","mediawiki.legacy.wikibits","mediawiki.legacy.ajax"]);
+}</script>
+<!--[if lt IE 7]><style type="text/css">body{behavior:url("/skins/vector/csshover.min.htc")}</style><![endif]--></head>
+<body class="mediawiki ltr sitedir-ltr ns-0 ns-subject page-Creature_ai_scripts skin-vector action-view vector-animateLayout">
+		<div id="mw-page-base" class="noprint"></div>
+		<div id="mw-head-base" class="noprint"></div>
+		<!-- content -->
+		<div id="content" class="mw-body" role="main">
+			<a id="top"></a>
+			<div id="mw-js-message" style="display:none;"></div>
+						<!-- firstHeading -->
+			<h1 id="firstHeading" class="firstHeading" lang="en-gb"><span dir="auto">creature_ai_scripts</span></h1>
+			<!-- /firstHeading -->
+			<!-- bodyContent -->
+			<div id="bodyContent">
+								<!-- tagline -->
+				<div id="siteSub">From HellGroundCore MMORPG framework educational and hobby project</div>
+				<!-- /tagline -->
+								<!-- subtitle -->
+				<div id="contentSub"></div>
+				<!-- /subtitle -->
+																<!-- jumpto -->
+				<div id="jump-to-nav" class="mw-jump">
+					Jump to:					<a href="#mw-navigation">navigation</a>, 					<a href="#p-search">search</a>
+				</div>
+				<!-- /jumpto -->
+								<!-- bodycontent -->
+				<div id="mw-content-text" lang="en-GB" dir="ltr" class="mw-content-ltr"><p><a href="Category_World_database.html" title="Category:World database">&#8592; Back to World database</a>
+</p>
+<div style="float: right; margin-left: 1em"><table id="toc" class="toc"><tr><td><div id="toctitle"><h2>Contents</h2></div>
+<ul>
+<li class="toclevel-1 tocsection-1"><a href="#id"><span class="tocnumber">1</span> <span class="toctext">id</span></a></li>
+<li class="toclevel-1 tocsection-2"><a href="#creature_id"><span class="tocnumber">2</span> <span class="toctext">creature_id</span></a></li>
+<li class="toclevel-1 tocsection-3"><a href="#event_type"><span class="tocnumber">3</span> <span class="toctext">event_type</span></a></li>
+<li class="toclevel-1 tocsection-4"><a href="#event_inverse_phase_mask"><span class="tocnumber">4</span> <span class="toctext">event_inverse_phase_mask</span></a></li>
+<li class="toclevel-1 tocsection-5"><a href="#Working_with_Phases"><span class="tocnumber">5</span> <span class="toctext">Working with Phases</span></a></li>
+<li class="toclevel-1 tocsection-6"><a href="#Quick_Phase_Reference"><span class="tocnumber">6</span> <span class="toctext">Quick Phase Reference</span></a>
+<ul>
+<li class="toclevel-2 tocsection-7"><a href="#event_chance"><span class="tocnumber">6.1</span> <span class="toctext">event_chance</span></a></li>
+<li class="toclevel-2 tocsection-8"><a href="#event_flags"><span class="tocnumber">6.2</span> <span class="toctext">event_flags</span></a></li>
+<li class="toclevel-2 tocsection-9"><a href="#event_param1"><span class="tocnumber">6.3</span> <span class="toctext">event_param1</span></a></li>
+<li class="toclevel-2 tocsection-10"><a href="#event_param2"><span class="tocnumber">6.4</span> <span class="toctext">event_param2</span></a></li>
+<li class="toclevel-2 tocsection-11"><a href="#event_param3"><span class="tocnumber">6.5</span> <span class="toctext">event_param3</span></a></li>
+<li class="toclevel-2 tocsection-12"><a href="#event_param4"><span class="tocnumber">6.6</span> <span class="toctext">event_param4</span></a></li>
+<li class="toclevel-2 tocsection-13"><a href="#action_param1"><span class="tocnumber">6.7</span> <span class="toctext">action_param1</span></a></li>
+<li class="toclevel-2 tocsection-14"><a href="#action_param1_2"><span class="tocnumber">6.8</span> <span class="toctext">action_param1</span></a></li>
+<li class="toclevel-2 tocsection-15"><a href="#action_param2"><span class="tocnumber">6.9</span> <span class="toctext">action_param2</span></a></li>
+<li class="toclevel-2 tocsection-16"><a href="#action_param3"><span class="tocnumber">6.10</span> <span class="toctext">action_param3</span></a></li>
+<li class="toclevel-2 tocsection-17"><a href="#comment"><span class="tocnumber">6.11</span> <span class="toctext">comment</span></a></li>
+</ul>
+</li>
+</ul>
+</td></tr></table>
+</div>
+<p>Event AI Script table.
+</p><p><i>This text is from the TC1 wiki, but it is believed to have originated with the ScriptDev2 project.</i>
+</p>
+<table class="wikitable">
+<caption> `creature_ai_scripts` table rev. 7933
+</caption>
+<tr>
+<th> Field </th>
+<th> Type </th>
+<th> Null </th>
+<th> Key </th>
+<th> Default </th>
+<th> Extra
+</th></tr>
+<tr>
+<td><a href="#id">id</a> </td>
+<td> int(11) unsigned </td>
+<td> PRI </td>
+<td> NO </td>
+<td> </td>
+<td> auto_increment
+</td></tr>
+<tr>
+<td><a href="#entryOrGUID">entryOrGUID</a> </td>
+<td> int(11) </td>
+<td> </td>
+<td> NO </td>
+<td> 0 </td>
+<td>
+</td></tr>
+<tr>
+<td><a href="#event_type">event_type</a> </td>
+<td> tinyint(5) unsigned </td>
+<td> </td>
+<td> NO </td>
+<td> 0 </td>
+<td>
+</td></tr>
+<tr>
+<td><a href="#event_inverse_phase_mask">event_inverse_phase_mask</a> </td>
+<td> int(11) </td>
+<td> </td>
+<td> NO </td>
+<td> 0 </td>
+<td>
+</td></tr>
+<tr>
+<td><a href="#event_chance">event_chance</a> </td>
+<td> int(3) unsigned </td>
+<td> </td>
+<td> NO </td>
+<td> 100 </td>
+<td>
+</td></tr>
+<tr>
+<td><a href="#event_flags">event_flags</a> </td>
+<td> int(3) unsigned </td>
+<td> </td>
+<td> NO </td>
+<td> 0 </td>
+<td>
+</td></tr>
+<tr>
+<td><a href="#event_param1">event_param1</a> </td>
+<td> int(11) </td>
+<td> </td>
+<td> NO </td>
+<td> 0 </td>
+<td>
+</td></tr>
+<tr>
+<td><a href="#event_param2">event_param2</a> </td>
+<td> int(11) </td>
+<td> </td>
+<td> NO </td>
+<td> 0 </td>
+<td>
+</td></tr>
+<tr>
+<td><a href="#event_param3">event_param3</a> </td>
+<td> int(11) </td>
+<td> </td>
+<td> NO </td>
+<td> 0 </td>
+<td>
+</td></tr>
+<tr>
+<td><a href="#event_param4">event_param4</a> </td>
+<td> int(11) </td>
+<td> </td>
+<td> NO </td>
+<td> 0 </td>
+<td>
+</td></tr>
+<tr>
+<td><a href="#action1_type">action1_type</a> </td>
+<td> tinyint(5) unsigned </td>
+<td> </td>
+<td> NO </td>
+<td> 0 </td>
+<td>
+</td></tr>
+<tr>
+<td><a href="#action1_param1">action1_param1</a> </td>
+<td> int(11) </td>
+<td> </td>
+<td> NO </td>
+<td> 0 </td>
+<td>
+</td></tr>
+<tr>
+<td><a href="#action1_param2">action1_param2</a> </td>
+<td> int(11) </td>
+<td> </td>
+<td> NO </td>
+<td> 0 </td>
+<td>
+</td></tr>
+<tr>
+<td><a href="#action1_param3">action1_param3</a> </td>
+<td> int(11) </td>
+<td> </td>
+<td> NO </td>
+<td> 0 </td>
+<td>
+</td></tr>
+<tr>
+<td><a href="#action2_type">action2_type</a> </td>
+<td> tinyint(5) unsigned </td>
+<td> </td>
+<td> NO </td>
+<td> 0 </td>
+<td>
+</td></tr>
+<tr>
+<td><a href="#action2_param1">action2_param1</a> </td>
+<td> int(11) </td>
+<td> </td>
+<td> NO </td>
+<td> 0 </td>
+<td>
+</td></tr>
+<tr>
+<td><a href="#action2_param2">action2_param2</a> </td>
+<td> int(11) </td>
+<td> </td>
+<td> NO </td>
+<td> 0 </td>
+<td>
+</td></tr>
+<tr>
+<td><a href="#action2_param3">action2_param3</a> </td>
+<td> int(11) </td>
+<td> </td>
+<td> NO </td>
+<td> 0 </td>
+<td>
+</td></tr>
+<tr>
+<td><a href="#action3_type">action3_type</a> </td>
+<td> tinyint(5) unsigned </td>
+<td> </td>
+<td> NO </td>
+<td> 0 </td>
+<td>
+</td></tr>
+<tr>
+<td><a href="#action3_param1">action3_param1</a> </td>
+<td> int(11) </td>
+<td> </td>
+<td> NO </td>
+<td> 0 </td>
+<td>
+</td></tr>
+<tr>
+<td><a href="#action3_param2">action3_param2</a> </td>
+<td> int(11) </td>
+<td> </td>
+<td> NO </td>
+<td> 0 </td>
+<td>
+</td></tr>
+<tr>
+<td><a href="#action3_param3">action3_param3</a> </td>
+<td> int(11) </td>
+<td> </td>
+<td> NO </td>
+<td> 0 </td>
+<td>
+</td></tr>
+<tr>
+<td><a href="#comment">comment</a> </td>
+<td> varchar(255) </td>
+<td> </td>
+<td> NO </td>
+<td> </td>
+<td>
+</td></tr></table>
+<h4> <span class="mw-headline" id="id">id</span></h4>
+<p>Unique Identificator for each script in your database.
+</p>
+<h4> <span class="mw-headline" id="creature_id">creature_id</span></h4>
+<p><a href="Creature_template.html#entry" title="Creature template">entry</a> of the creature
+</p>
+<h4> <span class="mw-headline" id="event_type">event_type</span></h4>
+<p>A list of event types EventAI is able to handle.
+Each event type has its own specific interpretation of the params that accompany it.
+Params are always read in the ascending order (from Param1 to Param3).
+Events will not repeat until the creature exits combat or unless EFLAG_REPEATABLE is set.
+Some events such as EVENT_T_AGGRO, EVENT_T_DEATH, EVENT_T_SPAWNED, and EVENT_T_EVADE cannot repeat.
+</p><p>See <a href="EventAI.html#Reference_Tables" title="EventAI">EventAI reference</a> for all possible values.
+</p>
+<h4> <span class="mw-headline" id="event_inverse_phase_mask"> event_inverse_phase_mask </span></h4>
+<h2> <span class="mw-headline" id="Working_with_Phases"> Working with Phases  </span></h2>
+<p>Working with phases requires a certain amount of math. You will have to know a few things before we begin. 
+</p>
+<ol><li>You should have an idea of how many phases the NPC will have. 
+</li><li>You will have to know Binary Addition. Don't worry, I'll show you how to do it.
+</li></ol>
+<p><br />
+<b>Binary Addition</b>
+</p><p><tt></tt> 
+</p>
+<ul><li><tt>0110 = 6 (base 10)</tt> 
+</li><li><tt>0111 = 7 (base 10)</tt> 
+</li><li><tt>____ = __</tt> 
+</li><li><tt>1101 = 13 (base 10)</tt>
+</li></ul>
+<p><tt><br /></tt> 
+</p>
+<ul><li><tt>07 06 05 04 03 02 01 00 &lt;-- <b>The place values.</b></tt> 
+</li><li><tt>64 32 16 08 04 02 01 00 &lt;-- <b>Note how it doubles in size.</b> <i><b><font color="red">This</font></b></i> is what you add.</tt>
+</li></ul>
+<p><tt><font color="white">_</font></tt> 
+</p>
+<ul><li><tt><font color="white">_</font>1 <font color="white">__</font> 1 <font color="white">__</font> 1</tt> 
+</li><li><tt>04 + 02 + 01 = 07.</tt>
+</li></ul>
+<p><tt><font color="white">_</font></tt> 
+</p>
+<ul><li><tt><font color="white">_</font>1 <font color="white">__</font> 0 <font color="white">__</font> 1 <font color="white">__</font> 1 <font color="white">__</font> 0 &lt;-- Note how place 1, 2, and 4 are <i><b>1</b></i>, but place 3 is not.</tt> 
+</li><li><tt>08 + 04 + 02 + 01 + 00 = 11.</tt>
+</li></ul>
+<p><tt>So you add 1, 2, and 8 together to get 11. You do not add the 4, because its bit was a 0. </tt> 
+</p><p><font color="white">__</font> <font color="white">__</font> <font color="white">__</font> 
+</p><p><b>Concept</b>
+</p><p>The overall concept (not method, just yet!) of a phase, is a "section" of activities that the NPC will act on. Hypothetically speaking, if a boss uses Attack "X" only when above 50% health, and only uses attack "Y" only when below 50% health, the boss will be using two different phases. 
+</p><p>The "event_inverse_phase_mask" field is the field controlling phase information. Read the following sentence very carefully and memorize it. <i>The number in this field represents the phases that this action</i> <i><b>will not</b></i> <i>be initiated in,</i> including up to and less than the NPC's total number of phases. Keep this in the back of your head. The reason for this is because this number also casually tells the script how many phases the NPC has. It's surprisingly ingenious. 
+</p><p><br /> This is where the Binary Addition comes into play. Suppose your NPC has three phases. It will start off in phase 1. (<font color="red"><i><b>*</b></i></font>) It will remain in phase 1 unless specifically told to by Action Types 22, 23, 30, and 31, which control phases mid-game once the script is already running. 
+</p><p><font color="red"><i><b>*</b></i></font> (<i>I should mention right here that anything with an event_inverse_phase_mask of</i> <i><b>0</b></i> <i>will happen in</i> <b>all</b> <i>phases.</i>) 
+</p><p>Suppose we wanted to have an attack that is only used in the NPC's first phase. You know that the NPC will have three phases. You would set up the attack as usual, but in the event_inverse_phase_mask field, you would put a <b>6</b>. Why the six? Let's take a look. 
+</p><p>We have three phases. We will represent these like this: <tt></tt> 
+</p>
+<ul><li><tt><font color="white">_</font>3<font color="white">__</font>2<font color="white">__</font>1<font color="white">__</font>&lt;-- <i>Represents the Phase Number and the bit.</i></tt> 
+</li><li><tt>04 02 01</tt>
+</li></ul>
+<p>Phase 1's bit is 1. Phase 2's bit is 2. Phase 3's bit is 4. <font color="gray">(If we had a phase 4, it would be 8, and phase 5 would be 16, etc.)</font> To get <i>6</i>, we have added the 2 and the 4 from the 2nd and 3rd phases. As was mentioned above, the number that goes into that field represents the bitmask of the phases that the action will <i>not</i> take place in. 
+</p>
+<h2> <span class="mw-headline" id="Quick_Phase_Reference"> Quick Phase Reference  </span></h2>
+<p>This list is for an easy reference of what phase equates to what number, if you're not very phase-savvy. The <b>"Value"</b> column is what goes into the "event_inverse_phase_mask" field. The <b>"Phase"</b> column indicates the phase number that the hypothetical mob or boss is in that the event <i><b>WILL</b></i> happen in. This field relies on the next field, the <b>"Max Phases"</b> field. That is the amount of total phases the mob has. (I.e. my boss has 2 phases, or my boss has 4 phases.) Then there is a <b>description</b> field for any numerical work involved. It is the least important field, and can safely be ignored. 
+</p><p>Remember, anything with "0" as a phase will occur in all phases. It is 0 by default. 
+</p><p>Again, this is based on the following number patterns: 
+</p><p>00 + 01 + 02 + 03 + 04 + 05 + 06 + 07 + 008 - Represents Phases. 
+</p><p>00 + 01 + 02 + 04 + 08 + 16 + 32 + 64 + 128 - The numerical representations of those phases. 
+</p><p>And, once again, how this works, is: 
+</p>
+<ol><li>You look at the total number of phases. Suppose it's 3. 
+</li><li>You cover up all the numbers to the right of phase 3, which corresponds to the 04 right below it. 
+</li><li>Then you decide which phase you want the event to occur in. 
+</li><li>Then you look at <i>all other phases,</i> and add up the number beneath them. 
+</li><li>The number you come up with goes in the "Value" field below in that chart, and what will go into the event_inverse_phase_mask field.
+</li></ol>
+<h4> <span class="mw-headline" id="event_chance">event_chance</span></h4>
+<p>Event chance field set the chance which event will occur in&#160;%.
+</p>
+<h4> <span class="mw-headline" id="event_flags">event_flags</span></h4>
+<p><i>This field has no description yet.</i>
+</p>
+<h4> <span class="mw-headline" id="event_param1">event_param1</span></h4>
+<p><i>This field has no description yet.</i>
+</p>
+<h4> <span class="mw-headline" id="event_param2">event_param2</span></h4>
+<p><i>This field has no description yet.</i>
+</p>
+<h4> <span class="mw-headline" id="event_param3">event_param3</span></h4>
+<p><i>This field has no description yet.</i>
+</p>
+<h4> <span class="mw-headline" id="event_param4">event_param4</span></h4>
+<p><i>This field has no description yet.</i>
+</p>
+<h4> <span class="mw-headline" id="action_param1">action_param1</span></h4>
+<p><i>This field has no description yet.</i>
+</p>
+<h4> <span class="mw-headline" id="action_param1_2">action_param1</span></h4>
+<p>Spell ID you wish the creature to use.
+</p>
+<h4> <span class="mw-headline" id="action_param2">action_param2</span></h4>
+<p><i>This field has no description yet.</i>
+</p>
+<h4> <span class="mw-headline" id="action_param3">action_param3</span></h4>
+<p><i>This field has no description yet.</i>
+</p>
+<h4> <span class="mw-headline" id="comment">comment</span></h4>
+<p><i>This field has no description yet.</i>
+</p>
+<!-- 
+NewPP limit report
+Preprocessor visited node count: 135/1000000
+Preprocessor generated node count: 344/1000000
+Post‐expand include size: 578/2097152 bytes
+Template argument size: 34/2097152 bytes
+Highest expansion depth: 3/40
+Expensive parser function count: 0/100
+-->
+
+<!-- Saved in parser cache with key admin_wikia:pcache:idhash:130-0!*!0!!en-gb!*!* and timestamp 20160412104838 -->
+</div>				<!-- /bodycontent -->
+								<!-- printfooter -->
+				<div class="printfooter">
+				Retrieved from ‘<a href="http://wiki.hellground.net/index.php?title=Creature_ai_scripts&amp;oldid=1037">http://wiki.hellground.net/index.php?title=Creature_ai_scripts&amp;oldid=1037</a>’				</div>
+				<!-- /printfooter -->
+												<!-- catlinks -->
+				<div id='catlinks' class='catlinks'><div id="mw-normal-catlinks" class="mw-normal-catlinks"><a href="Special_Categories.html" title="Special:Categories">Categories</a>: <ul><li><a href="Category_World_database.html" title="Category:World database">World database</a></li><li><a href="Category_Database_tables.html" title="Category:Database tables">Database tables</a></li><li><a href="Category_EventAI.html" title="Category:EventAI">EventAI</a></li><li><a href="Category_Reloadable_tables.html" title="Category:Reloadable tables">Reloadable tables</a></li></ul></div></div>				<!-- /catlinks -->
+												<div class="visualClear"></div>
+				<!-- debughtml -->
+								<!-- /debughtml -->
+			</div>
+			<!-- /bodyContent -->
+		</div>
+		<!-- /content -->
+		<div id="mw-navigation">
+			<h2>Navigation menu</h2>
+			<!-- header -->
+			<div id="mw-head">
+				
+<!-- 0 -->
+<div id="p-personal" role="navigation" class="">
+	<h3>Personal tools</h3>
+	<ul>
+<li id="pt-login"><a href="http://wiki.hellground.net/index.php?title=Special:UserLogin&amp;returnto=Creature+ai+scripts" title="You are encouraged to log in; however, it is not mandatory [o]" accesskey="o">Log in</a></li>	</ul>
+</div>
+
+<!-- /0 -->
+				<div id="left-navigation">
+					
+<!-- 0 -->
+<div id="p-namespaces" role="navigation" class="vectorTabs">
+	<h3>Namespaces</h3>
+	<ul>
+					<li  id="ca-nstab-main" class="selected"><span><a href="Creature_ai_scripts.html"  title="View the content page [c]" accesskey="c">Page</a></span></li>
+					<li  id="ca-talk" class="new"><span><a href="http://wiki.hellground.net/index.php?title=Talk:Creature_ai_scripts&amp;action=edit&amp;redlink=1"  title="Discussion about the content page [t]" accesskey="t">Discussion</a></span></li>
+			</ul>
+</div>
+
+<!-- /0 -->
+
+<!-- 1 -->
+<div id="p-variants" role="navigation" class="vectorMenu emptyPortlet">
+	<h3 id="mw-vector-current-variant">
+		</h3>
+	<h3><span>Variants</span><a href="#"></a></h3>
+	<div class="menu">
+		<ul>
+					</ul>
+	</div>
+</div>
+
+<!-- /1 -->
+				</div>
+				<div id="right-navigation">
+					
+<!-- 0 -->
+<div id="p-views" role="navigation" class="vectorTabs">
+	<h3>Views</h3>
+	<ul>
+					<li id="ca-view" class="selected"><span><a href="Creature_ai_scripts.html" >Read</a></span></li>
+					<li id="ca-viewsource"><span><a href="http://wiki.hellground.net/index.php?title=Creature_ai_scripts&amp;action=edit"  title="This page is protected.&#10;You can view its source [e]" accesskey="e">View source</a></span></li>
+					<li id="ca-history" class="collapsible"><span><a href="http://wiki.hellground.net/index.php?title=Creature_ai_scripts&amp;action=history"  title="Past revisions of this page [h]" accesskey="h">View history</a></span></li>
+			</ul>
+</div>
+
+<!-- /0 -->
+
+<!-- 1 -->
+<div id="p-cactions" role="navigation" class="vectorMenu emptyPortlet">
+	<h3><span>Actions</span><a href="#"></a></h3>
+	<div class="menu">
+		<ul>
+					</ul>
+	</div>
+</div>
+
+<!-- /1 -->
+
+<!-- 2 -->
+
+
+<!-- /2 -->
+				</div>
+			</div>
+			<!-- /header -->
+			<!-- panel -->
+			<div id="mw-panel">
+				<!-- logo -->
+					<div id="p-logo" role="banner"><a style="background-image: url(../skins/common/images/wiki.png);" href="Main_Page.html"  title="Visit the main page"></a></div>
+				<!-- /logo -->
+				
+<!-- navigation -->
+<div class="portal" role="navigation" id='p-navigation'>
+	<h3>Navigation</h3>
+	<div class="body">
+		<ul>
+			<li id="n-mainpage-description"><a href="Main_Page.html" title="Visit the main page [z]" accesskey="z">Main page</a></li>
+			<li id="n-randompage"><a href="Spell_required.html" title="Load a random page [x]" accesskey="x">Random page</a></li>
+		</ul>
+	</div>
+</div>
+
+<!-- /navigation -->
+
+<!-- HellGroundCore -->
+<div class="portal" role="navigation" id='p-HellGroundCore'>
+	<h3>HellGroundCore</h3>
+	<div class="body">
+		<ul>
+			<li id="n-Project-site"><a href="https://hellground.net/" rel="nofollow">Project site</a></li>
+			<li id="n-Project--forum"><a href="http://forum.hellground.net/" rel="nofollow">Project  forum</a></li>
+			<li id="n-Project-repositories"><a href="http://emu.hellground.net/" rel="nofollow">Project repositories</a></li>
+			<li id="n-Project-bug-tracker"><a href="http://forum.hellground.net/" rel="nofollow">Project bug tracker</a></li>
+		</ul>
+	</div>
+</div>
+
+<!-- /HellGroundCore -->
+
+<!-- SEARCH -->
+
+<!-- /SEARCH -->
+
+<!-- TOOLBOX -->
+<div class="portal" role="navigation" id='p-tb'>
+	<h3>Tools</h3>
+	<div class="body">
+		<ul>
+			<li id="t-whatlinkshere"><a href="Special_WhatLinksHere/Creature_ai_scripts.html" title="A list of all wiki pages that link here [j]" accesskey="j">What links here</a></li>
+			<li id="t-recentchangeslinked"><a href="Special_RecentChangesLinked/Creature_ai_scripts.html" title="Recent changes in pages linked from this page [k]" accesskey="k">Related changes</a></li>
+			<li id="t-specialpages"><a href="Special_SpecialPages.html" title="A list of all special pages [q]" accesskey="q">Special pages</a></li>
+			<li id="t-print"><a href="http://wiki.hellground.net/index.php?title=Creature_ai_scripts&amp;printable=yes" rel="alternate" title="Printable version of this page [p]" accesskey="p">Printable version</a></li>
+			<li id="t-permalink"><a href="http://wiki.hellground.net/index.php?title=Creature_ai_scripts&amp;oldid=1037" title="Permanent link to this revision of the page">Permanent link</a></li>
+			<li id="t-info"><a href="http://wiki.hellground.net/index.php?title=Creature_ai_scripts&amp;action=info">Page information</a></li>
+		</ul>
+	</div>
+</div>
+
+<!-- /TOOLBOX -->
+
+<!-- LANGUAGES -->
+
+<!-- /LANGUAGES -->
+			</div>
+			<!-- /panel -->
+		</div>
+		<!-- footer -->
+		<div id="footer" role="contentinfo">
+							<ul id="footer-info">
+											<li id="footer-info-lastmod"> This page was last modified on 9 April 2014, at 19:16.</li>
+											<li id="footer-info-viewcount">This page has been accessed 665 times.</li>
+									</ul>
+							<ul id="footer-places">
+											<li id="footer-places-privacy"><a href="TBC_HellGroundCore_Privacy_policy.html" title="TBC HellGroundCore:Privacy policy">Privacy policy</a></li>
+											<li id="footer-places-about"><a href="TBC_HellGroundCore_About.html" title="TBC HellGroundCore:About">About HellGroundCore MMORPG framework educational and hobby project</a></li>
+											<li id="footer-places-disclaimer"><a href="TBC_HellGroundCore_General_disclaimer.html" title="TBC HellGroundCore:General disclaimer">Disclaimers</a></li>
+									</ul>
+										<ul id="footer-icons" class="noprint">
+					<li id="footer-poweredbyico">
+						<a href="http://www.mediawiki.org/"><img src="../skins/common/images/poweredby_mediawiki_88x31.png" alt="Powered by MediaWiki" width="88" height="31" /></a>
+					</li>
+				</ul>
+						<div style="clear:both"></div>
+		</div>
+		<!-- /footer -->
+		<script>if(window.mw){
+mw.loader.state({"site":"loading","user":"missing","user.groups":"ready"});
+}</script>
+<script>if(window.mw){
+mw.loader.load(["mediawiki.action.view.postEdit","mediawiki.user","mediawiki.page.ready","mediawiki.searchSuggest","mediawiki.hidpi","skins.vector.js"], null, true);
+}</script>
+<script>if(window.mw){
+mw.loader.state({"site":"ready"});
+}</script>
+<!-- Served in 0.097 secs. -->
+	</body>
+
+<!-- Mirrored from wiki.hellground.net/index.php/Creature_ai_scripts by HTTrack Website Copier/3.x [XR&CO'2014], Tue, 12 Apr 2016 10:51:08 GMT -->
+</html>

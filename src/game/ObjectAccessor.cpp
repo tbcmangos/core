@@ -43,6 +43,9 @@ Pet * ObjectAccessor::GetPet(uint64 guid)
 
 Player* ObjectAccessor::FindPlayer(uint64 guid)
 {
+    if (!guid)
+        return NULL;
+
     Player * plr = GetPlayer(guid);
     if (!plr || !plr->IsInWorld())
         return NULL;
@@ -161,6 +164,14 @@ Corpse* ObjectAccessor::GetCorpseForPlayerGUID(uint64 guid)
     return NULL;
 }
 
+void ObjectAccessor::SaveAllPlayers()
+{
+	ACE_GUARD(ACE_Thread_Mutex, guard, *HashMapHolder<Player>::GetLock());
+	HashMapHolder<Player>::MapType& m = sObjectAccessor.GetPlayers();
+	for (HashMapHolder<Player>::MapType::iterator itr = m.begin(); itr != m.end(); ++itr)
+		itr->second->SaveToDB();
+}
+
 void ObjectAccessor::RemoveCorpse(Corpse *corpse)
 {
     ASSERT(corpse && corpse->GetType() != CORPSE_BONES);
@@ -170,7 +181,7 @@ void ObjectAccessor::RemoveCorpse(Corpse *corpse)
         return;
 
     // build mapid*cellid -> guid_set map
-    CellPair cell_pair = Hellground::ComputeCellPair(corpse->GetPositionX(), corpse->GetPositionY());
+    CellPair cell_pair = MaNGOS::ComputeCellPair(corpse->GetPositionX(), corpse->GetPositionY());
     uint32 cell_id = (cell_pair.y_coord*TOTAL_NUMBER_OF_CELLS_PER_MAP) + cell_pair.x_coord;
 
     sObjectMgr.DeleteCorpseCellData(corpse->GetMapId(),cell_id,corpse->GetOwnerGUID());
@@ -191,7 +202,7 @@ void ObjectAccessor::AddCorpse(Corpse *corpse)
     i_player2corpse.insert(std::make_pair(corpse->GetOwnerGUID(), corpse));
 
     // build mapid*cellid -> guid_set map
-    CellPair cell_pair = Hellground::ComputeCellPair(corpse->GetPositionX(), corpse->GetPositionY());
+    CellPair cell_pair = MaNGOS::ComputeCellPair(corpse->GetPositionX(), corpse->GetPositionY());
     uint32 cell_id = (cell_pair.y_coord*TOTAL_NUMBER_OF_CELLS_PER_MAP) + cell_pair.x_coord;
 
     sObjectMgr.AddCorpseCellData(corpse->GetMapId(),cell_id,corpse->GetOwnerGUID(),corpse->GetInstanceId());
@@ -222,7 +233,7 @@ Corpse* ObjectAccessor::ConvertCorpseForPlayer(uint64 player_guid, bool insignia
     {
         //in fact this function is called from several places
         //even when player doesn't have a corpse, not an error
-        //sLog.outLog(LOG_DEFAULT, "ERROR: Try remove corpse that not in map for GUID %ul", player_guid);
+        //sLog.outError( "ERROR: Try remove corpse that not in map for GUID %ul", player_guid);
         return NULL;
     }
 
@@ -287,17 +298,17 @@ Corpse * ObjectAccessor::GetCorpse(uint32 mapid, float x, float y, uint64 guid)
 
     if (corpse && corpse->GetMapId() == mapid)
     {
-        CellPair p = Hellground::ComputeCellPair(x,y);
+        CellPair p = MaNGOS::ComputeCellPair(x,y);
         if (p.x_coord >= TOTAL_NUMBER_OF_CELLS_PER_MAP || p.y_coord >= TOTAL_NUMBER_OF_CELLS_PER_MAP)
         {
-            sLog.outLog(LOG_DEFAULT, "ERROR: ObjectAccessor::GetCorpse: invalid coordinates supplied X:%f Y:%f grid cell [%u:%u]", x, y, p.x_coord, p.y_coord);
+            sLog.outError( "ERROR: ObjectAccessor::GetCorpse: invalid coordinates supplied X:%f Y:%f grid cell [%u:%u]", x, y, p.x_coord, p.y_coord);
             return NULL;
         }
 
-        CellPair q = Hellground::ComputeCellPair(corpse->GetPositionX(), corpse->GetPositionY());
+        CellPair q = MaNGOS::ComputeCellPair(corpse->GetPositionX(), corpse->GetPositionY());
         if (q.x_coord >= TOTAL_NUMBER_OF_CELLS_PER_MAP || q.y_coord >= TOTAL_NUMBER_OF_CELLS_PER_MAP)
         {
-            sLog.outLog(LOG_DEFAULT, "ERROR: ObjectAccessor::GetCorpse: object " UI64FMTD " has invalid coordinates X:%f Y:%f grid cell [%u:%u]", corpse->GetGUID(), corpse->GetPositionX(), corpse->GetPositionY(), q.x_coord, q.y_coord);
+            sLog.outError( "ERROR: ObjectAccessor::GetCorpse: object " UI64FMTD " has invalid coordinates X:%f Y:%f grid cell [%u:%u]", corpse->GetGUID(), corpse->GetPositionX(), corpse->GetPositionY(), q.x_coord, q.y_coord);
             return NULL;
         }
 

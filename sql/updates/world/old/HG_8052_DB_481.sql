@@ -1,0 +1,2 @@
+UPDATE `creature_template` SET `AIName` = '' WHERE `entry` IN ('5595', '5624', '16222');
+UPDATE `creature_template` SET `minhealth` = '11650', `maxhealth` = '11650', `armor` = '4500' WHERE `entry` IN ('68', '5595', '4262', '16733', '5624', '3296', '3084', '16222');

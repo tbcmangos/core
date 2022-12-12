@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html lang="en-GB" dir="ltr" class="client-nojs">
+
+<!-- Mirrored from wiki.hellground.net/index.php/HowTo_-_Creature_Movement_and_Waypoints by HTTrack Website Copier/3.x [XR&CO'2014], Tue, 12 Apr 2016 10:53:16 GMT -->
+<!-- Added by HTTrack --><meta http-equiv="content-type" content="text/html;charset=UTF-8" /><!-- /Added by HTTrack -->
+<head>
+<title>HowTo - Creature Movement and Waypoints - HellGroundCore MMORPG framework educational and hobby project</title>
+<meta charset="UTF-8" />
+<meta name="generator" content="MediaWiki 1.21.4" />
+<link rel="shortcut icon" href="http://wiki.hellground.net/favicon.ico" />
+<link rel="search" type="application/opensearchdescription+xml" href="http://wiki.hellground.net/opensearch_desc.php" title="HellGroundCore MMORPG framework educational and hobby project (en-gb)" />
+<link rel="EditURI" type="application/rsd+xml" href="http://wiki.hellground.net/api.php?action=rsd" />
+<link rel="alternate" type="application/atom+xml" title="HellGroundCore MMORPG framework educational and hobby project Atom feed" href="http://wiki.hellground.net/index.php?title=Special:RecentChanges&amp;feed=atom" />
+<link rel="stylesheet" href="http://wiki.hellground.net/load.php?debug=false&amp;lang=en-gb&amp;modules=mediawiki.legacy.commonPrint%2Cshared%7Cskins.vector&amp;only=styles&amp;skin=vector&amp;*" />
+<meta name="ResourceLoaderDynamicStyles" content="" />
+<style>a:lang(ar),a:lang(ckb),a:lang(fa),a:lang(kk-arab),a:lang(mzn),a:lang(ps),a:lang(ur){text-decoration:none}
+/* cache key: admin_wikia:resourceloader:filter:minify-css:7:584a0492c58c82e3a4daddd5656471fb */</style>
+
+<script src="http://wiki.hellground.net/load.php?debug=false&amp;lang=en-gb&amp;modules=startup&amp;only=scripts&amp;skin=vector&amp;*"></script>
+<script>if(window.mw){
+mw.config.set({"wgCanonicalNamespace":"","wgCanonicalSpecialPageName":false,"wgNamespaceNumber":0,"wgPageName":"HowTo_-_Creature_Movement_and_Waypoints","wgTitle":"HowTo - Creature Movement and Waypoints","wgCurRevisionId":275,"wgArticleId":25,"wgIsArticle":true,"wgAction":"view","wgUserName":null,"wgUserGroups":["*"],"wgCategories":["HellGroundCore Installation and Configuration"],"wgBreakFrames":false,"wgPageContentLanguage":"en-gb","wgSeparatorTransformTable":["",""],"wgDigitTransformTable":["",""],"wgDefaultDateFormat":"dmy","wgMonthNames":["","January","February","March","April","May","June","July","August","September","October","November","December"],"wgMonthNamesShort":["","Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"],"wgRelevantPageName":"HowTo_-_Creature_Movement_and_Waypoints","wgRestrictionEdit":[],"wgRestrictionMove":[]});
+}</script><script>if(window.mw){
+mw.loader.implement("user.options",function(){mw.user.options.set({"ccmeonemails":0,"cols":80,"date":"default","diffonly":0,"disablemail":0,"disablesuggest":0,"editfont":"default","editondblclick":0,"editsection":1,"editsectiononrightclick":0,"enotifminoredits":0,"enotifrevealaddr":0,"enotifusertalkpages":1,"enotifwatchlistpages":0,"extendwatchlist":0,"externaldiff":0,"externaleditor":0,"fancysig":0,"forceeditsummary":0,"gender":"unknown","hideminor":0,"hidepatrolled":0,"imagesize":2,"justify":0,"math":1,"minordefault":0,"newpageshidepatrolled":0,"nocache":0,"noconvertlink":0,"norollbackdiff":0,"numberheadings":0,"previewonfirst":0,"previewontop":1,"quickbar":5,"rcdays":7,"rclimit":50,"rememberpassword":0,"rows":25,"searchlimit":20,"showhiddencats":0,"showjumplinks":1,"shownumberswatching":1,"showtoc":1,"showtoolbar":1,"skin":"vector","stubthreshold":0,"thumbsize":2,"underline":2,"uselivepreview":0,"usenewrc":0,"watchcreations":0,"watchdefault":0,"watchdeletion":0,"watchlistdays":3,
+"watchlisthideanons":0,"watchlisthidebots":0,"watchlisthideliu":0,"watchlisthideminor":0,"watchlisthideown":0,"watchlisthidepatrolled":0,"watchmoves":0,"wllimit":250,"variant":"en-gb","language":"en-gb","searchNs0":true,"searchNs1":false,"searchNs2":false,"searchNs3":false,"searchNs4":false,"searchNs5":false,"searchNs6":false,"searchNs7":false,"searchNs8":false,"searchNs9":false,"searchNs10":false,"searchNs11":false,"searchNs12":false,"searchNs13":false,"searchNs14":false,"searchNs15":false});;},{},{});mw.loader.implement("user.tokens",function(){mw.user.tokens.set({"editToken":"+\\","patrolToken":false,"watchToken":false});;},{},{});
+/* cache key: admin_wikia:resourceloader:filter:minify-js:7:811a3adb8f714f1f28210df16d324ee9 */
+}</script>
+<script>if(window.mw){
+mw.loader.load(["mediawiki.page.startup","mediawiki.legacy.wikibits","mediawiki.legacy.ajax"]);
+}</script>
+<!--[if lt IE 7]><style type="text/css">body{behavior:url("/skins/vector/csshover.min.htc")}</style><![endif]--></head>
+<body class="mediawiki ltr sitedir-ltr ns-0 ns-subject page-HowTo_-_Creature_Movement_and_Waypoints skin-vector action-view vector-animateLayout">
+		<div id="mw-page-base" class="noprint"></div>
+		<div id="mw-head-base" class="noprint"></div>
+		<!-- content -->
+		<div id="content" class="mw-body" role="main">
+			<a id="top"></a>
+			<div id="mw-js-message" style="display:none;"></div>
+						<!-- firstHeading -->
+			<h1 id="firstHeading" class="firstHeading" lang="en-gb"><span dir="auto">HowTo - Creature Movement and Waypoints</span></h1>
+			<!-- /firstHeading -->
+			<!-- bodyContent -->
+			<div id="bodyContent">
+								<!-- tagline -->
+				<div id="siteSub">From HellGroundCore MMORPG framework educational and hobby project</div>
+				<!-- /tagline -->
+								<!-- subtitle -->
+				<div id="contentSub"></div>
+				<!-- /subtitle -->
+																<!-- jumpto -->
+				<div id="jump-to-nav" class="mw-jump">
+					Jump to:					<a href="#mw-navigation">navigation</a>, 					<a href="#p-search">search</a>
+				</div>
+				<!-- /jumpto -->
+								<!-- bodycontent -->
+				<div id="mw-content-text" lang="en-GB" dir="ltr" class="mw-content-ltr"><table align="right">
+<tr>
+<td> <table id="toc" class="toc"><tr><td><div id="toctitle"><h2>Contents</h2></div>
+<ul>
+<li class="toclevel-1 tocsection-1"><a href="#Creature_Movement"><span class="tocnumber">1</span> <span class="toctext">Creature Movement</span></a></li>
+<li class="toclevel-1 tocsection-2"><a href="#Basic_Creature_Movement:_Random_Movement"><span class="tocnumber">2</span> <span class="toctext">Basic Creature Movement: Random Movement</span></a>
+<ul>
+<li class="toclevel-2 tocsection-3"><a href="#What_We_Created"><span class="tocnumber">2.1</span> <span class="toctext">What We Created</span></a></li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-4"><a href="#Basic_Creature_Movement:_Paths_.28Waypoints.29"><span class="tocnumber">3</span> <span class="toctext">Basic Creature Movement: Paths (Waypoints)</span></a>
+<ul>
+<li class="toclevel-2 tocsection-5"><a href="#What_We_Created_2"><span class="tocnumber">3.1</span> <span class="toctext">What We Created</span></a></li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-6"><a href="#Adding_to_the_Paths"><span class="tocnumber">4</span> <span class="toctext">Adding to the Paths</span></a>
+<ul>
+<li class="toclevel-2 tocsection-7"><a href="#Adding_to_the_Path:_Pauses_.28Delays.29"><span class="tocnumber">4.1</span> <span class="toctext">Adding to the Path: Pauses (Delays)</span></a>
+<ul>
+<li class="toclevel-3 tocsection-8"><a href="#What_We_Modified"><span class="tocnumber">4.1.1</span> <span class="toctext">What We Modified</span></a></li>
+</ul>
+</li>
+<li class="toclevel-2 tocsection-9"><a href="#Adding_to_the_Path:_Running_.28Speed_Changes.29"><span class="tocnumber">4.2</span> <span class="toctext">Adding to the Path: Running (Speed Changes)</span></a>
+<ul>
+<li class="toclevel-3 tocsection-10"><a href="#What_We_Modified_2"><span class="tocnumber">4.2.1</span> <span class="toctext">What We Modified</span></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-11"><a href="#Making_Corrections"><span class="tocnumber">5</span> <span class="toctext">Making Corrections</span></a>
+<ul>
+<li class="toclevel-2 tocsection-12"><a href="#Deleting_a_Waypoint"><span class="tocnumber">5.1</span> <span class="toctext">Deleting a Waypoint</span></a></li>
+<li class="toclevel-2 tocsection-13"><a href="#Moving_a_Waypoint"><span class="tocnumber">5.2</span> <span class="toctext">Moving a Waypoint</span></a></li>
+<li class="toclevel-2 tocsection-14"><a href="#Adding_to_an_Existing_Path"><span class="tocnumber">5.3</span> <span class="toctext">Adding to an Existing Path</span></a></li>
+</ul>
+</li>
+<li class="toclevel-1 tocsection-15"><a href="#Waypoint_Scripts"><span class="tocnumber">6</span> <span class="toctext">Waypoint Scripts</span></a>
+<ul>
+<li class="toclevel-2 tocsection-16"><a href="#Waypoint_Scripts:_Creating_a_Script"><span class="tocnumber">6.1</span> <span class="toctext">Waypoint Scripts: Creating a Script</span></a></li>
+<li class="toclevel-2 tocsection-17"><a href="#Waypoint_Scripts:_Talking"><span class="tocnumber">6.2</span> <span class="toctext">Waypoint Scripts: Talking</span></a>
+<ul>
+<li class="toclevel-3 tocsection-18"><a href="#What_We_Created_3"><span class="tocnumber">6.2.1</span> <span class="toctext">What We Created</span></a></li>
+</ul>
+</li>
+<li class="toclevel-2 tocsection-19"><a href="#Waypoint_Scripts:_Emotes"><span class="tocnumber">6.3</span> <span class="toctext">Waypoint Scripts: Emotes</span></a>
+<ul>
+<li class="toclevel-3 tocsection-20"><a href="#What_We_Created_4"><span class="tocnumber">6.3.1</span> <span class="toctext">What We Created</span></a></li>
+</ul>
+</li>
+<li class="toclevel-2 tocsection-21"><a href="#Waypoint_Scripts:_Other_Commands"><span class="tocnumber">6.4</span> <span class="toctext">Waypoint Scripts: Other Commands</span></a></li>
+</ul>
+</li>
+</ul>
+</td></tr></table>
+</td></tr></table>
+<p><br />
+</p>
+<h2> <span class="mw-headline" id="Creature_Movement">Creature Movement</span></h2>
+<p>The topic of creature movement seems to come up fairly frequently in discussions regarding content creation.  Although the process of adding movement and actions to creatures is fairly simple, it's not often clear to us when we first start looking at building content.  This short guide will provide basic instructions on the various types of movement to get the new content creator started.
+</p><p>There was a post on the TrinityCore forums some time ago that brought up an excellent point, that is worth repeating here.  When we are adding creature movement, it can be extremely helpful to record video of the creature on the retail servers.  This will allow us to examine the movement carefully so that we can duplicate (as closely as possible) the proper behavior.  
+</p><p>As we learn the various commands and steps to create our new content, you will see a section called <b>What We Created</b>, or <b>What We Modified</b>.  This information is given so that you will know where to look in the database for the various pieces.  After you become familiar with the process of creating movement, you may find it easier at times to make the changes directly to the database.  This information is also needed if you are creating content to be submitted for inclusion to the HellGroundDB, since you will need to create a proper SQL file to add your content.  Likewise, if your content is intended only for your own use, you will need to create an SQL file with your changes in order to apply them after a major database upgrade.
+</p><p>Now on to the basics...
+</p>
+<h2> <span class="mw-headline" id="Basic_Creature_Movement:_Random_Movement">Basic Creature Movement: Random Movement</span></h2>
+<p>1. Spawn or select an NPC.
+</p><p>2. With the NPC selected, issue the command <b>.npc spawndist <i>RADIUS</i></b>, where <i>RADIUS</i> is the distance that the NPC can randomly move from the spawn point.  For example, the boars in Goldshire have a radius of 5.  If we were adding another, we would spawn it, select it, and issue the command <b>.npc spawndist 5</b>.
+</p><p><b>Your creature should not be moving around in a random pattern.</b>
+</p>
+<h3> <span class="mw-headline" id="What_We_Created">What We Created</span></h3>
+<p>Only one table in our world database is modified by our actions: <a href="Creature.html" title="Creature">creature</a>.
+</p><p>Changes in the <a href="Creature.html" title="Creature">creature</a> table: The <i>MovementType</i> will be changed to 1, and <i>spawndist</i> will be changed to the radius we specify when we issue <b>.npc spawndist <i>RADIUS</i></b>.
+</p><p><br />
+</p>
+<h2> <span class="mw-headline" id="Basic_Creature_Movement:_Paths_.28Waypoints.29">Basic Creature Movement: Paths (Waypoints)</span></h2>
+<p>1. Spawn or select an NPC.
+</p><p>2. Get the GUID with <b>.npc info</b>.  For our example, we'll use 99999.
+</p><p>3. Select the NPC and issue the command <b>.npc setmovetype way</b>.
+</p><p>4. Go to the place where you want the first waypoint, and issue the command <b>.path addwp <i>GUID*10</i></b>.  In our example, <i>GUID*10</i> would be 99999 * 10 or 999990.  This would make the command <b>.path addwp 999990</b>.  It is very helpful to make a temporary macro with this command, to avoid mis-typing the path ID on later points.
+</p><p>5. Keep adding waypoints to form the path by moving and either typing the command <b>.path addwp <i>GUID*10</i></b>, or using a temporary macro, if you set one up.
+</p><p>6. Make sure the last point has a clear path back to the first point for the NPC to return by.  <i>This is very important.  When the NPC finishes the last waypoint, they will return to the first and start over again.  The NPC will take the shortest path, a straight line.  If the path is not clear back to the first point, the movement will be flawed, resulting in a rather amusing, but completely incorrect combination of floating, running, and flailing of the arms that is very unlikely to be what you had hoped for.</i>
+</p><p>7. Issue the command <b>.loadpath <i>GUID*10</i></b> (<b>.loadpath 999990</b> in our example).  This picks up the path data so that we don't need to restart the core to add the path to the NPC.
+</p><p>8. Select the NPC and issue the command <b>.path load <i>GUID*10</i></b>.  In our example, this would be <b>.path load 999990</b>.
+</p><p>9. To adjust the speed that the NPC is moving, we have to modify the <i>speed</i> field in creature_template.  Setting speed to 1 will result in the creature walking at a regular pace, higher numbers result in faster movement.  From a practical standpoint, this should probably not exceed 4 or 5, which appear as a fairly quick running pace.  If you have an NPC that needs to be spawned in more than one location, such as a guard for example, and you need for some of them to move at different rates, it would be best to have two entries in creature_template; one each with the movement speeds needed for each spawn, since this value does not appear in the creature table.  We can also adjust the speed for some portions of the path.  We'll discuss that later in the article.
+</p><p><b>These steps should result in making your NPC walk the path that you have created.  Congratulations!</b>
+</p>
+<h3> <span class="mw-headline" id="What_We_Created_2">What We Created</span></h3>
+<p>There are four tables in our world database that will be modified by our actions: <a href="Creature.html" title="Creature">creature</a>, <a href="Creature_addon.html" title="Creature addon">creature_addon</a>, <a href="Waypoint_data.html" title="Waypoint data">waypoint_data</a>, and possibly <a href="Creature_template.html" title="Creature template">creature_template</a>.
+</p><p>Changes in the <a href="Creature.html" title="Creature">creature</a> table: The <i>MovementType</i> will be changed to 2 when we issue <b>.npc setmovetype way</b>.
+</p><p>Changes in the <a href="Creature_addon.html" title="Creature addon">creature_addon</a> table: A new row will be added, or existing row replaced, with our NPC GUID as <i>guid</i> and path ID as <i>path_id</i>.  This takes place when we issue the <b>.path load <i>GUID*10</i></b> command.
+</p><p>Changes in the <a href="Waypoint_data.html" title="Waypoint data">waypoint_data</a> table: The rows needed for each of the points in our new path will be created, with the path ID in the <i>id</i> field, and each step of the path, as a <i>point</i> field entry.  These are added as we issue the <b>.path addwp <i>GUID*10</i></b> commands for each point in the path.
+</p><p>Changes in the <a href="Creature_template.html" title="Creature template">creature_template</a> table: If we adjusted the movement speed, our new value will, of course, be in the <i>speed</i> field.
+</p><p><br />
+</p>
+<h2> <span class="mw-headline" id="Adding_to_the_Paths">Adding to the Paths</span></h2>
+<p>The path commands make it possible for us to make our new NPC do several things without having to create a C++ script, or even an EventAI sequence.  Before we can start creating new actions, we need to be able to visualize the path.  These steps will turn on the <i>visual waypoints</i>, which represent each point in our path using a half-size human male.  <i>The visual waypoints can only be seen if you have GM mode on.</i>
+</p><p>1. If you have not already done so, enable GM mode with the <b>.gm on</b> command.
+</p><p>2. Select the NPC that is walking the path that you want to modify.
+</p><p>3. Issue the command <b>.path show on</b>.
+</p><p>You should now see the visual waypoints.  To turn off the visual waypoints when we are finished, issue the command <b>.path show off</b>.  To see what actions are attached to any of the points, do the following:
+</p><p>1. Select the visual waypoint, just as you would select an NPC.
+</p><p>2. Issue the command <b>.path show info</b>.
+</p><p>You will see a display in your chat window telling you the specific information about that point.  This command can be used as we work with a path to verify the changes we are making.
+</p><p><br />
+</p>
+<h3> <span class="mw-headline" id="Adding_to_the_Path:_Pauses_.28Delays.29">Adding to the Path: Pauses (Delays)</span></h3>
+<p>1. Select the visual waypoint where we want our NPC to pause.
+</p><p>2. Add the delay by issuing the command <b>.path modify delay <i>DELAY_IN_MILLISECONDS</i></b>.  For a 5 second pause, this would be <b>.path modify delay 5000</b>.
+</p><p>3. Reload the path with the command <b>.loadpath <i>GUID*10</i></b> (<b>.loadpath 999990</b> in our example).  <i>The NPC will stop moving - this is normal.</i>
+</p><p>4. Select the NPC that will walk the path.
+</p><p>5. Reattach the path to the NPC by issuing the command <b>.path load <i>GUID*10</i></b> (<b>.path load 999990</b> in our example).  The NPC will immediately walk directly to the start of the path.  <i>Don't be alarmed, they only do this when we reattach the path.</i>  
+</p><p><b>The NPC will now walk the path, pausing at the waypoint we just modified.</b>
+</p>
+<h4> <span class="mw-headline" id="What_We_Modified">What We Modified</span></h4>
+<p>Only one table in our world database has been modified: <a href="Waypoint_data.html" title="Waypoint data">waypoint_data</a>
+</p><p>Changes in the <a href="Waypoint_data.html" title="Waypoint data">waypoint_data</a> table: The <i>delay</i> field has been changed for the selected point, adding the delay in milliseconds.
+</p><p><br />
+</p>
+<h3> <span class="mw-headline" id="Adding_to_the_Path:_Running_.28Speed_Changes.29">Adding to the Path: Running (Speed Changes)</span></h3>
+<p>1. Select the visual waypoint that we want our NPC to run <b>to</b>.
+</p><p>2. Change the movement type by issuing the command <b>.path modify move_flag 1</b>.  To reverse the setting, if you change your mind and want them to walk instead, the command is <b>.path modify move_flag 0</b>.
+</p><p>3. Reload the path with the command <b>.loadpath <i>GUID*10</i></b> (<b>.loadpath 999990</b> in our example).  <i>The NPC will stop moving - this is normal.</i>
+</p><p>4. Select the NPC that will walk the path.
+</p><p>5. Reattach the path to the NPC by issuing the command <b>.path load <i>GUID*10</i></b> (<b>.path load 999990</b> in our example).  The NPC will immediately walk directly to the start of the path.  <i>Don't be alarmed, they only do this when we reattach the path.</i>  
+</p><p><b>The NPC will now walk the path, running from the previous waypoint to the waypoint we just modified.</b>
+</p>
+<h4> <span class="mw-headline" id="What_We_Modified_2">What We Modified</span></h4>
+<p>Only one table in our world database has been modified: <a href="Waypoint_data.html" title="Waypoint data">waypoint_data</a>
+</p><p>Changes in the <a href="Waypoint_data.html" title="Waypoint data">waypoint_data</a> table: The <i>move_flag</i> field has been changed for the selected point to 1, unless we were reversing a setting to make them walk instead, in which case <i>move_flag</i> will be set to 0.
+</p><p><br />
+</p>
+<h2> <span class="mw-headline" id="Making_Corrections">Making Corrections</span></h2>
+<h3> <span class="mw-headline" id="Deleting_a_Waypoint">Deleting a Waypoint</span></h3>
+<p>1. Select the visual waypoint to delete by clicking on it.
+</p><p>2. Issue the command <b>.path modify del</b>.
+</p><p>3. Reload the path with <b>.loadpath <i>GUID*10</i></b>.
+</p><p>4. Reattach the path to the NPC with <b>.path load <i>GUID*10</i></b>.
+</p>
+<h3> <span class="mw-headline" id="Moving_a_Waypoint">Moving a Waypoint</span></h3>
+<p>1. Select the visual waypoint that you want to move by clicking on it.
+</p><p>2. Move to the place that you want the waypoint to be.
+</p><p>3. Issue the command <b>.path modify move</b>.  The visual waypoint will move to your position.
+</p><p>4. Reload the path with <b>.loadpath <i>GUID*10</i></b>.
+</p><p>5. Reattach the path to the NPC with <b>.path load <i>GUID*10</i></b>.
+</p>
+<h3> <span class="mw-headline" id="Adding_to_an_Existing_Path">Adding to an Existing Path</span></h3>
+<p>1. Select the NPC that is attached to the path.
+</p><p>2. Turn off visual waypoints with <b>.path show off</b>.
+</p><p>3. Turn on only the last visual waypoint with <b>.path show last</b>.  This will indicate the point where you will start adding additional waypoints.  [Note: There is also a command to show only the first waypoint, <b>.path show first</b>.  Before changing the <i>.path show</i> option, you must turn off visual waypoints.]
+</p><p>4. Load the current path with <b>.loadpath <i>GUID*10</i></b>.
+</p><p>5. Add waypoints by moving to the positions where you want the added points and issuing the command <b>.path addwp <i>GUID*10</i> NODEL</b>.  <i>NODEL</i> specifies that you do not want to delete the waypoints already in the path.  For our example, this command would be <b>.path addwp 999990 NODEL</b>.
+</p><p>6. Continue adding additional waypoints with <b>.path addwp <i>GUID*10</i> NODEL</b> until you have completed the path.
+</p><p>7. Reload the path with <b>.loadpath <i>GUID*10</i></b>.
+</p><p>8. Reattach the path to the NPC with <b>.path load <i>GUID*10</i></b>.  At this point, you may wish to view the whole path with visual waypoints.  The commands <b>.show path off</b> and <b>.show path on</b> will display all of the points.
+</p><p><br />
+</p>
+<h2> <span class="mw-headline" id="Waypoint_Scripts">Waypoint Scripts</span></h2>
+<p>In order to do more complex things with our paths, we have the ability to create waypoint scripts.  These can be used to have our NPC speak, emote, cast a spell, and many other things.  Using scripts, they can even do more than one of these at a particular waypoint.  We can also make the probability of the scripts more random, where the options we've already looked at will occur 100% of the time.  Waypoint scripts are quite a powerful tool, but require a slightly more complicated series of commands to create.  The next sections will deal with some of the script actions that are frequently employed in the existing database.  The available actions may be seen by referring to the <a href="Waypoint_scripts.html" title="Waypoint scripts">waypoint_scripts</a> article in the world database section of the wiki.
+</p><p><br />
+</p>
+<h3> <span class="mw-headline" id="Waypoint_Scripts:_Creating_a_Script">Waypoint Scripts: Creating a Script</span></h3>
+<p>These steps are required for all types of action that we will use.
+</p><p>1. Create the initial script and get the GUID by issuing the command <b>.path event add</b>.  This lays the foundation for our script.  It is not necessary to have our NPC or a visual waypoint selected at this time.  We will join the script to our path in a later step.  When this command is run, the system will provide a GUID by displaying <b>New waypoint event added: <i>NUMBER</i></b> in the chat window.  Make a not of the <i>NUMBER</i>.  This is our event GUID.  <i>For our example, we will use 888 as the GUID.</i>
+</p><p>2. Set the script ID with the command <b>.path event mod <i>GUID</i> setid <i>EVENTID</i></b>.  For the first action in our event, the GUID will be the same as the EVENTID.  In our example, the command will be <b>.path event mod 888 setid 888</b>.  When we add a second event, we will get a new GUID, but we will set the <i>EVENTID</i> to the <i>GUID</i> of the first event.  We'll see that in a later step.
+</p><p><b>These steps are needed for any new script.</b>
+</p><p>Now let's add some actions...
+</p><p><br />
+</p>
+<h3> <span class="mw-headline" id="Waypoint_Scripts:_Talking">Waypoint Scripts: Talking</span></h3>
+<p>1. In order for our NPC to talk, they need something to say.  We need to add a new string to <b>db_script_string</b>.  For historical reasons, the entry number in db_script_string has to be between <i>2000000000</i> and <i>2000010000</i>.  For our example, we'll use <i>2000009000</i>, which is far above the entries already found in the table, and within the system-specified limit.  Using the SQL tool of your choice, create a new row in <b>db_script_string</b> with an <i>entry</i> value and <i>default_content</i> containing the text you want the NPC to say.  In our example, the entry is <i>2000009000</i>.  You should choose something in a similar part of the allowed value range.  The other fields in <b>db_script_string</b> are for localization.  You may or may not need them, depending on your language choices.  <i>This table is only loaded at core start-up, so you will need to restart the core in order to have the string available for the next steps.</i>
+</p><p>2. Set the event command for our event by issuing <b>.path event mod <i>EVENTID</i> command 0</b>.  <i>Command 0</i> is the TALK command.  <i>EVENTID</i> was set earlier when we created the initial script.  For our example, this command will be <b>.path event mod 888 command 0</b>.
+</p><p>3. Now we set the way the text is said.  We have the option of a regular SAY, or a YELL.  The command also supports WHISPER, but it requires a target, so we won't use it here.  To have our text said in a SAY, the command is <b>.path event mod <i>EVENTID</i> datalong 0</b>.  In our example, this will be <b>.path event mod 888 datalong 0</b>.  To YELL, we issue <b>.path event mod <i>EVENTID</i> datalong 2</b> (or <b>.path event mod 888 datalong 2</b> in our example).
+</p><p>4. The next step is to add our text string that we created in db_script_string.  The command for this is <b>.path event mod <i>EVENTID</i> dataint <i>DB_SCRIPT_STRING.ENTRY</i></b>.  In our example, this will be <b>.path event mod 888 dataint 2000009000</b>.
+</p><p>5. Now we have our event fully defined, so we can add it to a waypoint.  Select a visual waypoint in our path by clicking on it.
+</p><p>6. Add the script to the waypoint with the command <b>.path mod action <i>EVENTID</i></b>.  In our example, this is <b>.path mod action 888</b>.
+</p><p>7. By default, our action will take place 100% of the time that the script runs.  We can change this if we want a more random experience, using the command <b>.path mod action_chance <i>PERCENT</i></b> - where <i>PERCENT</i> is the percent possibility of the action taking place.  If we wanted a 50% chance, the command is <b>.path mod action_chance 50</b>.
+</p><p>8. In order to use our event, we have to reload the <i>waypoint_scripts</i> table, using <b>.reload way</b>.
+</p><p>9. Reload the path with the command <b>.loadpath <i>GUID*10</i></b> (<b>.loadpath 999990</b> in our example).  <i>The NPC will stop moving - this is normal.</i>
+</p><p>10. Reattach the path to the NPC by issuing the command <b>.path load <i>GUID*10</i></b> (<b>.path load 999990</b> in our example).  The NPC will immediately walk directly to the start of the path.  <i>Don't be alarmed, they only do this when we reattach the path.</i> 
+</p><p>11. For unknown (at this time) reasons, your NPC will not talk until the core has been restarted.  Restart when you can, and when the server is back on line the event will be available.
+</p><p><b>Your NPC will now walk the path, saying the specified text at the waypoint you have chosen.</b>
+</p>
+<h4> <span class="mw-headline" id="What_We_Created_3">What We Created</span></h4>
+<p>Three tables in our world database are modified by our actions: <a href="Waypoint_data.html" title="Waypoint data">waypoint_data</a>, <a href="Waypoint_scripts.html" title="Waypoint scripts">waypoint_scripts</a>, and <a href="Db_script_string.html" title="Db script string">db_script_string</a>.
+</p><p>Changes in the <a href="Db_script_string.html" title="Db script string">db_script_string</a> table: A new row will be added with an <i>entry</i> that is unique and as far away from existing data as is practical.  The <i>content_default</i> field will contain our string.  Depending on your localization needs, one or more of the <i>content_loc<b>X</b></i> fields may be populated with the localized version of the text.
+</p><p>Changes in the <a href="Waypoint_scripts.html" title="Waypoint scripts">waypoint_scripts</a> table: A new row will be inserted for our script, with the <i>id</i> set to the <i>guid</i> (by the setid command), the <i>command</i> field will be <b>0</b> (the TALK command), the <i>datalong</i> field will be <b>0</b> for SAY or <b>2</b> for YELL depending on what we've chosen, and the <i>dataint</i> field will be the <i>entry</i> field of our string from <b>db_script_string</b>.
+</p><p>Changes in the <a href="Waypoint_data.html" title="Waypoint data">waypoint_data</a> table: The <i>action</i> field will be changed to contain the EVENTID of our script.  The <i>action_chance</i> field will have our probability percent, if we have modified it, otherwise it will contain 100 indicating a 100% probability.
+</p><p><br />
+</p>
+<h3> <span class="mw-headline" id="Waypoint_Scripts:_Emotes">Waypoint Scripts: Emotes</span></h3>
+<p>1. Set the event command for our event by issuing <b>.path event mod <i>EVENTID</i> command 1</b>.  <i>Command 1</i> is the EMOTE command.  <i>EVENTID</i> was set earlier when we created the initial script.  For our example, this command will be <b>.path event mod 888 command 1</b>.
+</p><p>2. Now we set the emote to be performed.  For our example, we'll have the NPC salute.  The command to set the emote ID is <b>.path event mod <i>EVENTID</i> datalong <i>EMOTEID</i></b>.  In our example, this will be <b>.path event mod 888 datalong 66</b>, since a salute is ID 66.  The reference section has a full list of <a href="Emotes-2.html" title="Emotes">Emotes</a>.
+</p><p>3. Now we have our event fully defined, so we can add it to a waypoint.  Select a visual waypoint in our path by clicking on it.
+</p><p>4. Add the script to the waypoint with the command <b>.path mod action <i>EVENTID</i></b>.  In our example, this is <b>.path mod action 888</b>.
+</p><p>5. Remember that by default, our action will take place 100% of the time that the script runs.  We can change this if we want a more random experience, using the command <b>.path mod action_chance <i>PERCENT</i></b> - where <i>PERCENT</i> is the percent possibility of the action taking place.  If we wanted a 50% chance, the command is <b>.path mod action_chance 50</b>.
+</p><p>6. In order to use our event, we have to reload the <i>waypoint_scripts</i> table, using <b>.reload way</b>.
+</p><p>7. Reload the path with the command <b>.loadpath <i>GUID*10</i></b> (<b>.loadpath 999990</b> in our example).  <i>The NPC will stop moving - this is normal.</i>
+</p><p>8. Reattach the path to the NPC by issuing the command <b>.path load <i>GUID*10</i></b> (<b>.path load 999990</b> in our example).  The NPC will immediately walk directly to the start of the path.  <i>Don't be alarmed, they only do this when we reattach the path.</i> 
+</p><p>9. For unknown (at this time) reasons, your NPC will not perform the emote until the core has been restarted.  Restart when you can, and when the server is back on line the event will be available.
+</p><p><b>Your NPC will now walk the path, performing the specified emote at the waypoint you have chosen.</b>
+</p>
+<h4> <span class="mw-headline" id="What_We_Created_4">What We Created</span></h4>
+<p>Two tables in our world database are modified by our actions: <a href="Waypoint_data.html" title="Waypoint data">waypoint_data</a>, and <a href="Waypoint_scripts.html" title="Waypoint scripts">waypoint_scripts</a>.
+</p><p>Changes in the <a href="Waypoint_scripts.html" title="Waypoint scripts">waypoint_scripts</a> table: A new row will be inserted for our script, with the <i>id</i> set to the <i>guid</i> (by the setid command), the <i>command</i> field will be <b>1</b> (the EMOTE command), the <i>datalong</i> field will be the <i>EMOTEID</i> that we wish to have the NPC perform.
+</p><p>Changes in the <a href="Waypoint_data.html" title="Waypoint data">waypoint_data</a> table: The <i>action</i> field will be changed to contain the EVENTID of our script.  The <i>action_chance</i> field will have our probability percent, if we have modified it, otherwise it will contain 100 indicating a 100% probability.
+</p><p><br />
+</p>
+<h3> <span class="mw-headline" id="Waypoint_Scripts:_Other_Commands">Waypoint Scripts: Other Commands</span></h3>
+<p>There are many other commands available for us to use in our waypoint scripts.  The wiki description of the <a href="Waypoint_scripts.html" title="Waypoint scripts">waypoint_scripts</a> table lists the various commands, and the data required to use them.  Most of the remaining ones are specific to object, quest, or other NPC interaction, and do not lend themselves easily to a generalized guide such as this.  For that reason, we will not outline the specific steps needed to use them.  The steps given above will apply to nearly all of the others within the narrow range of appropriate use.  If it seems that more information is needed, this guide will be expanded at a later date.
+</p><p>Please direct any questions to the appropriate forum.
+</p>
+<!-- 
+NewPP limit report
+Preprocessor visited node count: 83/1000000
+Preprocessor generated node count: 88/1000000
+Post‐expand include size: 0/2097152 bytes
+Template argument size: 0/2097152 bytes
+Highest expansion depth: 2/40
+Expensive parser function count: 0/100
+-->
+
+<!-- Saved in parser cache with key admin_wikia:pcache:idhash:25-0!*!0!!en-gb!*!* and timestamp 20160412105310 -->
+</div>				<!-- /bodycontent -->
+								<!-- printfooter -->
+				<div class="printfooter">
+				Retrieved from ‘<a href="http://wiki.hellground.net/index.php?title=HowTo_-_Creature_Movement_and_Waypoints&amp;oldid=275">http://wiki.hellground.net/index.php?title=HowTo_-_Creature_Movement_and_Waypoints&amp;oldid=275</a>’				</div>
+				<!-- /printfooter -->
+												<!-- catlinks -->
+				<div id='catlinks' class='catlinks'><div id="mw-normal-catlinks" class="mw-normal-catlinks"><a href="Special_Categories.html" title="Special:Categories">Category</a>: <ul><li><a href="Category_HellGroundCore_Installation_and_Configuration.html" title="Category:HellGroundCore Installation and Configuration">HellGroundCore Installation and Configuration</a></li></ul></div></div>				<!-- /catlinks -->
+												<div class="visualClear"></div>
+				<!-- debughtml -->
+								<!-- /debughtml -->
+			</div>
+			<!-- /bodyContent -->
+		</div>
+		<!-- /content -->
+		<div id="mw-navigation">
+			<h2>Navigation menu</h2>
+			<!-- header -->
+			<div id="mw-head">
+				
+<!-- 0 -->
+<div id="p-personal" role="navigation" class="">
+	<h3>Personal tools</h3>
+	<ul>
+<li id="pt-anonuserpage"><a href="User_217.86.238.html" class="new" title="The user page for the IP address you are editing as [.]" accesskey=".">217.86.238.74</a></li><li id="pt-anontalk"><a href="User_talk_217.86.238.html" class="new" title="Discussion about edits from this IP address [n]" accesskey="n">Talk for this IP address</a></li><li id="pt-anonlogin"><a href="http://wiki.hellground.net/index.php?title=Special:UserLogin&amp;returnto=HowTo+-+Creature+Movement+and+Waypoints" title="You are encouraged to log in; however, it is not mandatory [o]" accesskey="o">Log in</a></li>	</ul>
+</div>
+
+<!-- /0 -->
+				<div id="left-navigation">
+					
+<!-- 0 -->
+<div id="p-namespaces" role="navigation" class="vectorTabs">
+	<h3>Namespaces</h3>
+	<ul>
+					<li  id="ca-nstab-main" class="selected"><span><a href="HowTo_-_Creature_Movement_and_Waypoints.html"  title="View the content page [c]" accesskey="c">Page</a></span></li>
+					<li  id="ca-talk" class="new"><span><a href="http://wiki.hellground.net/index.php?title=Talk:HowTo_-_Creature_Movement_and_Waypoints&amp;action=edit&amp;redlink=1"  title="Discussion about the content page [t]" accesskey="t">Discussion</a></span></li>
+			</ul>
+</div>
+
+<!-- /0 -->
+
+<!-- 1 -->
+<div id="p-variants" role="navigation" class="vectorMenu emptyPortlet">
+	<h3 id="mw-vector-current-variant">
+		</h3>
+	<h3><span>Variants</span><a href="#"></a></h3>
+	<div class="menu">
+		<ul>
+					</ul>
+	</div>
+</div>
+
+<!-- /1 -->
+				</div>
+				<div id="right-navigation">
+					
+<!-- 0 -->
+<div id="p-views" role="navigation" class="vectorTabs">
+	<h3>Views</h3>
+	<ul>
+					<li id="ca-view" class="selected"><span><a href="HowTo_-_Creature_Movement_and_Waypoints.html" >Read</a></span></li>
+					<li id="ca-viewsource"><span><a href="http://wiki.hellground.net/index.php?title=HowTo_-_Creature_Movement_and_Waypoints&amp;action=edit"  title="This page is protected.&#10;You can view its source [e]" accesskey="e">View source</a></span></li>
+					<li id="ca-history" class="collapsible"><span><a href="http://wiki.hellground.net/index.php?title=HowTo_-_Creature_Movement_and_Waypoints&amp;action=history"  title="Past revisions of this page [h]" accesskey="h">View history</a></span></li>
+			</ul>
+</div>
+
+<!-- /0 -->
+
+<!-- 1 -->
+<div id="p-cactions" role="navigation" class="vectorMenu emptyPortlet">
+	<h3><span>Actions</span><a href="#"></a></h3>
+	<div class="menu">
+		<ul>
+					</ul>
+	</div>
+</div>
+
+<!-- /1 -->
+
+<!-- 2 -->
+
+
+<!-- /2 -->
+				</div>
+			</div>
+			<!-- /header -->
+			<!-- panel -->
+			<div id="mw-panel">
+				<!-- logo -->
+					<div id="p-logo" role="banner"><a style="background-image: url(../skins/common/images/wiki.png);" href="Main_Page.html"  title="Visit the main page"></a></div>
+				<!-- /logo -->
+				
+<!-- navigation -->
+<div class="portal" role="navigation" id='p-navigation'>
+	<h3>Navigation</h3>
+	<div class="body">
+		<ul>
+			<li id="n-mainpage-description"><a href="Main_Page.html" title="Visit the main page [z]" accesskey="z">Main page</a></li>
+			<li id="n-randompage"><a href="Spell_required.html" title="Load a random page [x]" accesskey="x">Random page</a></li>
+		</ul>
+	</div>
+</div>
+
+<!-- /navigation -->
+
+<!-- HellGroundCore -->
+<div class="portal" role="navigation" id='p-HellGroundCore'>
+	<h3>HellGroundCore</h3>
+	<div class="body">
+		<ul>
+			<li id="n-Project-site"><a href="https://hellground.net/" rel="nofollow">Project site</a></li>
+			<li id="n-Project--forum"><a href="http://forum.hellground.net/" rel="nofollow">Project  forum</a></li>
+			<li id="n-Project-repositories"><a href="http://emu.hellground.net/" rel="nofollow">Project repositories</a></li>
+			<li id="n-Project-bug-tracker"><a href="http://forum.hellground.net/" rel="nofollow">Project bug tracker</a></li>
+		</ul>
+	</div>
+</div>
+
+<!-- /HellGroundCore -->
+
+<!-- SEARCH -->
+
+<!-- /SEARCH -->
+
+<!-- TOOLBOX -->
+<div class="portal" role="navigation" id='p-tb'>
+	<h3>Tools</h3>
+	<div class="body">
+		<ul>
+			<li id="t-whatlinkshere"><a href="Special_WhatLinksHere/HowTo_-_Creature_Movement_and_Waypoints.html" title="A list of all wiki pages that link here [j]" accesskey="j">What links here</a></li>
+			<li id="t-recentchangeslinked"><a href="Special_RecentChangesLinked/HowTo_-_Creature_Movement_and_Waypoints.html" title="Recent changes in pages linked from this page [k]" accesskey="k">Related changes</a></li>
+			<li id="t-specialpages"><a href="Special_SpecialPages.html" title="A list of all special pages [q]" accesskey="q">Special pages</a></li>
+			<li id="t-print"><a href="http://wiki.hellground.net/index.php?title=HowTo_-_Creature_Movement_and_Waypoints&amp;printable=yes" rel="alternate" title="Printable version of this page [p]" accesskey="p">Printable version</a></li>
+			<li id="t-permalink"><a href="http://wiki.hellground.net/index.php?title=HowTo_-_Creature_Movement_and_Waypoints&amp;oldid=275" title="Permanent link to this revision of the page">Permanent link</a></li>
+			<li id="t-info"><a href="http://wiki.hellground.net/index.php?title=HowTo_-_Creature_Movement_and_Waypoints&amp;action=info">Page information</a></li>
+		</ul>
+	</div>
+</div>
+
+<!-- /TOOLBOX -->
+
+<!-- LANGUAGES -->
+
+<!-- /LANGUAGES -->
+			</div>
+			<!-- /panel -->
+		</div>
+		<!-- footer -->
+		<div id="footer" role="contentinfo">
+							<ul id="footer-info">
+											<li id="footer-info-lastmod"> This page was last modified on 6 February 2014, at 09:44.</li>
+											<li id="footer-info-viewcount">This page has been accessed 228 times.</li>
+									</ul>
+							<ul id="footer-places">
+											<li id="footer-places-privacy"><a href="TBC_HellGroundCore_Privacy_policy.html" title="TBC HellGroundCore:Privacy policy">Privacy policy</a></li>
+											<li id="footer-places-about"><a href="TBC_HellGroundCore_About.html" title="TBC HellGroundCore:About">About HellGroundCore MMORPG framework educational and hobby project</a></li>
+											<li id="footer-places-disclaimer"><a href="TBC_HellGroundCore_General_disclaimer.html" title="TBC HellGroundCore:General disclaimer">Disclaimers</a></li>
+									</ul>
+										<ul id="footer-icons" class="noprint">
+					<li id="footer-poweredbyico">
+						<a href="http://www.mediawiki.org/"><img src="../skins/common/images/poweredby_mediawiki_88x31.png" alt="Powered by MediaWiki" width="88" height="31" /></a>
+					</li>
+				</ul>
+						<div style="clear:both"></div>
+		</div>
+		<!-- /footer -->
+		<script>if(window.mw){
+mw.loader.state({"site":"loading","user":"missing","user.groups":"ready"});
+}</script>
+<script>if(window.mw){
+mw.loader.load(["mediawiki.action.view.postEdit","mediawiki.user","mediawiki.page.ready","mediawiki.searchSuggest","mediawiki.hidpi","skins.vector.js"], null, true);
+}</script>
+<script>if(window.mw){
+mw.loader.state({"site":"ready"});
+}</script>
+<!-- Served in 0.095 secs. -->
+	</body>
+
+<!-- Mirrored from wiki.hellground.net/index.php/HowTo_-_Creature_Movement_and_Waypoints by HTTrack Website Copier/3.x [XR&CO'2014], Tue, 12 Apr 2016 10:53:16 GMT -->
+</html>

@@ -72,12 +72,12 @@ bool PlayerSocial::AddToSocialList(uint32 friend_guid, bool ignore)
     PlayerSocialMap::iterator itr = m_playerSocialMap.find(friend_guid);
     if (itr != m_playerSocialMap.end())
     {
-        RealmDataDatabase.PExecute("UPDATE character_social SET flags = (flags | %u) WHERE guid = '%u' AND friend = '%u'", flag, GetPlayerGUID(), friend_guid);
+        CharacterDatabase.PExecute("UPDATE character_social SET flags = (flags | %u) WHERE guid = '%u' AND friend = '%u'", flag, GetPlayerGUID(), friend_guid);
         m_playerSocialMap[friend_guid].Flags |= flag;
     }
     else
     {
-        RealmDataDatabase.PExecute("REPLACE INTO character_social (guid, friend, flags) VALUES ('%u', '%u', '%u')", GetPlayerGUID(), friend_guid, flag);
+        CharacterDatabase.PExecute("REPLACE INTO character_social (guid, friend, flags) VALUES ('%u', '%u', '%u')", GetPlayerGUID(), friend_guid, flag);
         FriendInfo fi;
         fi.Flags |= flag;
         m_playerSocialMap[friend_guid] = fi;
@@ -98,12 +98,12 @@ void PlayerSocial::RemoveFromSocialList(uint32 friend_guid, bool ignore)
     itr->second.Flags &= ~flag;
     if (itr->second.Flags == 0)
     {
-        RealmDataDatabase.PExecute("DELETE FROM character_social WHERE guid = '%u' AND friend = '%u'", GetPlayerGUID(), friend_guid);
+        CharacterDatabase.PExecute("DELETE FROM character_social WHERE guid = '%u' AND friend = '%u'", GetPlayerGUID(), friend_guid);
         m_playerSocialMap.erase(itr);
     }
     else
     {
-        RealmDataDatabase.PExecute("UPDATE character_social SET flags = (flags & ~%u) WHERE guid = '%u' AND friend = '%u'", flag, GetPlayerGUID(), friend_guid);
+        CharacterDatabase.PExecute("UPDATE character_social SET flags = (flags & ~%u) WHERE guid = '%u' AND friend = '%u'", flag, GetPlayerGUID(), friend_guid);
     }
 }
 
@@ -115,8 +115,8 @@ void PlayerSocial::SetFriendNote(uint32 friend_guid, std::string note)
 
     utf8truncate(note,48);                                  // DB and client size limitation
 
-    RealmDataDatabase.escape_string(note);
-    RealmDataDatabase.PExecute("UPDATE character_social SET note = '%s' WHERE guid = '%u' AND friend = '%u'", note.c_str(), GetPlayerGUID(), friend_guid);
+    CharacterDatabase.escape_string(note);
+    CharacterDatabase.PExecute("UPDATE character_social SET note = '%s' WHERE guid = '%u' AND friend = '%u'", note.c_str(), GetPlayerGUID(), friend_guid);
     m_playerSocialMap[friend_guid].Note = note;
 }
 
@@ -204,7 +204,7 @@ void SocialMgr::GetFriendInfo(Player *player, uint32 friendGUID, FriendInfo &fri
 
     uint32 team = player->GetTeam();
     bool allowTwoSideWhoList = sWorld.getConfig(CONFIG_ALLOW_TWO_SIDE_WHO_LIST);
-    bool gmInWhoList = sWorld.getConfig(CONFIG_GM_IN_WHO_LIST) || player->GetSession()->HasPermissions(PERM_GMT_HDEV);
+    bool gmInWhoList = sWorld.getConfig(CONFIG_GM_IN_WHO_LIST) || player->GetSession()->HasPermissions(SEC_DEVELOPPER);
 
     PlayerSocialMap::iterator itr = player->GetSocial()->m_playerSocialMap.find(friendGUID);
     if (itr != player->GetSocial()->m_playerSocialMap.end())
@@ -213,9 +213,9 @@ void SocialMgr::GetFriendInfo(Player *player, uint32 friendGUID, FriendInfo &fri
     // PLAYER see his team only and PLAYER can't see MODERATOR, GAME MASTER, ADMINISTRATOR characters
     // MODERATOR, GAME MASTER, ADMINISTRATOR can see all
     if (pFriend && pFriend->GetName() &&
-        (player->GetSession()->HasPermissions(PERM_GMT_HDEV) ||
+        (player->GetSession()->HasPermissions(SEC_DEVELOPPER) ||
         (pFriend->GetTeam() == team || allowTwoSideWhoList) &&
-        (!pFriend->GetSession()->HasPermissions(PERM_GMT) || gmInWhoList && pFriend->IsVisibleGloballyfor (player))))
+        (!pFriend->GetSession()->HasPermissions(SEC_GAMEMASTER) || gmInWhoList && pFriend->IsVisibleGloballyfor (player))))
     {
         friendInfo.Status = FriendStatus(friendInfo.Status | FRIEND_STATUS_ONLINE);
 
@@ -294,9 +294,9 @@ void SocialMgr::BroadcastToFriendListers(Player *player, WorldPacket *packet)
             // PLAYER see his team only and PLAYER can't see MODERATOR, GAME MASTER, ADMINISTRATOR characters
             // MODERATOR, GAME MASTER, ADMINISTRATOR can see all
             if (pFriend && pFriend->IsInWorld() &&
-                (pFriend->GetSession()->HasPermissions(PERM_GMT_HDEV) ||
+                (pFriend->GetSession()->HasPermissions(SEC_DEVELOPPER) ||
                 (pFriend->GetTeam() == team || allowTwoSideWhoList) &&
-                (!player->GetSession()->HasPermissions(PERM_GMT) || gmInWhoList && player->IsVisibleGloballyfor (pFriend))))
+                (!player->GetSession()->HasPermissions(SEC_GAMEMASTER) || gmInWhoList && player->IsVisibleGloballyfor (pFriend))))
             {
                 pFriend->SendPacketToSelf(packet);
             }
@@ -304,7 +304,7 @@ void SocialMgr::BroadcastToFriendListers(Player *player, WorldPacket *packet)
     }
 }
 
-PlayerSocial *SocialMgr::LoadFromDB(QueryResultAutoPtr result, uint32 guid)
+PlayerSocial *SocialMgr::LoadFromDB(QueryResult* result, uint32 guid)
 {
     PlayerSocial *social = &m_socialMap[guid];
     social->SetPlayerGUID(guid);

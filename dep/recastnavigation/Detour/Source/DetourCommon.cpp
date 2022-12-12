@@ -16,15 +16,10 @@
 // 3. This notice may not be removed or altered from any source distribution.
 //
 
-#include <math.h>
 #include "DetourCommon.h"
+#include "DetourMath.h"
 
 //////////////////////////////////////////////////////////////////////////////////////////
-
-float dtSqrt(float x)
-{
-	return sqrtf(x);
-}
 
 void dtClosestPtPointTriangle(float* closest, const float* p,
 							  const float* a, const float* b, const float* c)
@@ -208,36 +203,38 @@ void dtCalcPolyCenter(float* tc, const unsigned short* idx, int nidx, const floa
 
 bool dtClosestHeightPointTriangle(const float* p, const float* a, const float* b, const float* c, float& h)
 {
+	const float EPS = 1e-6f;
 	float v0[3], v1[3], v2[3];
-	dtVsub(v0, c,a);
-	dtVsub(v1, b,a);
-	dtVsub(v2, p,a);
-	
-	const float dot00 = dtVdot2D(v0, v0);
-	const float dot01 = dtVdot2D(v0, v1);
-	const float dot02 = dtVdot2D(v0, v2);
-	const float dot11 = dtVdot2D(v1, v1);
-	const float dot12 = dtVdot2D(v1, v2);
-	
-	// Compute barycentric coordinates
-	const float invDenom = 1.0f / (dot00 * dot11 - dot01 * dot01);
-	const float u = (dot11 * dot02 - dot01 * dot12) * invDenom;
-	const float v = (dot00 * dot12 - dot01 * dot02) * invDenom;
 
-	// The (sloppy) epsilon is needed to allow to get height of points which
-	// are interpolated along the edges of the triangles.
-	static const float EPS = 1e-4f;
-	
+	dtVsub(v0, c, a);
+	dtVsub(v1, b, a);
+	dtVsub(v2, p, a);
+
+	// Compute scaled barycentric coordinates
+	float denom = v0[0] * v1[2] - v0[2] * v1[0];
+	if (fabsf(denom) < EPS)
+		return false;
+
+	float u = v1[2] * v2[0] - v1[0] * v2[2];
+	float v = v0[0] * v2[2] - v0[2] * v2[0];
+
+	if (denom < 0) {
+		denom = -denom;
+		u = -u;
+		v = -v;
+	}
+
 	// If point lies inside the triangle, return interpolated ycoord.
-	if (u >= -EPS && v >= -EPS && (u+v) <= 1+EPS)
-	{
-		h = a[1] + v0[1]*u + v1[1]*v;
+	if (u >= 0.0f && v >= 0.0f && (u + v) <= denom) {
+		h = a[1] + (v0[1] * u + v1[1] * v) / denom;
 		return true;
 	}
-	
 	return false;
 }
 
+/// @par
+///
+/// All points are projected onto the xz-plane, so the y-values are ignored.
 bool dtPointInPolygon(const float* pt, const float* verts, const int nverts)
 {
 	// TODO: Replace pnpoly with triArea2D tests?
@@ -291,6 +288,9 @@ inline bool overlapRange(const float amin, const float amax,
 	return ((amin+eps) > bmax || (amax-eps) < bmin) ? false : true;
 }
 
+/// @par
+///
+/// All vertices are projected onto the xz-plane, so the y-values are ignored.
 bool dtOverlapPolyPoly2D(const float* polya, const int npolya,
 						 const float* polyb, const int npolyb)
 {
@@ -324,6 +324,64 @@ bool dtOverlapPolyPoly2D(const float* polya, const int npolya,
 			return false;
 		}
 	}
+	return true;
+}
+
+// Returns a random point in a convex polygon.
+// Adapted from Graphics Gems article.
+void dtRandomPointInConvexPoly(const float* pts, const int npts, float* areas,
+							   const float s, const float t, float* out)
+{
+	// Calc triangle araes
+	float areasum = 0.0f;
+	for (int i = 2; i < npts; i++) {
+		areas[i] = dtTriArea2D(&pts[0], &pts[(i-1)*3], &pts[i*3]);
+		areasum += dtMax(0.001f, areas[i]);
+	}
+	// Find sub triangle weighted by area.
+	const float thr = s*areasum;
+	float acc = 0.0f;
+	float u = 1.0f;
+	int tri = npts - 1;
+	for (int i = 2; i < npts; i++) {
+		const float dacc = areas[i];
+		if (thr >= acc && thr < (acc+dacc))
+		{
+			u = (thr - acc) / dacc;
+			tri = i;
+			break;
+		}
+		acc += dacc;
+	}
+	
+	float v = dtMathSqrtf(t);
+	
+	const float a = 1 - v;
+	const float b = (1 - u) * v;
+	const float c = u * v;
+	const float* pa = &pts[0];
+	const float* pb = &pts[(tri-1)*3];
+	const float* pc = &pts[tri*3];
+	
+	out[0] = a*pa[0] + b*pb[0] + c*pc[0];
+	out[1] = a*pa[1] + b*pb[1] + c*pc[1];
+	out[2] = a*pa[2] + b*pb[2] + c*pc[2];
+}
+
+inline float vperpXZ(const float* a, const float* b) { return a[0]*b[2] - a[2]*b[0]; }
+
+bool dtIntersectSegSeg2D(const float* ap, const float* aq,
+						 const float* bp, const float* bq,
+						 float& s, float& t)
+{
+	float u[3], v[3], w[3];
+	dtVsub(u,aq,ap);
+	dtVsub(v,bq,bp);
+	dtVsub(w,ap,bp);
+	float d = vperpXZ(u,v);
+	if (fabsf(d) < 1e-6f) return false;
+	s = vperpXZ(v,w) / d;
+	t = vperpXZ(u,w) / d;
 	return true;
 }
 

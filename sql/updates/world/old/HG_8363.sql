@@ -1,0 +1,1 @@
+UPDATE gameobject_template SET flags = 34 where entry = 186305;

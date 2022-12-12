@@ -84,6 +84,17 @@ enum HellgroundStrings
     LANG_MOTD_CURRENT                   = 56,
     LANG_USING_WORLD_DB                 = 57,
     LANG_USING_SCRIPT_LIB               = 58,
+    LANG_RA_USER                        = 61,
+    LANG_RA_PASS                        = 62,
+    LANG_GM_ACCEPTS_WHISPER             = 63,
+    LANG_GM_NO_WHISPER                  = 64,
+    LANG_USING_SCRIPT_LIB_UNKNOWN       = 65,
+    LANG_USING_SCRIPT_LIB_NONE          = 66,
+    LANG_UNSTUCK_UNAVAILABLE            = 67,
+    LANG_UNSTUCK_ALIVE                  = 68,
+    LANG_UNSTUCK_DEAD                   = 69,
+    LANG_LEAVE_TO_RESET_INSTANCE        = 70,
+    // Room for more level 0              71-99 not used
     // Room for more level 0              59-99 not used
 
     // level 1 chat

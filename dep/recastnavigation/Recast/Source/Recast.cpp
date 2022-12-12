@@ -27,12 +27,55 @@
 #include "RecastAlloc.h"
 #include "RecastAssert.h"
 
+namespace
+{
+/// Allocates and constructs an object of the given type, returning a pointer.
+/// TODO: Support constructor args.
+/// @param[in]		hint	Hint to the allocator.
+template <typename T>
+T* rcNew(rcAllocHint hint) {
+	T* ptr = (T*)rcAlloc(sizeof(T), hint);
+	::new(rcNewTag(), (void*)ptr) T();
+	return ptr;
+}
+
+/// Destroys and frees an object allocated with rcNew.
+/// @param[in]     ptr    The object pointer to delete.
+template <typename T>
+void rcDelete(T* ptr) {
+	if (ptr) {
+		ptr->~T();
+		rcFree((void*)ptr);
+	}
+}
+}  // namespace
+
+
 float rcSqrt(float x)
 {
 	return sqrtf(x);
 }
 
+/// @class rcContext
+/// @par
+///
+/// This class does not provide logging or timer functionality on its 
+/// own.  Both must be provided by a concrete implementation 
+/// by overriding the protected member functions.  Also, this class does not 
+/// provide an interface for extracting log messages. (Only adding them.) 
+/// So concrete implementations must provide one.
+///
+/// If no logging or timers are required, just pass an instance of this 
+/// class through the Recast build process.
+///
 
+/// @par
+///
+/// Example:
+/// @code
+/// // Where ctx is an instance of rcContext and filepath is a char array.
+/// ctx->log(RC_LOG_ERROR, "buildTiledNavigation: Could not load '%s'", filepath);
+/// @endcode
 void rcContext::log(const rcLogCategory category, const char* format, ...)
 {
 	if (!m_logEnabled)
@@ -53,78 +96,163 @@ void rcContext::log(const rcLogCategory category, const char* format, ...)
 
 rcHeightfield* rcAllocHeightfield()
 {
-	rcHeightfield* hf = (rcHeightfield*)rcAlloc(sizeof(rcHeightfield), RC_ALLOC_PERM);
-	memset(hf, 0, sizeof(rcHeightfield));
-	return hf;
+	return rcNew<rcHeightfield>(RC_ALLOC_PERM);
+}
+rcHeightfield::rcHeightfield()
+	: width()
+	, height()
+	, bmin()
+	, bmax()
+	, cs()
+	, ch()
+	, spans()
+	, pools()
+	, freelist()
+{
+}
+
+rcHeightfield::~rcHeightfield()
+{
+	// Delete span array.
+	rcFree(spans);
+	// Delete span pools.
+	while (pools)
+	{
+		rcSpanPool* next = pools->next;
+		rcFree(pools);
+		pools = next;
+	}
 }
 
 void rcFreeHeightField(rcHeightfield* hf)
 {
-	if (!hf) return;
-	// Delete span array.
-	rcFree(hf->spans);
-	// Delete span pools.
-	while (hf->pools)
-	{
-		rcSpanPool* next = hf->pools->next;
-		rcFree(hf->pools);
-		hf->pools = next;
-	}
-	rcFree(hf);
+	rcDelete(hf);
 }
 
 rcCompactHeightfield* rcAllocCompactHeightfield()
 {
-	rcCompactHeightfield* chf = (rcCompactHeightfield*)rcAlloc(sizeof(rcCompactHeightfield), RC_ALLOC_PERM);
-	memset(chf, 0, sizeof(rcCompactHeightfield));
-	return chf;
+	return rcNew<rcCompactHeightfield>(RC_ALLOC_PERM);
 }
 
 void rcFreeCompactHeightfield(rcCompactHeightfield* chf)
 {
-	if (!chf) return;
-	rcFree(chf->cells);
-	rcFree(chf->spans);
-	rcFree(chf->dist);
-	rcFree(chf->areas);
-	rcFree(chf);
+	rcDelete(chf);
 }
+
+rcCompactHeightfield::rcCompactHeightfield()
+	: width(),
+	height(),
+	spanCount(),
+	walkableHeight(),
+	walkableClimb(),
+	borderSize(),
+	maxDistance(),
+	maxRegions(),
+	bmin(),
+	bmax(),
+	cs(),
+	ch(),
+	cells(),
+	spans(),
+	dist(),
+	areas()
+{
+}
+rcCompactHeightfield::~rcCompactHeightfield()
+{
+	rcFree(cells);
+	rcFree(spans);
+	rcFree(dist);
+	rcFree(areas);
+}
+
+rcHeightfieldLayerSet* rcAllocHeightfieldLayerSet()
+{
+	return rcNew<rcHeightfieldLayerSet>(RC_ALLOC_PERM);
+}
+void rcFreeHeightfieldLayerSet(rcHeightfieldLayerSet* lset)
+{
+	rcDelete(lset);
+}
+
+rcHeightfieldLayerSet::rcHeightfieldLayerSet()
+	: layers(),	nlayers() {}
+rcHeightfieldLayerSet::~rcHeightfieldLayerSet()
+{
+	for (int i = 0; i < nlayers; ++i)
+	{
+		rcFree(layers[i].heights);
+		rcFree(layers[i].areas);
+		rcFree(layers[i].cons);
+	}
+	rcFree(layers);
+}
+
 
 rcContourSet* rcAllocContourSet()
 {
-	rcContourSet* cset = (rcContourSet*)rcAlloc(sizeof(rcContourSet), RC_ALLOC_PERM);
-	memset(cset, 0, sizeof(rcContourSet));
-	return cset;
+	return rcNew<rcContourSet>(RC_ALLOC_PERM);
 }
-
 void rcFreeContourSet(rcContourSet* cset)
 {
-	if (!cset) return;
-	for (int i = 0; i < cset->nconts; ++i)
-	{
-		rcFree(cset->conts[i].verts);
-		rcFree(cset->conts[i].rverts);
-	}
-	rcFree(cset->conts);
-	rcFree(cset);
+	rcDelete(cset);
 }
+
+rcContourSet::rcContourSet()
+	: conts(),
+	nconts(),
+	bmin(),
+	bmax(),
+	cs(),
+	ch(),
+	width(),
+	height(),
+	borderSize(),
+	maxError() {}
+rcContourSet::~rcContourSet()
+{
+	for (int i = 0; i < nconts; ++i)
+	{
+		rcFree(conts[i].verts);
+		rcFree(conts[i].rverts);
+	}
+	rcFree(conts);
+}
+
 
 rcPolyMesh* rcAllocPolyMesh()
 {
-	rcPolyMesh* pmesh = (rcPolyMesh*)rcAlloc(sizeof(rcPolyMesh), RC_ALLOC_PERM);
-	memset(pmesh, 0, sizeof(rcPolyMesh));
-	return pmesh;
+	return rcNew<rcPolyMesh>(RC_ALLOC_PERM);
 }
-
 void rcFreePolyMesh(rcPolyMesh* pmesh)
 {
-	if (!pmesh) return;
-	rcFree(pmesh->verts);
-	rcFree(pmesh->polys);
-	rcFree(pmesh->regs);
-	rcFree(pmesh->flags);
-	rcFree(pmesh->areas);
-	rcFree(pmesh);
+	rcDelete(pmesh);
+}
+
+rcPolyMesh::rcPolyMesh()
+	: verts(),
+	polys(),
+	regs(),
+	flags(),
+	areas(),
+	nverts(),
+	npolys(),
+	maxpolys(),
+	nvp(),
+	bmin(),
+	bmax(),
+	cs(),
+	ch(),
+	borderSize(),
+	maxEdgeError() {}
+
+rcPolyMesh::~rcPolyMesh()
+{
+	rcFree(verts);
+	rcFree(polys);
+	rcFree(regs);
+	rcFree(flags);
+	rcFree(areas);
 }
 
 rcPolyMeshDetail* rcAllocPolyMeshDetail()
@@ -142,7 +270,6 @@ void rcFreePolyMeshDetail(rcPolyMeshDetail* dmesh)
 	rcFree(dmesh->tris);
 	rcFree(dmesh);
 }
-
 
 void rcCalcBounds(const float* verts, int nv, float* bmin, float* bmax)
 {
@@ -163,12 +290,16 @@ void rcCalcGridSize(const float* bmin, const float* bmax, float cs, int* w, int*
 	*h = (int)((bmax[2] - bmin[2])/cs+0.5f);
 }
 
-bool rcCreateHeightfield(rcContext* /*ctx*/, rcHeightfield& hf, int width, int height,
+/// @par
+///
+/// See the #rcConfig documentation for more information on the configuration parameters.
+/// 
+/// @see rcAllocHeightfield, rcHeightfield 
+bool rcCreateHeightfield(rcContext* ctx, rcHeightfield& hf, int width, int height,
 						 const float* bmin, const float* bmax,
 						 float cs, float ch)
 {
-	// TODO: VC complains about unref formal variable, figure out a way to handle this better.
-//	rcAssert(ctx);
+	rcIgnoreUnused(ctx);
 	
 	hf.width = width;
 	hf.height = height;
@@ -192,13 +323,21 @@ static void calcTriNormal(const float* v0, const float* v1, const float* v2, flo
 	rcVnormalize(norm);
 }
 
-void rcMarkWalkableTriangles(rcContext* /*ctx*/, const float walkableSlopeAngle,
-							 const float* verts, int /*nv*/,
+/// @par
+///
+/// Only sets the area id's for the walkable triangles.  Does not alter the
+/// area id's for unwalkable triangles.
+/// 
+/// See the #rcConfig documentation for more information on the configuration parameters.
+/// 
+/// @see rcHeightfield, rcClearUnwalkableTriangles, rcRasterizeTriangles
+void rcMarkWalkableTriangles(rcContext* ctx, const float walkableSlopeAngle,
+							 const float* verts, int nv,
 							 const int* tris, int nt,
 							 unsigned char* areas)
 {
-	// TODO: VC complains about unref formal variable, figure out a way to handle this better.
-//	rcAssert(ctx);
+	rcIgnoreUnused(ctx);
+	rcIgnoreUnused(nv);
 	
 	const float walkableThr = cosf(walkableSlopeAngle/180.0f*RC_PI);
 
@@ -214,13 +353,20 @@ void rcMarkWalkableTriangles(rcContext* /*ctx*/, const float walkableSlopeAngle,
 	}
 }
 
-void rcClearUnwalkableTriangles(rcContext* /*ctx*/, const float walkableSlopeAngle,
+/// @par
+///
+/// Only sets the area id's for the unwalkable triangles.  Does not alter the
+/// area id's for walkable triangles.
+/// 
+/// See the #rcConfig documentation for more information on the configuration parameters.
+/// 
+/// @see rcHeightfield, rcClearUnwalkableTriangles, rcRasterizeTriangles
+void rcClearUnwalkableTriangles(rcContext* ctx, const float walkableSlopeAngle,
 								const float* verts, int /*nv*/,
 								const int* tris, int nt,
 								unsigned char* areas)
 {
-	// TODO: VC complains about unref formal variable, figure out a way to handle this better.
-//	rcAssert(ctx);
+	rcIgnoreUnused(ctx);
 	
 	const float walkableThr = cosf(walkableSlopeAngle/180.0f*RC_PI);
 	
@@ -236,10 +382,9 @@ void rcClearUnwalkableTriangles(rcContext* /*ctx*/, const float walkableSlopeAng
 	}
 }
 
-int rcGetHeightFieldSpanCount(rcContext* /*ctx*/, rcHeightfield& hf)
+int rcGetHeightFieldSpanCount(rcContext* ctx, rcHeightfield& hf)
 {
-	// TODO: VC complains about unref formal variable, figure out a way to handle this better.
-//	rcAssert(ctx);
+	rcIgnoreUnused(ctx);
 	
 	const int w = hf.width;
 	const int h = hf.height;
@@ -258,12 +403,21 @@ int rcGetHeightFieldSpanCount(rcContext* /*ctx*/, rcHeightfield& hf)
 	return spanCount;
 }
 
+/// @par
+///
+/// This is just the beginning of the process of fully building a compact heightfield.
+/// Various filters may be applied, then the distance field and regions built.
+/// E.g: #rcBuildDistanceField and #rcBuildRegions
+///
+/// See the #rcConfig documentation for more information on the configuration parameters.
+///
+/// @see rcAllocCompactHeightfield, rcHeightfield, rcCompactHeightfield, rcConfig
 bool rcBuildCompactHeightfield(rcContext* ctx, const int walkableHeight, const int walkableClimb,
 							   rcHeightfield& hf, rcCompactHeightfield& chf)
 {
 	rcAssert(ctx);
 	
-	ctx->startTimer(RC_TIMER_BUILD_COMPACTHEIGHTFIELD);
+	rcScopedTimer timer(ctx, RC_TIMER_BUILD_COMPACTHEIGHTFIELD);
 	
 	const int w = hf.width;
 	const int h = hf.height;
@@ -369,13 +523,13 @@ bool rcBuildCompactHeightfield(rcContext* ctx, const int walkableHeight, const i
 						if ((top - bot) >= walkableHeight && rcAbs((int)ns.y - (int)s.y) <= walkableClimb)
 						{
 							// Mark direction as walkable.
-							const int idx = k - (int)nc.index;
-							if (idx < 0 || idx > MAX_LAYERS)
+							const int lidx = k - (int)nc.index;
+							if (lidx < 0 || lidx > MAX_LAYERS)
 							{
-								tooHighNeighbour = rcMax(tooHighNeighbour, idx);
+								tooHighNeighbour = rcMax(tooHighNeighbour, lidx);
 								continue;
 							}
-							rcSetCon(s, dir, idx);
+							rcSetCon(s, dir, lidx);
 							break;
 						}
 					}
@@ -390,8 +544,6 @@ bool rcBuildCompactHeightfield(rcContext* ctx, const int walkableHeight, const i
 		ctx->log(RC_LOG_ERROR, "rcBuildCompactHeightfield: Heightfield has too many layers %d (max: %d)",
 				 tooHighNeighbour, MAX_LAYERS);
 	}
-		
-	ctx->stopTimer(RC_TIMER_BUILD_COMPACTHEIGHTFIELD);
 	
 	return true;
 }

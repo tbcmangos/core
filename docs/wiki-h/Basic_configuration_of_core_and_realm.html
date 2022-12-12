@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html lang="en-GB" dir="ltr" class="client-nojs">
+
+<!-- Mirrored from wiki.hellground.net/index.php/Basic_configuration_of_core_and_realm by HTTrack Website Copier/3.x [XR&CO'2014], Tue, 12 Apr 2016 10:48:22 GMT -->
+<!-- Added by HTTrack --><meta http-equiv="content-type" content="text/html;charset=UTF-8" /><!-- /Added by HTTrack -->
+<head>
+<title>Basic configuration of core and realm - HellGroundCore MMORPG framework educational and hobby project</title>
+<meta charset="UTF-8" />
+<meta name="generator" content="MediaWiki 1.21.4" />
+<link rel="shortcut icon" href="http://wiki.hellground.net/favicon.ico" />
+<link rel="search" type="application/opensearchdescription+xml" href="http://wiki.hellground.net/opensearch_desc.php" title="HellGroundCore MMORPG framework educational and hobby project (en-gb)" />
+<link rel="EditURI" type="application/rsd+xml" href="http://wiki.hellground.net/api.php?action=rsd" />
+<link rel="alternate" type="application/atom+xml" title="HellGroundCore MMORPG framework educational and hobby project Atom feed" href="http://wiki.hellground.net/index.php?title=Special:RecentChanges&amp;feed=atom" />
+<link rel="stylesheet" href="http://wiki.hellground.net/load.php?debug=false&amp;lang=en-gb&amp;modules=mediawiki.legacy.commonPrint%2Cshared%7Cskins.vector&amp;only=styles&amp;skin=vector&amp;*" />
+<meta name="ResourceLoaderDynamicStyles" content="" />
+<style>a:lang(ar),a:lang(ckb),a:lang(fa),a:lang(kk-arab),a:lang(mzn),a:lang(ps),a:lang(ur){text-decoration:none}
+/* cache key: admin_wikia:resourceloader:filter:minify-css:7:584a0492c58c82e3a4daddd5656471fb */</style>
+
+<script src="http://wiki.hellground.net/load.php?debug=false&amp;lang=en-gb&amp;modules=startup&amp;only=scripts&amp;skin=vector&amp;*"></script>
+<script>if(window.mw){
+mw.config.set({"wgCanonicalNamespace":"","wgCanonicalSpecialPageName":false,"wgNamespaceNumber":0,"wgPageName":"Basic_configuration_of_core_and_realm","wgTitle":"Basic configuration of core and realm","wgCurRevisionId":645,"wgArticleId":8,"wgIsArticle":true,"wgAction":"view","wgUserName":null,"wgUserGroups":["*"],"wgCategories":["Configuration"],"wgBreakFrames":false,"wgPageContentLanguage":"en-gb","wgSeparatorTransformTable":["",""],"wgDigitTransformTable":["",""],"wgDefaultDateFormat":"dmy","wgMonthNames":["","January","February","March","April","May","June","July","August","September","October","November","December"],"wgMonthNamesShort":["","Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"],"wgRelevantPageName":"Basic_configuration_of_core_and_realm","wgRestrictionEdit":[],"wgRestrictionMove":[]});
+}</script><script>if(window.mw){
+mw.loader.implement("user.options",function(){mw.user.options.set({"ccmeonemails":0,"cols":80,"date":"default","diffonly":0,"disablemail":0,"disablesuggest":0,"editfont":"default","editondblclick":0,"editsection":1,"editsectiononrightclick":0,"enotifminoredits":0,"enotifrevealaddr":0,"enotifusertalkpages":1,"enotifwatchlistpages":0,"extendwatchlist":0,"externaldiff":0,"externaleditor":0,"fancysig":0,"forceeditsummary":0,"gender":"unknown","hideminor":0,"hidepatrolled":0,"imagesize":2,"justify":0,"math":1,"minordefault":0,"newpageshidepatrolled":0,"nocache":0,"noconvertlink":0,"norollbackdiff":0,"numberheadings":0,"previewonfirst":0,"previewontop":1,"quickbar":5,"rcdays":7,"rclimit":50,"rememberpassword":0,"rows":25,"searchlimit":20,"showhiddencats":0,"showjumplinks":1,"shownumberswatching":1,"showtoc":1,"showtoolbar":1,"skin":"vector","stubthreshold":0,"thumbsize":2,"underline":2,"uselivepreview":0,"usenewrc":0,"watchcreations":0,"watchdefault":0,"watchdeletion":0,"watchlistdays":3,
+"watchlisthideanons":0,"watchlisthidebots":0,"watchlisthideliu":0,"watchlisthideminor":0,"watchlisthideown":0,"watchlisthidepatrolled":0,"watchmoves":0,"wllimit":250,"variant":"en-gb","language":"en-gb","searchNs0":true,"searchNs1":false,"searchNs2":false,"searchNs3":false,"searchNs4":false,"searchNs5":false,"searchNs6":false,"searchNs7":false,"searchNs8":false,"searchNs9":false,"searchNs10":false,"searchNs11":false,"searchNs12":false,"searchNs13":false,"searchNs14":false,"searchNs15":false});;},{},{});mw.loader.implement("user.tokens",function(){mw.user.tokens.set({"editToken":"+\\","patrolToken":false,"watchToken":false});;},{},{});
+/* cache key: admin_wikia:resourceloader:filter:minify-js:7:811a3adb8f714f1f28210df16d324ee9 */
+}</script>
+<script>if(window.mw){
+mw.loader.load(["mediawiki.page.startup","mediawiki.legacy.wikibits","mediawiki.legacy.ajax"]);
+}</script>
+<!--[if lt IE 7]><style type="text/css">body{behavior:url("/skins/vector/csshover.min.htc")}</style><![endif]--></head>
+<body class="mediawiki ltr sitedir-ltr ns-0 ns-subject page-Basic_configuration_of_core_and_realm skin-vector action-view vector-animateLayout">
+		<div id="mw-page-base" class="noprint"></div>
+		<div id="mw-head-base" class="noprint"></div>
+		<!-- content -->
+		<div id="content" class="mw-body" role="main">
+			<a id="top"></a>
+			<div id="mw-js-message" style="display:none;"></div>
+						<!-- firstHeading -->
+			<h1 id="firstHeading" class="firstHeading" lang="en-gb"><span dir="auto">Basic configuration of core and realm</span></h1>
+			<!-- /firstHeading -->
+			<!-- bodyContent -->
+			<div id="bodyContent">
+								<!-- tagline -->
+				<div id="siteSub">From HellGroundCore MMORPG framework educational and hobby project</div>
+				<!-- /tagline -->
+								<!-- subtitle -->
+				<div id="contentSub"></div>
+				<!-- /subtitle -->
+																<!-- jumpto -->
+				<div id="jump-to-nav" class="mw-jump">
+					Jump to:					<a href="#mw-navigation">navigation</a>, 					<a href="#p-search">search</a>
+				</div>
+				<!-- /jumpto -->
+								<!-- bodycontent -->
+				<div id="mw-content-text" lang="en-GB" dir="ltr" class="mw-content-ltr"><div class="toc" style="float: right; margin-left: 1em; margin-bottom: 1em">
+<p><b>Installation guide</b>
+</p>
+<hr />
+<ul><li><a href="Getting_started.html" title="Getting started">Getting started</a>
+</li><li><a href="Installing_the_game_client.html" title="Installing the game client">Installing the game client</a>
+</li><li><a href="Building_under_Windows.html" title="Building under Windows">Building under Windows</a>
+</li><li><a href="Building_under_Linux.html" title="Building under Linux">Building under Linux</a>
+</li><li><a href="Extracting_client_data.html" title="Extracting client data">Extracting client data</a>
+</li><li><a href="Loading_the_HellGroundDB_database.html" title="Loading the HellGroundDB database">Loading the HellGroundDB database</a>
+</li><li><strong class="selflink">Basic configuration of core and realm</strong>
+</li><li><a href="Starting_your_new_server.html" title="Starting your new server">Starting your new server</a>
+</li><li><a href="Creating_the_administrator_account.html" title="Creating the administrator account">Creating the administrator account</a>
+</li><li><a href="Adding_a_player_account.html" title="Adding a player account">Adding a player account</a>
+</li><li><a href="Network_configuration.html" title="Network configuration">Network configuration</a>
+</li></ul>
+</div>
+<p>In the introduction, we explained that there are two major applications that make up your server software.   Each of these has a configuration file that allow you to tailor the way your server works.  Although the system allows a considerable amount of customization, this article will explain only the settings that are required to start the server for the first time.
+</p><p>After running the server, you may want to change various other aspects of the configuration.  Each section has an extensive list of the options, and possible settings in most cases, that will be available.
+</p><p>Let's begin with the authentication server, <i>hellground-realm</i>.
+</p><p><br />
+</p>
+<table id="toc" class="toc"><tr><td><div id="toctitle"><h2>Contents</h2></div>
+<ul>
+<li class="toclevel-1 tocsection-1"><a href="#hellgroundrealm.conf"><span class="tocnumber">1</span> <span class="toctext">hellgroundrealm.conf</span></a></li>
+<li class="toclevel-1 tocsection-2"><a href="#hellgroundcore.conf"><span class="tocnumber">2</span> <span class="toctext">hellgroundcore.conf</span></a></li>
+<li class="toclevel-1 tocsection-3"><a href="#Using_VMaps"><span class="tocnumber">3</span> <span class="toctext">Using VMaps</span></a></li>
+<li class="toclevel-1 tocsection-4"><a href="#The_realmlist_Table"><span class="tocnumber">4</span> <span class="toctext">The <i>realmlist</i> Table</span></a></li>
+</ul>
+</td></tr></table>
+<h2> <span class="mw-headline" id="hellgroundrealm.conf">hellgroundrealm.conf</span></h2>
+<p>Before we can begin, we have to make a working copy of the configuration file.  The installation process has provided an example, <i>hellgroundrealm.conf.dist</i>.  You can find this in your server directory on Windows, or in your $HOME/etc directory on Linux.
+</p><p>Make a copy of the file, and call it <i>hellgroundrealm.conf</i>.  This will be our actual working configuration.
+</p><p>Initially, your configuration options will look like this:
+</p>
+<pre>
+LoginDatabaseInfo = &quot;127.0.0.1;3306;hellground;hellground;realmd&quot;
+LogsDir = &quot;&quot;
+MaxPingTime = 30
+RealmServerPort = 3724
+BindIP = &quot;0.0.0.0&quot;
+PidFile = &quot;&quot;
+LogLevel = 0
+LogFile = &quot;realmd.log&quot;
+LogTimestamp = 0
+LogFileLevel = 0
+LogColors = &quot;&quot;
+EnableLogDB = 0
+DBLogLevel = 1
+UseProcessors = 0
+ProcessPriority = 1
+RealmsStateUpdateDelay = 20
+WrongPass.MaxCount = 0
+WrongPass.BanTime = 600
+WrongPass.BanType = 0
+</pre>
+<p>While there are a lot of options here, the only required change is to set the LoginDatabaseInfo line.  The format of this line is:
+</p>
+<pre>    DATABASEHOST;DATABSEPORT;DATABASEUSERNAME;DATABASEPASSWORD;DATABASENAME
+</pre>
+<ul><li> If your database is running on the same server as your core, the <i>DATABASEHOST</i> can be left as 127.0.0.1.  If your database is on a different machine, change this to the hostname of the database server.
+</li></ul>
+<ul><li> The <i>DATABASEPORT</i> is the port that your DB server is set to answer on.  For MySQL, the default is 3306.  Unless you have changed your MySQL server configuration, the default can be used here (3306).
+</li></ul>
+<ul><li> It is very good practice to create a new database user for each application that uses the database.  By default, MySQL will create a user called <b>root</b>, and prompt you for a password when you install the database server.  While you can use <i>root</i> as your <i>DATABASEUSERNAME</i>, you really should set up a special user for HellGroundCore.  Regular database-type geeks will laugh at you and call you noob if you use <i>root</i>.
+</li></ul>
+<ul><li> The <i>DATABASEPASSWORD</i> is, of course, the password for our <i>DATABASEUSERNAME</i>.
+</li></ul>
+<ul><li> Last is the <i>DATABASENAME</i>.  Unless you have decided to use a different name for some reason, the authentication database name should be <i>realmd</i>.
+</li></ul>
+<p>Linux users will probably want to set a few more options to keep their $HOME directory in good order.  Suggestions are:
+</p>
+<ul><li> Set your <b>LogsDir</b> to $HOME/log, where $HOME is the full path (/home/hellgroundcore/log, for example).
+</li></ul>
+<ul><li> Set your <b>PidFile</b> to realmd.pid
+</li></ul>
+<p>Two of these options will only apply on the Windows platform:
+</p>
+<ul><li> <b>UseProcessors</b>, which sets the <i>processor affinity</i>.  Unless you have done some serious studying of the Windows infrastructure, this does not do what you think it does.  If you don't know what processor affinity is, leave the default.  If you want to learn about processor affinity, and change it later, an internet search will give you some of the information you will need.  Explaining it here is beyond the scope of this document.
+</li></ul>
+<ul><li> <b>ProcessPriority</b> which sets the priority level of the server process.  We don't want any latency, if we can avoid it, so leave this at 1.
+</li></ul>
+<p><br />
+</p>
+<h2> <span class="mw-headline" id="hellgroundcore.conf">hellgroundcore.conf</span></h2>
+<p>Now let's take a look at the configuration for the world server,<i> hellground-core</i>.
+</p><p>Before we can begin, we have to make a working copy of the configuration file.  The installation process has provided an example, <i>hellgroundcore.conf.dist</i>.  You can find this in your server directory on Windows, or in your $HOME/etc directory on Linux.
+</p><p>Make a copy of the file, and call it <i>hellgroundcore.conf</i>.  This will be our actual working configuration.
+</p><p>The number of options in the <i>hellgroundcore.conf</i> file make it impractical to show the whole file here.  You will need to search for the various required settings in the file as we continue.
+</p><p><br />
+The most important changes to begin with, will be in the <b>CONNECTIONS AND DIRECTORIES</b> section.  Initially, this section will look like this:
+</p>
+<pre>
+RealmID = 1
+DataDir = &quot;.&quot;
+LogsDir = &quot;&quot;
+LoginDatabaseInfo     = &quot;127.0.0.1;3306;hellground;hellground;realmd&quot;
+WorldDatabaseInfo     = &quot;127.0.0.1;3306;hellground;hellground;world&quot;
+CharacterDatabaseInfo = &quot;127.0.0.1;3306;hellground;hellground;characters&quot;
+MaxPingTime = 30
+WorldServerPort = 8085
+BindIP = &quot;0.0.0.0&quot;
+</pre>
+<ul><li> If this is your first server setup, the <b>RealmID</b> will remain <b>1</b>.  The server supports running multiple cores using the same <i>realmd</i> database.  If you set up a second realm, the <b>RealmID</b> is <b>2</b>, and so on.
+</li></ul>
+<ul><li> Set the <b>DataDir</b> to the location of your client extracts.  On Windows, this might be C:\HellGroundCore\Data.  On Linux this will be the full path of $HOME/data (ex: /home/hellgroundcore/data.  
+</li></ul>
+<ul><li> Set the <b>LoginDatabaseInfo</b>, <b>WorldDatabaseInfo</b>, and <b>CharacterDatabaseInfo</b> to the appropriate setting.  The <i>hellgroundrealm.conf</i> section above discusses the database line in detail, these will be set up in a similar fashion.  The <i>DATABASENAME</i>s will be different if you have decided to use other names.
+</li></ul>
+<ul><li> For your first realm, the <b>WorldServerPort</b> should remain <b>8085</b>.  If you set up additional realms on the same server, this port will have to be different for each realm (second realm is 8086, etc)
+</li></ul>
+<ul><li> Unless you have a good reason to change it, <b>BindIP</b> should stay <b>0.0.0.0</b>.  This tells <i>hellground-core</i> what IP address it should listen on.  <b>0.0.0.0</b> means <i>listen on any IP that exists on the machine</i>.  Most of us will not have multiple IP addresses on our machine, so this is an appropriate setting.  If your machine has more than one network interface, and you only want the server to answer using one of them, set this to the IP address that is configured on the network interface that you want to have listening.  If one or more of your network interfaces have more than one IP alias configured, you can further limit the server to listening on only one of those aliases by changing this to the alias address.
+</li></ul>
+<p><br />
+The next section that we need to look at is <b>SERVER LOGGING</b>.  Initially, the section will look like this:
+</p>
+<pre>
+LogSQL = 1
+PidFile = &quot;&quot;
+LogLevel = 1
+LogFile = &quot;Server.log&quot;
+ChatLogFile = &quot;chat.log&quot;
+LogTimestamp = 0
+LogFileLevel = 0
+LogFilter_CreatureMoves = 1
+LogFilter_TransportMoves = 1
+LogFilter_VisibilityChanges = 1
+WorldLogFile = &quot;&quot;
+DBErrorLogFile = &quot;db_errors.log&quot;
+CharLogFile = &quot;characters.log&quot;
+CharLogTimestamp = 0
+CharLogDump = 0
+GmLogFile = &quot;gm_commands.log&quot;
+GmLogTimestamp = 0
+GmLogPerAccount = 0
+RaLogFile = &quot;ra_commands.log&quot;
+ArenaLogFile = &quot;&quot;
+LogColors = &quot;&quot;
+EnableLogDB = 0
+DBLogLevel = 2
+LogDB.Char   = 0
+LogDB.GM     = 0
+LogDB.RA     = 0
+LogDB.World  = 0
+LogDB.Chat   = 0
+ChatLogs.Channel      = 0
+ChatLogs.SysChan      = 0
+ChatLogs.Whisper      = 0
+ChatLogs.Party        = 0
+ChatLogs.Raid         = 0
+ChatLogs.Guild        = 0
+ChatLogs.Public       = 0
+ChatLogs.Addon        = 0
+ChatLogs.BattleGround = 0
+ChatLogTimestamp = 0
+</pre>
+<p>Fortunately, we don't need to make many changes here to get a running server.  On Windows, you may not want to make any changes at all, at this point.  On Linux, we will want to make a few minor changes to keep our $HOME directory neat and tidy.
+</p>
+<ul><li> First set <b>PidFile</b> to something appropriate.  The recommended setting is $HOME/log/cored.pid, with $HOME being the full path (ex: /home/hellgroundcore/log/cored.pid).  Why <i>cored</i>?  Well, it's our <i>core daemon</i>, that's why (actually it is not <i>technically</i> a daemon, but that is a minor point - daemons are background processes, and these programs do not background).
+</li></ul>
+<ul><li> Next, since us Linux types are so tweaky about such things, we want to change the <b>LogFile</b> to match the <b>PidFile</b>.  Let's go with $HOME/log/cored.log (or /home/hellgroundcore/log/cored.log, for example).
+</li></ul>
+<ul><li> Since we're testing a brand new core, let's get a bit more console log detail by setting <b>LogLevel</b> to <b>2</b>.
+</li></ul>
+<p><br />
+</p>
+<h2> <span class="mw-headline" id="Using_VMaps">Using VMaps</span></h2>
+<p>You will recall that earlier in the Guide we created our DBC, Map, and VMap files by extracting data from the client software.  inorder to make use of the VMap (Visual Map) data, we have to enable a few settings in the <b>PERFORMANCE SETINGS</b> section of
+<i>hellgroundcore.conf</i>.  If you choose not to use vmaps (it is optional, but highly recommended that you use them), then you will not need to make these changes.
+</p><p>The section that we are interested in initially looks like this:
+</p>
+<pre>
+vmap.enableLOS = 0
+vmap.enableHeight = 0
+vmap.ignoreMapIds = &quot;&quot;
+vmap.ignoreSpellIds = &quot;7720&quot;
+vmap.petLOS = 0
+vmap.totem = 0
+vmap.enableIndoorCheck = 0
+</pre>
+<p><br />
+To enable vmaps:
+</p>
+<ul><li> Change the <b>vmap.enableLOS</b>, <b>vmap.enableHeight</b>, <b>vmap.petLOS</b>, and <b>vmap.totem</b> settings to <b>1</b>.
+</li></ul>
+<ul><li> To have players dismount when entering buildings, change <b>vmap.enableIndoorCheck</b> to <b>1</b>.  <i>NOTE: This may cause them to dismount in some of the capital cities, and not be able to mount anywhere within the city.</i>
+</li></ul>
+<p><br />
+</p>
+<hr />
+<p><br />
+At this point, we have made the minimal number of configuration file changes.  As you start using the system, you are urged to read through the configuration options to see the rest of the possible changes.
+</p><p><br />
+</p>
+<hr />
+<p><br />
+</p>
+<h2> <span class="mw-headline" id="The_realmlist_Table">The <i>realmlist</i> Table</span></h2>
+<p>Before we can start our new core, we need to make an entry for our realm in the <i><a href="Realmlist.html" title="Realmlist" class="mw-redirect">realmlist</a></i> table.  This table is in the <a href="Category_Realm_database.html" title="Category:Realm database">realm database</a>.
+</p><p>We can accept most of the default settings for our new entry, but we will need to specifically set the <i>name</i> of our realm.  As an example, we will call our realm <b>HellGroundCore</b>.  We will also need to specify the server <i>address</i>.  This can be a dotted-quad IP address, or a fully qualified domain name (FQDN).  For our example, we will use a dotted quad address that is configured on our imaginary server, let's say <b>192.168.1.2</b>.
+</p><p>Using whatever SQL tools works for you, INSERT a record into the realmlist table like this:
+</p>
+<pre>    INSERT INTO `realmlist` (`name`,`address`) VALUES ('HellGroundCore','192.168.1.2');
+</pre>
+<p>You should use your real IP address and name!  If you have a GUI SQL tool, feel free to use it.
+</p><p><br />
+Once we have the realm entry in our realmlist, we're ready to start our new server.
+</p>
+<!-- 
+NewPP limit report
+Preprocessor visited node count: 55/1000000
+Preprocessor generated node count: 112/1000000
+Post‐expand include size: 456/2097152 bytes
+Template argument size: 0/2097152 bytes
+Highest expansion depth: 2/40
+Expensive parser function count: 0/100
+-->
+
+<!-- Saved in parser cache with key admin_wikia:pcache:idhash:8-0!*!0!!en-gb!*!* and timestamp 20160412090004 -->
+</div>				<!-- /bodycontent -->
+								<!-- printfooter -->
+				<div class="printfooter">
+				Retrieved from ‘<a href="http://wiki.hellground.net/index.php?title=Basic_configuration_of_core_and_realm&amp;oldid=645">http://wiki.hellground.net/index.php?title=Basic_configuration_of_core_and_realm&amp;oldid=645</a>’				</div>
+				<!-- /printfooter -->
+												<!-- catlinks -->
+				<div id='catlinks' class='catlinks'><div id="mw-normal-catlinks" class="mw-normal-catlinks"><a href="Special_Categories.html" title="Special:Categories">Category</a>: <ul><li><a href="Category_Configuration.html" title="Category:Configuration">Configuration</a></li></ul></div></div>				<!-- /catlinks -->
+												<div class="visualClear"></div>
+				<!-- debughtml -->
+								<!-- /debughtml -->
+			</div>
+			<!-- /bodyContent -->
+		</div>
+		<!-- /content -->
+		<div id="mw-navigation">
+			<h2>Navigation menu</h2>
+			<!-- header -->
+			<div id="mw-head">
+				
+<!-- 0 -->
+<div id="p-personal" role="navigation" class="">
+	<h3>Personal tools</h3>
+	<ul>
+<li id="pt-login"><a href="http://wiki.hellground.net/index.php?title=Special:UserLogin&amp;returnto=Basic+configuration+of+core+and+realm" title="You are encouraged to log in; however, it is not mandatory [o]" accesskey="o">Log in</a></li>	</ul>
+</div>
+
+<!-- /0 -->
+				<div id="left-navigation">
+					
+<!-- 0 -->
+<div id="p-namespaces" role="navigation" class="vectorTabs">
+	<h3>Namespaces</h3>
+	<ul>
+					<li  id="ca-nstab-main" class="selected"><span><a href="Basic_configuration_of_core_and_realm.html"  title="View the content page [c]" accesskey="c">Page</a></span></li>
+					<li  id="ca-talk" class="new"><span><a href="http://wiki.hellground.net/index.php?title=Talk:Basic_configuration_of_core_and_realm&amp;action=edit&amp;redlink=1"  title="Discussion about the content page [t]" accesskey="t">Discussion</a></span></li>
+			</ul>
+</div>
+
+<!-- /0 -->
+
+<!-- 1 -->
+<div id="p-variants" role="navigation" class="vectorMenu emptyPortlet">
+	<h3 id="mw-vector-current-variant">
+		</h3>
+	<h3><span>Variants</span><a href="#"></a></h3>
+	<div class="menu">
+		<ul>
+					</ul>
+	</div>
+</div>
+
+<!-- /1 -->
+				</div>
+				<div id="right-navigation">
+					
+<!-- 0 -->
+<div id="p-views" role="navigation" class="vectorTabs">
+	<h3>Views</h3>
+	<ul>
+					<li id="ca-view" class="selected"><span><a href="Basic_configuration_of_core_and_realm.html" >Read</a></span></li>
+					<li id="ca-viewsource"><span><a href="http://wiki.hellground.net/index.php?title=Basic_configuration_of_core_and_realm&amp;action=edit"  title="This page is protected.&#10;You can view its source [e]" accesskey="e">View source</a></span></li>
+					<li id="ca-history" class="collapsible"><span><a href="http://wiki.hellground.net/index.php?title=Basic_configuration_of_core_and_realm&amp;action=history"  title="Past revisions of this page [h]" accesskey="h">View history</a></span></li>
+			</ul>
+</div>
+
+<!-- /0 -->
+
+<!-- 1 -->
+<div id="p-cactions" role="navigation" class="vectorMenu emptyPortlet">
+	<h3><span>Actions</span><a href="#"></a></h3>
+	<div class="menu">
+		<ul>
+					</ul>
+	</div>
+</div>
+
+<!-- /1 -->
+
+<!-- 2 -->
+
+
+<!-- /2 -->
+				</div>
+			</div>
+			<!-- /header -->
+			<!-- panel -->
+			<div id="mw-panel">
+				<!-- logo -->
+					<div id="p-logo" role="banner"><a style="background-image: url(../skins/common/images/wiki.png);" href="Main_Page.html"  title="Visit the main page"></a></div>
+				<!-- /logo -->
+				
+<!-- navigation -->
+<div class="portal" role="navigation" id='p-navigation'>
+	<h3>Navigation</h3>
+	<div class="body">
+		<ul>
+			<li id="n-mainpage-description"><a href="Main_Page.html" title="Visit the main page [z]" accesskey="z">Main page</a></li>
+			<li id="n-randompage"><a href="Spell_required.html" title="Load a random page [x]" accesskey="x">Random page</a></li>
+		</ul>
+	</div>
+</div>
+
+<!-- /navigation -->
+
+<!-- HellGroundCore -->
+<div class="portal" role="navigation" id='p-HellGroundCore'>
+	<h3>HellGroundCore</h3>
+	<div class="body">
+		<ul>
+			<li id="n-Project-site"><a href="https://hellground.net/" rel="nofollow">Project site</a></li>
+			<li id="n-Project--forum"><a href="http://forum.hellground.net/" rel="nofollow">Project  forum</a></li>
+			<li id="n-Project-repositories"><a href="http://emu.hellground.net/" rel="nofollow">Project repositories</a></li>
+			<li id="n-Project-bug-tracker"><a href="http://forum.hellground.net/" rel="nofollow">Project bug tracker</a></li>
+		</ul>
+	</div>
+</div>
+
+<!-- /HellGroundCore -->
+
+<!-- SEARCH -->
+
+<!-- /SEARCH -->
+
+<!-- TOOLBOX -->
+<div class="portal" role="navigation" id='p-tb'>
+	<h3>Tools</h3>
+	<div class="body">
+		<ul>
+			<li id="t-whatlinkshere"><a href="Special_WhatLinksHere/Basic_configuration_of_core_and_realm.html" title="A list of all wiki pages that link here [j]" accesskey="j">What links here</a></li>
+			<li id="t-recentchangeslinked"><a href="Special_RecentChangesLinked/Basic_configuration_of_core_and_realm.html" title="Recent changes in pages linked from this page [k]" accesskey="k">Related changes</a></li>
+			<li id="t-specialpages"><a href="Special_SpecialPages.html" title="A list of all special pages [q]" accesskey="q">Special pages</a></li>
+			<li id="t-print"><a href="http://wiki.hellground.net/index.php?title=Basic_configuration_of_core_and_realm&amp;printable=yes" rel="alternate" title="Printable version of this page [p]" accesskey="p">Printable version</a></li>
+			<li id="t-permalink"><a href="http://wiki.hellground.net/index.php?title=Basic_configuration_of_core_and_realm&amp;oldid=645" title="Permanent link to this revision of the page">Permanent link</a></li>
+			<li id="t-info"><a href="http://wiki.hellground.net/index.php?title=Basic_configuration_of_core_and_realm&amp;action=info">Page information</a></li>
+		</ul>
+	</div>
+</div>
+
+<!-- /TOOLBOX -->
+
+<!-- LANGUAGES -->
+
+<!-- /LANGUAGES -->
+			</div>
+			<!-- /panel -->
+		</div>
+		<!-- footer -->
+		<div id="footer" role="contentinfo">
+							<ul id="footer-info">
+											<li id="footer-info-lastmod"> This page was last modified on 21 February 2014, at 04:57.</li>
+											<li id="footer-info-viewcount">This page has been accessed 858 times.</li>
+									</ul>
+							<ul id="footer-places">
+											<li id="footer-places-privacy"><a href="TBC_HellGroundCore_Privacy_policy.html" title="TBC HellGroundCore:Privacy policy">Privacy policy</a></li>
+											<li id="footer-places-about"><a href="TBC_HellGroundCore_About.html" title="TBC HellGroundCore:About">About HellGroundCore MMORPG framework educational and hobby project</a></li>
+											<li id="footer-places-disclaimer"><a href="TBC_HellGroundCore_General_disclaimer.html" title="TBC HellGroundCore:General disclaimer">Disclaimers</a></li>
+									</ul>
+										<ul id="footer-icons" class="noprint">
+					<li id="footer-poweredbyico">
+						<a href="http://www.mediawiki.org/"><img src="../skins/common/images/poweredby_mediawiki_88x31.png" alt="Powered by MediaWiki" width="88" height="31" /></a>
+					</li>
+				</ul>
+						<div style="clear:both"></div>
+		</div>
+		<!-- /footer -->
+		<script>if(window.mw){
+mw.loader.state({"site":"loading","user":"missing","user.groups":"ready"});
+}</script>
+<script>if(window.mw){
+mw.loader.load(["mediawiki.action.view.postEdit","mediawiki.user","mediawiki.page.ready","mediawiki.searchSuggest","mediawiki.hidpi","skins.vector.js"], null, true);
+}</script>
+<script>if(window.mw){
+mw.loader.state({"site":"ready"});
+}</script>
+<!-- Served in 0.061 secs. -->
+	</body>
+
+<!-- Mirrored from wiki.hellground.net/index.php/Basic_configuration_of_core_and_realm by HTTrack Website Copier/3.x [XR&CO'2014], Tue, 12 Apr 2016 10:48:23 GMT -->
+</html>

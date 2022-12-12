@@ -174,5 +174,5 @@ class GameEventMgr
 #define sGameEventMgr (*ACE_Singleton<GameEventMgr, ACE_Null_Mutex>::instance())
 #endif
 
-HELLGROUND_IMPORT_EXPORT bool isGameEventActive(uint16 event_id);
-HELLGROUND_IMPORT_EXPORT void HandleWorldEventGossip(Player*, Creature*);
+ bool isGameEventActive(uint16 event_id);
+ void HandleWorldEventGossip(Player*, Creature*);

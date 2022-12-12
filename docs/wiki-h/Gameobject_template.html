@@ -1,0 +1,934 @@
+<!DOCTYPE html>
+<html lang="en-GB" dir="ltr" class="client-nojs">
+
+<!-- Mirrored from wiki.hellground.net/index.php/Gameobject_template by HTTrack Website Copier/3.x [XR&CO'2014], Tue, 12 Apr 2016 10:51:29 GMT -->
+<!-- Added by HTTrack --><meta http-equiv="content-type" content="text/html;charset=UTF-8" /><!-- /Added by HTTrack -->
+<head>
+<title>gameobject_template - HellGroundCore MMORPG framework educational and hobby project</title>
+<meta charset="UTF-8" />
+<meta name="generator" content="MediaWiki 1.21.4" />
+<link rel="shortcut icon" href="http://wiki.hellground.net/favicon.ico" />
+<link rel="search" type="application/opensearchdescription+xml" href="http://wiki.hellground.net/opensearch_desc.php" title="HellGroundCore MMORPG framework educational and hobby project (en-gb)" />
+<link rel="EditURI" type="application/rsd+xml" href="http://wiki.hellground.net/api.php?action=rsd" />
+<link rel="alternate" type="application/atom+xml" title="HellGroundCore MMORPG framework educational and hobby project Atom feed" href="http://wiki.hellground.net/index.php?title=Special:RecentChanges&amp;feed=atom" />
+<link rel="stylesheet" href="http://wiki.hellground.net/load.php?debug=false&amp;lang=en-gb&amp;modules=mediawiki.legacy.commonPrint%2Cshared%7Cskins.vector&amp;only=styles&amp;skin=vector&amp;*" />
+<meta name="ResourceLoaderDynamicStyles" content="" />
+<style>a:lang(ar),a:lang(ckb),a:lang(fa),a:lang(kk-arab),a:lang(mzn),a:lang(ps),a:lang(ur){text-decoration:none}
+/* cache key: admin_wikia:resourceloader:filter:minify-css:7:584a0492c58c82e3a4daddd5656471fb */</style>
+
+<script src="http://wiki.hellground.net/load.php?debug=false&amp;lang=en-gb&amp;modules=startup&amp;only=scripts&amp;skin=vector&amp;*"></script>
+<script>if(window.mw){
+mw.config.set({"wgCanonicalNamespace":"","wgCanonicalSpecialPageName":false,"wgNamespaceNumber":0,"wgPageName":"Gameobject_template","wgTitle":"Gameobject template","wgCurRevisionId":1171,"wgArticleId":165,"wgIsArticle":true,"wgAction":"view","wgUserName":null,"wgUserGroups":["*"],"wgCategories":["World database","Database tables"],"wgBreakFrames":false,"wgPageContentLanguage":"en-gb","wgSeparatorTransformTable":["",""],"wgDigitTransformTable":["",""],"wgDefaultDateFormat":"dmy","wgMonthNames":["","January","February","March","April","May","June","July","August","September","October","November","December"],"wgMonthNamesShort":["","Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"],"wgRelevantPageName":"Gameobject_template","wgRestrictionEdit":[],"wgRestrictionMove":[]});
+}</script><script>if(window.mw){
+mw.loader.implement("user.options",function(){mw.user.options.set({"ccmeonemails":0,"cols":80,"date":"default","diffonly":0,"disablemail":0,"disablesuggest":0,"editfont":"default","editondblclick":0,"editsection":1,"editsectiononrightclick":0,"enotifminoredits":0,"enotifrevealaddr":0,"enotifusertalkpages":1,"enotifwatchlistpages":0,"extendwatchlist":0,"externaldiff":0,"externaleditor":0,"fancysig":0,"forceeditsummary":0,"gender":"unknown","hideminor":0,"hidepatrolled":0,"imagesize":2,"justify":0,"math":1,"minordefault":0,"newpageshidepatrolled":0,"nocache":0,"noconvertlink":0,"norollbackdiff":0,"numberheadings":0,"previewonfirst":0,"previewontop":1,"quickbar":5,"rcdays":7,"rclimit":50,"rememberpassword":0,"rows":25,"searchlimit":20,"showhiddencats":0,"showjumplinks":1,"shownumberswatching":1,"showtoc":1,"showtoolbar":1,"skin":"vector","stubthreshold":0,"thumbsize":2,"underline":2,"uselivepreview":0,"usenewrc":0,"watchcreations":0,"watchdefault":0,"watchdeletion":0,"watchlistdays":3,
+"watchlisthideanons":0,"watchlisthidebots":0,"watchlisthideliu":0,"watchlisthideminor":0,"watchlisthideown":0,"watchlisthidepatrolled":0,"watchmoves":0,"wllimit":250,"variant":"en-gb","language":"en-gb","searchNs0":true,"searchNs1":false,"searchNs2":false,"searchNs3":false,"searchNs4":false,"searchNs5":false,"searchNs6":false,"searchNs7":false,"searchNs8":false,"searchNs9":false,"searchNs10":false,"searchNs11":false,"searchNs12":false,"searchNs13":false,"searchNs14":false,"searchNs15":false});;},{},{});mw.loader.implement("user.tokens",function(){mw.user.tokens.set({"editToken":"+\\","patrolToken":false,"watchToken":false});;},{},{});
+/* cache key: admin_wikia:resourceloader:filter:minify-js:7:811a3adb8f714f1f28210df16d324ee9 */
+}</script>
+<script>if(window.mw){
+mw.loader.load(["mediawiki.page.startup","mediawiki.legacy.wikibits","mediawiki.legacy.ajax"]);
+}</script>
+<!--[if lt IE 7]><style type="text/css">body{behavior:url("/skins/vector/csshover.min.htc")}</style><![endif]--></head>
+<body class="mediawiki ltr sitedir-ltr ns-0 ns-subject page-Gameobject_template skin-vector action-view vector-animateLayout">
+		<div id="mw-page-base" class="noprint"></div>
+		<div id="mw-head-base" class="noprint"></div>
+		<!-- content -->
+		<div id="content" class="mw-body" role="main">
+			<a id="top"></a>
+			<div id="mw-js-message" style="display:none;"></div>
+						<!-- firstHeading -->
+			<h1 id="firstHeading" class="firstHeading" lang="en-gb"><span dir="auto">gameobject_template</span></h1>
+			<!-- /firstHeading -->
+			<!-- bodyContent -->
+			<div id="bodyContent">
+								<!-- tagline -->
+				<div id="siteSub">From HellGroundCore MMORPG framework educational and hobby project</div>
+				<!-- /tagline -->
+								<!-- subtitle -->
+				<div id="contentSub"></div>
+				<!-- /subtitle -->
+																<!-- jumpto -->
+				<div id="jump-to-nav" class="mw-jump">
+					Jump to:					<a href="#mw-navigation">navigation</a>, 					<a href="#p-search">search</a>
+				</div>
+				<!-- /jumpto -->
+								<!-- bodycontent -->
+				<div id="mw-content-text" lang="en-GB" dir="ltr" class="mw-content-ltr"><p><a href="Category_World_database.html" title="Category:World database">&#8592; Back to World database</a>
+</p>
+<div style="float: right; margin-left: 1em"><table id="toc" class="toc"><tr><td><div id="toctitle"><h2>Contents</h2></div>
+<ul>
+<li class="toclevel-1 tocsection-1"><a href="#entry"><span class="tocnumber">1</span> <span class="toctext">entry</span></a></li>
+<li class="toclevel-1 tocsection-2"><a href="#type"><span class="tocnumber">2</span> <span class="toctext">type</span></a></li>
+<li class="toclevel-1 tocsection-3"><a href="#displayId"><span class="tocnumber">3</span> <span class="toctext">displayId</span></a></li>
+<li class="toclevel-1 tocsection-4"><a href="#name"><span class="tocnumber">4</span> <span class="toctext">name</span></a></li>
+<li class="toclevel-1 tocsection-5"><a href="#castBarCaption"><span class="tocnumber">5</span> <span class="toctext">castBarCaption</span></a></li>
+<li class="toclevel-1 tocsection-6"><a href="#faction"><span class="tocnumber">6</span> <span class="toctext">faction</span></a></li>
+<li class="toclevel-1 tocsection-7"><a href="#flags"><span class="tocnumber">7</span> <span class="toctext">flags</span></a></li>
+<li class="toclevel-1 tocsection-8"><a href="#size"><span class="tocnumber">8</span> <span class="toctext">size</span></a></li>
+<li class="toclevel-1 tocsection-9"><a href="#data0-23"><span class="tocnumber">9</span> <span class="toctext">data0-23</span></a></li>
+<li class="toclevel-1 tocsection-10"><a href="#ScriptName"><span class="tocnumber">10</span> <span class="toctext">ScriptName</span></a></li>
+</ul>
+</td></tr></table>
+</div>
+<p>Contains template off all world's objects
+</p>
+<table class="wikitable">
+<caption> `gameobject_template` table rev. 7933
+</caption>
+<tr>
+<th> Field </th>
+<th> Type </th>
+<th> Null </th>
+<th> Key </th>
+<th> Default </th>
+<th> Extra
+</th></tr>
+<tr>
+<td><a href="#entry">entry</a> </td>
+<td> int(11) </td>
+<td> PRI </td>
+<td> NO </td>
+<td> 0 </td>
+<td>
+</td></tr>
+<tr>
+<td><a href="#type">type</a> </td>
+<td> tinyint(3) unsigned </td>
+<td> </td>
+<td> NO </td>
+<td> 0 </td>
+<td>
+</td></tr>
+<tr>
+<td><a href="#displayId">displayId</a> </td>
+<td> mediumint(8) unsigned </td>
+<td> </td>
+<td> NO </td>
+<td> 0 </td>
+<td>
+</td></tr>
+<tr>
+<td><a href="#name">name</a> </td>
+<td> varchar(100) </td>
+<td> MUL </td>
+<td> NO </td>
+<td> </td>
+<td>
+</td></tr>
+<tr>
+<td><a href="#castBarCaption">castBarCaption</a> </td>
+<td> varchar(100) </td>
+<td> </td>
+<td> NO </td>
+<td> </td>
+<td>
+</td></tr>
+<tr>
+<td><a href="#faction">faction</a> </td>
+<td> smallint(5) unsigned </td>
+<td> </td>
+<td> NO </td>
+<td> 0 </td>
+<td>
+</td></tr>
+<tr>
+<td><a href="#flags">flags</a> </td>
+<td> int(10) unsigned </td>
+<td> </td>
+<td> NO </td>
+<td> 0 </td>
+<td>
+</td></tr>
+<tr>
+<td><a href="#size">size</a> </td>
+<td> float </td>
+<td> </td>
+<td> NO </td>
+<td> 1 </td>
+<td>
+</td></tr>
+<tr>
+<td><a href="#data0-23">data0</a> </td>
+<td> int(10) unsigned </td>
+<td> </td>
+<td> NO </td>
+<td> 0 </td>
+<td>
+</td></tr>
+<tr>
+<td><a href="#data0-23">data1</a> </td>
+<td> int(10) unsigned </td>
+<td> </td>
+<td> NO </td>
+<td> 0 </td>
+<td>
+</td></tr>
+<tr>
+<td><a href="#data0-23">data2</a> </td>
+<td> int(10) unsigned </td>
+<td> </td>
+<td> NO </td>
+<td> 0 </td>
+<td>
+</td></tr>
+<tr>
+<td><a href="#data0-23">data3</a> </td>
+<td> int(10) unsigned </td>
+<td> </td>
+<td> NO </td>
+<td> 0 </td>
+<td>
+</td></tr>
+<tr>
+<td><a href="#data0-23">data4</a> </td>
+<td> int(10) unsigned </td>
+<td> </td>
+<td> NO </td>
+<td> 0 </td>
+<td>
+</td></tr>
+<tr>
+<td><a href="#data0-23">data5</a> </td>
+<td> int(10) unsigned </td>
+<td> </td>
+<td> NO </td>
+<td> 0 </td>
+<td>
+</td></tr>
+<tr>
+<td><a href="#data0-23">data6</a> </td>
+<td> int(10) unsigned </td>
+<td> </td>
+<td> NO </td>
+<td> 0 </td>
+<td>
+</td></tr>
+<tr>
+<td><a href="#data0-23">data7</a> </td>
+<td> int(10) unsigned </td>
+<td> </td>
+<td> NO </td>
+<td> 0 </td>
+<td>
+</td></tr>
+<tr>
+<td><a href="#data0-23">data8</a> </td>
+<td> int(10) unsigned </td>
+<td> </td>
+<td> NO </td>
+<td> 0 </td>
+<td>
+</td></tr>
+<tr>
+<td><a href="#data0-23">data9</a> </td>
+<td> int(10) unsigned </td>
+<td> </td>
+<td> NO </td>
+<td> 0 </td>
+<td>
+</td></tr>
+<tr>
+<td><a href="#data0-23">data10</a> </td>
+<td> int(10) unsigned </td>
+<td> </td>
+<td> NO </td>
+<td> 0 </td>
+<td>
+</td></tr>
+<tr>
+<td><a href="#data0-23">data11</a> </td>
+<td> int(10) unsigned </td>
+<td> </td>
+<td> NO </td>
+<td> 0 </td>
+<td>
+</td></tr>
+<tr>
+<td><a href="#data0-23">data12</a> </td>
+<td> int(10) unsigned </td>
+<td> </td>
+<td> NO </td>
+<td> 0 </td>
+<td>
+</td></tr>
+<tr>
+<td><a href="#data0-23">data13</a> </td>
+<td> int(10) unsigned </td>
+<td> </td>
+<td> NO </td>
+<td> 0 </td>
+<td>
+</td></tr>
+<tr>
+<td><a href="#data0-23">data14</a> </td>
+<td> int(10) unsigned </td>
+<td> </td>
+<td> NO </td>
+<td> 0 </td>
+<td>
+</td></tr>
+<tr>
+<td><a href="#data0-23">data15</a> </td>
+<td> int(10) unsigned </td>
+<td> </td>
+<td> NO </td>
+<td> 0 </td>
+<td>
+</td></tr>
+<tr>
+<td><a href="#data0-23">data16</a> </td>
+<td> int(10) unsigned </td>
+<td> </td>
+<td> NO </td>
+<td> 0 </td>
+<td>
+</td></tr>
+<tr>
+<td><a href="#data0-23">data17</a> </td>
+<td> int(10) unsigned </td>
+<td> </td>
+<td> NO </td>
+<td> 0 </td>
+<td>
+</td></tr>
+<tr>
+<td><a href="#data0-23">data18</a> </td>
+<td> int(10) unsigned </td>
+<td> </td>
+<td> NO </td>
+<td> 0 </td>
+<td>
+</td></tr>
+<tr>
+<td><a href="#data0-23">data19</a> </td>
+<td> int(10) unsigned </td>
+<td> </td>
+<td> NO </td>
+<td> 0 </td>
+<td>
+</td></tr>
+<tr>
+<td><a href="#data0-23">data20</a> </td>
+<td> int(10) unsigned </td>
+<td> </td>
+<td> NO </td>
+<td> 0 </td>
+<td>
+</td></tr>
+<tr>
+<td><a href="#data0-23">data21</a> </td>
+<td> int(10) unsigned </td>
+<td> </td>
+<td> NO </td>
+<td> 0 </td>
+<td>
+</td></tr>
+<tr>
+<td><a href="#data0-23">data22</a> </td>
+<td> int(10) unsigned </td>
+<td> </td>
+<td> NO </td>
+<td> 0 </td>
+<td>
+</td></tr>
+<tr>
+<td><a href="#data0-23">data23</a> </td>
+<td> int(10) unsigned </td>
+<td> </td>
+<td> NO </td>
+<td> 0 </td>
+<td>
+</td></tr>
+<tr>
+<td><a href="#ScriptName">ScriptName</a> </td>
+<td> varchar(64) </td>
+<td> </td>
+<td> NO </td>
+<td> </td>
+<td>
+</td></tr></table>
+<h4> <span class="mw-headline" id="entry">entry</span></h4>
+<p>Id of the gameobject template
+</p>
+<h4> <span class="mw-headline" id="type">type</span></h4>
+<pre>
+   GAMEOBJECT_TYPE_DOOR               = 0
+   GAMEOBJECT_TYPE_BUTTON             = 1
+   GAMEOBJECT_TYPE_QUESTGIVER         = 2
+   GAMEOBJECT_TYPE_CHEST              = 3
+   GAMEOBJECT_TYPE_BINDER             = 4
+   GAMEOBJECT_TYPE_GENERIC            = 5
+   GAMEOBJECT_TYPE_TRAP               = 6
+   GAMEOBJECT_TYPE_CHAIR              = 7
+   GAMEOBJECT_TYPE_SPELL_FOCUS        = 8
+   GAMEOBJECT_TYPE_TEXT               = 9
+   GAMEOBJECT_TYPE_GOOBER             = 10
+   GAMEOBJECT_TYPE_TRANSPORT          = 11
+   GAMEOBJECT_TYPE_AREADAMAGE         = 12
+   GAMEOBJECT_TYPE_CAMERA             = 13
+   GAMEOBJECT_TYPE_MAP_OBJECT         = 14
+   GAMEOBJECT_TYPE_MO_TRANSPORT       = 15
+   GAMEOBJECT_TYPE_DUEL_ARBITER       = 16
+   GAMEOBJECT_TYPE_FISHINGNODE        = 17
+   GAMEOBJECT_TYPE_RITUAL             = 18
+   GAMEOBJECT_TYPE_MAILBOX            = 19
+   GAMEOBJECT_TYPE_AUCTIONHOUSE       = 20
+   GAMEOBJECT_TYPE_GUARDPOST          = 21
+   GAMEOBJECT_TYPE_SPELLCASTER        = 22
+   GAMEOBJECT_TYPE_MEETINGSTONE       = 23
+   GAMEOBJECT_TYPE_FLAGSTAND          = 24
+   GAMEOBJECT_TYPE_FISHINGHOLE        = 25
+   GAMEOBJECT_TYPE_FLAGDROP           = 26
+   GAMEOBJECT_TYPE_MINI_GAME          = 27
+   GAMEOBJECT_TYPE_LOTTERY_KIOSK      = 28
+   GAMEOBJECT_TYPE_CAPTURE_POINT      = 29
+   GAMEOBJECT_TYPE_AURA_GENERATOR     = 30
+   GAMEOBJECT_TYPE_DUNGEON_DIFFICULTY = 31
+   GAMEOBJECT_TYPE_BARBER_CHAIR       = 32
+   GAMEOBJECT_TYPE_DESTRUCTIBLE_BUILDING = 33
+   GAMEOBJECT_TYPE_GUILD_BANK         = 34
+</pre>
+<h4> <span class="mw-headline" id="displayId">displayId</span></h4>
+<p>Graphic model id sent to the client from GameObjectDisplayInfo.dbc.
+</p>
+<h4> <span class="mw-headline" id="name">name</span></h4>
+<p>Object's name
+</p>
+<h4> <span class="mw-headline" id="castBarCaption">castBarCaption</span></h4>
+<p>Shows unique text in the object's casting bar when the object is used.
+</p>
+<h4> <span class="mw-headline" id="faction">faction</span></h4>
+<p>Object's faction, if any. See <a href="FactionTemplate.html" title="FactionTemplate.dbc">FactionTemplate.dbc</a>
+</p>
+<h4> <span class="mw-headline" id="flags">flags</span></h4>
+<ul><li> 1 = in use (can't interact with the object)
+</li><li> 2 = Makes chests/doors locked (requiring a key, spell, event to open)
+</li><li> 4 = Untargetable
+</li><li> 8 = Transport (Object can transport (elevator, boat, car))
+</li><li> 32 = No despawn (never despawn, typically for doors, they just change state)
+</li><li> 64 = Triggered (typically, summoned objects. Triggered by spell or other events)
+</li></ul>
+<p>NOTE: All chests that contain only quest loots need to have flag 4 set as the core will only allow players who have the quest in their questlog to loot them.
+</p>
+<h4> <span class="mw-headline" id="size">size</span></h4>
+<p>Object's size must be set because graphic models can be resample.
+</p>
+<h4> <span class="mw-headline" id="data0-23">data0-23</span></h4>
+<p>The content of the data fields depends on the <a href="#type">gameobject type</a>
+</p>
+<ul><li> <b>GAMEOBJECT_TYPE_DOOR = 0</b>
+<ul><li>data0:  startOpen (Boolean flag)
+</li><li>data1:  open (LockId from <a href="Lock.html" title="Lock.dbc">Lock.dbc</a>)
+</li><li>data2:  autoClose (long unknown flag)
+</li><li>data3:  noDamageImmune (Boolean flag)
+</li><li>data4:  openTextID (Unknown Text ID)
+</li><li>data5:  closeTextID (Unknown Text ID)
+</li></ul>
+</li></ul>
+<p><br />
+</p>
+<ul><li> <b>GAMEOBJECT_TYPE_BUTTON = 1</b>
+<ul><li>data0:  startOpen (State)
+</li><li>data1:  open (LockId from <a href="Lock.html" title="Lock.dbc">Lock.dbc</a>)
+</li><li>data2:  autoClose (long unknown flag)
+</li><li>data3:  linkedTrap (<a href="Gameobject_template.html#entry" title="Gameobject template">gameobject_template.entry</a> (Spawned GO type 6))
+</li><li>data4:  noDamageImmune (Boolean flag)
+</li><li>data5:  large? (Boolean flag)
+</li><li>data6:  openTextID (Unknown Text ID)
+</li><li>data7:  closeTextID (Unknown Text ID)
+</li><li>data8:  losOK (Boolean flag)
+</li></ul>
+</li></ul>
+<p><br />
+</p>
+<ul><li> <b>GAMEOBJECT_TYPE_QUESTGIVER = 2</b>
+<ul><li>data0:  open (LockId from <a href="Lock.html" title="Lock.dbc">Lock.dbc</a>)
+</li><li>data1:  questList (unknown ID)
+</li><li>data2:  pageMaterial (<a href="PageTextMaterial.html" title="PageTextMaterial.dbc">PageTextMaterial.dbc</a>)
+</li><li>data3:  gossipID (unknown ID)
+</li><li>data4:  customAnim (unknown value from 1 to 4)
+</li><li>data5:  noDamageImmune (Boolean flag)
+</li><li>data6:  openTextID (Unknown Text ID)
+</li><li>data7:  losOK (Boolean flag)
+</li><li>data8:  allowMounted (Boolean flag)
+</li><li>data9:  large? (Boolean flag)
+</li></ul>
+</li></ul>
+<p><br />
+</p>
+<ul><li> <b>GAMEOBJECT_TYPE_CHEST = 3</b>
+<ul><li>data0:  open (LockId from <a href="Lock.html" title="Lock.dbc">Lock.dbc</a>)
+</li><li>data1:  chestLoot (<a href="Loot_Template_tables.html#entry" title="Loot Template tables">gameobject_loot_template.entry</a>) *This field is obtained from WDB data and is not to be changed*
+</li><li>data2:  chestRestockTime (time in seconds)
+</li><li>data3:  consumable (State: Boolean flag)
+</li><li>data4:  minRestock (Min successful loot attempts for Mining, Herbalism etc)
+</li><li>data5:  maxRestock (Max successful loot attempts for Mining, Herbalism etc)
+</li><li>data6:  lootedEvent (unknown ID)
+</li><li>data7:  linkedTrap (<a href="Gameobject_template.html#entry" title="Gameobject template">gameobject_template.entry</a> (Spawned GO type 6))
+</li><li>data8:  questID (<a href="Quest_template.html#entry" title="Quest template">quest_template.entry</a> of completed quest) 
+</li><li>data9:  level (minimal level required to open this gameobject)
+</li><li>data10:  losOK (Boolean flag)
+</li><li>data11:  leaveLoot (Boolean flag)
+</li><li>data12:  notInCombat (Boolean flag)
+</li><li>data13:  log loot (Boolean flag)
+</li><li>data14:  openTextID (Unknown ID)
+</li><li>data15:  use group loot rules (Boolean flag)
+</li></ul>
+</li></ul>
+<p><br />
+</p>
+<ul><li> <b>GAMEOBJECT_TYPE_BINDER = 4</b>
+</li></ul>
+<p>Object type not used
+</p><p><br />
+</p>
+<ul><li> <b>GAMEOBJECT_TYPE_GENERIC = 5</b>
+<ul><li>data0:  floatingTooltip (Boolean flag)
+</li><li>data1:  highlight (Boolean flag)
+</li><li>data2:  serverOnly? (Always 0)
+</li><li>data3:  large? (Boolean flag)
+</li><li>data4:  floatOnWater (Boolean flag)
+</li><li>data5:  questID (Required active <a href="Quest_template.html#entry" title="Quest template">quest_template.entry</a> to work)
+</li></ul>
+</li></ul>
+<p><br />
+</p>
+<ul><li> <b>GAMEOBJECT_TYPE_TRAP = 6</b>
+<ul><li>data0:  open (LockId from <a href="Lock.html" title="Lock.dbc">Lock.dbc</a>)
+</li><li>data1:  level (npc equivalent level for casted spell)
+</li><li>data2:  diameter (so radius*2)
+</li><li>data3:  spell (Spell Id from <a href="Spell.html" title="Spell.dbc">Spell.dbc</a>)
+</li><li>data4:  charges (0 or 1)
+</li><li>data5:  cooldown (time in seconds)
+</li><li>data6: &#160;? (unknown flag)
+</li><li>data7:  startDelay? (time in seconds)
+</li><li>data8:  serverOnly? (always 0)
+</li><li>data9:  stealthed (Boolean flag)
+</li><li>data10:  large? (Boolean flag)
+</li><li>data11:  stealthAffected (Boolean flag)
+</li><li>data12:  openTextID (Unknown ID)
+</li></ul>
+</li></ul>
+<p><br />
+</p>
+<ul><li> <b>GAMEOBJECT_TYPE_CHAIR = 7</b>
+<ul><li>data0:  chairslots (number of players that can sit down on it)
+</li><li>data1:  chairorientation? (number of usable side?)
+</li></ul>
+</li></ul>
+<p><br />
+</p>
+<ul><li> <b>GAMEOBJECT_TYPE_SPELLFOCUS = 8</b>
+<ul><li>data0:  spellFocusType (from <a href="SpellFocusObject.html" title="SpellFocusObject.dbc">SpellFocusObject.dbc</a>)
+</li><li>data1:  diameter (so radius*2)
+</li><li>data2:  linkedTrap (<a href="Gameobject_template.html#entry" title="Gameobject template">gameobject_template.entry</a> (Spawned GO type 6))
+</li></ul>
+</li></ul>
+<p><br />
+</p>
+<ul><li> <b>GAMEOBJECT_TYPE_TEXT = 9</b>
+<ul><li>data0:  pageID (<a href="Page_text.html#entry" title="Page text">page_text.entry</a>)
+</li><li>data1:  language (from <a href="Languages.html" title="Languages.dbc">Languages.dbc</a>)
+</li><li>data2:  pageMaterial (<a href="PageTextMaterial.html" title="PageTextMaterial.dbc">PageTextMaterial.dbc</a>)
+</li></ul>
+</li></ul>
+<p><br />
+</p>
+<ul><li> <b>GAMEOBJECT_TYPE_GOOBER = 10</b>
+<ul><li>data0:  open (LockId from <a href="Lock.html" title="Lock.dbc">Lock.dbc</a>)
+</li><li>data1:  questID (Required active <a href="Quest_template.html#entry" title="Quest template">quest_template.entry</a> to work)
+</li><li>data2:  eventID (Unknown Event ID)
+</li><li>data3: &#160;? (unknown flag)
+</li><li>data4:  customAnim (unknown)
+</li><li>data5:  consumable (Boolean flag controling if gameobject will despawn or not)
+</li><li>data6:  cooldown (time is seconds)
+</li><li>data7:  pageID (<a href="Page_text.html#entry" title="Page text">page_text.entry</a>)
+</li><li>data8:  language (from <a href="Languages.html" title="Languages.dbc">Languages.dbc</a>)
+</li><li>data9:  pageMaterial (<a href="PageTextMaterial.html" title="PageTextMaterial.dbc">PageTextMaterial.dbc</a>)
+</li><li>data10:  spell (Spell Id from <a href="Spell.html" title="Spell.dbc">Spell.dbc</a>)
+</li><li>data11:  noDamageImmune (Boolean flag)
+</li><li>data12:  linkedTrap (<a href="Gameobject_template.html#entry" title="Gameobject template">gameobject_template.entry</a> (Spawned GO type 6))
+</li><li>data13:  large? (Boolean flag)
+</li><li>data14:  openTextID (Unknown ID)
+</li><li>data15:  closeTextID (Unknown ID)
+</li><li>data16:  losOK (Boolean flag)
+</li></ul>
+</li></ul>
+<p><br />
+</p>
+<ul><li> <b>GAMEOBJECT_TYPE_TRANSPORT = 11</b>
+</li></ul>
+<p>No data data used, all are always 0
+</p><p><br />
+</p>
+<ul><li> <b>GAMEOBJECT_TYPE_AREADAMAGE = 12</b>
+</li></ul>
+<p>Object type not used
+</p><p><br />
+</p>
+<ul><li> <b>GAMEOBJECT_TYPE_CAMERA = 13</b>
+<ul><li>data0:  open (LockId from <a href="Lock.html" title="Lock.dbc">Lock.dbc</a>)
+</li><li>data1:  camera (Cinematic entry from <a href="http://wiki.hellground.net/index.php?title=CinematicCamera.dbc&amp;action=edit&amp;redlink=1" class="new" title="CinematicCamera.dbc (page does not exist)">CinematicCamera.dbc</a>)
+</li></ul>
+</li></ul>
+<p><br />
+</p>
+<ul><li> <b>GAMEOBJECT_TYPE_MAPOBJECT = 14</b>
+</li></ul>
+<p>No data data used, all are always 0
+</p><p><br />
+</p>
+<ul><li> <b>GAMEOBJECT_TYPE_MOTRANSPORT = 15</b>
+<ul><li>data0:  taxiPathID (Id from <a href="TaxiPath.html" title="TaxiPath.dbc">TaxiPath.dbc</a>)
+</li><li>data1:  moveSpeed
+</li><li>data2:  accelRate
+</li></ul>
+</li></ul>
+<p><br />
+</p>
+<ul><li> <b>GAMEOBJECT_TYPE_DUELFLAG = 16</b>
+</li></ul>
+<p>Only one Gameobject with this type (21680) and no data data
+</p><p><br />
+</p>
+<ul><li> <b>GAMEOBJECT_TYPE_FISHINGNODE = 17</b>
+</li></ul>
+<p>Only one Gameobject with this type (35591) and no data data
+</p><p><br />
+</p>
+<ul><li> <b>GAMEOBJECT_TYPE_RITUAL = 18</b>
+<ul><li>data0:  casters?
+</li><li>data1:  spell (Spell Id from <a href="Spell.html" title="Spell.dbc">Spell.dbc</a>)
+</li><li>data2:  animSpell (Spell Id from <a href="Spell.html" title="Spell.dbc">Spell.dbc</a>)
+</li><li>data3:  ritualPersistent (Boolean flag)
+</li><li>data4:  casterTargetSpell (Spell Id from <a href="Spell.html" title="Spell.dbc">Spell.dbc</a>)
+</li><li>data5:  casterTargetSpellTargets (Boolean flag)
+</li><li>data6:  castersGrouped (Boolean flag)
+</li></ul>
+</li></ul>
+<p><br />
+</p>
+<ul><li> <b>GAMEOBJECT_TYPE_MAILBOX = 19</b>
+</li></ul>
+<p>No data data used, all are always 0
+</p><p><br />
+</p>
+<ul><li> <b>GAMEOBJECT_TYPE_AUCTIONHOUSE = 20</b>
+<ul><li>data0:  actionHouseID (From <a href="http://wiki.hellground.net/index.php?title=AuctionHouse.dbc&amp;action=edit&amp;redlink=1" class="new" title="AuctionHouse.dbc (page does not exist)">AuctionHouse.dbc</a>&#160;?)
+</li></ul>
+</li></ul>
+<p><br />
+</p>
+<ul><li> <b>GAMEOBJECT_TYPE_GUARDPOST = 21</b>
+</li></ul>
+<p>Object type not used
+</p><p><br />
+</p>
+<ul><li> <b>GAMEOBJECT_TYPE_SPELLCASTER = 22</b>
+<ul><li>data0:  spell (Spell Id from <a href="Spell.html" title="Spell.dbc">Spell.dbc</a>)
+</li><li>data1:  charges
+</li><li>data2:  partyOnly (Boolean flag, need to be in group to use it)
+</li></ul>
+</li></ul>
+<p><br />
+</p>
+<ul><li> <b>GAMEOBJECT_TYPE_MEETINGSTONE = 23</b>
+<ul><li>data0:  minLevel
+</li><li>data1:  maxLevel
+</li><li>data2:  areaID (From <a href="AreaTable.html" title="AreaTable.dbc">AreaTable.dbc</a>)
+</li></ul>
+</li></ul>
+<p><br />
+</p>
+<ul><li> <b>GAMEOBJECT_TYPE_FLAGSTAND = 24</b>
+<ul><li>data0:  open (LockId from <a href="Lock.html" title="Lock.dbc">Lock.dbc</a>)
+</li><li>data1:  pickupSpell (Spell Id from <a href="Spell.html" title="Spell.dbc">Spell.dbc</a>)
+</li><li>data2:  radius (distance)
+</li><li>data3:  returnAura (Spell Id from <a href="Spell.html" title="Spell.dbc">Spell.dbc</a>)
+</li><li>data4:  returnSpell (Spell Id from <a href="Spell.html" title="Spell.dbc">Spell.dbc</a>)
+</li><li>data5:  noDamageImmune (Boolean flag)
+</li><li>data6: &#160;?
+</li><li>data7:  losOK (Boolean flag)
+</li></ul>
+</li></ul>
+<p><br />
+</p>
+<ul><li> <b>GAMEOBJECT_TYPE_FISHINGHOLE = 25</b>
+<ul><li>data0:  radius (distance)
+</li><li>data1:  chestLoot (<a href="Loot_Template_tables.html#entry" title="Loot Template tables">gameobject_loot_template.entry</a>)
+</li><li>data2:  minRestock
+</li><li>data3:  maxRestock
+</li></ul>
+</li></ul>
+<p><br />
+</p>
+<ul><li> <b>GAMEOBJECT_TYPE_FLAGDROP = 26</b>
+<ul><li>data0:  open (LockId from <a href="Lock.html" title="Lock.dbc">Lock.dbc</a>)
+</li><li>data1:  eventID (Unknown Event ID)
+</li><li>data2:  pickupSpell (Spell Id from <a href="Spell.html" title="Spell.dbc">Spell.dbc</a>)
+</li><li>data3:  noDamageImmune (Boolean flag)
+</li></ul>
+</li></ul>
+<p><br />
+</p>
+<ul><li> <b>GAMEOBJECT_TYPE_MINIGAME = 27</b>
+</li></ul>
+<p>Object type not used
+</p><p>Reused in core for CUSTOM_TELEPORT
+</p>
+<ul><li><ul><li>data0:  <a href="Areatrigger_teleport.html#id" title="Areatrigger teleport">areatrigger_teleport.id</a>
+</li></ul>
+</li></ul>
+<p><br />
+</p>
+<ul><li> <b>GAMEOBJECT_TYPE_LOTTERYKIOSK = 28</b>
+</li></ul>
+<p>Object type not used
+</p><p><br />
+</p>
+<ul><li> <b>GAMEOBJECT_TYPE_CAPTUREPOINT = 29</b>
+<ul><li>data0:  radius (Distance)
+</li><li>data1:  spell (Unknown ID, not a spell id in dbc file, maybe server only side spell)
+</li><li>data2:  worldState1
+</li><li>data3:  worldstate2
+</li><li>data4:  winEventID1 (Unknown Event ID)
+</li><li>data5:  winEventID2 (Unknown Event ID)
+</li><li>data6:  contestedEventID1 (Unknown Event ID)
+</li><li>data7:  contestedEventID2 (Unknown Event ID)
+</li><li>data8:  progressEventID1 (Unknown Event ID)
+</li><li>data9:  progressEventID2 (Unknown Event ID)
+</li><li>data10:  neutralEventID1 (Unknown Event ID)
+</li><li>data11:  neutralEventID2 (Unknown Event ID)
+</li><li>data12:  neutralPercent
+</li><li>data13:  worldstate3
+</li><li>data14:  minSuperiority
+</li><li>data15:  maxSuperiority
+</li><li>data16:  minTime (in seconds)
+</li><li>data17:  maxTime (in seconds)
+</li><li>data18:  large? (Boolean flag)
+</li></ul>
+</li></ul>
+<p><br />
+</p>
+<ul><li> <b>GAMEOBJECT_TYPE_AURAGENERATOR = 30</b>
+<ul><li>data0:  startOpen (Boolean flag)
+</li><li>data1:  radius (Distance)
+</li><li>data2:  auraID1 (Spell Id from <a href="Spell.html" title="Spell.dbc">Spell.dbc</a>)
+</li><li>data3:  conditionID1 (Unknown ID)
+</li></ul>
+</li></ul>
+<p><br />
+</p>
+<ul><li> <b>GAMEOBJECT_TYPE_DUNGEONDIFFICULTY = 31</b>
+<ul><li>data0:  mapID (From <a href="Map.html" title="Map.dbc">Map.dbc</a>)
+</li><li>data1:  difficulty (0 or 1)
+</li></ul>
+</li></ul>
+<p><br />
+</p>
+<ul><li> <b>GAMEOBJECT_TYPE_BARBER_CHAIR = 32</b>
+</li></ul>
+<p>Used for barbier chairs.
+</p><p><br />
+</p>
+<ul><li> <b>GAMEOBJECT_TYPE_DESTRUCTIBLE_BUILDING = 33</b>
+</li></ul>
+<p>Object type not used
+</p><p><br />
+</p>
+<ul><li> <b>GAMEOBJECT_TYPE_GUILD_BANK = 34</b>
+</li></ul>
+<p>No data data used, all are always 0
+</p>
+<h4> <span class="mw-headline" id="ScriptName">ScriptName</span></h4>
+<p>Name of the script this object uses if needed
+</p>
+<!-- 
+NewPP limit report
+Preprocessor visited node count: 61/1000000
+Preprocessor generated node count: 130/1000000
+Post‐expand include size: 236/2097152 bytes
+Template argument size: 34/2097152 bytes
+Highest expansion depth: 3/40
+Expensive parser function count: 0/100
+-->
+
+<!-- Saved in parser cache with key admin_wikia:pcache:idhash:165-0!*!0!!en-gb!*!* and timestamp 20160412030623 -->
+</div>				<!-- /bodycontent -->
+								<!-- printfooter -->
+				<div class="printfooter">
+				Retrieved from ‘<a href="http://wiki.hellground.net/index.php?title=Gameobject_template&amp;oldid=1171">http://wiki.hellground.net/index.php?title=Gameobject_template&amp;oldid=1171</a>’				</div>
+				<!-- /printfooter -->
+												<!-- catlinks -->
+				<div id='catlinks' class='catlinks'><div id="mw-normal-catlinks" class="mw-normal-catlinks"><a href="Special_Categories.html" title="Special:Categories">Categories</a>: <ul><li><a href="Category_World_database.html" title="Category:World database">World database</a></li><li><a href="Category_Database_tables.html" title="Category:Database tables">Database tables</a></li></ul></div></div>				<!-- /catlinks -->
+												<div class="visualClear"></div>
+				<!-- debughtml -->
+								<!-- /debughtml -->
+			</div>
+			<!-- /bodyContent -->
+		</div>
+		<!-- /content -->
+		<div id="mw-navigation">
+			<h2>Navigation menu</h2>
+			<!-- header -->
+			<div id="mw-head">
+				
+<!-- 0 -->
+<div id="p-personal" role="navigation" class="">
+	<h3>Personal tools</h3>
+	<ul>
+<li id="pt-login"><a href="http://wiki.hellground.net/index.php?title=Special:UserLogin&amp;returnto=Gameobject+template" title="You are encouraged to log in; however, it is not mandatory [o]" accesskey="o">Log in</a></li>	</ul>
+</div>
+
+<!-- /0 -->
+				<div id="left-navigation">
+					
+<!-- 0 -->
+<div id="p-namespaces" role="navigation" class="vectorTabs">
+	<h3>Namespaces</h3>
+	<ul>
+					<li  id="ca-nstab-main" class="selected"><span><a href="Gameobject_template.html"  title="View the content page [c]" accesskey="c">Page</a></span></li>
+					<li  id="ca-talk" class="new"><span><a href="http://wiki.hellground.net/index.php?title=Talk:Gameobject_template&amp;action=edit&amp;redlink=1"  title="Discussion about the content page [t]" accesskey="t">Discussion</a></span></li>
+			</ul>
+</div>
+
+<!-- /0 -->
+
+<!-- 1 -->
+<div id="p-variants" role="navigation" class="vectorMenu emptyPortlet">
+	<h3 id="mw-vector-current-variant">
+		</h3>
+	<h3><span>Variants</span><a href="#"></a></h3>
+	<div class="menu">
+		<ul>
+					</ul>
+	</div>
+</div>
+
+<!-- /1 -->
+				</div>
+				<div id="right-navigation">
+					
+<!-- 0 -->
+<div id="p-views" role="navigation" class="vectorTabs">
+	<h3>Views</h3>
+	<ul>
+					<li id="ca-view" class="selected"><span><a href="Gameobject_template.html" >Read</a></span></li>
+					<li id="ca-viewsource"><span><a href="http://wiki.hellground.net/index.php?title=Gameobject_template&amp;action=edit"  title="This page is protected.&#10;You can view its source [e]" accesskey="e">View source</a></span></li>
+					<li id="ca-history" class="collapsible"><span><a href="http://wiki.hellground.net/index.php?title=Gameobject_template&amp;action=history"  title="Past revisions of this page [h]" accesskey="h">View history</a></span></li>
+			</ul>
+</div>
+
+<!-- /0 -->
+
+<!-- 1 -->
+<div id="p-cactions" role="navigation" class="vectorMenu emptyPortlet">
+	<h3><span>Actions</span><a href="#"></a></h3>
+	<div class="menu">
+		<ul>
+					</ul>
+	</div>
+</div>
+
+<!-- /1 -->
+
+<!-- 2 -->
+
+
+<!-- /2 -->
+				</div>
+			</div>
+			<!-- /header -->
+			<!-- panel -->
+			<div id="mw-panel">
+				<!-- logo -->
+					<div id="p-logo" role="banner"><a style="background-image: url(../skins/common/images/wiki.png);" href="Main_Page.html"  title="Visit the main page"></a></div>
+				<!-- /logo -->
+				
+<!-- navigation -->
+<div class="portal" role="navigation" id='p-navigation'>
+	<h3>Navigation</h3>
+	<div class="body">
+		<ul>
+			<li id="n-mainpage-description"><a href="Main_Page.html" title="Visit the main page [z]" accesskey="z">Main page</a></li>
+			<li id="n-randompage"><a href="Spell_required.html" title="Load a random page [x]" accesskey="x">Random page</a></li>
+		</ul>
+	</div>
+</div>
+
+<!-- /navigation -->
+
+<!-- HellGroundCore -->
+<div class="portal" role="navigation" id='p-HellGroundCore'>
+	<h3>HellGroundCore</h3>
+	<div class="body">
+		<ul>
+			<li id="n-Project-site"><a href="https://hellground.net/" rel="nofollow">Project site</a></li>
+			<li id="n-Project--forum"><a href="http://forum.hellground.net/" rel="nofollow">Project  forum</a></li>
+			<li id="n-Project-repositories"><a href="http://emu.hellground.net/" rel="nofollow">Project repositories</a></li>
+			<li id="n-Project-bug-tracker"><a href="http://forum.hellground.net/" rel="nofollow">Project bug tracker</a></li>
+		</ul>
+	</div>
+</div>
+
+<!-- /HellGroundCore -->
+
+<!-- SEARCH -->
+
+<!-- /SEARCH -->
+
+<!-- TOOLBOX -->
+<div class="portal" role="navigation" id='p-tb'>
+	<h3>Tools</h3>
+	<div class="body">
+		<ul>
+			<li id="t-whatlinkshere"><a href="Special_WhatLinksHere/Gameobject_template.html" title="A list of all wiki pages that link here [j]" accesskey="j">What links here</a></li>
+			<li id="t-recentchangeslinked"><a href="Special_RecentChangesLinked/Gameobject_template.html" title="Recent changes in pages linked from this page [k]" accesskey="k">Related changes</a></li>
+			<li id="t-specialpages"><a href="Special_SpecialPages.html" title="A list of all special pages [q]" accesskey="q">Special pages</a></li>
+			<li id="t-print"><a href="http://wiki.hellground.net/index.php?title=Gameobject_template&amp;printable=yes" rel="alternate" title="Printable version of this page [p]" accesskey="p">Printable version</a></li>
+			<li id="t-permalink"><a href="http://wiki.hellground.net/index.php?title=Gameobject_template&amp;oldid=1171" title="Permanent link to this revision of the page">Permanent link</a></li>
+			<li id="t-info"><a href="http://wiki.hellground.net/index.php?title=Gameobject_template&amp;action=info">Page information</a></li>
+		</ul>
+	</div>
+</div>
+
+<!-- /TOOLBOX -->
+
+<!-- LANGUAGES -->
+
+<!-- /LANGUAGES -->
+			</div>
+			<!-- /panel -->
+		</div>
+		<!-- footer -->
+		<div id="footer" role="contentinfo">
+							<ul id="footer-info">
+											<li id="footer-info-lastmod"> This page was last modified on 4 June 2014, at 15:57.</li>
+											<li id="footer-info-viewcount">This page has been accessed 620 times.</li>
+									</ul>
+							<ul id="footer-places">
+											<li id="footer-places-privacy"><a href="TBC_HellGroundCore_Privacy_policy.html" title="TBC HellGroundCore:Privacy policy">Privacy policy</a></li>
+											<li id="footer-places-about"><a href="TBC_HellGroundCore_About.html" title="TBC HellGroundCore:About">About HellGroundCore MMORPG framework educational and hobby project</a></li>
+											<li id="footer-places-disclaimer"><a href="TBC_HellGroundCore_General_disclaimer.html" title="TBC HellGroundCore:General disclaimer">Disclaimers</a></li>
+									</ul>
+										<ul id="footer-icons" class="noprint">
+					<li id="footer-poweredbyico">
+						<a href="http://www.mediawiki.org/"><img src="../skins/common/images/poweredby_mediawiki_88x31.png" alt="Powered by MediaWiki" width="88" height="31" /></a>
+					</li>
+				</ul>
+						<div style="clear:both"></div>
+		</div>
+		<!-- /footer -->
+		<script>if(window.mw){
+mw.loader.state({"site":"loading","user":"missing","user.groups":"ready"});
+}</script>
+<script>if(window.mw){
+mw.loader.load(["mediawiki.action.view.postEdit","mediawiki.user","mediawiki.page.ready","mediawiki.searchSuggest","mediawiki.hidpi","skins.vector.js"], null, true);
+}</script>
+<script>if(window.mw){
+mw.loader.state({"site":"ready"});
+}</script>
+<!-- Served in 0.060 secs. -->
+	</body>
+
+<!-- Mirrored from wiki.hellground.net/index.php/Gameobject_template by HTTrack Website Copier/3.x [XR&CO'2014], Tue, 12 Apr 2016 10:51:30 GMT -->
+</html>

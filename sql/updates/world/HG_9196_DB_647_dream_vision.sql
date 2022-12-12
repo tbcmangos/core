@@ -1,0 +1,1 @@
+update creature_template set unit_flags = 33554434 where entry = 7863;

@@ -1,0 +1,2128 @@
+<!DOCTYPE html>
+<html lang="en-GB" dir="ltr" class="client-nojs">
+
+<!-- Mirrored from wiki.hellground.net/index.php/Quest_template by HTTrack Website Copier/3.x [XR&CO'2014], Tue, 12 Apr 2016 10:51:49 GMT -->
+<!-- Added by HTTrack --><meta http-equiv="content-type" content="text/html;charset=UTF-8" /><!-- /Added by HTTrack -->
+<head>
+<title>quest_template - HellGroundCore MMORPG framework educational and hobby project</title>
+<meta charset="UTF-8" />
+<meta name="generator" content="MediaWiki 1.21.4" />
+<link rel="shortcut icon" href="http://wiki.hellground.net/favicon.ico" />
+<link rel="search" type="application/opensearchdescription+xml" href="http://wiki.hellground.net/opensearch_desc.php" title="HellGroundCore MMORPG framework educational and hobby project (en-gb)" />
+<link rel="EditURI" type="application/rsd+xml" href="http://wiki.hellground.net/api.php?action=rsd" />
+<link rel="alternate" type="application/atom+xml" title="HellGroundCore MMORPG framework educational and hobby project Atom feed" href="http://wiki.hellground.net/index.php?title=Special:RecentChanges&amp;feed=atom" />
+<link rel="stylesheet" href="http://wiki.hellground.net/load.php?debug=false&amp;lang=en-gb&amp;modules=mediawiki.legacy.commonPrint%2Cshared%7Cskins.vector&amp;only=styles&amp;skin=vector&amp;*" />
+<meta name="ResourceLoaderDynamicStyles" content="" />
+<style>a:lang(ar),a:lang(ckb),a:lang(fa),a:lang(kk-arab),a:lang(mzn),a:lang(ps),a:lang(ur){text-decoration:none}
+/* cache key: admin_wikia:resourceloader:filter:minify-css:7:584a0492c58c82e3a4daddd5656471fb */</style>
+
+<script src="http://wiki.hellground.net/load.php?debug=false&amp;lang=en-gb&amp;modules=startup&amp;only=scripts&amp;skin=vector&amp;*"></script>
+<script>if(window.mw){
+mw.config.set({"wgCanonicalNamespace":"","wgCanonicalSpecialPageName":false,"wgNamespaceNumber":0,"wgPageName":"Quest_template","wgTitle":"Quest template","wgCurRevisionId":888,"wgArticleId":198,"wgIsArticle":true,"wgAction":"view","wgUserName":null,"wgUserGroups":["*"],"wgCategories":["World database","Database tables"],"wgBreakFrames":false,"wgPageContentLanguage":"en-gb","wgSeparatorTransformTable":["",""],"wgDigitTransformTable":["",""],"wgDefaultDateFormat":"dmy","wgMonthNames":["","January","February","March","April","May","June","July","August","September","October","November","December"],"wgMonthNamesShort":["","Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"],"wgRelevantPageName":"Quest_template","wgRestrictionEdit":[],"wgRestrictionMove":[]});
+}</script><script>if(window.mw){
+mw.loader.implement("user.options",function(){mw.user.options.set({"ccmeonemails":0,"cols":80,"date":"default","diffonly":0,"disablemail":0,"disablesuggest":0,"editfont":"default","editondblclick":0,"editsection":1,"editsectiononrightclick":0,"enotifminoredits":0,"enotifrevealaddr":0,"enotifusertalkpages":1,"enotifwatchlistpages":0,"extendwatchlist":0,"externaldiff":0,"externaleditor":0,"fancysig":0,"forceeditsummary":0,"gender":"unknown","hideminor":0,"hidepatrolled":0,"imagesize":2,"justify":0,"math":1,"minordefault":0,"newpageshidepatrolled":0,"nocache":0,"noconvertlink":0,"norollbackdiff":0,"numberheadings":0,"previewonfirst":0,"previewontop":1,"quickbar":5,"rcdays":7,"rclimit":50,"rememberpassword":0,"rows":25,"searchlimit":20,"showhiddencats":0,"showjumplinks":1,"shownumberswatching":1,"showtoc":1,"showtoolbar":1,"skin":"vector","stubthreshold":0,"thumbsize":2,"underline":2,"uselivepreview":0,"usenewrc":0,"watchcreations":0,"watchdefault":0,"watchdeletion":0,"watchlistdays":3,
+"watchlisthideanons":0,"watchlisthidebots":0,"watchlisthideliu":0,"watchlisthideminor":0,"watchlisthideown":0,"watchlisthidepatrolled":0,"watchmoves":0,"wllimit":250,"variant":"en-gb","language":"en-gb","searchNs0":true,"searchNs1":false,"searchNs2":false,"searchNs3":false,"searchNs4":false,"searchNs5":false,"searchNs6":false,"searchNs7":false,"searchNs8":false,"searchNs9":false,"searchNs10":false,"searchNs11":false,"searchNs12":false,"searchNs13":false,"searchNs14":false,"searchNs15":false});;},{},{});mw.loader.implement("user.tokens",function(){mw.user.tokens.set({"editToken":"+\\","patrolToken":false,"watchToken":false});;},{},{});
+/* cache key: admin_wikia:resourceloader:filter:minify-js:7:811a3adb8f714f1f28210df16d324ee9 */
+}</script>
+<script>if(window.mw){
+mw.loader.load(["mediawiki.page.startup","mediawiki.legacy.wikibits","mediawiki.legacy.ajax"]);
+}</script>
+<!--[if lt IE 7]><style type="text/css">body{behavior:url("/skins/vector/csshover.min.htc")}</style><![endif]--></head>
+<body class="mediawiki ltr sitedir-ltr ns-0 ns-subject page-Quest_template skin-vector action-view vector-animateLayout">
+		<div id="mw-page-base" class="noprint"></div>
+		<div id="mw-head-base" class="noprint"></div>
+		<!-- content -->
+		<div id="content" class="mw-body" role="main">
+			<a id="top"></a>
+			<div id="mw-js-message" style="display:none;"></div>
+						<!-- firstHeading -->
+			<h1 id="firstHeading" class="firstHeading" lang="en-gb"><span dir="auto">quest_template</span></h1>
+			<!-- /firstHeading -->
+			<!-- bodyContent -->
+			<div id="bodyContent">
+								<!-- tagline -->
+				<div id="siteSub">From HellGroundCore MMORPG framework educational and hobby project</div>
+				<!-- /tagline -->
+								<!-- subtitle -->
+				<div id="contentSub"></div>
+				<!-- /subtitle -->
+																<!-- jumpto -->
+				<div id="jump-to-nav" class="mw-jump">
+					Jump to:					<a href="#mw-navigation">navigation</a>, 					<a href="#p-search">search</a>
+				</div>
+				<!-- /jumpto -->
+								<!-- bodycontent -->
+				<div id="mw-content-text" lang="en-GB" dir="ltr" class="mw-content-ltr"><p><a href="Category_World_database.html" title="Category:World database">&#8592; Back to World database</a>
+</p>
+<div style="float: right; margin-left: 1em"><table id="toc" class="toc"><tr><td><div id="toctitle"><h2>Contents</h2></div>
+<ul>
+<li class="toclevel-1 tocsection-1"><a href="#entry"><span class="tocnumber">1</span> <span class="toctext">entry</span></a></li>
+<li class="toclevel-1 tocsection-2"><a href="#Method"><span class="tocnumber">2</span> <span class="toctext">Method</span></a></li>
+<li class="toclevel-1 tocsection-3"><a href="#ZoneOrSort"><span class="tocnumber">3</span> <span class="toctext">ZoneOrSort</span></a></li>
+<li class="toclevel-1 tocsection-4"><a href="#SkillOrClass"><span class="tocnumber">4</span> <span class="toctext">SkillOrClass</span></a></li>
+<li class="toclevel-1 tocsection-5"><a href="#MinLevel"><span class="tocnumber">5</span> <span class="toctext">MinLevel</span></a></li>
+<li class="toclevel-1 tocsection-6"><a href="#QuestLevel"><span class="tocnumber">6</span> <span class="toctext">QuestLevel</span></a></li>
+<li class="toclevel-1 tocsection-7"><a href="#Type"><span class="tocnumber">7</span> <span class="toctext">Type</span></a></li>
+<li class="toclevel-1 tocsection-8"><a href="#RequiredRaces"><span class="tocnumber">8</span> <span class="toctext">RequiredRaces</span></a></li>
+<li class="toclevel-1 tocsection-9"><a href="#RequiredSkillValue"><span class="tocnumber">9</span> <span class="toctext">RequiredSkillValue</span></a></li>
+<li class="toclevel-1 tocsection-10"><a href="#RepObjectiveFaction"><span class="tocnumber">10</span> <span class="toctext">RepObjectiveFaction</span></a></li>
+<li class="toclevel-1 tocsection-11"><a href="#RepObjectiveValue"><span class="tocnumber">11</span> <span class="toctext">RepObjectiveValue</span></a></li>
+<li class="toclevel-1 tocsection-12"><a href="#RequiredMinRepFaction"><span class="tocnumber">12</span> <span class="toctext">RequiredMinRepFaction</span></a></li>
+<li class="toclevel-1 tocsection-13"><a href="#RequiredMinRepValue"><span class="tocnumber">13</span> <span class="toctext">RequiredMinRepValue</span></a></li>
+<li class="toclevel-1 tocsection-14"><a href="#RequiredMaxRepFaction"><span class="tocnumber">14</span> <span class="toctext">RequiredMaxRepFaction</span></a></li>
+<li class="toclevel-1 tocsection-15"><a href="#RequiredMaxRepValue"><span class="tocnumber">15</span> <span class="toctext">RequiredMaxRepValue</span></a></li>
+<li class="toclevel-1 tocsection-16"><a href="#SuggestedPlayers"><span class="tocnumber">16</span> <span class="toctext">SuggestedPlayers</span></a></li>
+<li class="toclevel-1 tocsection-17"><a href="#LimitTime"><span class="tocnumber">17</span> <span class="toctext">LimitTime</span></a></li>
+<li class="toclevel-1 tocsection-18"><a href="#QuestFlags"><span class="tocnumber">18</span> <span class="toctext">QuestFlags</span></a></li>
+<li class="toclevel-1 tocsection-19"><a href="#SpecialFlags"><span class="tocnumber">19</span> <span class="toctext">SpecialFlags</span></a></li>
+<li class="toclevel-1 tocsection-20"><a href="#CharTitleId"><span class="tocnumber">20</span> <span class="toctext">CharTitleId</span></a></li>
+<li class="toclevel-1 tocsection-21"><a href="#PrevQuestId"><span class="tocnumber">21</span> <span class="toctext">PrevQuestId</span></a></li>
+<li class="toclevel-1 tocsection-22"><a href="#NextQuestId"><span class="tocnumber">22</span> <span class="toctext">NextQuestId</span></a></li>
+<li class="toclevel-1 tocsection-23"><a href="#ExclusiveGroup"><span class="tocnumber">23</span> <span class="toctext">ExclusiveGroup</span></a></li>
+<li class="toclevel-1 tocsection-24"><a href="#NextQuestInChain"><span class="tocnumber">24</span> <span class="toctext">NextQuestInChain</span></a></li>
+<li class="toclevel-1 tocsection-25"><a href="#SrcItemId"><span class="tocnumber">25</span> <span class="toctext">SrcItemId</span></a></li>
+<li class="toclevel-1 tocsection-26"><a href="#SrcItemCount"><span class="tocnumber">26</span> <span class="toctext">SrcItemCount</span></a></li>
+<li class="toclevel-1 tocsection-27"><a href="#SrcSpell"><span class="tocnumber">27</span> <span class="toctext">SrcSpell</span></a></li>
+<li class="toclevel-1 tocsection-28"><a href="#Name"><span class="tocnumber">28</span> <span class="toctext">Name</span></a></li>
+<li class="toclevel-1 tocsection-29"><a href="#Details"><span class="tocnumber">29</span> <span class="toctext">Details</span></a></li>
+<li class="toclevel-1 tocsection-30"><a href="#Objectives"><span class="tocnumber">30</span> <span class="toctext">Objectives</span></a></li>
+<li class="toclevel-1 tocsection-31"><a href="#OfferRewardText"><span class="tocnumber">31</span> <span class="toctext">OfferRewardText</span></a></li>
+<li class="toclevel-1 tocsection-32"><a href="#RequestItemsText"><span class="tocnumber">32</span> <span class="toctext">RequestItemsText</span></a></li>
+<li class="toclevel-1 tocsection-33"><a href="#EndText"><span class="tocnumber">33</span> <span class="toctext">EndText</span></a></li>
+<li class="toclevel-1 tocsection-34"><a href="#ObjectiveText"><span class="tocnumber">34</span> <span class="toctext">ObjectiveText</span></a></li>
+<li class="toclevel-1 tocsection-35"><a href="#ReqItemId"><span class="tocnumber">35</span> <span class="toctext">ReqItemId</span></a></li>
+<li class="toclevel-1 tocsection-36"><a href="#ReqItemCount"><span class="tocnumber">36</span> <span class="toctext">ReqItemCount</span></a></li>
+<li class="toclevel-1 tocsection-37"><a href="#ReqSourceID"><span class="tocnumber">37</span> <span class="toctext">ReqSourceID</span></a></li>
+<li class="toclevel-1 tocsection-38"><a href="#ReqSourceCount"><span class="tocnumber">38</span> <span class="toctext">ReqSourceCount</span></a></li>
+<li class="toclevel-1 tocsection-39"><a href="#ReqSourceRef"><span class="tocnumber">39</span> <span class="toctext">ReqSourceRef</span></a></li>
+<li class="toclevel-1 tocsection-40"><a href="#ReqCreatureOrGOId"><span class="tocnumber">40</span> <span class="toctext">ReqCreatureOrGOId</span></a></li>
+<li class="toclevel-1 tocsection-41"><a href="#ReqCreatureOrGOCount"><span class="tocnumber">41</span> <span class="toctext">ReqCreatureOrGOCount</span></a></li>
+<li class="toclevel-1 tocsection-42"><a href="#ReqSpellCast"><span class="tocnumber">42</span> <span class="toctext">ReqSpellCast</span></a></li>
+<li class="toclevel-1 tocsection-43"><a href="#RewChoiceItemId.2C_RewChoiceItemCount"><span class="tocnumber">43</span> <span class="toctext">RewChoiceItemId, RewChoiceItemCount</span></a></li>
+<li class="toclevel-1 tocsection-44"><a href="#RewItemId.2C_RewItemCount"><span class="tocnumber">44</span> <span class="toctext">RewItemId, RewItemCount</span></a></li>
+<li class="toclevel-1 tocsection-45"><a href="#RewRepFaction.2C_RewRepValue"><span class="tocnumber">45</span> <span class="toctext">RewRepFaction, RewRepValue</span></a></li>
+<li class="toclevel-1 tocsection-46"><a href="#RewHonorableKills"><span class="tocnumber">46</span> <span class="toctext">RewHonorableKills</span></a></li>
+<li class="toclevel-1 tocsection-47"><a href="#RewOrReqMoney"><span class="tocnumber">47</span> <span class="toctext">RewOrReqMoney</span></a></li>
+<li class="toclevel-1 tocsection-48"><a href="#RewMoneyMaxLevel"><span class="tocnumber">48</span> <span class="toctext">RewMoneyMaxLevel</span></a></li>
+<li class="toclevel-1 tocsection-49"><a href="#RewSpell"><span class="tocnumber">49</span> <span class="toctext">RewSpell</span></a></li>
+<li class="toclevel-1 tocsection-50"><a href="#RewSpellCast"><span class="tocnumber">50</span> <span class="toctext">RewSpellCast</span></a></li>
+<li class="toclevel-1 tocsection-51"><a href="#RewMailTemplateId"><span class="tocnumber">51</span> <span class="toctext">RewMailTemplateId</span></a></li>
+<li class="toclevel-1 tocsection-52"><a href="#RewMailDelaySecs"><span class="tocnumber">52</span> <span class="toctext">RewMailDelaySecs</span></a></li>
+<li class="toclevel-1 tocsection-53"><a href="#PointMapId"><span class="tocnumber">53</span> <span class="toctext">PointMapId</span></a></li>
+<li class="toclevel-1 tocsection-54"><a href="#PointX"><span class="tocnumber">54</span> <span class="toctext">PointX</span></a></li>
+<li class="toclevel-1 tocsection-55"><a href="#PointY"><span class="tocnumber">55</span> <span class="toctext">PointY</span></a></li>
+<li class="toclevel-1 tocsection-56"><a href="#PointOpt"><span class="tocnumber">56</span> <span class="toctext">PointOpt</span></a></li>
+<li class="toclevel-1 tocsection-57"><a href="#DetailsEmote"><span class="tocnumber">57</span> <span class="toctext">DetailsEmote</span></a></li>
+<li class="toclevel-1 tocsection-58"><a href="#CompleteEmote"><span class="tocnumber">58</span> <span class="toctext">CompleteEmote</span></a></li>
+<li class="toclevel-1 tocsection-59"><a href="#OfferRewardEmote"><span class="tocnumber">59</span> <span class="toctext">OfferRewardEmote</span></a></li>
+<li class="toclevel-1 tocsection-60"><a href="#StartScript"><span class="tocnumber">60</span> <span class="toctext">StartScript</span></a></li>
+<li class="toclevel-1 tocsection-61"><a href="#CompleteScript"><span class="tocnumber">61</span> <span class="toctext">CompleteScript</span></a></li>
+<li class="toclevel-1 tocsection-62"><a href="#Examples"><span class="tocnumber">62</span> <span class="toctext">Examples</span></a></li>
+</ul>
+</td></tr></table>
+</div>
+<p>Contains all basic definitions of quests available.
+</p>
+<table class="wikitable">
+<caption> `quest_template` table rev. 7933
+</caption>
+<tr>
+<th> Field </th>
+<th> Type </th>
+<th> Null </th>
+<th> Key </th>
+<th> Default </th>
+<th> Extra
+</th></tr>
+<tr>
+<td><a href="#entry">entry</a> </td>
+<td> int(11) </td>
+<td> PRI </td>
+<td> NO </td>
+<td> 0 </td>
+<td>
+</td></tr>
+<tr>
+<td><a href="#Method">Method</a> </td>
+<td> tinyint(3) unsigned </td>
+<td> </td>
+<td> NO </td>
+<td> 2 </td>
+<td>
+</td></tr>
+<tr>
+<td><a href="#ZoneOrSort">ZoneOrSort</a> </td>
+<td> smallint(6) </td>
+<td> </td>
+<td> NO </td>
+<td> 0 </td>
+<td>
+</td></tr>
+<tr>
+<td><a href="#SkillOrClass">SkillOrClass</a> </td>
+<td> smallint(6) </td>
+<td> </td>
+<td> NO </td>
+<td> 0 </td>
+<td>
+</td></tr>
+<tr>
+<td><a href="#MinLevel">MinLevel</a> </td>
+<td> tinyint(3) unsigned </td>
+<td> </td>
+<td> NO </td>
+<td> 0 </td>
+<td>
+</td></tr>
+<tr>
+<td><a href="#QuestLevel">QuestLevel</a> </td>
+<td> smallint(6) </td>
+<td> </td>
+<td> NO </td>
+<td> 1 </td>
+<td>
+</td></tr>
+<tr>
+<td><a href="#Type">Type</a> </td>
+<td> smallint(5) unsigned </td>
+<td> </td>
+<td> NO </td>
+<td> 0 </td>
+<td>
+</td></tr>
+<tr>
+<td><a href="#RequiredRaces">RequiredRaces</a> </td>
+<td> smallint(5) unsigned </td>
+<td> </td>
+<td> NO </td>
+<td> 0 </td>
+<td>
+</td></tr>
+<tr>
+<td><a href="#RequiredSkillValue">RequiredSkillValue</a> </td>
+<td> smallint(5) unsigned </td>
+<td> </td>
+<td> NO </td>
+<td> 0 </td>
+<td>
+</td></tr>
+<tr>
+<td><a href="#RepObjectiveFaction">RepObjectiveFaction</a> </td>
+<td> smallint(5) unsigned </td>
+<td> </td>
+<td> NO </td>
+<td> 0 </td>
+<td>
+</td></tr>
+<tr>
+<td><a href="#RepObjectiveValue">RepObjectiveValue</a> </td>
+<td> mediumint(9) </td>
+<td> </td>
+<td> NO </td>
+<td> 0 </td>
+<td>
+</td></tr>
+<tr>
+<td><a href="#RequiredMinRepFaction">RequiredMinRepFaction</a> </td>
+<td> smallint(5) unsigned </td>
+<td> </td>
+<td> NO </td>
+<td> 0 </td>
+<td>
+</td></tr>
+<tr>
+<td><a href="#RequiredMinRepValue">RequiredMinRepValue</a> </td>
+<td> mediumint(9) </td>
+<td> </td>
+<td> NO </td>
+<td> 0 </td>
+<td>
+</td></tr>
+<tr>
+<td><a href="#RequiredMaxRepFaction">RequiredMaxRepFaction</a> </td>
+<td> smallint(5) unsigned </td>
+<td> </td>
+<td> NO </td>
+<td> 0 </td>
+<td>
+</td></tr>
+<tr>
+<td><a href="#RequiredMaxRepValue">RequiredMaxRepValue</a> </td>
+<td> mediumint(9) </td>
+<td> </td>
+<td> NO </td>
+<td> 0 </td>
+<td>
+</td></tr>
+<tr>
+<td><a href="#SuggestedPlayers">SuggestedPlayers</a> </td>
+<td> tinyint(3) unsigned </td>
+<td> </td>
+<td> NO </td>
+<td> 0 </td>
+<td>
+</td></tr>
+<tr>
+<td><a href="#LimitTime">LimitTime</a> </td>
+<td> int(10) unsigned </td>
+<td> </td>
+<td> NO </td>
+<td> 0 </td>
+<td>
+</td></tr>
+<tr>
+<td><a href="#QuestFlags">QuestFlags</a> </td>
+<td> smallint(5) unsigned </td>
+<td> </td>
+<td> NO </td>
+<td> 0 </td>
+<td>
+</td></tr>
+<tr>
+<td><a href="#SpecialFlags">SpecialFlags</a> </td>
+<td> tinyint(3) unsigned </td>
+<td> </td>
+<td> NO </td>
+<td> 0 </td>
+<td>
+</td></tr>
+<tr>
+<td><a href="#CharTitleId">CharTitleId</a> </td>
+<td> tinyint(3) unsigned </td>
+<td> </td>
+<td> NO </td>
+<td> 0 </td>
+<td>
+</td></tr>
+<tr>
+<td><a href="#PrevQuestId">PrevQuestId</a> </td>
+<td> mediumint(9) </td>
+<td> </td>
+<td> NO </td>
+<td> 0 </td>
+<td>
+</td></tr>
+<tr>
+<td><a href="#NextQuestId">NextQuestId</a> </td>
+<td> mediumint(9) </td>
+<td> </td>
+<td> NO </td>
+<td> 0 </td>
+<td>
+</td></tr>
+<tr>
+<td><a href="#ExclusiveGroup">ExclusiveGroup</a> </td>
+<td> mediumint(9) </td>
+<td> </td>
+<td> NO </td>
+<td> 0 </td>
+<td>
+</td></tr>
+<tr>
+<td><a href="#NextQuestInChain">NextQuestInChain</a> </td>
+<td> mediumint(8) unsigned </td>
+<td> </td>
+<td> NO </td>
+<td> 0 </td>
+<td>
+</td></tr>
+<tr>
+<td><a href="#SrcItemId">SrcItemId</a> </td>
+<td> mediumint(8) unsigned </td>
+<td> </td>
+<td> NO </td>
+<td> 0 </td>
+<td>
+</td></tr>
+<tr>
+<td><a href="#SrcItemCount">SrcItemCount</a> </td>
+<td> tinyint(3) unsigned </td>
+<td> </td>
+<td> NO </td>
+<td> 0 </td>
+<td>
+</td></tr>
+<tr>
+<td><a href="#SrcSpell">SrcSpell</a> </td>
+<td> mediumint(8) unsigned </td>
+<td> </td>
+<td> NO </td>
+<td> 0 </td>
+<td>
+</td></tr>
+<tr>
+<td><a href="#Name">Name</a> </td>
+<td> text </td>
+<td> </td>
+<td> YES </td>
+<td> </td>
+<td>
+</td></tr>
+<tr>
+<td><a href="#Details">Details</a> </td>
+<td> text </td>
+<td> </td>
+<td> YES </td>
+<td> </td>
+<td>
+</td></tr>
+<tr>
+<td><a href="#Objectives">Objectives</a> </td>
+<td> text </td>
+<td> </td>
+<td> YES </td>
+<td> </td>
+<td>
+</td></tr>
+<tr>
+<td><a href="#OfferRewardText">OfferRewardText</a> </td>
+<td> text </td>
+<td> </td>
+<td> YES </td>
+<td> </td>
+<td>
+</td></tr>
+<tr>
+<td><a href="#RequestItemsText">RequestItemsText</a> </td>
+<td> text </td>
+<td> </td>
+<td> YES </td>
+<td> </td>
+<td>
+</td></tr>
+<tr>
+<td><a href="#EndText">EndText</a> </td>
+<td> text </td>
+<td> </td>
+<td> YES </td>
+<td> </td>
+<td>
+</td></tr>
+<tr>
+<td><a href="#ObjectiveText">ObjectiveText1</a> </td>
+<td> text </td>
+<td> </td>
+<td> YES </td>
+<td> </td>
+<td>
+</td></tr>
+<tr>
+<td><a href="#ObjectiveText">ObjectiveText2</a> </td>
+<td> text </td>
+<td> </td>
+<td> YES </td>
+<td> </td>
+<td>
+</td></tr>
+<tr>
+<td><a href="#ObjectiveText">ObjectiveText3</a> </td>
+<td> text </td>
+<td> </td>
+<td> YES </td>
+<td> </td>
+<td>
+</td></tr>
+<tr>
+<td><a href="#ObjectiveText">ObjectiveText4</a> </td>
+<td> text </td>
+<td> </td>
+<td> YES </td>
+<td> </td>
+<td>
+</td></tr>
+<tr>
+<td><a href="#ReqItemId">ReqItemId1</a> </td>
+<td> mediumint(8) unsigned </td>
+<td> </td>
+<td> NO </td>
+<td> 0 </td>
+<td>
+</td></tr>
+<tr>
+<td><a href="#ReqItemId">ReqItemId2</a> </td>
+<td> mediumint(8) unsigned </td>
+<td> </td>
+<td> NO </td>
+<td> 0 </td>
+<td>
+</td></tr>
+<tr>
+<td><a href="#ReqItemId">ReqItemId3</a> </td>
+<td> mediumint(8) unsigned </td>
+<td> </td>
+<td> NO </td>
+<td> 0 </td>
+<td>
+</td></tr>
+<tr>
+<td><a href="#ReqItemId">ReqItemId4</a> </td>
+<td> mediumint(8) unsigned </td>
+<td> </td>
+<td> NO </td>
+<td> 0 </td>
+<td>
+</td></tr>
+<tr>
+<td><a href="#ReqItemCount">ReqItemCount1</a> </td>
+<td> smallint(5) unsigned </td>
+<td> </td>
+<td> NO </td>
+<td> 0 </td>
+<td>
+</td></tr>
+<tr>
+<td><a href="#ReqItemCount">ReqItemCount2</a> </td>
+<td> smallint(5) unsigned </td>
+<td> </td>
+<td> NO </td>
+<td> 0 </td>
+<td>
+</td></tr>
+<tr>
+<td><a href="#ReqItemCount">ReqItemCount3</a> </td>
+<td> smallint(5) unsigned </td>
+<td> </td>
+<td> NO </td>
+<td> 0 </td>
+<td>
+</td></tr>
+<tr>
+<td><a href="#ReqItemCount">ReqItemCount4</a> </td>
+<td> smallint(5) unsigned </td>
+<td> </td>
+<td> NO </td>
+<td> 0 </td>
+<td>
+</td></tr>
+<tr>
+<td><a href="#ReqSourceId">ReqSourceId1</a> </td>
+<td> mediumint(8) unsigned </td>
+<td> </td>
+<td> NO </td>
+<td> 0 </td>
+<td>
+</td></tr>
+<tr>
+<td><a href="#ReqSourceId">ReqSourceId2</a> </td>
+<td> mediumint(8) unsigned </td>
+<td> </td>
+<td> NO </td>
+<td> 0 </td>
+<td>
+</td></tr>
+<tr>
+<td><a href="#ReqSourceId">ReqSourceId3</a> </td>
+<td> mediumint(8) unsigned </td>
+<td> </td>
+<td> NO </td>
+<td> 0 </td>
+<td>
+</td></tr>
+<tr>
+<td><a href="#ReqSourceId">ReqSourceId4</a> </td>
+<td> mediumint(8) unsigned </td>
+<td> </td>
+<td> NO </td>
+<td> 0 </td>
+<td>
+</td></tr>
+<tr>
+<td><a href="#ReqSourceCount">ReqSourceCount1</a> </td>
+<td> smallint(5) unsigned </td>
+<td> </td>
+<td> NO </td>
+<td> 0 </td>
+<td>
+</td></tr>
+<tr>
+<td><a href="#ReqSourceCount">ReqSourceCount2</a> </td>
+<td> smallint(5) unsigned </td>
+<td> </td>
+<td> NO </td>
+<td> 0 </td>
+<td>
+</td></tr>
+<tr>
+<td><a href="#ReqSourceCount">ReqSourceCount3</a> </td>
+<td> smallint(5) unsigned </td>
+<td> </td>
+<td> NO </td>
+<td> 0 </td>
+<td>
+</td></tr>
+<tr>
+<td><a href="#ReqSourceCount">ReqSourceCount4</a> </td>
+<td> smallint(5) unsigned </td>
+<td> </td>
+<td> NO </td>
+<td> 0 </td>
+<td>
+</td></tr>
+<tr>
+<td><a href="#ReqSourceRef">ReqSourceRef1</a> </td>
+<td> tinyint(3) unsigned </td>
+<td> </td>
+<td> NO </td>
+<td> 0 </td>
+<td>
+</td></tr>
+<tr>
+<td><a href="#ReqSourceRef">ReqSourceRef2</a> </td>
+<td> tinyint(3) unsigned </td>
+<td> </td>
+<td> NO </td>
+<td> 0 </td>
+<td>
+</td></tr>
+<tr>
+<td><a href="#ReqSourceRef">ReqSourceRef3</a> </td>
+<td> tinyint(3) unsigned </td>
+<td> </td>
+<td> NO </td>
+<td> 0 </td>
+<td>
+</td></tr>
+<tr>
+<td><a href="#ReqSourceRef">ReqSourceRef4</a> </td>
+<td> tinyint(3) unsigned </td>
+<td> </td>
+<td> NO </td>
+<td> 0 </td>
+<td>
+</td></tr>
+<tr>
+<td><a href="#ReqCreatureOrGOId">ReqCreatureOrGOId1</a> </td>
+<td> mediumint(9) </td>
+<td> </td>
+<td> NO </td>
+<td> 0 </td>
+<td>
+</td></tr>
+<tr>
+<td><a href="#ReqCreatureOrGOId">ReqCreatureOrGOId2</a> </td>
+<td> mediumint(9) </td>
+<td> </td>
+<td> NO </td>
+<td> 0 </td>
+<td>
+</td></tr>
+<tr>
+<td><a href="#ReqCreatureOrGOId">ReqCreatureOrGOId3</a> </td>
+<td> mediumint(9) </td>
+<td> </td>
+<td> NO </td>
+<td> 0 </td>
+<td>
+</td></tr>
+<tr>
+<td><a href="#ReqCreatureOrGOId">ReqCreatureOrGOId4</a> </td>
+<td> mediumint(9) </td>
+<td> </td>
+<td> NO </td>
+<td> 0 </td>
+<td>
+</td></tr>
+<tr>
+<td><a href="#ReqCreatureOrGOCount">ReqCreatureOrGOCount1</a> </td>
+<td> smallint(5) unsigned </td>
+<td> </td>
+<td> NO </td>
+<td> 0 </td>
+<td>
+</td></tr>
+<tr>
+<td><a href="#ReqCreatureOrGOCount">ReqCreatureOrGOCount2</a> </td>
+<td> smallint(5) unsigned </td>
+<td> </td>
+<td> NO </td>
+<td> 0 </td>
+<td>
+</td></tr>
+<tr>
+<td><a href="#ReqCreatureOrGOCount">ReqCreatureOrGOCount3</a> </td>
+<td> smallint(5) unsigned </td>
+<td> </td>
+<td> NO </td>
+<td> 0 </td>
+<td>
+</td></tr>
+<tr>
+<td><a href="#ReqCreatureOrGOCount">ReqCreatureOrGOCount4</a> </td>
+<td> smallint(5) unsigned </td>
+<td> </td>
+<td> NO </td>
+<td> 0 </td>
+<td>
+</td></tr>
+<tr>
+<td><a href="#ReqSpellCast">ReqSpellCast1</a> </td>
+<td> mediumint(8) unsigned </td>
+<td> </td>
+<td> NO </td>
+<td> 0 </td>
+<td>
+</td></tr>
+<tr>
+<td><a href="#ReqSpellCast">ReqSpellCast2</a> </td>
+<td> mediumint(8) unsigned </td>
+<td> </td>
+<td> NO </td>
+<td> 0 </td>
+<td>
+</td></tr>
+<tr>
+<td><a href="#ReqSpellCast">ReqSpellCast3</a> </td>
+<td> mediumint(8) unsigned </td>
+<td> </td>
+<td> NO </td>
+<td> 0 </td>
+<td>
+</td></tr>
+<tr>
+<td><a href="#ReqSpellCast">ReqSpellCast4</a> </td>
+<td> mediumint(8) unsigned </td>
+<td> </td>
+<td> NO </td>
+<td> 0 </td>
+<td>
+</td></tr>
+<tr>
+<td><a href="#RewChoiceItemId">RewChoiceItemId1</a> </td>
+<td> mediumint(8) unsigned </td>
+<td> </td>
+<td> NO </td>
+<td> 0 </td>
+<td>
+</td></tr>
+<tr>
+<td><a href="#RewChoiceItemId">RewChoiceItemId2</a> </td>
+<td> mediumint(8) unsigned </td>
+<td> </td>
+<td> NO </td>
+<td> 0 </td>
+<td>
+</td></tr>
+<tr>
+<td><a href="#RewChoiceItemId">RewChoiceItemId3</a> </td>
+<td> mediumint(8) unsigned </td>
+<td> </td>
+<td> NO </td>
+<td> 0 </td>
+<td>
+</td></tr>
+<tr>
+<td><a href="#RewChoiceItemId">RewChoiceItemId4</a> </td>
+<td> mediumint(8) unsigned </td>
+<td> </td>
+<td> NO </td>
+<td> 0 </td>
+<td>
+</td></tr>
+<tr>
+<td><a href="#RewChoiceItemId">RewChoiceItemId5</a> </td>
+<td> mediumint(8) unsigned </td>
+<td> </td>
+<td> NO </td>
+<td> 0 </td>
+<td>
+</td></tr>
+<tr>
+<td><a href="#RewChoiceItemId">RewChoiceItemId6</a> </td>
+<td> mediumint(8) unsigned </td>
+<td> </td>
+<td> NO </td>
+<td> 0 </td>
+<td>
+</td></tr>
+<tr>
+<td><a href="#RewChoiceItemCount">RewChoiceItemCount1</a> </td>
+<td> smallint(5) unsigned </td>
+<td> </td>
+<td> NO </td>
+<td> 0 </td>
+<td>
+</td></tr>
+<tr>
+<td><a href="#RewChoiceItemCount">RewChoiceItemCount2</a> </td>
+<td> smallint(5) unsigned </td>
+<td> </td>
+<td> NO </td>
+<td> 0 </td>
+<td>
+</td></tr>
+<tr>
+<td><a href="#RewChoiceItemCount">RewChoiceItemCount3</a> </td>
+<td> smallint(5) unsigned </td>
+<td> </td>
+<td> NO </td>
+<td> 0 </td>
+<td>
+</td></tr>
+<tr>
+<td><a href="#RewChoiceItemCount">RewChoiceItemCount4</a> </td>
+<td> smallint(5) unsigned </td>
+<td> </td>
+<td> NO </td>
+<td> 0 </td>
+<td>
+</td></tr>
+<tr>
+<td><a href="#RewChoiceItemCount">RewChoiceItemCount5</a> </td>
+<td> smallint(5) unsigned </td>
+<td> </td>
+<td> NO </td>
+<td> 0 </td>
+<td>
+</td></tr>
+<tr>
+<td><a href="#RewChoiceItemCount">RewChoiceItemCount6</a> </td>
+<td> smallint(5) unsigned </td>
+<td> </td>
+<td> NO </td>
+<td> 0 </td>
+<td>
+</td></tr>
+<tr>
+<td><a href="#RewItemId">RewItemId1</a> </td>
+<td> mediumint(8) unsigned </td>
+<td> </td>
+<td> NO </td>
+<td> 0 </td>
+<td>
+</td></tr>
+<tr>
+<td><a href="#RewItemId">RewItemId2</a> </td>
+<td> mediumint(8) unsigned </td>
+<td> </td>
+<td> NO </td>
+<td> 0 </td>
+<td>
+</td></tr>
+<tr>
+<td><a href="#RewItemId">RewItemId3</a> </td>
+<td> mediumint(8) unsigned </td>
+<td> </td>
+<td> NO </td>
+<td> 0 </td>
+<td>
+</td></tr>
+<tr>
+<td><a href="#RewItemId">RewItemId4</a> </td>
+<td> mediumint(8) unsigned </td>
+<td> </td>
+<td> NO </td>
+<td> 0 </td>
+<td>
+</td></tr>
+<tr>
+<td><a href="#RewItemCount">RewItemCount1</a> </td>
+<td> smallint(5) unsigned </td>
+<td> </td>
+<td> NO </td>
+<td> 0 </td>
+<td>
+</td></tr>
+<tr>
+<td><a href="#RewItemCount">RewItemCount2</a> </td>
+<td> smallint(5) unsigned </td>
+<td> </td>
+<td> NO </td>
+<td> 0 </td>
+<td>
+</td></tr>
+<tr>
+<td><a href="#RewItemCount">RewItemCount3</a> </td>
+<td> smallint(5) unsigned </td>
+<td> </td>
+<td> NO </td>
+<td> 0 </td>
+<td>
+</td></tr>
+<tr>
+<td><a href="#RewItemCount">RewItemCount4</a> </td>
+<td> smallint(5) unsigned </td>
+<td> </td>
+<td> NO </td>
+<td> 0 </td>
+<td>
+</td></tr>
+<tr>
+<td><a href="#RewRepFaction">RewRepFaction1</a> </td>
+<td> smallint(5) unsigned </td>
+<td> </td>
+<td> NO </td>
+<td> 0 </td>
+<td>
+</td></tr>
+<tr>
+<td><a href="#RewRepFaction">RewRepFaction2</a> </td>
+<td> smallint(5) unsigned </td>
+<td> </td>
+<td> NO </td>
+<td> 0 </td>
+<td>
+</td></tr>
+<tr>
+<td><a href="#RewRepFaction">RewRepFaction3</a> </td>
+<td> smallint(5) unsigned </td>
+<td> </td>
+<td> NO </td>
+<td> 0 </td>
+<td>
+</td></tr>
+<tr>
+<td><a href="#RewRepFaction">RewRepFaction4</a> </td>
+<td> smallint(5) unsigned </td>
+<td> </td>
+<td> NO </td>
+<td> 0 </td>
+<td>
+</td></tr>
+<tr>
+<td><a href="#RewRepFaction">RewRepFaction5</a> </td>
+<td> smallint(5) unsigned </td>
+<td> </td>
+<td> NO </td>
+<td> 0 </td>
+<td>
+</td></tr>
+<tr>
+<td><a href="#RewRepValue">RewRepValue1</a> </td>
+<td> mediumint(9) </td>
+<td> </td>
+<td> NO </td>
+<td> 0 </td>
+<td>
+</td></tr>
+<tr>
+<td><a href="#RewRepValue">RewRepValue2</a> </td>
+<td> mediumint(9) </td>
+<td> </td>
+<td> NO </td>
+<td> 0 </td>
+<td>
+</td></tr>
+<tr>
+<td><a href="#RewRepValue">RewRepValue3</a> </td>
+<td> mediumint(9) </td>
+<td> </td>
+<td> NO </td>
+<td> 0 </td>
+<td>
+</td></tr>
+<tr>
+<td><a href="#RewRepValue">RewRepValue4</a> </td>
+<td> mediumint(9) </td>
+<td> </td>
+<td> NO </td>
+<td> 0 </td>
+<td>
+</td></tr>
+<tr>
+<td><a href="#RewRepValue">RewRepValue5</a> </td>
+<td> mediumint(9) </td>
+<td> </td>
+<td> NO </td>
+<td> 0 </td>
+<td>
+</td></tr>
+<tr>
+<td><a href="#RewHonorableKills">RewHonorableKills</a> </td>
+<td> mediumint(9) unsigned </td>
+<td> </td>
+<td> NO </td>
+<td> 0 </td>
+<td>
+</td></tr>
+<tr>
+<td><a href="#RewOrReqMoney">RewOrReqMoney</a> </td>
+<td> int(11) </td>
+<td> </td>
+<td> NO </td>
+<td> 0 </td>
+<td>
+</td></tr>
+<tr>
+<td><a href="#RewMoneyMaxLevel">RewMoneyMaxLevel</a> </td>
+<td> int(10) unsigned </td>
+<td> </td>
+<td> NO </td>
+<td> 0 </td>
+<td>
+</td></tr>
+<tr>
+<td><a href="#RewSpell">RewSpell</a> </td>
+<td> mediumint(8) unsigned </td>
+<td> </td>
+<td> NO </td>
+<td> 0 </td>
+<td>
+</td></tr>
+<tr>
+<td><a href="#RewSpellCast">RewSpellCast</a> </td>
+<td> mediumint(8) unsigned </td>
+<td> </td>
+<td> NO </td>
+<td> 0 </td>
+<td>
+</td></tr>
+<tr>
+<td><a href="#RewMailTemplateId">RewMailTemplateId</a> </td>
+<td> mediumint(8) unsigned </td>
+<td> </td>
+<td> NO </td>
+<td> 0 </td>
+<td>
+</td></tr>
+<tr>
+<td><a href="#RewMailDelaySecs">RewMailDelaySecs</a> </td>
+<td> int(11) unsigned </td>
+<td> </td>
+<td> NO </td>
+<td> 0 </td>
+<td>
+</td></tr>
+<tr>
+<td><a href="#PointMapId">PointMapId</a> </td>
+<td> smallint(5) unsigned </td>
+<td> </td>
+<td> NO </td>
+<td> 0 </td>
+<td>
+</td></tr>
+<tr>
+<td><a href="#PointX">PointX</a> </td>
+<td> float </td>
+<td> </td>
+<td> NO </td>
+<td> 0 </td>
+<td>
+</td></tr>
+<tr>
+<td><a href="#PointY">PointY</a> </td>
+<td> float </td>
+<td> </td>
+<td> NO </td>
+<td> 0 </td>
+<td>
+</td></tr>
+<tr>
+<td><a href="#PointOpt">PointOpt</a> </td>
+<td> mediumint(8) unsigned </td>
+<td> </td>
+<td> NO </td>
+<td> 0 </td>
+<td>
+</td></tr>
+<tr>
+<td><a href="#DetailsEmote">DetailsEmote1</a> </td>
+<td> smallint(5) unsigned </td>
+<td> </td>
+<td> NO </td>
+<td> 0 </td>
+<td>
+</td></tr>
+<tr>
+<td><a href="#DetailsEmote">DetailsEmote2</a> </td>
+<td> smallint(5) unsigned </td>
+<td> </td>
+<td> NO </td>
+<td> 0 </td>
+<td>
+</td></tr>
+<tr>
+<td><a href="#DetailsEmote">DetailsEmote3</a> </td>
+<td> smallint(5) unsigned </td>
+<td> </td>
+<td> NO </td>
+<td> 0 </td>
+<td>
+</td></tr>
+<tr>
+<td><a href="#DetailsEmote">DetailsEmote4</a> </td>
+<td> smallint(5) unsigned </td>
+<td> </td>
+<td> NO </td>
+<td> 0 </td>
+<td>
+</td></tr>
+<tr>
+<td><a href="#IncompleteEmote">IncompleteEmote</a> </td>
+<td> smallint(5) unsigned </td>
+<td> </td>
+<td> NO </td>
+<td> 0 </td>
+<td>
+</td></tr>
+<tr>
+<td><a href="#CompleteEmote">CompleteEmote</a> </td>
+<td> smallint(5) unsigned </td>
+<td> </td>
+<td> NO </td>
+<td> 0 </td>
+<td>
+</td></tr>
+<tr>
+<td><a href="#OfferRewardEmote">OfferRewardEmote1</a> </td>
+<td> smallint(5) unsigned </td>
+<td> </td>
+<td> NO </td>
+<td> 0 </td>
+<td>
+</td></tr>
+<tr>
+<td><a href="#OfferRewardEmote">OfferRewardEmote2</a> </td>
+<td> smallint(5) unsigned </td>
+<td> </td>
+<td> NO </td>
+<td> 0 </td>
+<td>
+</td></tr>
+<tr>
+<td><a href="#OfferRewardEmote">OfferRewardEmote3</a> </td>
+<td> smallint(5) unsigned </td>
+<td> </td>
+<td> NO </td>
+<td> 0 </td>
+<td>
+</td></tr>
+<tr>
+<td><a href="#OfferRewardEmote">OfferRewardEmote4</a> </td>
+<td> smallint(5) unsigned </td>
+<td> </td>
+<td> NO </td>
+<td> 0 </td>
+<td>
+</td></tr>
+<tr>
+<td><a href="#StartScript">StartScript</a> </td>
+<td> mediumint(8) unsigned </td>
+<td> </td>
+<td> NO </td>
+<td> 0 </td>
+<td>
+</td></tr>
+<tr>
+<td><a href="#CompleteScript">CompleteScript</a> </td>
+<td> mediumint(8) unsigned </td>
+<td> </td>
+<td> NO </td>
+<td> 0 </td>
+<td>
+</td></tr></table>
+<h4> <span class="mw-headline" id="entry">entry</span></h4>
+<p>Quest Id.
+Quest ID is the Primary Key for the Table. Each Quest ID must be unique!
+</p>
+<h4> <span class="mw-headline" id="Method">Method</span></h4>
+<p>Accepted values: 0, 1 or 2. 
+If <b>value = 0</b> then Quest is autocompleted (skip objectives/details).
+</p>
+<h4> <span class="mw-headline" id="ZoneOrSort">ZoneOrSort</span></h4>
+<p>This field defines under what category the quest falls in the quest log.
+</p><p>If <b>value &gt; 0</b> then value is Zone IDs taken from <a href="AreaTable.html" title="AreaTable.dbc">AreaTable.dbc</a>.
+</p><p>if <b>value &lt; 0</b> then (<b>-value</b>) is quest sort id: (in general profession or class quests. Also see <a href="#RequiredSkillValue">RequiredSkillValue</a> ) Value is ID from <a href="QuestSort.html" title="QuestSort.dbc">QuestSort.dbc</a>.
+</p>
+<table class="wikitable">
+<caption> Class
+</caption>
+<tr>
+<th>ID
+</th>
+<th>Name
+</th>
+<th>ID
+</th>
+<th>Name
+</th></tr>
+<tr>
+<td>61
+</td>
+<td>Warlock
+</td>
+<td>81
+</td>
+<td>Warrior
+</td></tr>
+<tr>
+<td>82
+</td>
+<td>Shaman
+</td>
+<td>141
+</td>
+<td>Paladin
+</td></tr>
+<tr>
+<td>161
+</td>
+<td>Mage
+</td>
+<td>162
+</td>
+<td>Rogue
+</td></tr>
+<tr>
+<td>261
+</td>
+<td>Hunter
+</td>
+<td>262
+</td>
+<td>Priest
+</td></tr>
+<tr>
+<td>263
+</td>
+<td>Druid
+</td>
+<td>
+</td>
+<td>
+</td></tr></table>
+<table class="wikitable">
+<caption> Professions
+</caption>
+<tr>
+<th>ID
+</th>
+<th>Name
+</th>
+<th>ID
+</th>
+<th>Name
+</th></tr>
+<tr>
+<td>24
+</td>
+<td>Herbalism
+</td>
+<td>101
+</td>
+<td>Fishing
+</td></tr>
+<tr>
+<td>121
+</td>
+<td>Blacksmithing
+</td>
+<td>181
+</td>
+<td>Alchemy
+</td></tr>
+<tr>
+<td>182
+</td>
+<td>Leatherworking
+</td>
+<td>201
+</td>
+<td>Engineering
+</td></tr>
+<tr>
+<td>264
+</td>
+<td>Tailoring
+</td>
+<td>304
+</td>
+<td>Cooking
+</td></tr>
+<tr>
+<td>324
+</td>
+<td>First Aid
+</td>
+<td>762
+</td>
+<td>Riding
+</td></tr></table>
+<table class="wikitable">
+<caption> Misc
+</caption>
+<tr>
+<th>ID
+</th>
+<th>Name
+</th>
+<th>ID
+</th>
+<th>Name
+</th></tr>
+<tr>
+<td>1
+</td>
+<td>Epic
+</td>
+<td>21
+</td>
+<td>REUSE - old wailing caverns
+</td></tr>
+<tr>
+<td>22
+</td>
+<td>Seasonal
+</td>
+<td>23
+</td>
+<td>REUSE - old undercity one
+</td></tr>
+<tr>
+<td>25
+</td>
+<td>REUSE - old scarlet monastery
+</td>
+<td>41
+</td>
+<td>REUSE - old uldaman
+</td></tr>
+<tr>
+<td>221
+</td>
+<td>Treasure Map
+</td>
+<td>241
+</td>
+<td>REUSE - old sunken temple
+</td></tr>
+<tr>
+<td>284
+</td>
+<td>Special
+</td>
+<td>344
+</td>
+<td>Legendary
+</td></tr>
+<tr>
+<td>364
+</td>
+<td>Darkmoon Faire
+</td>
+<td>365
+</td>
+<td>Ahn'Qiraj War
+</td></tr>
+<tr>
+<td>366
+</td>
+<td>Lunar Festival
+</td>
+<td>367
+</td>
+<td>Reputation
+</td></tr>
+<tr>
+<td>368
+</td>
+<td>Invasion
+</td>
+<td>369
+</td>
+<td>Midsummer
+</td></tr>
+<tr>
+<td>370
+</td>
+<td>Brewfest
+</td>
+<td>
+</td>
+<td>
+</td></tr></table>
+<h4> <span class="mw-headline" id="SkillOrClass">SkillOrClass</span></h4>
+<p>This field defines any specific skill or class requirements for the quest to be available for a character.
+</p><p>If <b>value &gt; 0</b> then value is a skill ID (see <a href="SkillLine.html" title="SkillLine.dbc">SkillLine.dbc</a>)
+</p><p>If <b>value &lt; 0</b> then (<b>-value</b>) is class ID (see <a href="ChrClasses.html" title="ChrClasses.dbc">ChrClasses.dbc</a>)
+</p>
+<h4> <span class="mw-headline" id="MinLevel">MinLevel</span></h4>
+<p>Minimum level required to get the quest.
+</p>
+<h4> <span class="mw-headline" id="QuestLevel">QuestLevel</span></h4>
+<p>Level of quest. Player recieves full experience amount only if their level is less than or equal to QuestLevel+5.  For quests that should be available to the player at any level, this value may be set to -1.
+</p>
+<h4> <span class="mw-headline" id="Type">Type</span></h4>
+<p>These values are ID taken from <a href="QuestInfo.html" title="QuestInfo.dbc">QuestInfo.dbc</a>
+</p>
+<table class="wikitable">
+<tr>
+<th>Value
+</th>
+<th>Type
+</th></tr>
+<tr>
+<td>1
+</td>
+<td>Group
+</td></tr>
+<tr>
+<td>21
+</td>
+<td>Life
+</td></tr>
+<tr>
+<td>41
+</td>
+<td>PvP
+</td></tr>
+<tr>
+<td>62
+</td>
+<td>Raid
+</td></tr>
+<tr>
+<td>81
+</td>
+<td>Dungeon
+</td></tr>
+<tr>
+<td>82
+</td>
+<td>World Event
+</td></tr>
+<tr>
+<td>83
+</td>
+<td>Legendary
+</td></tr>
+<tr>
+<td>84
+</td>
+<td>Escort
+</td></tr>
+<tr>
+<td>85
+</td>
+<td>Heroic
+</td></tr>
+<tr>
+<td>87
+</td>
+<td>Daily
+</td></tr></table>
+<h4> <span class="mw-headline" id="RequiredRaces">RequiredRaces</span></h4>
+<p>Races required to get the quest. 0 means available for all races.
+Field's value is a decimal value that must be transform to a 8 bits binary in order to be understandable.
+In binary form, each different bit represent a different race. They're assigned as follow&#160;:
+</p><p><big><b>Race</b></big>
+</p><p>These values are 2^ID taken from <a href="ChrRaces.html" title="ChrRaces.dbc">ChrRaces.dbc</a>
+</p>
+<table class="wikitable">
+<tr>
+<th> Value </th>
+<th> ID </th>
+<th> Name
+</th></tr>
+<tr>
+<td> 1 </td>
+<td> 1 </td>
+<td> Human
+</td></tr>
+<tr>
+<td> 2 </td>
+<td> 2 </td>
+<td> Orc
+</td></tr>
+<tr>
+<td> 4 </td>
+<td> 3 </td>
+<td> Dwarf
+</td></tr>
+<tr>
+<td> 8 </td>
+<td> 4 </td>
+<td> Night Elf
+</td></tr>
+<tr>
+<td> 16 </td>
+<td> 5 </td>
+<td> Undead
+</td></tr>
+<tr>
+<td> 32 </td>
+<td> 6 </td>
+<td> Tauren
+</td></tr>
+<tr>
+<td> 64 </td>
+<td> 7 </td>
+<td> Gnome
+</td></tr>
+<tr>
+<td> 128 </td>
+<td> 8 </td>
+<td> Troll
+</td></tr>
+<tr>
+<td> 512 </td>
+<td> 10 </td>
+<td> Blood Elf
+</td></tr>
+<tr>
+<td> 1024 </td>
+<td> 11 </td>
+<td> Draenei
+</td></tr></table>
+<p><big>Examples</big>
+</p><p>0,1791  = All Races 
+</p><p>690 (2 + 16 + 32 + 128 + 512)     = Horde Quest 
+</p><p>1101 (1 + 4 + 8 + 64 + 1024)   = Alliance Quest
+</p>
+<h4> <span class="mw-headline" id="RequiredSkillValue">RequiredSkillValue</span></h4>
+<p>Player skill value requirement for skill if in <a href="#ZoneOrSort">ZoneOrSort</a> field &lt; 0 and have some from skill related values.
+</p>
+<h4> <span class="mw-headline" id="RepObjectiveFaction">RepObjectiveFaction</span></h4>
+<p>Faction ID for an objective to achieve a certain reputation value with. See <a href="Faction.html" title="Faction.dbc">Faction.dbc</a>
+</p>
+<h4> <span class="mw-headline" id="RepObjectiveValue">RepObjectiveValue</span></h4>
+<p>Reputation value that the player must achieve with the faction in <a href="#RepObjectiveFaction">RepObjectiveFaction</a> as part of the quest objectives.
+</p>
+<h4> <span class="mw-headline" id="RequiredMinRepFaction">RequiredMinRepFaction</span></h4>
+<p>Faction ID for reputation requirement. See <a href="Faction.html" title="Faction.dbc">Faction.dbc</a>
+</p>
+<h4> <span class="mw-headline" id="RequiredMinRepValue">RequiredMinRepValue</span></h4>
+<p>Players must have this reputation or higher in order to receive the quest.
+</p><p><br />
+</p>
+<h4> <span class="mw-headline" id="RequiredMaxRepFaction">RequiredMaxRepFaction</span></h4>
+<p>The Faction ID for the faction that controls the maximum reputation value that the player can have and still get the quest. See <a href="Faction.html" title="Faction.dbc">Faction.dbc</a>
+</p>
+<h4> <span class="mw-headline" id="RequiredMaxRepValue">RequiredMaxRepValue</span></h4>
+<p>The maximum reputation value that the player can have with a faction and still get the quest. If the player has more reputation than the value in this field, the quest will not be able to be taken anymore.
+</p><p><br />
+</p>
+<h4> <span class="mw-headline" id="SuggestedPlayers">SuggestedPlayers</span></h4>
+<p>Info about how many players should do unite for the quest.
+</p>
+<h4> <span class="mw-headline" id="LimitTime">LimitTime</span></h4>
+<p>Time in seconds that the player has to complete this quest.
+</p>
+<h4> <span class="mw-headline" id="QuestFlags">QuestFlags</span></h4>
+<p>This flag field defines more specifically the type of quest it is. Aside from the daily flag and sharable flag, this field is used just for grouping purposes and NOT for any other quest requirements. The quest requirements are calculated from non-zero values in other quest template fields. Also, while some of these flags are known, others have yet an unknown purpose and the comments below is simply guesswork on them.
+</p><p>At the moment (rev 6055), the core does not actually handle these flags any differently (again, except for the daily flag and the sharable flag).
+</p>
+<table border="1" cellspacing="0" cellpadding="3">
+<tr>
+<th> Bit </th>
+<th> Name </th>
+<th> Comments
+</th></tr>
+<tr>
+<td> 0 </td>
+<td> QUEST_FLAGS_NONE </td>
+<td> No flags, so no groups assigned to this quest.
+</td></tr>
+<tr>
+<td> 1 </td>
+<td> QUEST_FLAGS_STAY_ALIVE </td>
+<td> If the player dies, the quest is failed.(?)
+</td></tr>
+<tr>
+<td> 2 </td>
+<td> QUEST_FLAGS_EVENT </td>
+<td> Escort quests or any other event-driven quests. If player in party, all players that can accept this quest will receive confirmation box to accept quest.
+</td></tr>
+<tr>
+<td> 4 </td>
+<td> QUEST_FLAGS_EXPLORATION </td>
+<td> Involves the activation of an areatrigger.
+</td></tr>
+<tr>
+<td> 8 </td>
+<td> QUEST_FLAGS_SHARABLE </td>
+<td> Allows the quest to be shared with other players.
+</td></tr>
+<tr>
+<td> 16 </td>
+<td> QUEST_FLAGS_NONE2 </td>
+<td> Unknown at this time and not used.
+</td></tr>
+<tr>
+<td> 32 </td>
+<td> QUEST_FLAGS_EPIC </td>
+<td> Epic class quests (hunter) (??)
+</td></tr>
+<tr>
+<td> 64 </td>
+<td> QUEST_FLAGS_RAID </td>
+<td> Raid or similiar player group needed for quest.
+</td></tr>
+<tr>
+<td> 128 </td>
+<td> QUEST_FLAGS_TBC </td>
+<td> Added with or after TBC.
+</td></tr>
+<tr>
+<td> 256 </td>
+<td> QUEST_FLAGS_UNK2 </td>
+<td> Quest needs extra non-objective items dropped (eg. ReqSourceID fields) (?)
+</td></tr>
+<tr>
+<td> 512 </td>
+<td> QUEST_FLAGS_HIDDEN_REWARDS </td>
+<td> Item and monetary rewards are hidden in the initial quest details page and in the quest log but will appear once ready to be rewarded.
+</td></tr>
+<tr>
+<td> 1024 </td>
+<td> QUEST_FLAGS_UNK4 </td>
+<td> Unknown at this time.
+</td></tr>
+<tr>
+<td> 2048 </td>
+<td> QUEST_FLAGS_TBC_RACES </td>
+<td> Blood elf/draenei starting zone quests.
+</td></tr>
+<tr>
+<td> 4096 </td>
+<td> QUEST_FLAGS_DAILY </td>
+<td> Daily repeatable quests (only flag that the core applies specific behavior for)
+</td></tr></table>
+<p>Like all flag based fields, <b>QuestFlags</b> can be added for the different types of quest.
+</p>
+<h4> <span class="mw-headline" id="SpecialFlags">SpecialFlags</span></h4>
+<p>This field is a bitmask and controls only two extra requirements and has only 4 possible values.
+</p>
+<ul><li> 0: No extra requirements
+</li><li> 1: Makes the quest repeatable.
+</li><li> 2: Makes the quest only completable by some external event (an entry in <a href="Areatrigger_involvedrelation.html" title="Areatrigger involvedrelation">areatrigger_involvedrelation</a>, spell effect quest complete or an entry in <a href="Scripts_tables.html" title="Scripts tables">spell_scripts</a> with command 7 as some examples)
+</li><li> 3: Both repeatable and completable only through an external event
+</li></ul>
+<h4> <span class="mw-headline" id="CharTitleId">CharTitleId</span></h4>
+<p>The title the character will receive upon completion of the quest. See <a href="CharTitles.html" title="CharTitles.dbc">CharTitles.dbc</a>
+</p>
+<h4> <span class="mw-headline" id="PrevQuestId">PrevQuestId</span></h4>
+<p><b>if value &gt; 0:</b> Contains the previous quest id, that must be completed before this quest can be started.
+</p><p><b>If value &lt; 0:</b> Contains the parent quest id, that must be active before this quest can be started.
+</p><p>See the <a href="#Examples">examples section</a> for examples.
+</p>
+<h4> <span class="mw-headline" id="NextQuestId">NextQuestId</span></h4>
+<p><b>If value &gt; 0:</b> Contains the next quest id, if PrevQuestId of that quest is not sufficient.
+</p><p><b>If value &lt; 0:</b> Contains the sub quest id, if PrevQuestId of that quest is not sufficient.
+If quest have many alternative next quests (class specific quests lead from single not class specific quest) field PrevQuestId in next quests can used for setting this dependence.
+</p><p>See the <a href="#Examples">examples section</a> for examples.
+</p>
+<h4> <span class="mw-headline" id="ExclusiveGroup">ExclusiveGroup</span></h4>
+<p><b>if ExclusiveGroup &gt; 0</b>
+</p><p>Allows to define a group of quests of which only one may be chosen and completed.
+E.g. if from quests 1200, 1201 and 1202 only one should be allowed to be chosen, insert 1200 into ExclusiveGroup of all 3 quests.
+</p><p><b>if ExclusiveGroup &lt; 0</b>
+</p><p>Allows to define a group of quests of which all must be completed and rewarded to start next quest.
+E.g. if quest 1000 dependent from one of quests 1200, 1201 and 1202 and all this quests have same negative exclusive group then all this quest must be completed and rewarded before quest 1000 can be started.
+</p><p>See the <a href="#Examples">examples section</a> for examples.
+</p>
+<h4> <span class="mw-headline" id="NextQuestInChain">NextQuestInChain</span></h4>
+<p>The quest entry from a <b>creature</b> or <b>gameobject</b> that ends a quest and starts a new one. The result is, that if you end the quest, the new quest instantly appears from the quest giver.
+</p><p>See the <a href="#Examples">examples section</a> for examples.
+</p>
+<h4> <span class="mw-headline" id="SrcItemId">SrcItemId</span></h4>
+<p>Item's ID given by the quest giver at beginning of the quest.
+Items will be deleted when quest is abandoned.
+</p>
+<h4> <span class="mw-headline" id="SrcItemCount">SrcItemCount</span></h4>
+<p>Amount of items given.
+</p>
+<h4> <span class="mw-headline" id="SrcSpell">SrcSpell</span></h4>
+<p>Spell casted on player when quest is started. Can be a buff or a learning spell.
+</p>
+<h4> <span class="mw-headline" id="Name">Name</span></h4>
+<p>Name (title) of the quest.
+</p>
+<h4> <span class="mw-headline" id="Details">Details</span></h4>
+<p>The quest text. You can use certain placeholders that will be filled in in-game: $B - line break, $N - name, $R - race, $C - class, $Gmale:female; (male and female can be replace with any synonym you want, but the order must stay the same. IE: boy:girl / man:woman / sir:madam / dude:chick)
+</p>
+<h4> <span class="mw-headline" id="Objectives">Objectives</span></h4>
+<p>Objectives of the quest.
+If empty, quest is an auto-complete quest that can be immediately finished without accepting it first.
+</p>
+<h4> <span class="mw-headline" id="OfferRewardText">OfferRewardText</span></h4>
+<p>First text send to the player by the NPC when completing the quest. You can use certain placeholders that will be filled in in-game: $B - line break, $N - name, $R - race, $C - class, $Gmale:female; (male and female can be replace with any synonym you want, but the order must stay the same. IE: boy:girl / man:woman / sir:madam / dude:chick)
+</p>
+<h4> <span class="mw-headline" id="RequestItemsText">RequestItemsText</span></h4>
+<p>Text sent to player when the player tries to talk to the NPC with the quest active but incomplete. (The text under the "Progress" title in Wowhead.) You can use certain placeholders that will be filled in in-game: $B - line break, $N - name, $R - race, $C - class, $Gmale:female; (male and female can be replace with any synonym you want, but the order must stay the same. IE: boy:girl / man:woman / sir:madam / dude:chick)
+</p>
+<h4> <span class="mw-headline" id="EndText">EndText</span></h4>
+<p><i>This field has no description yet.</i>
+</p>
+<h4> <span class="mw-headline" id="ObjectiveText">ObjectiveText</span></h4>
+<p>Used to define non-standard objective texts, that show up in the questlog.
+Example, "Heal fallen warrior" and the number gets added by Count values.
+</p>
+<h4> <span class="mw-headline" id="ReqItemId">ReqItemId</span></h4>
+<p>Item_template Id of required item to complete the quest.
+</p>
+<h4> <span class="mw-headline" id="ReqItemCount">ReqItemCount</span></h4>
+<p>Amount of required items
+</p>
+<h4> <span class="mw-headline" id="ReqSourceID">ReqSourceID</span></h4>
+<p>Item ID that is needed indirectly by the quest. For example, the quests asks for item X but the only way to get item X is by activating item Y; however, item Y is also a quest item. Therefore you set item Y's ID in this field. This requirement will not appear in the quest text, it is just for the core to know when to drop a quest item that isn't in the ReqItemID field but is still needed by the quest.
+</p>
+<h4> <span class="mw-headline" id="ReqSourceCount">ReqSourceCount</span></h4>
+<p>The maximum number of copies of the item in ReqSourceID that can be picked up (and dropped by the core).
+</p>
+<h4> <span class="mw-headline" id="ReqSourceRef">ReqSourceRef</span></h4>
+<p><i>This field has no description yet.</i>
+</p>
+<h4> <span class="mw-headline" id="ReqCreatureOrGOId">ReqCreatureOrGOId</span></h4>
+<p><b>Value &gt; 0:</b> required creature_template ID the player needs to kill/cast on in order to complete the quest.
+</p><p><b>Value &lt; 0:</b> required gameobject_template ID the player needs to cast on in order to complete the quest.
+</p><p>If <b>ReqSpellCast</b> is&#160;!= 0, the objective is to cast on target, else kill.
+</p><p>NOTE: If ReqSpellCast is&#160;!= 0 and the spell has effects Send Event or Quest Complete, this field may be left empty.
+</p>
+<h4> <span class="mw-headline" id="ReqCreatureOrGOCount">ReqCreatureOrGOCount</span></h4>
+<p>The number of times the creature or gameobject must be killed or casted upon.
+</p>
+<h4> <span class="mw-headline" id="ReqSpellCast">ReqSpellCast</span></h4>
+<p>Spell ID of Spell that needs to be cast in order to fulfill a quest objective.
+A spell normally needs a target which is <a href="#ReqCreatureOrGOId">ReqCreatureOrGOId</a>
+</p><p>And for spells with "SpellEffect with ImpliciteTargetA-B == 38" check table <a href="Spell_script_target.html" title="Spell script target">Spell_script_target</a>
+</p><p>NOTE: If the spell has spell effects Send Event or Quest Complete, it can be entered here WITHOUT the need for a target and count.
+</p>
+<h4> <span class="mw-headline" id="RewChoiceItemId.2C_RewChoiceItemCount">RewChoiceItemId, RewChoiceItemCount</span></h4>
+<p>Id of item available for reward choice. 
+</p><p>Number of Charges in rewarded item available.
+</p>
+<h4> <span class="mw-headline" id="RewItemId.2C_RewItemCount">RewItemId, RewItemCount</span></h4>
+<p>Number of RewItem
+</p><p>item Id given for reward (no choice).
+</p>
+<h4> <span class="mw-headline" id="RewRepFaction.2C_RewRepValue">RewRepFaction, RewRepValue</span></h4>
+<p>Faction Id (from <a href="Faction.html" title="Faction.dbc">Faction.dbc</a>) for which the quest give reputation points.
+</p><p>Number of gain or lost reputation points for Faction at quest completion.
+This is special reputation rewarding. Normal reputation reward to quest rewarding creature faction calculated and added automatically.
+</p>
+<h4> <span class="mw-headline" id="RewHonorableKills">RewHonorableKills</span></h4>
+<p>Number of honorable kill honor rewarded for completing this quest.
+</p><p>Example:
+An example value is 15 for quest 8388: At level 70 an honorable kill is 20.9 honor worth. Multiply this with 15 and you receive 313.5, after the multiplication the value is rounded up. So the honor rewarded at level 70 is 314 for this quest.
+</p>
+<h4> <span class="mw-headline" id="RewOrReqMoney">RewOrReqMoney</span></h4>
+<p>Money earned by completing the quest (if value &gt; 0). Money quest requirement (if value &lt; 0).
+</p>
+<h4> <span class="mw-headline" id="RewMoneyMaxLevel">RewMoneyMaxLevel</span></h4>
+<p>The money a character at level 70 would get when they complete this quest. This field also controls the XP given as the XP is calculated from the value in this field by the following formula. If the quest is repeatable, XP will be given only once. The total XP that a character will receive is also affected by the level difference between the character's level and the quest's level.
+<br /><br />
+The formula for calculating XP from the value in this field:<br />
+<b>QuestLevel &gt;= 65:</b> XP = RewMoneyMaxLevel / 6.0<br />
+<b>QuestLevel == 64:</b> XP = RewMoneyMaxLevel / 4.8<br />
+<b>QuestLevel == 63:</b> XP = RewMoneyMaxLevel / 3.6<br />
+<b>QuestLevel == 62:</b> XP = RewMoneyMaxLevel / 2.4<br />
+<b>QuestLevel == 61:</b> XP = RewMoneyMaxLevel / 1.2<br />
+<b>QuestLevel &lt;= 60:</b> XP = RewMoneyMaxLevel / 0.6
+</p>
+<h4> <span class="mw-headline" id="RewSpell">RewSpell</span></h4>
+<p>Spell that is shown to be casted on quest completion in the quest log. Note that this spell will NOT be casted if <a href="#RewSpellCast">RewSpellCast</a> is non-zero. The spell in the other field will be casted instead, in which case the spell here only serves as the visual in the quest log.
+</p><p>NOTE: This field comes straight from the WDB and should not be changed.
+</p>
+<h4> <span class="mw-headline" id="RewSpellCast">RewSpellCast</span></h4>
+<p>Spell that will always be casted at player when completing the quest. This can be learn spell and player learned some spell in result, or buff spell, for example. If this field is non-zero then this spell will ALWAYS be casted and the spell in <a href="#RewSpell">RewSpell</a> will not.
+</p><p>NOTE: This field comes straight from the WDB and should not be changed.
+</p>
+<h4> <span class="mw-headline" id="RewMailTemplateId">RewMailTemplateId</span></h4>
+<p>If the quest gives as a reward an item from a possible list of items, the ID here corresponds to the proper loot template in <a href="Loot_Template_tables.html" title="Loot Template tables">mail_loot_template</a>. According to the rules in that loot template, items "looted" will be sent by mail at the completion of the quest.
+</p>
+<h4> <span class="mw-headline" id="RewMailDelaySecs">RewMailDelaySecs</span></h4>
+<p>How many seconds to wait until the mail is sent to the character that turned in a quest rewarding items from a loot template defined in <a href="#RewMailTemplateId">RewMailTemplateId</a>
+</p>
+<h4> <span class="mw-headline" id="PointMapId">PointMapId</span></h4>
+<p>MapId of a quest point of interest (POI - Point Of Interest).
+POI will be shown on the map when quest is active.
+</p>
+<h4> <span class="mw-headline" id="PointX">PointX</span></h4>
+<p>X coordinate of quest POI.
+</p>
+<h4> <span class="mw-headline" id="PointY">PointY</span></h4>
+<p>Y coordinate of quest POI.
+</p>
+<h4> <span class="mw-headline" id="PointOpt">PointOpt</span></h4>
+<p><i>This field has no description yet.</i>
+</p>
+<h4> <span class="mw-headline" id="DetailsEmote">DetailsEmote</span></h4>
+<p><i>This field has no description yet.</i>
+</p>
+<h4> <span class="mw-headline" id="CompleteEmote">CompleteEmote</span></h4>
+<p>Emote played by the related NPC at the time all quest objects are completed.
+</p>
+<h4> <span class="mw-headline" id="OfferRewardEmote">OfferRewardEmote</span></h4>
+<p>Emote played by the NPC at the time the character is rewarded for the quest.
+</p>
+<h4> <span class="mw-headline" id="StartScript">StartScript</span></h4>
+<p>ID of the start script. See <a href="Scripts_tables.html#id" title="Scripts tables">quest_start_scripts.id</a>
+</p>
+<h4> <span class="mw-headline" id="CompleteScript">CompleteScript</span></h4>
+<p>ID of the end script. See <a href="Scripts_tables.html#id" title="Scripts tables">quest_end_scripts.id</a>
+</p>
+<h2> <span class="mw-headline" id="Examples">Examples</span></h2>
+<p><b>The "rules of engagement" dealing with quests</b>
+</p><p>1. Always use PrevQuestId before using NextQuestId. NextQuestId is considered optional and to be used only when PrevQuestId is not sufficient
+</p><p><br />
+<b>Basic quest</b>
+</p><p><i>Single, stand-alone quest with no prerequisites</i>
+</p>
+<pre>
+    *questA*
+</pre>
+<pre>
+PrevQuestId = 0        NextQuestId = 0        ExclusiveGroup = 0        NextQuestInChain = 0        entry = questA
+</pre>
+<p><i>When this quest require another quest to be rewarded</i>
+</p>
+<pre>
+    *questA*
+</pre>
+<pre>
+PrevQuestId = questX   NextQuestId = 0        ExclusiveGroup = 0        NextQuestInChain = 0        entry = questA
+</pre>
+<p><b>Chain of quests</b>
+</p><p><i>Player get quests in a strict chain that must be completed in a specific order.</i>
+</p>
+<pre>
+    *questA*
+        |
+    *questB*
+        |
+    *questC*
+        |
+    *questD*
+</pre>
+<pre>
+PrevQuestId = 0        NextQuestId = 0        ExclusiveGroup = 0        NextQuestInChain = questB    entry = questA
+PrevQuestId = questA   NextQuestId = 0        ExclusiveGroup = 0        NextQuestInChain = questC    entry = questB
+PrevQuestId = questB   NextQuestId = 0        ExclusiveGroup = 0        NextQuestInChain = questD    entry = questC
+PrevQuestId = questC   NextQuestId = 0        ExclusiveGroup = 0        NextQuestInChain = 0         entry = questD
+</pre>
+<p><b>Chain of quests with multiple start quests.</b>
+</p><p><i>Player should only be allowed to complete one of three possible</i>
+</p>
+<pre>
+    *questA*     *questB*    *questC*
+        \           |           /
+          ------ *questD* -----
+                    |
+                 *questE*
+</pre>
+<pre>
+PrevQuestId = 0        NextQuestId = questD   ExclusiveGroup = questA   NextQuestInChain = questD    entry = questA
+PrevQuestId = 0        NextQuestId = questD   ExclusiveGroup = questA   NextQuestInChain = questD    entry = questB
+PrevQuestId = 0        NextQuestId = questD   ExclusiveGroup = questA   NextQuestInChain = questD    entry = questC
+PrevQuestId = 0        NextQuestId = 0        ExclusiveGroup = 0        NextQuestInChain = questE    entry = questD
+PrevQuestId = questD   NextQuestId = 0        ExclusiveGroup = 0        NextQuestInChain = 0         entry = questE
+</pre>
+<p><br />
+<b>Chain of quests with multiple start quests.</b>
+</p><p><i>Player must complete all three initial quests before D becomes available</i>
+</p>
+<pre>
+    *questA*    *questB*    *questC*
+        \          |          /
+         ------ *questD* -----
+                   |
+                *questE*
+</pre>
+<pre>
+PrevQuestId = 0        NextQuestId = questD   ExclusiveGroup = -questA    NextQuestInChain = questD    entry = questA
+PrevQuestId = 0        NextQuestId = questD   ExclusiveGroup = -questA    NextQuestInChain = questD    entry = questB
+PrevQuestId = 0        NextQuestId = questD   ExclusiveGroup = -questA    NextQuestInChain = questD    entry = questC
+PrevQuestId = 0        NextQuestId = 0        ExclusiveGroup = 0          NextQuestInChain = questE    entry = questD
+PrevQuestId = questD   NextQuestId = 0        ExclusiveGroup = 0          NextQuestInChain = 0         entry = questE
+</pre>
+<p><br />
+<b>Quests with split and a child quest</b>
+</p><p><i>Completing A unlocks B and C that can be done at the same time. They both need to be completed before D becomes available. X is needed to obtain item for C and this quest should only be available if C is active</i>
+</p>
+<pre>
+                *questA*
+                /        \
+           *questB     *questC* - *questX*
+                \        /
+                *questD*
+</pre>
+<pre>
+PrevQuestId = 0        NextQuestId = 0        ExclusiveGroup = 0         NextQuestInChain = 0        entry = questA
+PrevQuestId = questA   NextQuestId = questD   ExclusiveGroup = -questB   NextQuestInChain = 0        entry = questB
+PrevQuestId = questA   NextQuestId = questD   ExclusiveGroup = -questB   NextQuestInChain = 0        entry = questC
+PrevQuestId = -questC  NextQuestId = 0        ExclusiveGroup = 0         NextQuestInChain = 0        entry = questX
+PrevQuestId = 0        NextQuestId = 0        ExclusiveGroup = 0         NextQuestInChain = 0        entry = questD
+</pre>
+<p><br />
+<b>Multiple quest chains, leading to one final quest</b>
+</p><p><i>Player may complete (not required to) X, but has to complete all three quest chains before final quest becomes available</i>
+</p>
+<pre>
+                *questX*
+                   |
+    *questA*    *questC*    *questE*
+       |           |            |
+    *questB*    *questD*    *questF*
+       \           |           /
+         ------ *questG* -----
+</pre>
+<pre>
+PrevQuestId = 0        NextQuestId = 0         ExclusiveGroup = 0          NextQuestInChain = questC    entry = questX
+
+PrevQuestId = 0        NextQuestId = 0         ExclusiveGroup = 0          NextQuestInChain = questB    entry = questA
+PrevQuestId = questA   NextQuestId = questG    ExclusiveGroup = -questB    NextQuestInChain = 0         entry = questB
+PrevQuestId = 0        NextQuestId = 0         ExclusiveGroup = 0          NextQuestInChain = questD    entry = questC
+PrevQuestId = questC   NextQuestId = questG    ExclusiveGroup = -questB    NextQuestInChain = 0         entry = questD
+PrevQuestId = 0        NextQuestId = 0         ExclusiveGroup = 0          NextQuestInChain = questF    entry = questE
+PrevQuestId = questE   NextQuestId = questG    ExclusiveGroup = -questB    NextQuestInChain = 0         entry = questF
+
+PrevQuestId = 0        NextQuestId = 0         ExclusiveGroup = 0          NextQuestInChain = 0         entry = questG
+</pre>
+<p><br />
+<b>Complicated</b>
+</p><p><i>Player must first complete A, then B to unlock the chain from C to E. Three other quests in a group will also be unlocked, those can be done at the same time. The three grouped quests must all be completed before I becomes available. Completion of E and I is required to obtain the final quest.</i>
+</p>
+<pre>
+                *questA*
+                   |
+                *questB*
+              /          \
+          *questC*     *questF*
+             |         *questG*
+          *questD*     *questH*
+             |            |
+          *questE*     *questI*
+             \           /
+                *questJ*
+</pre>
+<pre>
+PrevQuestId = 0        NextQuestId = 0         ExclusiveGroup = 0          NextQuestInChain = questB    entry = questA
+PrevQuestId = questA   NextQuestId = 0         ExclusiveGroup = 0          NextQuestInChain = 0         entry = questB
+
+PrevQuestId = questB   NextQuestId = 0         ExclusiveGroup = 0          NextQuestInChain = questD    entry = questC
+PrevQuestId = questC   NextQuestId = 0         ExclusiveGroup = 0          NextQuestInChain = questE    entry = questD
+PrevQuestId = questD   NextQuestId = questJ    ExclusiveGroup = -questE    NextQuestInChain = 0         entry = questE
+
+PrevQuestId = questB   NextQuestId = questI    ExclusiveGroup = -questF    NextQuestInChain = 0         entry = questF
+PrevQuestId = questB   NextQuestId = questI    ExclusiveGroup = -questF    NextQuestInChain = 0         entry = questG
+PrevQuestId = questB   NextQuestId = questI    ExclusiveGroup = -questF    NextQuestInChain = 0         entry = questH
+
+PrevQuestId = 0        NextQuestId = questJ    ExclusiveGroup = -questE    NextQuestInChain = 0         entry = questI
+
+PrevQuestId = 0        NextQuestId = 0         ExclusiveGroup = 0          NextQuestInChain = 0         entry = questJ
+</pre>
+<p><br />
+<b>Impossible - many quests may unlock many</b>
+</p><p><i>Player can choose between two alternative chains (Chain A or B, but not both chains). A2 or B2 should unlock C, D and E when complete. When all three complete, F should be unlocked. If player get A3 or B3 after complete F, depends on if chain A or B was chosen.</i>
+</p>
+<pre>
+                *questA1*           *questB1*
+                    |                   |
+                *questA2*           *questB2*
+                    \                  /
+                     ---- *questC* ----
+                          *questD*
+                          *questE*
+                             |
+                          *questF*
+                         /        \
+                    *questA3*   *questB3*
+</pre>
+<pre>
+PrevQuestId = 0        NextQuestId = 0         ExclusiveGroup = 0          NextQuestInChain = questA2   entry = questA1
+PrevQuestId = questA1  NextQuestId = 0         ExclusiveGroup = 0          NextQuestInChain = 0         entry = questA2
+
+PrevQuestId = 0        NextQuestId = 0         ExclusiveGroup = 0          NextQuestInChain = questB2   entry = questB1
+PrevQuestId = questB1  NextQuestId = 0         ExclusiveGroup = 0          NextQuestInChain = 0         entry = questB2
+
+PrevQuestId = 0        NextQuestId = questF    ExclusiveGroup = -questC    NextQuestInChain = 0         entry = questC
+PrevQuestId = 0        NextQuestId = questF    ExclusiveGroup = -questC    NextQuestInChain = 0         entry = questD
+PrevQuestId = 0        NextQuestId = questF    ExclusiveGroup = -questC    NextQuestInChain = 0         entry = questE
+
+PrevQuestId = 0        NextQuestId = 0         ExclusiveGroup = 0          NextQuestInChain = 0         entry = questF
+
+PrevQuestId = questF   NextQuestId = 0         ExclusiveGroup = 0          NextQuestInChain = 0         entry = questA3
+PrevQuestId = questF   NextQuestId = 0         ExclusiveGroup = 0          NextQuestInChain = 0         entry = questB3
+</pre>
+<p><i>Note: if player can choose between chain A or B may be determined by faction status (aldor or scryer), using ReqMinRepFaction = 1. Player should not be able to be neutral+1 with both at the same time. This may be the common threshold to obtain aldor or scryer quests (this is unsure). If that is the case, only the unlock of C, D and E after complete A2 _or_ B2 is the impossible part.</i>
+</p>
+<!-- 
+NewPP limit report
+Preprocessor visited node count: 343/1000000
+Preprocessor generated node count: 804/1000000
+Post‐expand include size: 1712/2097152 bytes
+Template argument size: 29/2097152 bytes
+Highest expansion depth: 3/40
+Expensive parser function count: 0/100
+-->
+
+<!-- Saved in parser cache with key admin_wikia:pcache:idhash:198-0!*!0!!en-gb!*!* and timestamp 20160412104855 -->
+</div>				<!-- /bodycontent -->
+								<!-- printfooter -->
+				<div class="printfooter">
+				Retrieved from ‘<a href="http://wiki.hellground.net/index.php?title=Quest_template&amp;oldid=888">http://wiki.hellground.net/index.php?title=Quest_template&amp;oldid=888</a>’				</div>
+				<!-- /printfooter -->
+												<!-- catlinks -->
+				<div id='catlinks' class='catlinks'><div id="mw-normal-catlinks" class="mw-normal-catlinks"><a href="Special_Categories.html" title="Special:Categories">Categories</a>: <ul><li><a href="Category_World_database.html" title="Category:World database">World database</a></li><li><a href="Category_Database_tables.html" title="Category:Database tables">Database tables</a></li></ul></div></div>				<!-- /catlinks -->
+												<div class="visualClear"></div>
+				<!-- debughtml -->
+								<!-- /debughtml -->
+			</div>
+			<!-- /bodyContent -->
+		</div>
+		<!-- /content -->
+		<div id="mw-navigation">
+			<h2>Navigation menu</h2>
+			<!-- header -->
+			<div id="mw-head">
+				
+<!-- 0 -->
+<div id="p-personal" role="navigation" class="">
+	<h3>Personal tools</h3>
+	<ul>
+<li id="pt-login"><a href="http://wiki.hellground.net/index.php?title=Special:UserLogin&amp;returnto=Quest+template" title="You are encouraged to log in; however, it is not mandatory [o]" accesskey="o">Log in</a></li>	</ul>
+</div>
+
+<!-- /0 -->
+				<div id="left-navigation">
+					
+<!-- 0 -->
+<div id="p-namespaces" role="navigation" class="vectorTabs">
+	<h3>Namespaces</h3>
+	<ul>
+					<li  id="ca-nstab-main" class="selected"><span><a href="Quest_template.html"  title="View the content page [c]" accesskey="c">Page</a></span></li>
+					<li  id="ca-talk" class="new"><span><a href="http://wiki.hellground.net/index.php?title=Talk:Quest_template&amp;action=edit&amp;redlink=1"  title="Discussion about the content page [t]" accesskey="t">Discussion</a></span></li>
+			</ul>
+</div>
+
+<!-- /0 -->
+
+<!-- 1 -->
+<div id="p-variants" role="navigation" class="vectorMenu emptyPortlet">
+	<h3 id="mw-vector-current-variant">
+		</h3>
+	<h3><span>Variants</span><a href="#"></a></h3>
+	<div class="menu">
+		<ul>
+					</ul>
+	</div>
+</div>
+
+<!-- /1 -->
+				</div>
+				<div id="right-navigation">
+					
+<!-- 0 -->
+<div id="p-views" role="navigation" class="vectorTabs">
+	<h3>Views</h3>
+	<ul>
+					<li id="ca-view" class="selected"><span><a href="Quest_template.html" >Read</a></span></li>
+					<li id="ca-viewsource"><span><a href="http://wiki.hellground.net/index.php?title=Quest_template&amp;action=edit"  title="This page is protected.&#10;You can view its source [e]" accesskey="e">View source</a></span></li>
+					<li id="ca-history" class="collapsible"><span><a href="http://wiki.hellground.net/index.php?title=Quest_template&amp;action=history"  title="Past revisions of this page [h]" accesskey="h">View history</a></span></li>
+			</ul>
+</div>
+
+<!-- /0 -->
+
+<!-- 1 -->
+<div id="p-cactions" role="navigation" class="vectorMenu emptyPortlet">
+	<h3><span>Actions</span><a href="#"></a></h3>
+	<div class="menu">
+		<ul>
+					</ul>
+	</div>
+</div>
+
+<!-- /1 -->
+
+<!-- 2 -->
+
+
+<!-- /2 -->
+				</div>
+			</div>
+			<!-- /header -->
+			<!-- panel -->
+			<div id="mw-panel">
+				<!-- logo -->
+					<div id="p-logo" role="banner"><a style="background-image: url(../skins/common/images/wiki.png);" href="Main_Page.html"  title="Visit the main page"></a></div>
+				<!-- /logo -->
+				
+<!-- navigation -->
+<div class="portal" role="navigation" id='p-navigation'>
+	<h3>Navigation</h3>
+	<div class="body">
+		<ul>
+			<li id="n-mainpage-description"><a href="Main_Page.html" title="Visit the main page [z]" accesskey="z">Main page</a></li>
+			<li id="n-randompage"><a href="Spell_required.html" title="Load a random page [x]" accesskey="x">Random page</a></li>
+		</ul>
+	</div>
+</div>
+
+<!-- /navigation -->
+
+<!-- HellGroundCore -->
+<div class="portal" role="navigation" id='p-HellGroundCore'>
+	<h3>HellGroundCore</h3>
+	<div class="body">
+		<ul>
+			<li id="n-Project-site"><a href="https://hellground.net/" rel="nofollow">Project site</a></li>
+			<li id="n-Project--forum"><a href="http://forum.hellground.net/" rel="nofollow">Project  forum</a></li>
+			<li id="n-Project-repositories"><a href="http://emu.hellground.net/" rel="nofollow">Project repositories</a></li>
+			<li id="n-Project-bug-tracker"><a href="http://forum.hellground.net/" rel="nofollow">Project bug tracker</a></li>
+		</ul>
+	</div>
+</div>
+
+<!-- /HellGroundCore -->
+
+<!-- SEARCH -->
+
+<!-- /SEARCH -->
+
+<!-- TOOLBOX -->
+<div class="portal" role="navigation" id='p-tb'>
+	<h3>Tools</h3>
+	<div class="body">
+		<ul>
+			<li id="t-whatlinkshere"><a href="Special_WhatLinksHere/Quest_template.html" title="A list of all wiki pages that link here [j]" accesskey="j">What links here</a></li>
+			<li id="t-recentchangeslinked"><a href="Special_RecentChangesLinked/Quest_template.html" title="Recent changes in pages linked from this page [k]" accesskey="k">Related changes</a></li>
+			<li id="t-specialpages"><a href="Special_SpecialPages.html" title="A list of all special pages [q]" accesskey="q">Special pages</a></li>
+			<li id="t-print"><a href="http://wiki.hellground.net/index.php?title=Quest_template&amp;printable=yes" rel="alternate" title="Printable version of this page [p]" accesskey="p">Printable version</a></li>
+			<li id="t-permalink"><a href="http://wiki.hellground.net/index.php?title=Quest_template&amp;oldid=888" title="Permanent link to this revision of the page">Permanent link</a></li>
+			<li id="t-info"><a href="http://wiki.hellground.net/index.php?title=Quest_template&amp;action=info">Page information</a></li>
+		</ul>
+	</div>
+</div>
+
+<!-- /TOOLBOX -->
+
+<!-- LANGUAGES -->
+
+<!-- /LANGUAGES -->
+			</div>
+			<!-- /panel -->
+		</div>
+		<!-- footer -->
+		<div id="footer" role="contentinfo">
+							<ul id="footer-info">
+											<li id="footer-info-lastmod"> This page was last modified on 3 March 2014, at 20:26.</li>
+											<li id="footer-info-viewcount">This page has been accessed 518 times.</li>
+									</ul>
+							<ul id="footer-places">
+											<li id="footer-places-privacy"><a href="TBC_HellGroundCore_Privacy_policy.html" title="TBC HellGroundCore:Privacy policy">Privacy policy</a></li>
+											<li id="footer-places-about"><a href="TBC_HellGroundCore_About.html" title="TBC HellGroundCore:About">About HellGroundCore MMORPG framework educational and hobby project</a></li>
+											<li id="footer-places-disclaimer"><a href="TBC_HellGroundCore_General_disclaimer.html" title="TBC HellGroundCore:General disclaimer">Disclaimers</a></li>
+									</ul>
+										<ul id="footer-icons" class="noprint">
+					<li id="footer-poweredbyico">
+						<a href="http://www.mediawiki.org/"><img src="../skins/common/images/poweredby_mediawiki_88x31.png" alt="Powered by MediaWiki" width="88" height="31" /></a>
+					</li>
+				</ul>
+						<div style="clear:both"></div>
+		</div>
+		<!-- /footer -->
+		<script>if(window.mw){
+mw.loader.state({"site":"loading","user":"missing","user.groups":"ready"});
+}</script>
+<script>if(window.mw){
+mw.loader.load(["mediawiki.action.view.postEdit","mediawiki.user","mediawiki.page.ready","mediawiki.searchSuggest","mediawiki.hidpi","skins.vector.js"], null, true);
+}</script>
+<script>if(window.mw){
+mw.loader.state({"site":"ready"});
+}</script>
+<!-- Served in 0.153 secs. -->
+	</body>
+
+<!-- Mirrored from wiki.hellground.net/index.php/Quest_template by HTTrack Website Copier/3.x [XR&CO'2014], Tue, 12 Apr 2016 10:51:49 GMT -->
+</html>

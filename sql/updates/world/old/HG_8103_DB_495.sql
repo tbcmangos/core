@@ -1,0 +1,1 @@
+INSERT INTO spell_linked_spell VALUES ('36920', '30928', '1', "Nazan: fireball summons fire"), ('34653', '23971', '1', "Nazan: fireball summons fire [HERO]");

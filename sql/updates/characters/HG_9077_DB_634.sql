@@ -1,0 +1,1 @@
+ALTER TABLE `saved_variables` ADD COLUMN `LastCharacterGuid` INT(11) UNSIGNED DEFAULT 1 NOT NULL AFTER `PVPHorde`;

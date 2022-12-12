@@ -1,0 +1,1 @@
+update quest_template set ReqCreatureOrGOId1=0, ReqCreatureOrGOCount1=0, SpecialFlags = 2 where entry in (8353,8354,8356,8357,8359,8360);

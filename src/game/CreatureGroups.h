@@ -40,7 +40,7 @@ namespace CreatureGroupManager
     void LoadCreatureFormations();
 };
 
-typedef UNORDERED_MAP<uint32/*memberDBGUID*/, FormationInfo*> CreatureGroupInfoType;
+typedef std::unordered_map<uint32/*memberDBGUID*/, FormationInfo*> CreatureGroupInfoType;
 
 extern CreatureGroupInfoType CreatureGroupMap;
 
@@ -71,10 +71,10 @@ class CreatureGroup
         void RemoveMember(Creature *member);
         void FormationReset(bool dismiss);
         // as for now, used in scripts to respawn whole group when one member enters evade mode
-        HELLGROUND_IMPORT_EXPORT void RespawnFormation(Creature *member);
+         void RespawnFormation(Creature *member);
 
         // used to respawn and evade whole formation
-        HELLGROUND_IMPORT_EXPORT void EvadeFormation(Creature *member);
+         void EvadeFormation(Creature *member);
 
         void LeaderMoveTo(float x, float y, float z);
         void MemberAttackStart(Creature* member, Unit *target);

@@ -1,0 +1,1 @@
+UPDATE `item_template` SET `bonding`= 1 WHERE `entry` IN (90001,90002,90003,90004);

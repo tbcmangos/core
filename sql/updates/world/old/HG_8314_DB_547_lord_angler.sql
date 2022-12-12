@@ -1,0 +1,2 @@
+INSERT INTO creature (id, map, position_x, position_y, position_z, orientation, spawntimesecs, curhealth, spawndist, MovementType) VALUES (14236, 1, -4190, -4011, -9, 4.337, 259200, 1603, 4, 1);
+UPDATE creature_template SET faction_A=129, faction_H=129 WHERE entry=14236;

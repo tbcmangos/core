@@ -1,0 +1,1 @@
+UPDATE quest_end_scripts SET datalong = 20890 WHERE id = 7429 AND command = 9;

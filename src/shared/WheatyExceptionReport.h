@@ -1,12 +1,5 @@
-//==========================================
-// Matt Pietrek
-// MSDN Magazine, 2002
-// FILE: WheatyExceptionReport.h
-//==========================================
 #ifndef _WHEATYEXCEPTIONREPORT_
 #define _WHEATYEXCEPTIONREPORT_
-
-#if PLATFORM == PLATFORM_WINDOWS
 
 #include <dbghelp.h>
 
@@ -39,7 +32,7 @@ enum BasicType                                              // Stolen from CVCON
     btHresult = 31
 };
 
-const char* const rgBaseType[] =
+char const* const rgBaseType[] =
 {
     " <user defined> ",                                     // btNoType = 0,
     " void ",                                               // btVoid = 1,
@@ -103,26 +96,22 @@ class WheatyExceptionReport
 
         static BOOL CALLBACK EnumerateSymbolsCallback(PSYMBOL_INFO,ULONG, PVOID);
 
-        static bool FormatSymbolValue(PSYMBOL_INFO, STACKFRAME *, char * pszBuffer, unsigned cbBuffer);
+        static bool FormatSymbolValue(PSYMBOL_INFO, STACKFRAME*, char* pszBuffer, unsigned cbBuffer);
 
-        static char * DumpTypeIndex(char *, DWORD64, DWORD, unsigned, DWORD_PTR, bool & , char*);
+        static char* DumpTypeIndex(char*, DWORD64, DWORD, unsigned, DWORD_PTR, bool&, char*);
 
-        static char * FormatOutputValue(char * pszCurrBuffer, BasicType basicType, DWORD64 length, PVOID pAddress);
+        static char* FormatOutputValue(char* pszCurrBuffer, BasicType basicType, DWORD64 length, PVOID pAddress);
 
         static BasicType GetBasicType(DWORD typeIndex, DWORD64 modBase);
 
-        static int __cdecl _tprintf(const TCHAR * format, ...);
+        static int __cdecl _tprintf(TCHAR const* format, ...);
 
         // Variables used by the class
         static TCHAR m_szLogFileName[MAX_PATH];
-        static TCHAR m_szDumpFileName[MAX_PATH];
         static LPTOP_LEVEL_EXCEPTION_FILTER m_previousFilter;
         static HANDLE m_hReportFile;
-        static HANDLE m_hDumpFile;
         static HANDLE m_hProcess;
 };
 
 extern WheatyExceptionReport g_WheatyExceptionReport;       //  global instance of class
-#endif                                                      // _WIN32
-#endif                                                      // _WHEATYEXCEPTIONREPORT_
-
+#endif                                                      //WheatyExceptionReport

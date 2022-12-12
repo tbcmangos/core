@@ -113,7 +113,7 @@ struct QuestMenuItem
 
 typedef std::vector<QuestMenuItem> QuestMenuItemList;
 
-class HELLGROUND_IMPORT_EXPORT GossipMenu
+class  GossipMenu
 {
     public:
         GossipMenu();
@@ -181,7 +181,7 @@ class QuestMenu
         QuestMenuItemList m_qItems;
 };
 
-class HELLGROUND_IMPORT_EXPORT PlayerMenu
+class  PlayerMenu
 {
     private:
         GossipMenu mGossipMenu;

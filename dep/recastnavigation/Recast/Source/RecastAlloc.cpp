@@ -19,8 +19,9 @@
 #include <stdlib.h>
 #include <string.h>
 #include "RecastAlloc.h"
+#include "RecastAssert.h"
 
-static void *rcAllocDefault(int size, rcAllocHint)
+static void *rcAllocDefault(size_t size, rcAllocHint)
 {
 	return malloc(size);
 }
@@ -33,35 +34,27 @@ static void rcFreeDefault(void *ptr)
 static rcAllocFunc* sRecastAllocFunc = rcAllocDefault;
 static rcFreeFunc* sRecastFreeFunc = rcFreeDefault;
 
+/// @see rcAlloc, rcFree
 void rcAllocSetCustom(rcAllocFunc *allocFunc, rcFreeFunc *freeFunc)
 {
 	sRecastAllocFunc = allocFunc ? allocFunc : rcAllocDefault;
 	sRecastFreeFunc = freeFunc ? freeFunc : rcFreeDefault;
 }
 
-void* rcAlloc(int size, rcAllocHint hint)
+/// @see rcAllocSetCustom
+void* rcAlloc(size_t size, rcAllocHint hint)
 {
 	return sRecastAllocFunc(size, hint);
 }
 
+/// @par
+///
+/// @warning This function leaves the value of @p ptr unchanged.  So it still
+/// points to the same (now invalid) location, and not to null.
+/// 
+/// @see rcAllocSetCustom
 void rcFree(void* ptr)
 {
 	if (ptr)
 		sRecastFreeFunc(ptr);
 }
-
-
-void rcIntArray::resize(int n)
-{
-	if (n > m_cap)
-	{
-		if (!m_cap) m_cap = n;
-		while (m_cap < n) m_cap *= 2;
-		int* newData = (int*)rcAlloc(m_cap*sizeof(int), RC_ALLOC_TEMP);
-		if (m_size && newData) memcpy(newData, m_data, m_size*sizeof(int));
-		rcFree(m_data);
-		m_data = newData;
-	}
-	m_size = n;
-}
-

@@ -75,20 +75,20 @@ void CreatureGroupManager::LoadCreatureFormations()
     CreatureGroupMap.clear();
 
     //Check Integrity of the table
-    QueryResultAutoPtr result = GameDataDatabase.PQuery("SELECT MAX(`leaderGUID`) FROM `creature_formations`");
+    QueryResult* result = WorldDatabase.PQuery("SELECT MAX(`leaderGUID`) FROM `creature_formations`");
 
     if (!result)
     {
-        sLog.outLog(LOG_DB_ERR, " ...an error occured while loading the table `creature_formations` (maybe it doesn't exist ?)\n");
+        sLog.outErrorDb( " ...an error occured while loading the table `creature_formations` (maybe it doesn't exist ?)\n");
         return;
     }
 
     //Get group data
-    result = GameDataDatabase.PQuery("SELECT `leaderGUID`, `memberGUID`, `dist`, `angle`, `groupAI` FROM `creature_formations` ORDER BY `leaderGUID`");
+    result = WorldDatabase.PQuery("SELECT `leaderGUID`, `memberGUID`, `dist`, `angle`, `groupAI` FROM `creature_formations` ORDER BY `leaderGUID`");
 
     if (!result)
     {
-        sLog.outLog(LOG_DB_ERR, "The table `creature_formations` is empty or corrupted");
+        sLog.outErrorDb( "The table `creature_formations` is empty or corrupted");
         return;
     }
 
@@ -120,7 +120,7 @@ void CreatureGroupManager::LoadCreatureFormations()
         const CreatureData* member = sObjectMgr.GetCreatureData(memberGUID);
         if (!leader || !member || leader->mapid != member->mapid)
         {
-            sLog.outLog(LOG_DB_ERR, "Table `creature_formations` has an invalid record (leaderGUID: '%u', memberGUID: '%u')", group_member->leaderGUID, memberGUID);
+            sLog.outErrorDb( "Table `creature_formations` has an invalid record (leaderGUID: '%u', memberGUID: '%u')", group_member->leaderGUID, memberGUID);
             delete group_member;
             continue;
         }
@@ -299,8 +299,8 @@ void CreatureGroup::LeaderMoveTo(float x, float y, float z)
         float dy = y + sin(angle + pathangle) * dist;
         float dz = z;
 
-        Hellground::NormalizeMapCoord(dx);
-        Hellground::NormalizeMapCoord(dy);
+        MaNGOS::NormalizeMapCoord(dx);
+        MaNGOS::NormalizeMapCoord(dy);
 
         member->UpdateGroundPositionZ(dx, dy, dz);
 

@@ -1,0 +1,1 @@
+insert into creature_ai_scripts values ('1148905', '11489', '6', '0', '100', '3', '0', '0', '0', '0', '12', '14566', '0', '600000', '0', '0', '0', '0', '0', '0', '0', '0', 'Tendris Warpwood - Summon Ancient Equine Spirit');

@@ -26,7 +26,7 @@
 #include "ace/Thread_Mutex.h"
 #include <list>
 #include <map>
-#include "Utilities/UnorderedMap.h"
+#include <unordered_map>
 #include "Database/DatabaseEnv.h"
 
 struct InstanceTemplate;
@@ -124,7 +124,7 @@ class InstanceSaveManager
         ~InstanceSaveManager();
 
         typedef std::map<uint32 /*InstanceId*/, InstanceSave*> InstanceSaveMap;
-        typedef UNORDERED_MAP<uint32 /*InstanceId*/, InstanceSave*> InstanceSaveHashMap;
+        typedef std::unordered_map<uint32 /*InstanceId*/, InstanceSave*> InstanceSaveHashMap;
         typedef std::map<uint32 /*mapId*/, InstanceSaveMap> InstanceSaveMapMap;
 
         /* resetTime is a global propery of each (raid/heroic) map

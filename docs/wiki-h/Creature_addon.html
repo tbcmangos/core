@@ -1,0 +1,759 @@
+<!DOCTYPE html>
+<html lang="en-GB" dir="ltr" class="client-nojs">
+
+<!-- Mirrored from wiki.hellground.net/index.php/Creature_addon by HTTrack Website Copier/3.x [XR&CO'2014], Tue, 12 Apr 2016 10:51:07 GMT -->
+<!-- Added by HTTrack --><meta http-equiv="content-type" content="text/html;charset=UTF-8" /><!-- /Added by HTTrack -->
+<head>
+<title>creature_addon - HellGroundCore MMORPG framework educational and hobby project</title>
+<meta charset="UTF-8" />
+<meta name="generator" content="MediaWiki 1.21.4" />
+<link rel="shortcut icon" href="http://wiki.hellground.net/favicon.ico" />
+<link rel="search" type="application/opensearchdescription+xml" href="http://wiki.hellground.net/opensearch_desc.php" title="HellGroundCore MMORPG framework educational and hobby project (en-gb)" />
+<link rel="EditURI" type="application/rsd+xml" href="http://wiki.hellground.net/api.php?action=rsd" />
+<link rel="alternate" type="application/atom+xml" title="HellGroundCore MMORPG framework educational and hobby project Atom feed" href="http://wiki.hellground.net/index.php?title=Special:RecentChanges&amp;feed=atom" />
+<link rel="stylesheet" href="http://wiki.hellground.net/load.php?debug=false&amp;lang=en-gb&amp;modules=mediawiki.legacy.commonPrint%2Cshared%7Cskins.vector&amp;only=styles&amp;skin=vector&amp;*" />
+<meta name="ResourceLoaderDynamicStyles" content="" />
+<style>a:lang(ar),a:lang(ckb),a:lang(fa),a:lang(kk-arab),a:lang(mzn),a:lang(ps),a:lang(ur){text-decoration:none}
+/* cache key: admin_wikia:resourceloader:filter:minify-css:7:584a0492c58c82e3a4daddd5656471fb */</style>
+
+<script src="http://wiki.hellground.net/load.php?debug=false&amp;lang=en-gb&amp;modules=startup&amp;only=scripts&amp;skin=vector&amp;*"></script>
+<script>if(window.mw){
+mw.config.set({"wgCanonicalNamespace":"","wgCanonicalSpecialPageName":false,"wgNamespaceNumber":0,"wgPageName":"Creature_addon","wgTitle":"Creature addon","wgCurRevisionId":790,"wgArticleId":129,"wgIsArticle":true,"wgAction":"view","wgUserName":null,"wgUserGroups":["*"],"wgCategories":["World database","Database tables"],"wgBreakFrames":false,"wgPageContentLanguage":"en-gb","wgSeparatorTransformTable":["",""],"wgDigitTransformTable":["",""],"wgDefaultDateFormat":"dmy","wgMonthNames":["","January","February","March","April","May","June","July","August","September","October","November","December"],"wgMonthNamesShort":["","Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"],"wgRelevantPageName":"Creature_addon","wgRestrictionEdit":[],"wgRestrictionMove":[]});
+}</script><script>if(window.mw){
+mw.loader.implement("user.options",function(){mw.user.options.set({"ccmeonemails":0,"cols":80,"date":"default","diffonly":0,"disablemail":0,"disablesuggest":0,"editfont":"default","editondblclick":0,"editsection":1,"editsectiononrightclick":0,"enotifminoredits":0,"enotifrevealaddr":0,"enotifusertalkpages":1,"enotifwatchlistpages":0,"extendwatchlist":0,"externaldiff":0,"externaleditor":0,"fancysig":0,"forceeditsummary":0,"gender":"unknown","hideminor":0,"hidepatrolled":0,"imagesize":2,"justify":0,"math":1,"minordefault":0,"newpageshidepatrolled":0,"nocache":0,"noconvertlink":0,"norollbackdiff":0,"numberheadings":0,"previewonfirst":0,"previewontop":1,"quickbar":5,"rcdays":7,"rclimit":50,"rememberpassword":0,"rows":25,"searchlimit":20,"showhiddencats":0,"showjumplinks":1,"shownumberswatching":1,"showtoc":1,"showtoolbar":1,"skin":"vector","stubthreshold":0,"thumbsize":2,"underline":2,"uselivepreview":0,"usenewrc":0,"watchcreations":0,"watchdefault":0,"watchdeletion":0,"watchlistdays":3,
+"watchlisthideanons":0,"watchlisthidebots":0,"watchlisthideliu":0,"watchlisthideminor":0,"watchlisthideown":0,"watchlisthidepatrolled":0,"watchmoves":0,"wllimit":250,"variant":"en-gb","language":"en-gb","searchNs0":true,"searchNs1":false,"searchNs2":false,"searchNs3":false,"searchNs4":false,"searchNs5":false,"searchNs6":false,"searchNs7":false,"searchNs8":false,"searchNs9":false,"searchNs10":false,"searchNs11":false,"searchNs12":false,"searchNs13":false,"searchNs14":false,"searchNs15":false});;},{},{});mw.loader.implement("user.tokens",function(){mw.user.tokens.set({"editToken":"+\\","patrolToken":false,"watchToken":false});;},{},{});
+/* cache key: admin_wikia:resourceloader:filter:minify-js:7:811a3adb8f714f1f28210df16d324ee9 */
+}</script>
+<script>if(window.mw){
+mw.loader.load(["mediawiki.page.startup","mediawiki.legacy.wikibits","mediawiki.legacy.ajax"]);
+}</script>
+<!--[if lt IE 7]><style type="text/css">body{behavior:url("/skins/vector/csshover.min.htc")}</style><![endif]--></head>
+<body class="mediawiki ltr sitedir-ltr ns-0 ns-subject page-Creature_addon skin-vector action-view vector-animateLayout">
+		<div id="mw-page-base" class="noprint"></div>
+		<div id="mw-head-base" class="noprint"></div>
+		<!-- content -->
+		<div id="content" class="mw-body" role="main">
+			<a id="top"></a>
+			<div id="mw-js-message" style="display:none;"></div>
+						<!-- firstHeading -->
+			<h1 id="firstHeading" class="firstHeading" lang="en-gb"><span dir="auto">creature_addon</span></h1>
+			<!-- /firstHeading -->
+			<!-- bodyContent -->
+			<div id="bodyContent">
+								<!-- tagline -->
+				<div id="siteSub">From HellGroundCore MMORPG framework educational and hobby project</div>
+				<!-- /tagline -->
+								<!-- subtitle -->
+				<div id="contentSub"></div>
+				<!-- /subtitle -->
+																<!-- jumpto -->
+				<div id="jump-to-nav" class="mw-jump">
+					Jump to:					<a href="#mw-navigation">navigation</a>, 					<a href="#p-search">search</a>
+				</div>
+				<!-- /jumpto -->
+								<!-- bodycontent -->
+				<div id="mw-content-text" lang="en-GB" dir="ltr" class="mw-content-ltr"><p><a href="Category_World_database.html" title="Category:World database">&#8592; Back to World database</a>
+</p>
+<div style="float: right; margin-left: 1em"><table id="toc" class="toc"><tr><td><div id="toctitle"><h2>Contents</h2></div>
+<ul>
+<li class="toclevel-1 tocsection-1"><a href="#entry.2Fguid"><span class="tocnumber">1</span> <span class="toctext">entry/guid</span></a></li>
+<li class="toclevel-1 tocsection-2"><a href="#path_id"><span class="tocnumber">2</span> <span class="toctext">path_id</span></a></li>
+<li class="toclevel-1 tocsection-3"><a href="#mount"><span class="tocnumber">3</span> <span class="toctext">mount</span></a></li>
+<li class="toclevel-1 tocsection-4"><a href="#bytes1"><span class="tocnumber">4</span> <span class="toctext">bytes1</span></a></li>
+<li class="toclevel-1 tocsection-5"><a href="#bytes2"><span class="tocnumber">5</span> <span class="toctext">bytes2</span></a></li>
+<li class="toclevel-1 tocsection-6"><a href="#emote"><span class="tocnumber">6</span> <span class="toctext">emote</span></a></li>
+<li class="toclevel-1 tocsection-7"><a href="#moveflags"><span class="tocnumber">7</span> <span class="toctext">moveflags</span></a></li>
+<li class="toclevel-1 tocsection-8"><a href="#auras"><span class="tocnumber">8</span> <span class="toctext">auras</span></a></li>
+</ul>
+</td></tr></table>
+</div>
+<p>The creature_addon and creature_template_addon tables define different things that are applied on creatures when they are loaded. These "different things" can be for example to have the creature be mounted, to have it emote something, to have it display an aura effect, etc. Through the use of the fields in this table, many things can be changed about the outward visual appearance of the creature. The creature_template_addon table affects all creatures with that creature template ID while the creature_addon table affects individually spawned creatures (so that two creatures using the same template can look different).
+</p><p>NOTE: A creature_addon record will override a creature_template_addon record should they overlap on the same creature.
+</p><p>NOTICE: The data for this table is largely incomplete and is mostly just a regurgitation of what the client receives from the server. This article is a WIP as to what all the possible values are.
+</p>
+<table class="wikitable">
+<caption> `creature_addon` table rev. 7933
+</caption>
+<tr>
+<th> Field </th>
+<th> Type </th>
+<th> Null </th>
+<th> Key </th>
+<th> Default </th>
+<th> Extra
+</th></tr>
+<tr>
+<td><a href="#guid">guid</a> </td>
+<td> double </td>
+<td> PRI </td>
+<td> NO </td>
+<td> 0 </td>
+<td>
+</td></tr>
+<tr>
+<td><a href="#path_id">path_id</a> </td>
+<td> double </td>
+<td> </td>
+<td> YES </td>
+<td> </td>
+<td>
+</td></tr>
+<tr>
+<td><a href="#mount">mount</a> </td>
+<td> int(11) </td>
+<td> </td>
+<td> YES </td>
+<td> </td>
+<td>
+</td></tr>
+<tr>
+<td><a href="#bytes0">bytes0</a> </td>
+<td> double </td>
+<td> </td>
+<td> YES </td>
+<td> </td>
+<td>
+</td></tr>
+<tr>
+<td><a href="#bytes1">bytes1</a> </td>
+<td> double </td>
+<td> </td>
+<td> YES </td>
+<td> </td>
+<td>
+</td></tr>
+<tr>
+<td><a href="#bytes2">bytes2</a> </td>
+<td> double </td>
+<td> </td>
+<td> YES </td>
+<td> </td>
+<td>
+</td></tr>
+<tr>
+<td><a href="#emote">emote</a> </td>
+<td> double </td>
+<td> </td>
+<td> YES </td>
+<td> </td>
+<td>
+</td></tr>
+<tr>
+<td><a href="#moveflags">moveflags</a> </td>
+<td> double </td>
+<td> </td>
+<td> YES </td>
+<td> </td>
+<td>
+</td></tr>
+<tr>
+<td><a href="#auras">auras</a> </td>
+<td> text </td>
+<td> </td>
+<td> YES </td>
+<td> </td>
+<td>
+</td></tr></table>
+<h4> <span class="mw-headline" id="entry.2Fguid">entry/guid</span></h4>
+<p>For creature_template_addon, this field signifies the creature <a href="Creature_template.html#entry" title="Creature template">template ID</a>. It will affect all spawned creatures using that template ID.
+For creature_addon, this field signifies a unique creature <a href="Creature.html#guid" title="Creature">guid</a>. It will affect just that creature whose GUID matches the one specified here.
+</p>
+<h4> <span class="mw-headline" id="path_id">path_id</span></h4>
+<p><i>This field has no description yet.</i>
+</p>
+<h4> <span class="mw-headline" id="mount">mount</span></h4>
+<p>The model ID of the mount to be used to make the creature appear mounted. The value here overrides the value for the creature's unit field UNIT_FIELD_MOUNTDISPLAYID.
+</p><p>List of known values and what their visual effects on the creature
+</p>
+<h4> <span class="mw-headline" id="bytes1">bytes1</span></h4>
+<p>The value here overrides the value for the creature's unit field UNIT_FIELD_BYTES_1.
+</p><p>List of known values and what their visual effects on the creature
+</p>
+<ul><li> 1 = Sitting on Ground
+</li><li> 3 = Sleep
+</li><li> 7 = Makes the mob lying dead (combined with empty health bar (<a href="Creature_template.html#dynamicflags" title="Creature template">dynamicflags</a> |= 32) and gray name (<a href="Creature_template.html#dynamicflags" title="Creature template">dynamicflags</a> |= 4) makes the mob to appear dead)
+</li><li> 8 = Makes the mob kneel (need <a href="Creature_addon.html#bytes2" title="Creature addon">bytes2</a> |= 1)
+</li><li> 9 = Submerges the creature below the ground
+</li></ul>
+<h4> <span class="mw-headline" id="bytes2">bytes2</span></h4>
+<p>The value here overrides the value for the creature's unit field UNIT_FIELD_BYTES_2.
+</p><p>List of known values and what their visual effects on the creature
+</p>
+<ul><li> 4096 = Causes the creature to have his weapons sheathed always
+</li><li> 4097 = Unattackable?
+</li></ul>
+<h4> <span class="mw-headline" id="emote">emote</span></h4>
+<p>Emote ID that the creature should continually perform.
+</p><p>List of often used emote IDs and what they do
+</p>
+<ul><li> 65 = Makes the creature look dead by lying on the ground
+</li></ul>
+<p>untested List from Mangos Source
+</p>
+<pre>   EMOTE_STATE_DANCE                  = 10,
+   EMOTE_STATE_SLEEP                  = 12,
+   EMOTE_STATE_SIT                    = 13,
+   EMOTE_STATE_STAND                  = 26,
+   EMOTE_STATE_WORK                   = 28,
+   EMOTE_STATE_STUN                   = 64,
+   EMOTE_STATE_DEAD                   = 65,
+   EMOTE_STATE_KNEEL                  = 68,
+   EMOTE_ONESHOT_WAVE_NOSHEATHE       = 70,
+   EMOTE_ONESHOT_CHEER_NOSHEATHE      = 71,
+   EMOTE_ONESHOT_EAT_NOSHEATHE        = 92,
+   EMOTE_STATE_WORK_NOSHEATHE         = 173,
+   EMOTE_STATE_FISHING                = 379,
+   EMOTE_ONESHOT_FISHING              = 380,
+   EMOTE_ONESHOT_LOOT                 = 381,
+   EMOTE_STATE_WHIRLWIND              = 382,
+   EMOTE_STATE_LAUGH                  = 392,
+   EMOTE_STATE_CANNIBALIZE            = 398,
+   EMOTE_STATE_DANCESPECIAL           = 400,
+   EMOTE_STATE_EXCLAIM                = 412,
+   EMOTE_STATE_SIT_CHAIR_MED          = 415
+</pre>
+<h4> <span class="mw-headline" id="moveflags">moveflags</span></h4>
+<p>Flags controlling how the creature will behave animation-wise while moving.
+<span style="color: red">This table is 100% wrong as of 3.1. It is still here for a period of time for reference and to convert values in DB.
+</p><p>See the proper table under this one</span>
+</p>
+<table class="wikitable">
+<tr>
+<th> Bit </th>
+<th> Name </th>
+<th> Comment
+</th></tr>
+<tr>
+<td> 0 </td>
+<td> MOVEMENTFLAG_NONE </td>
+<td>
+</td></tr>
+<tr>
+<td> 1 </td>
+<td> MOVEMENTFLAG_FORWARD </td>
+<td> instantly teleport creature, then creature move forward animation but no real movement
+</td></tr>
+<tr>
+<td> 2 </td>
+<td> MOVEMENTFLAG_BACKWARD </td>
+<td> instantly teleport creature, then creature move back animation but no real movement
+</td></tr>
+<tr>
+<td> 4 </td>
+<td> MOVEMENTFLAG_STRAFE_LEFT </td>
+<td> instantly teleport creature, then creature move left animation but no real movement
+</td></tr>
+<tr>
+<td> 8 </td>
+<td> MOVEMENTFLAG_STRAFE_RIGHT </td>
+<td> instantly teleport creature, then creature move right animation but no real movement
+</td></tr>
+<tr>
+<td> 16 </td>
+<td> MOVEMENTFLAG_LEFT </td>
+<td> creature spin left animation
+</td></tr>
+<tr>
+<td> 32 </td>
+<td> MOVEMENTFLAG_RIGHT </td>
+<td> then creature spin right animation
+</td></tr>
+<tr>
+<td> 64 </td>
+<td> MOVEMENTFLAG_PITCH_UP </td>
+<td> no effect on creature
+</td></tr>
+<tr>
+<td> 128 </td>
+<td> MOVEMENTFLAG_PITCH_DOWN </td>
+<td> no effect on creature
+</td></tr>
+<tr>
+<td> 256 </td>
+<td> MOVEMENTFLAG_RUN_MODE </td>
+<td> If flag set then player runs
+</td></tr>
+<tr>
+<td> 512 </td>
+<td> MOVEMENTFLAG_ONTRANSPORT </td>
+<td> causes creatures to fly while moving (not include standing)
+</td></tr>
+<tr>
+<td> 1024 </td>
+<td> MOVEMENTFLAG_HOVERING </td>
+<td> hovering animation at stand (not include moving)
+</td></tr>
+<tr>
+<td> 2048 </td>
+<td> MOVEMENTFLAG_FLY_UNK1 </td>
+<td>
+</td></tr>
+<tr>
+<td> 4096 </td>
+<td> MOVEMENTFLAG_JUMPING </td>
+<td> Jump animation
+</td></tr>
+<tr>
+<td> 8192 </td>
+<td> MOVEMENTFLAG_UNK1 </td>
+<td>
+</td></tr>
+<tr>
+<td> 16384 </td>
+<td> MOVEMENTFLAG_FALLING </td>
+<td> Falling
+</td></tr>
+<tr>
+<td> 32768 </td>
+<td> MOVEMENTFLAG_UNK2 </td>
+<td>
+</td></tr>
+<tr>
+<td> 65536 </td>
+<td> MOVEMENTFLAG_UNK3 </td>
+<td>
+</td></tr>
+<tr>
+<td> 131072 </td>
+<td> MOVEMENTFLAG_UNK4 </td>
+<td>
+</td></tr>
+<tr>
+<td> 262144 </td>
+<td> MOVEMENTFLAG_UNK5 </td>
+<td>
+</td></tr>
+<tr>
+<td> 524288 </td>
+<td> MOVEMENTFLAG_UNK6 </td>
+<td>
+</td></tr>
+<tr>
+<td> 1048576 </td>
+<td> MOVEMENTFLAG_UNK7 </td>
+<td> Causes creature to instantly appear at new position
+</td></tr>
+<tr>
+<td> 2097152 </td>
+<td> MOVEMENTFLAG_SWIMMING </td>
+<td> appears with fly flag also (causes creatures to fall to ground at stand state)
+</td></tr>
+<tr>
+<td> 4194304 </td>
+<td> MOVEMENTFLAG_FLY_UP </td>
+<td> no effect on creature
+</td></tr>
+<tr>
+<td> 8388608 </td>
+<td> MOVEMENTFLAG_CAN_FLY </td>
+<td> no effect on creature
+</td></tr>
+<tr>
+<td> 16777216 </td>
+<td> MOVEMENTFLAG_FLYING </td>
+<td> no effect on creature
+</td></tr>
+<tr>
+<td> 33554432 </td>
+<td> MOVEMENTFLAG_UNK8 </td>
+<td> Creature flying (not hover at stop moving)
+</td></tr>
+<tr>
+<td> 67108864 </td>
+<td> MOVEMENTFLAG_SPLINE </td>
+<td> probably wrong name (no effect on creature)
+</td></tr>
+<tr>
+<td> 134217728 </td>
+<td> MOVEMENTFLAG_SPLINE2 </td>
+<td> no effect on creature
+</td></tr>
+<tr>
+<td> 268435456 </td>
+<td> MOVEMENTFLAG_WATERWALKING </td>
+<td> also prevent creature from falling under water
+</td></tr>
+<tr>
+<td> 536870912 </td>
+<td> MOVEMENTFLAG_SAFE_FALL </td>
+<td> active rogue safe fall spell (passive) (no effect on creature)
+</td></tr>
+<tr>
+<td> 1073741824 </td>
+<td> MOVEMENTFLAG_UNK9 </td>
+<td> Causes creature to hover at stand state (not include moving)
+</td></tr>
+<tr>
+<td> 2147483648 </td>
+<td> MOVEMENTFLAG_UNK10 </td>
+<td> Causes creature to roll to strange angle
+</td></tr></table>
+<p><span style="color: red">Proper table as of 3.1</span>
+</p>
+<table class="wikitable">
+<tr>
+<th> Bit </th>
+<th> Name </th>
+<th> Comment
+</th></tr>
+<tr>
+<td> 0 </td>
+<td> MONSTER_MOVE_NONE </td>
+<td> Core makes the creature behave based on <a href="Creature_template.html#InhabitType" title="Creature template">InhabitType</a> and <a href="Creature_template.html#MovementType" title="Creature template">MovementType</a>
+</td></tr>
+<tr>
+<td> 1 </td>
+<td> MONSTER_MOVE_FORWARD </td>
+<td> Instantly teleport creature, then creature move forward animation but no real movement
+</td></tr>
+<tr>
+<td> 2 </td>
+<td> MONSTER_MOVE_BACKWARD </td>
+<td> Instantly teleport creature, then creature move back animation but no real movement
+</td></tr>
+<tr>
+<td> 4 </td>
+<td> MONSTER_MOVE_STRAFE_LEFT </td>
+<td> Instantly teleport creature, then creature move left animation but no real movement
+</td></tr>
+<tr>
+<td> 8 </td>
+<td> MONSTER_MOVE_STRAFE_RIGHT </td>
+<td> Instantly teleport creature, then creature move right animation but no real movement
+</td></tr>
+<tr>
+<td> 16 </td>
+<td> MONSTER_MOVE_LEFT </td>
+<td> Creature spin left animation
+</td></tr>
+<tr>
+<td> 32 </td>
+<td> MONSTER_MOVE_RIGHT </td>
+<td> Then creature spin right animation
+</td></tr>
+<tr>
+<td> 64 </td>
+<td> MONSTER_MOVE_PITCH_UP </td>
+<td> Seams to have no effect
+</td></tr>
+<tr>
+<td> 128 </td>
+<td> MONSTER_MOVE_PITCH_DOWN </td>
+<td> Seams to have no effect
+</td></tr>
+<tr>
+<td> 256 </td>
+<td> MONSTER_MOVE_TELEPORT </td>
+<td> Makes creature teleport instead of walking
+</td></tr>
+<tr>
+<td> 512 </td>
+<td> MONSTER_MOVE_TELEPORT2 </td>
+<td>
+</td></tr>
+<tr>
+<td> 1024 </td>
+<td> MONSTER_MOVE_LEVITATING </td>
+<td>
+</td></tr>
+<tr>
+<td> 2048 </td>
+<td> MONSTER_MOVE_UNK1 </td>
+<td>
+</td></tr>
+<tr>
+<td> 4096 </td>
+<td> MONSTER_MOVE_WALK </td>
+<td> Makes creature walk
+</td></tr>
+<tr>
+<td> 8192 </td>
+<td> MONSTER_MOVE_SPLINE </td>
+<td>
+</td></tr>
+<tr>
+<td> 16384 </td>
+<td> No name in core </td>
+<td> Makes creature run
+</td></tr>
+<tr>
+<td> 32768 </td>
+<td> No name in core </td>
+<td> Makes creature run
+</td></tr>
+<tr>
+<td> 65536 </td>
+<td> No name in core </td>
+<td> Makes creature run
+</td></tr>
+<tr>
+<td> 131072 </td>
+<td> No name in core </td>
+<td> Makes creature run
+</td></tr>
+<tr>
+<td> 262144 </td>
+<td> MONSTER_MOVE_SPLINE2 </td>
+<td>
+</td></tr>
+<tr>
+<td> 524288 </td>
+<td> MONSTER_MOVE_UNK2 </td>
+<td> Used for flying mobs
+</td></tr>
+<tr>
+<td> 1048576</td>
+<td> MONSTER_MOVE_UNK3 </td>
+<td> Used for flying mobs
+</td></tr>
+<tr>
+<td> 2097152</td>
+<td> MONSTER_MOVE_UNK4 </td>
+<td>
+</td></tr>
+<tr>
+<td> 4194304</td>
+<td> MONSTER_MOVE_UNK5 </td>
+<td> Run in place, then teleport to final point
+</td></tr>
+<tr>
+<td> 8388608</td>
+<td> MONSTER_MOVE_UNK6 </td>
+<td> Teleport
+</td></tr>
+<tr>
+<td> 16777216</td>
+<td> MONSTER_MOVE_UNK7 </td>
+<td> Run
+</td></tr>
+<tr>
+<td> 33554432</td>
+<td> MONSTER_MOVE_FLY </td>
+<td> Swimming / Flying
+</td></tr>
+<tr>
+<td> 67108864</td>
+<td> MONSTER_MOVE_UNK9 </td>
+<td> Run
+</td></tr>
+<tr>
+<td>134217728</td>
+<td> MONSTER_MOVE_UNK10 </td>
+<td> Run
+</td></tr>
+<tr>
+<td>268435456</td>
+<td> MONSTER_MOVE_UNK11 </td>
+<td> Run
+</td></tr>
+<tr>
+<td>536870912</td>
+<td> MONSTER_MOVE_UNK12 </td>
+<td> Run
+</td></tr>
+<tr>
+<td>1073741824</td>
+<td> MONSTER_MOVE_UNK13 </td>
+<td> Levitating
+</td></tr></table>
+<p>Note: MONSTER_MOVE_SPLINE_FLY = MONSTER_MOVE_WALK + MONSTER_MOVE_SPLINE and makes creature fly by points.
+</p>
+<h4> <span class="mw-headline" id="auras">auras</span></h4>
+<p>This field controls any auras to be applied on the creature (both in effect and visually). The syntax for for an individual aura entry is "&lt;spell ID&gt; &lt;index&gt;". An aura is defined not just by the spell that applies it but also by the individual spell affect that applies it. Therefore, the effect index must be specified along with the spell ID. Each spell can have a maximum of three spell effects, so the effect index can only be 0, 1, or 2. To apply multiple auras, you can add more aura entries, separating each entry by a space. Remember that if a spell applies multiple auras, you need to specify an aura entry for each effect index if you want to apply more than one aura from the same spell.
+</p><p><span style="color: red">NOTE: Currently (Rev 5067) auras defined in creature_template_addon are not being properly added. Only add auras for creatures in creature_addon.</span>
+</p><p>List of useful aura entries:
+</p>
+<ul><li> '16380 0' - Makes the creature invisible.
+</li><li> '18950 0 18950 1' - Makes the creature detect other invisible units (players or creatures).
+</li></ul>
+
+<!-- 
+NewPP limit report
+Preprocessor visited node count: 51/1000000
+Preprocessor generated node count: 118/1000000
+Post‐expand include size: 274/2097152 bytes
+Template argument size: 29/2097152 bytes
+Highest expansion depth: 3/40
+Expensive parser function count: 0/100
+-->
+
+<!-- Saved in parser cache with key admin_wikia:pcache:idhash:129-0!*!0!!en-gb!*!* and timestamp 20160412104838 -->
+</div>				<!-- /bodycontent -->
+								<!-- printfooter -->
+				<div class="printfooter">
+				Retrieved from ‘<a href="http://wiki.hellground.net/index.php?title=Creature_addon&amp;oldid=790">http://wiki.hellground.net/index.php?title=Creature_addon&amp;oldid=790</a>’				</div>
+				<!-- /printfooter -->
+												<!-- catlinks -->
+				<div id='catlinks' class='catlinks'><div id="mw-normal-catlinks" class="mw-normal-catlinks"><a href="Special_Categories.html" title="Special:Categories">Categories</a>: <ul><li><a href="Category_World_database.html" title="Category:World database">World database</a></li><li><a href="Category_Database_tables.html" title="Category:Database tables">Database tables</a></li></ul></div></div>				<!-- /catlinks -->
+												<div class="visualClear"></div>
+				<!-- debughtml -->
+								<!-- /debughtml -->
+			</div>
+			<!-- /bodyContent -->
+		</div>
+		<!-- /content -->
+		<div id="mw-navigation">
+			<h2>Navigation menu</h2>
+			<!-- header -->
+			<div id="mw-head">
+				
+<!-- 0 -->
+<div id="p-personal" role="navigation" class="">
+	<h3>Personal tools</h3>
+	<ul>
+<li id="pt-login"><a href="http://wiki.hellground.net/index.php?title=Special:UserLogin&amp;returnto=Creature+addon" title="You are encouraged to log in; however, it is not mandatory [o]" accesskey="o">Log in</a></li>	</ul>
+</div>
+
+<!-- /0 -->
+				<div id="left-navigation">
+					
+<!-- 0 -->
+<div id="p-namespaces" role="navigation" class="vectorTabs">
+	<h3>Namespaces</h3>
+	<ul>
+					<li  id="ca-nstab-main" class="selected"><span><a href="Creature_addon.html"  title="View the content page [c]" accesskey="c">Page</a></span></li>
+					<li  id="ca-talk" class="new"><span><a href="http://wiki.hellground.net/index.php?title=Talk:Creature_addon&amp;action=edit&amp;redlink=1"  title="Discussion about the content page [t]" accesskey="t">Discussion</a></span></li>
+			</ul>
+</div>
+
+<!-- /0 -->
+
+<!-- 1 -->
+<div id="p-variants" role="navigation" class="vectorMenu emptyPortlet">
+	<h3 id="mw-vector-current-variant">
+		</h3>
+	<h3><span>Variants</span><a href="#"></a></h3>
+	<div class="menu">
+		<ul>
+					</ul>
+	</div>
+</div>
+
+<!-- /1 -->
+				</div>
+				<div id="right-navigation">
+					
+<!-- 0 -->
+<div id="p-views" role="navigation" class="vectorTabs">
+	<h3>Views</h3>
+	<ul>
+					<li id="ca-view" class="selected"><span><a href="Creature_addon.html" >Read</a></span></li>
+					<li id="ca-viewsource"><span><a href="http://wiki.hellground.net/index.php?title=Creature_addon&amp;action=edit"  title="This page is protected.&#10;You can view its source [e]" accesskey="e">View source</a></span></li>
+					<li id="ca-history" class="collapsible"><span><a href="http://wiki.hellground.net/index.php?title=Creature_addon&amp;action=history"  title="Past revisions of this page [h]" accesskey="h">View history</a></span></li>
+			</ul>
+</div>
+
+<!-- /0 -->
+
+<!-- 1 -->
+<div id="p-cactions" role="navigation" class="vectorMenu emptyPortlet">
+	<h3><span>Actions</span><a href="#"></a></h3>
+	<div class="menu">
+		<ul>
+					</ul>
+	</div>
+</div>
+
+<!-- /1 -->
+
+<!-- 2 -->
+
+
+<!-- /2 -->
+				</div>
+			</div>
+			<!-- /header -->
+			<!-- panel -->
+			<div id="mw-panel">
+				<!-- logo -->
+					<div id="p-logo" role="banner"><a style="background-image: url(../skins/common/images/wiki.png);" href="Main_Page.html"  title="Visit the main page"></a></div>
+				<!-- /logo -->
+				
+<!-- navigation -->
+<div class="portal" role="navigation" id='p-navigation'>
+	<h3>Navigation</h3>
+	<div class="body">
+		<ul>
+			<li id="n-mainpage-description"><a href="Main_Page.html" title="Visit the main page [z]" accesskey="z">Main page</a></li>
+			<li id="n-randompage"><a href="Spell_required.html" title="Load a random page [x]" accesskey="x">Random page</a></li>
+		</ul>
+	</div>
+</div>
+
+<!-- /navigation -->
+
+<!-- HellGroundCore -->
+<div class="portal" role="navigation" id='p-HellGroundCore'>
+	<h3>HellGroundCore</h3>
+	<div class="body">
+		<ul>
+			<li id="n-Project-site"><a href="https://hellground.net/" rel="nofollow">Project site</a></li>
+			<li id="n-Project--forum"><a href="http://forum.hellground.net/" rel="nofollow">Project  forum</a></li>
+			<li id="n-Project-repositories"><a href="http://emu.hellground.net/" rel="nofollow">Project repositories</a></li>
+			<li id="n-Project-bug-tracker"><a href="http://forum.hellground.net/" rel="nofollow">Project bug tracker</a></li>
+		</ul>
+	</div>
+</div>
+
+<!-- /HellGroundCore -->
+
+<!-- SEARCH -->
+
+<!-- /SEARCH -->
+
+<!-- TOOLBOX -->
+<div class="portal" role="navigation" id='p-tb'>
+	<h3>Tools</h3>
+	<div class="body">
+		<ul>
+			<li id="t-whatlinkshere"><a href="Special_WhatLinksHere/Creature_addon.html" title="A list of all wiki pages that link here [j]" accesskey="j">What links here</a></li>
+			<li id="t-recentchangeslinked"><a href="Special_RecentChangesLinked/Creature_addon.html" title="Recent changes in pages linked from this page [k]" accesskey="k">Related changes</a></li>
+			<li id="t-specialpages"><a href="Special_SpecialPages.html" title="A list of all special pages [q]" accesskey="q">Special pages</a></li>
+			<li id="t-print"><a href="http://wiki.hellground.net/index.php?title=Creature_addon&amp;printable=yes" rel="alternate" title="Printable version of this page [p]" accesskey="p">Printable version</a></li>
+			<li id="t-permalink"><a href="http://wiki.hellground.net/index.php?title=Creature_addon&amp;oldid=790" title="Permanent link to this revision of the page">Permanent link</a></li>
+			<li id="t-info"><a href="http://wiki.hellground.net/index.php?title=Creature_addon&amp;action=info">Page information</a></li>
+		</ul>
+	</div>
+</div>
+
+<!-- /TOOLBOX -->
+
+<!-- LANGUAGES -->
+
+<!-- /LANGUAGES -->
+			</div>
+			<!-- /panel -->
+		</div>
+		<!-- footer -->
+		<div id="footer" role="contentinfo">
+							<ul id="footer-info">
+											<li id="footer-info-lastmod"> This page was last modified on 28 February 2014, at 23:22.</li>
+											<li id="footer-info-viewcount">This page has been accessed 427 times.</li>
+									</ul>
+							<ul id="footer-places">
+											<li id="footer-places-privacy"><a href="TBC_HellGroundCore_Privacy_policy.html" title="TBC HellGroundCore:Privacy policy">Privacy policy</a></li>
+											<li id="footer-places-about"><a href="TBC_HellGroundCore_About.html" title="TBC HellGroundCore:About">About HellGroundCore MMORPG framework educational and hobby project</a></li>
+											<li id="footer-places-disclaimer"><a href="TBC_HellGroundCore_General_disclaimer.html" title="TBC HellGroundCore:General disclaimer">Disclaimers</a></li>
+									</ul>
+										<ul id="footer-icons" class="noprint">
+					<li id="footer-poweredbyico">
+						<a href="http://www.mediawiki.org/"><img src="../skins/common/images/poweredby_mediawiki_88x31.png" alt="Powered by MediaWiki" width="88" height="31" /></a>
+					</li>
+				</ul>
+						<div style="clear:both"></div>
+		</div>
+		<!-- /footer -->
+		<script>if(window.mw){
+mw.loader.state({"site":"loading","user":"missing","user.groups":"ready"});
+}</script>
+<script>if(window.mw){
+mw.loader.load(["mediawiki.action.view.postEdit","mediawiki.user","mediawiki.page.ready","mediawiki.searchSuggest","mediawiki.hidpi","skins.vector.js"], null, true);
+}</script>
+<script>if(window.mw){
+mw.loader.state({"site":"ready"});
+}</script>
+<!-- Served in 0.084 secs. -->
+	</body>
+
+<!-- Mirrored from wiki.hellground.net/index.php/Creature_addon by HTTrack Website Copier/3.x [XR&CO'2014], Tue, 12 Apr 2016 10:51:07 GMT -->
+</html>
