@@ -9,14 +9,13 @@
 #
 # Normal rules
 #
-.*
+
 *.o
 *.o.*
 *.a
 *.so
 *.so.dbg
 *.bin
-*.gz
 
 # Visual studio solution files
 *.tlog
@@ -26,7 +25,7 @@
 *.db
 *.opendb
 *.exp
-*.res
+
 CMakeSettings.json
 /out/
 
