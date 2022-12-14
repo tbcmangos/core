@@ -87,14 +87,8 @@ bool GridMap::loadData(char *filename)
         return true;
 
     fread(&header, sizeof(header),1,in);
-#ifdef USING_CM_MAP
     if (header.mapMagic == *((uint32 const*)(MAP_MAGIC)) &&
         header.versionMagic == *((uint32 const*)(MAP_VERSION_MAGIC)))
-#else
-    if (header.mapMagic == *((uint32 const*)(MAP_MAGIC)) &&
-        header.versionMagic == *((uint32 const*)(MAP_VERSION_MAGIC)) &&
-        IsAcceptableClientBuild(header.buildMagic))
-#endif
     {
         // loadup area data
         if (header.areaMapOffset && !loadAreaData(in, header.areaMapOffset, header.areaMapSize))
@@ -590,14 +584,9 @@ bool GridMap::ExistMap(uint32 mapid,int gx,int gy)
 
     GridMapFileHeader header;
     fread(&header, sizeof(header), 1, pf);
-#ifdef USING_CM_MAP
-    if (header.mapMagic != *((uint32 const*)(MAP_MAGIC)) ||
-        header.versionMagic != *((uint32 const*)(MAP_VERSION_MAGIC)))
-#else
-    if (header.mapMagic != *((uint32 const*)(MAP_MAGIC)) ||
-        header.versionMagic != *((uint32 const*)(MAP_VERSION_MAGIC)) ||
-        !IsAcceptableClientBuild(header.buildMagic))
-#endif
+    if (header.mapMagic     != *((uint32 const*)(MAP_MAGIC)) ||
+            header.versionMagic != *((uint32 const*)(MAP_VERSION_MAGIC)))
+
     {
         sLog.outError( "ERROR: Map file '%s' is non-compatible version (outdated?). Please, create new using ad.exe program.",tmp);
         delete [] tmp;
